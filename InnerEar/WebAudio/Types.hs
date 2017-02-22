@@ -3,7 +3,9 @@ module InnerEar.WebAudio.Types where
 import GHCJS.Types (JSVal)
 import qualified InnerAudio.WebAudio.Foreign as F
 
-data NodeType = Filter | Gain | Destination
+data FilterType = Peaking
+
+data NodeType = Filter FilterType | Gain | Destination
 
 data WebAudioNode = WebAudioNode NodeType JSVal
 
@@ -27,32 +29,34 @@ createGain g = do
 createBiquadFilter :: IO WebAudioNode
 createBiquadFilter = F.createBiQuadFilter >>= return $ WebAudioNode Filter
 
-data FilterType = Peaking
-
-setFilterType :: FilterType -> WebAudioNode -> IO ()
-setFilterType Peaking (WebAudioNode Filter x) = F.setType "peaking" x
-setFilterType _ _ = error "can't setFilterType on non-filter"
+createPeakingFilter :: Double -> Double -> Double -> IO WebAudioNode
+createPeakingFilter f q g = do
+  x <- F.createBiquadFilter
+  let y = WebAudioNode (Filter Peaking) x
+  setFilterF f y
+  setFilterQ q y
+  setFilterGain g y
+  return y
 
 setFilterF :: Double -> WebAudioNode -> IO ()
-setFilterF f (WebAudioNode Filter x) = F.setF f x
+setFilterF f (WebAudioNode (Filter _) x) = do
+  F.setF f x
+  return ()
 setFilterF _ _ = error "can't setFilterF on non-filter"
 
 setFilterQ :: Double -> WebAudioNode -> IO ()
-setFilterQ q (WebAudioNode Filter x) = F.setQ q x
+setFilterQ q (WebAudioNode (Filter _) x) = do
+  F.setQ q x
+  return ()
 setFilterQ _ _ = error "can't setFilterQ on non-filter"
 
 setFilterGain :: Double -> WebAudioNode -> IO ()
-setFilterGain g (WebAudioNode Filter x) = F.setFilterGain g x
-setFilterGain g (WebAudioNode x) = error "FFI call goes here"
+setFilterGain g (WebAudioNode (Filter _) x) = do
+  F.setFilterGain g x
+  return ()
+setFilterGain _ _ = error "can't setFilterGain on non-filter"
 
-createFilter :: FilterType -> Double -> Double -> Double -> IO WebAudioNode
-createFilter t f q g = do
-  x <- createBiquadFilter
-  setFilterType t x
-  setFilterF f x
-  setFilterQ q x
-  setFilterGain g x
-  return x
+
 
 createPinkNoiseNode :: IO WebAudioNode
 createPinkNoiseNode = error "FFI call goes here"
