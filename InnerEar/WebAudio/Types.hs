@@ -5,12 +5,14 @@ import qualified InnerAudio.WebAudio.Foreign as F
 
 data FilterType = Peaking
 
-data NodeType = Filter FilterType | Gain | Destination
+data NoiseType = White | Pink | Brownian
+
+data NodeType = Filter FilterType | Gain | Destination | Noise NoiseType
 
 data WebAudioNode = WebAudioNode NodeType JSVal
 
 getDestination :: IO WebAudioNode
-getDestination = F.getDestination >>= return $ WebAudioNode Destination x
+getDestination = F.getDestination >>= return $ WebAudioNode Destination
 
 connect :: WebAudioNode -> WebAudioNode -> IO ()
 connect (WebAudioNode Destination _) _ = error "destination can't be source of connection"
@@ -56,10 +58,14 @@ setFilterGain g (WebAudioNode (Filter _) x) = do
   return ()
 setFilterGain _ _ = error "can't setFilterGain on non-filter"
 
+createWhiteNoise :: IO WebAudioNode
+createWhiteNoise = F.createWhiteNoise >>= return $ WebAudioNode (Noise White)
 
+createPinkNoise :: IO WebAudioNode
+createPinkNoise = F.createPinkNoise >>= return $ WebAudioNode (Noise Pink)
 
-createPinkNoiseNode :: IO WebAudioNode
-createPinkNoiseNode = error "FFI call goes here"
+createBrownianNoise :: IO WebAudioNode
+createBrownianNoise = F.createBrownianNoise >>= return $ WebAudioNode (Noise Brownian)
 
 createAsrEnvelope :: Double -> Double -> Double -> IO WebAudioNode
 createAsrEnvelope a s r = do

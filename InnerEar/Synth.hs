@@ -1,6 +1,6 @@
 module InnerEar.Synth where
 
-import InnerEar.WebAudio
+import InnerEar.WebAudio.Types
 
 class WebAudio a where
   createNode :: a -> IO WebAudioNode
