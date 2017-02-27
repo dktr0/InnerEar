@@ -9,13 +9,15 @@ data NoiseType = White | Pink | Brownian
 
 data NodeType = Filter FilterType | Gain | Destination | Noise NoiseType
 
-data WebAudioNode = WebAudioNode NodeType JSVal
+data WebAudioNode = WebAudioNode NodeType JSVal | NullAudioNode
 
 getDestination :: IO WebAudioNode
 getDestination = F.getDestination >>= return $ WebAudioNode Destination
 
 connect :: WebAudioNode -> WebAudioNode -> IO ()
 connect (WebAudioNode Destination _) _ = error "destination can't be source of connection"
+connect NullAudioNode _ = return ()
+connect _ NullAudioNode = return ()
 connect (WebAudioNode _ x) (WebAudioNode yt y) = F.connect x y
 
 setGain :: Double -> WebAudioNode -> IO ()

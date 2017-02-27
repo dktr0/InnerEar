@@ -20,9 +20,10 @@ instance WebAudio Source where
     y <- createAsrEnvelope 0.005 1.0 0.005
     connect x y
 
-data Synth = Synth Source Filter
+data Synth = NoSynth | Synth Source Filter
 
 instance WebAudio Synth where
+  createNode (NoSynth) = return NullAudioNode
   createNode (Synth s f) = do
     x <- createNode s
     y <- createNode f
@@ -35,5 +36,22 @@ instance WebAudio Synth where
 example :: m (Event t ())
 example = do
   play <- button "play"
-  let synthEvent = Synth PinkNoise (PeakingFilter 1500 1.4 6.0) <$ play
-  performEvent_ synthEvent
+  let synthAction = createNode (Synth PinkNoise (PeakingFilter 1500 1.4 6.0)) <$ play
+  performEvent_ $ fmap liftIO synthAction
+
+getNewQuestion :: StdGen -> IO (Synth,StdGen)
+getNewQuestion gen = do
+  (x,g) <- randomR (0,1) gen
+  let s = if x==0 then (Synth PinkNoise NoFilter) else (Synth PinkNoise (PeakingFilter 1500 1.4 6.0))
+  return (s,g)
+
+example2 :: StdGen -> m ()
+example2 gen = el "div" $ mdo
+  newButton <- button "new"
+  gen'' <- tagPromptlyDyn gen' newButton -- m (Event t StdGen)
+  newQuestion <- performEvent $ fmap (liftIO . getNewQuestion) gen'' -- m (Event t (Synth,StdGen))
+  synth <- holdDyn (NoSynth) $ fmap fst newQuestion -- m (Dynamic t Synth)
+  gen' <- holdDyn gen $ fmap snd newQuestion -- m (Dynamic t StdGen)
+  playButton <- button "play"
+  synthAction <- tagPromptlyDyn synth playButton -- m (Event t Synth)
+  performEvent_ $ fmap (liftIO . createNode) synthAction
