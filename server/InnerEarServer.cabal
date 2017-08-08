@@ -4,7 +4,7 @@ synopsis:            Web-based adaptive ear training
 description:         Please see README.md
 homepage:            http://github.com/d0kt0r0/InnerEar/blob/master/README.md
 license:             GPL-3
-license-file:        LICENSE
+license-file:        ../LICENSE
 author:              Eldad Tsabary, David Ogborn, Jamie Beverley, Luis Navarro del Angel and others
 maintainer:          ogbornd@mcmaster.ca
 copyright:           2017 Eldad Tsabary, David Ogborn, Jamie Beverley, Luis Navarro del Angel and others
