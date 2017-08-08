@@ -1,0 +1,8 @@
+resolver: lts-7.24
+compiler: ghc-8.0.2
+compiler-check: match-exact
+
+packages:
+- '.'
+
+extra-deps:
