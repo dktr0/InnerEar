@@ -10,11 +10,7 @@ setup-info:
 
 packages:
 - '.'
-
-- location:
-    git: https://github.com/d0kt0r0/reflex-synth.git
-    commit: fe948e1e28476c352ce93f2335b7503e02d86beb
-  extra-dep: true
+- '../reflex-synth'
 
 extra-deps:
 - ghcjs-dom-0.2.3.1
