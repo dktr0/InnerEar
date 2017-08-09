@@ -2,6 +2,7 @@ module Main where
 
 import qualified Network.WebSockets as WS
 import Text.JSON
+import Data.Map
 import Data.Text (Text)
 import Data.List ((\\))
 import Data.Maybe (fromMaybe)
@@ -85,6 +86,7 @@ authenticate i h p s = if userExists h s
       then do
         putStrLn $ "authenticated as user " ++ h
         respond s i $ Authenticated h
+        -- placeholder: ...could also dump all records for now here...
         return $ authenticateConnection i h s
       else do
         putStrLn $ "failure to authenticate as user " ++ h
@@ -95,9 +97,17 @@ authenticate i h p s = if userExists h s
     return s
 
 postRecord :: ConnectionIndex -> Record -> Server -> IO Server
-postRecord i r s = do
-  putStrLn "placeholder: not implemented yet - needs to check that connection is authenticated and that handle matches handle in record"
-  return s
+postRecord i r@(Record h p) s = if ok then doIt else dont
+  where
+    cHandle = snd ((connections s) ! i)
+    rHandle = Just h
+    ok = cHandle == rHandle
+    doIt = do
+      putStrLn $ "posting record: " ++ (show r)
+      return $ postPoint h p s
+    dont = do
+      putStrLn $ "unable to post record (not authenticated or authenticated to different handle)" ++ (show r)
+      return s
 
 withServer :: MVar Server -> (Server -> IO Server) -> IO ()
 withServer s f = takeMVar s >>= f >>= putMVar s

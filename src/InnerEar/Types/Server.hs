@@ -9,6 +9,8 @@ import Data.Maybe (fromMaybe)
 import InnerEar.Types.Handle
 import InnerEar.Types.Password
 import InnerEar.Types.User
+import InnerEar.Types.Record
+import InnerEar.Types.Point
 
 type ConnectionIndex = Int
 
@@ -18,7 +20,7 @@ data Server = Server {
 }
 
 newServer :: Server
-newServer = Server { connections = empty, users = empty }
+newServer = Server { connections = empty, users = empty}
 
 addConnection :: WS.Connection -> Server -> (ConnectionIndex,Server)
 addConnection c s = (i,s { connections = newMap })
@@ -48,6 +50,10 @@ authenticateConnection i h s = if (userExists h s) then s { connections = newCon
 deauthenticateConnection :: ConnectionIndex -> Server -> Server
 deauthenticateConnection i s = s { connections = newConnections }
   where newConnections = adjust (\(ws,_) -> (ws,Nothing)) i (connections s)
+
+postPoint :: Handle -> Point -> Server -> Server
+postPoint h p s = s { users = newUsers }
+ where newUsers = adjust (addPoint p) h (users s)
 
 updateServer :: MVar Server -> (Server -> Server) -> IO (MVar Server)
 updateServer s f = do

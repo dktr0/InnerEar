@@ -18,3 +18,6 @@ newUser h p = User {
   password = p,
   points = []
 }
+
+addPoint :: Point -> User -> User
+addPoint p u = u { points = p:(points u) }
