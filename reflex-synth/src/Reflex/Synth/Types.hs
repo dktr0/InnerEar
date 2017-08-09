@@ -7,7 +7,14 @@ data FilterType = Peaking
 
 data NoiseType = White | Pink | Brownian
 
-data NodeType = Filter FilterType | Gain | Destination | Noise NoiseType
+data NodeType = Filter FilterType | Gain | Destination | Noise NoiseType | Oscillator
+
+data Oscillator = Saw Double | Sine Double | Square Double
+
+instance Show Oscillator where
+  show (Saw _) = "saw"
+  show (Sine _) = "sine"
+  show (Square _) = "square"
 
 data WebAudioNode = WebAudioNode NodeType JSVal | NullAudioNode
 
@@ -20,6 +27,14 @@ data WebAudioNode = WebAudioNode NodeType JSVal | NullAudioNode
 -- the WebAudioGraph would look lik:  WebAudioGraph (oscillator) $ WebAudioGraph compressor $ WebAudioGraph filter [filterJSVal]
 --data WebAudioGraph = WebAudioGraph WebAudioNode JSVal | WebAudioGraph' WebAudioNode WebAudioGraph
 data WebAudioGraph = WebAudioGraph WebAudioNode | WebAudioGraph' WebAudioNode WebAudioGraph | WebAudioGraph'' WebAudioGraph WebAudioGraph
+
+
+createSaw :: IO WebAudioNode
+createSaw = do
+  osc <- F.createOscillator
+  F.setOscillatorSaw osc
+  F.setOscillatorFrequency osc 220
+  return (WebAudioNode (Oscillator) osc)
 
 getFirstNode:: WebAudioGraph -> WebAudioNode
 getFirstNode (WebAudioGraph n) = n

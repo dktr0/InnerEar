@@ -3,13 +3,15 @@ module Main where
 
 import Reflex
 import Reflex.Dom
-
+import Reflex.Synth.Synth
 import InnerEar.Widgets.Navigation
 
 main :: IO ()
-main = mainWidget $ el "div" $ do
-  navigationWidget never
-  return ()
+main = do
+  createAudioContext
+  mainWidget $ el "div" $ do
+  							navigationWidget never
+  							return ()
 
 {-
 anEarTrainingExercise :: MonadWidget t m

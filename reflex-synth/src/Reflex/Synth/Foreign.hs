@@ -24,4 +24,12 @@ foreign import javascript safe "$r=___ac.createWhiteNoise()" createWhiteNoise ::
 foreign import javascript safe "$r=___ac.createPinkNoise()" createPinkNoise :: IO JSVal
 foreign import javascript safe "$r=___ac.createBrownNoise()" createBrownianNoise :: IO JSVal
 
+foreign import javascript safe "$r=___ac.createOscillator()" createOscillator :: IO JSVal
+
+
+foreign import javascript safe "$1.type = 'sawtooth'" setOscillatorSaw :: JSVal -> IO ()
+foreign import javascript safe "$1.frequency.value = $2" setOscillatorFrequency :: JSVal -> Double -> IO ()
+
+
+
 foreign import javascript safe "$1.start()" startNode :: JSVal -> IO ()

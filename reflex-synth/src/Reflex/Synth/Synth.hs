@@ -13,7 +13,7 @@ data Filter = NoFilter |
               PeakingFilter Double Double Double -- Frequency Q Gain
 
 type Duration = Double
-data Source = PinkNoise Duration
+data Source = PinkNoise Duration | Tone Oscillator Duration
 
 data Sound = NoSynth | FilteredSound Source Filter
 
@@ -31,7 +31,11 @@ instance WebAudio Source where
     y <- createAsrEnvelope 0.005 dur 0.005 
     let graph = WebAudioGraph' x (WebAudioGraph y)
     createGraph graph
-    --return $ WebAudioGraph y -- @ ?I think you want the last one?
+  createGraph (Tone osc dur) = do
+    x <- createSaw
+    y <- createAsrEnvelope 0.005 dur 0.005
+    let graph = WebAudioGraph' x (WebAudioGraph y)
+    createGraph graph
 
 
 instance WebAudio WebAudioGraph where
@@ -78,6 +82,9 @@ instance WebAudio Sound where
 
 
 --data WebAudioNode = WebAudioNode NodeType JSVal | NullAudioNode
+
+createAudioContext::IO ()
+createAudioContext = F.createAudioContext
 
 createSound :: Sound -> IO (WebAudioGraph)
 createSound (FilteredSound s f) = do
