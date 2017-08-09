@@ -7,6 +7,7 @@ import Control.Monad
 import InnerEar.Types.Request
 import InnerEar.Types.Response
 import Reflex.Synth.Synth
+import Reflex.Synth.Types
 import InnerEar.Widgets.Test
 
 prototypeExercise :: MonadWidget t m
