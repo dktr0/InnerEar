@@ -4,10 +4,12 @@ module Main where
 import Reflex
 import Reflex.Dom
 
-import InnerEar.Types.Record
+import InnerEar.Widgets.Navigation
 
 main :: IO ()
-main = mainWidget $ el "div" $ text "Inner Ear"
+main = mainWidget $ el "div" $ do
+  navigationWidget never
+  return ()
 
 {-
 anEarTrainingExercise :: MonadWidget t m
