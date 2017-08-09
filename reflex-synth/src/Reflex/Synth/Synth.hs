@@ -1,60 +1,97 @@
 module Reflex.Synth.Synth where
 
 import Reflex.Synth.Types 
+--import InnerEar.Types.Sound
 import qualified Reflex.Synth.Foreign as F
 import Reflex.Dom
 import Control.Monad.IO.Class (liftIO)
 
 class WebAudio a where
-  createNode :: a -> IO WebAudioNode
+  createGraph :: a -> IO WebAudioGraph
 
 data Filter = NoFilter |
               PeakingFilter Double Double Double -- Frequency Q Gain
 
-instance WebAudio Filter where
-  createNode (NoFilter) = createGain 1.0
-  createNode (PeakingFilter f q g) = createPeakingFilter f q g
-
 type Duration = Double
-
 data Source = PinkNoise Duration
 
+data Sound = NoSynth | FilteredSound Source Filter
+
+
+
+instance WebAudio Filter where
+  createGraph (NoFilter) = createGain 1.0 >>= return . WebAudioGraph
+  createGraph (PeakingFilter f q g) = createPeakingFilter f q g >>= return . WebAudioGraph
+
+
+
 instance WebAudio Source where
-  createNode (PinkNoise dur) = do
+  createGraph (PinkNoise dur) = do
     x <- createPinkNoise
     y <- createAsrEnvelope 0.005 dur 0.005 
-    connect x y
-    return x
+    let graph = WebAudioGraph' x (WebAudioGraph y)
+    createGraph graph
+    --return $ WebAudioGraph y -- @ ?I think you want the last one?
 
-
-data Synth = NoSynth | Synth Source Filter
 
 instance WebAudio WebAudioGraph where
-  createNode = connectGraph'
+  createGraph = connectGraph
 
-instance WebAudio Synth where
-  createNode (NoSynth) = return NullAudioNode
-  createNode (Synth s f) = do
-    let dur = case s of (PinkNoise a) -> a; otherwise -> 1 -- 1s default node length
-    x <- createNode s
-    y <- createNode f
-    env <- createAsrEnvelope 0.05 dur 0.05
-    dest <- getDestination
-    connect x y
-    connect y env
-    connect env dest
-    return env
+instance WebAudio Sound where
+  createGraph (FilteredSound s f) = do
+    source <- createGraph s
+    filt <- createGraph f
+    let graph = WebAudioGraph'' source filt
+    connectGraph graph
+
+
+--createNode:: Source -> IO (WebAudioNode)
+--createNode (PinkNoise dur) = do 
+--  noise <- createPinkNoise
+--  env <- createAsrEnvelope 0.05 dur 0.05
+--  connect noise env
+
+
+--instance WebAudio Synth where
+--  createGraph (NoSynth) = return $ WebAudioGraph NullAudioNode
+--  createGraph (Synth g d) = 
+
+--instance WebAudio Synth where
+--  createGraph (NoSynth) = return $ WebAudioGraph NullAudioNode
+--  createGraph (FilteredSound s f) = do 
+--    source <- createGraph 
+--    filt <- createGraph f
+--    connectGraphs source filt
+--  createGraph (Synth s f) = do
+--    let dur = case s of (PinkNoise a) -> a; otherwise -> 1 -- 1s default node length
+--    x <- createGraph s
+--    y <- createGraph f
+--    env <- createAsrEnvelope 0.05 dur 0.05
+--    dest <- getDestination
+--    let graph = WebAudioGraph' x (WebAudioGraph' y (WebAudioGraph' env (WebAudioGraph dest)))
+--    connectGraph graph
+    
+    --connect x y
+    --connect y env
+    --connectGraph env dest
+    --return $ WebAudioGraph' s (WebAudioGraph' f (WebAudioGraph env))
 
 
 --data WebAudioNode = WebAudioNode NodeType JSVal | NullAudioNode
 
+createSound :: Sound -> IO (WebAudioGraph)
+createSound (FilteredSound s f) = do
+  sourceNode <- createGraph s
+  filterNode <- createGraph f
+  dest <- getDestination
+  let graph = WebAudioGraph'' sourceNode (WebAudioGraph'' filterNode (WebAudioGraph dest))
+  connectGraph graph
 
-
-performSynth:: MonadWidget t m => Event t Synth -> m ()
+performSynth:: MonadWidget t m => Event t Sound -> m ()
 performSynth event = do
   let n = fmap (\e-> do 
-                      node <- createNode e
-                      startNode node
+                      graph <- createGraph e
+                      startGraph graph
                       ) event          -- Event t (IO ())
   performEvent_ $ fmap liftIO n
 

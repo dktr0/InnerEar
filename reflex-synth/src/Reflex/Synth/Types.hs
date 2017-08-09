@@ -19,7 +19,23 @@ data WebAudioNode = WebAudioNode NodeType JSVal | NullAudioNode
 -- 'filter' references the node furthest down the chain and
 -- the WebAudioGraph would look lik:  WebAudioGraph (oscillator) $ WebAudioGraph compressor $ WebAudioGraph filter [filterJSVal]
 --data WebAudioGraph = WebAudioGraph WebAudioNode JSVal | WebAudioGraph' WebAudioNode WebAudioGraph
-data WebAudioGraph = WebAudioGraph WebAudioNode | WebAudioGraph' WebAudioNode WebAudioGraph
+data WebAudioGraph = WebAudioGraph WebAudioNode | WebAudioGraph' WebAudioNode WebAudioGraph | WebAudioGraph'' WebAudioGraph WebAudioGraph
+
+getFirstNode:: WebAudioGraph -> WebAudioNode
+getFirstNode (WebAudioGraph n) = n
+getFirstNode (WebAudioGraph' n _) = n
+getFirstNode (WebAudioGraph'' n _) = getFirstNode n
+
+getLastNode:: WebAudioGraph -> WebAudioNode
+getLastNode (WebAudioGraph n) = n
+getLastNode (WebAudioGraph' _ n) = getLastNode n
+getLastNode (WebAudioGraph'' _ n) = getLastNode n
+
+--WebAudioGraph' (Buffer) (WebAudioGraph (filter)) 
+--WebAudioGraph' (oscillator) (WebAudioGraph (compressor))
+--data WebAudioGraph = WebAudioGraph Source Effect | WebAudioGraph' WebAudioGraph Effect
+--data Source = Oscillator | Noise | Buffer | NullAudioNode
+--data Effect = Filter | Compressor 
 
 
 getDestination :: IO WebAudioNode
@@ -27,14 +43,22 @@ getDestination = do
   x <- F.getDestination 
   return $ WebAudioNode Destination x
 
-connect :: WebAudioNode -> WebAudioNode -> IO ()
+--connect :: WebAudioNode -> WebAudioNode -> IO ()
+--connect (WebAudioNode Destination _) _ = error "destination can't be source of connection"
+--connect NullAudioNode _ = return ()
+--connect _ NullAudioNode = return ()
+--connect (WebAudioNode _ x) (WebAudioNode yt y) = F.connect x y
+
+connect :: WebAudioNode -> WebAudioNode -> IO (WebAudioGraph)
 connect (WebAudioNode Destination _) _ = error "destination can't be source of connection"
-connect NullAudioNode _ = return ()
-connect _ NullAudioNode = return ()
-connect (WebAudioNode _ x) (WebAudioNode yt y) = F.connect x y
+connect NullAudioNode _ = return (WebAudioGraph NullAudioNode)
+connect a NullAudioNode = return (WebAudioGraph a)
+connect (WebAudioNode xt x) (WebAudioNode yt y) = do 
+  F.connect x y
+  return $ WebAudioGraph' (WebAudioNode xt x) (WebAudioGraph (WebAudioNode yt y))
 
 connectGraph :: WebAudioGraph -> IO (WebAudioGraph)
-connectGraph (WebAudioGraph n) = return WebAudioGraph
+connectGraph (WebAudioGraph n) = return $ WebAudioGraph n
 connectGraph (WebAudioGraph' n (WebAudioGraph n2)) = do 
   connect n n2
   return $ (WebAudioGraph' n (WebAudioGraph n2))
@@ -42,6 +66,11 @@ connectGraph (WebAudioGraph' n (WebAudioGraph' n2 xs)) = do
   connect n n2
   connectGraph (WebAudioGraph' n2 xs)
   return (WebAudioGraph' n (WebAudioGraph' n2 xs))
+connectGraph (WebAudioGraph'' a b) = do 
+  let aLast = getLastNode a
+  let bFirst = getFirstNode b
+  connect aLast bFirst
+  return (WebAudioGraph'' a b)
 
 --connectGraph' :: WebAudioGraph -> IO (WebAudioNode)
 --connectGraph' (WebAudioGraph n) = do return n
@@ -125,3 +154,13 @@ setGainAtTime _ _ NullAudioNode = error "Cannot set gain of a null node"
 startNode :: WebAudioNode -> IO ()
 startNode (WebAudioNode _ ref) = F.startNode ref
 startNode _ = return ()
+
+startGraph :: WebAudioGraph -> IO()
+startGraph a = do
+  let f = getFirstNode a
+  let l = getLastNode a
+  dest <- getDestination
+  connect l dest
+  startNode f
+
+
