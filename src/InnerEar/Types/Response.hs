@@ -3,6 +3,7 @@ module InnerEar.Types.Response where
 import Text.JSON
 import InnerEar.Types.Utility
 import InnerEar.Types.Handle
+import InnerEar.Types.Record
 
 data Response =
   Authenticated Handle | -- signals that client is successfully authenticated as the indicated handle
