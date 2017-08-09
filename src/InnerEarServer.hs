@@ -16,8 +16,6 @@ import InnerEar.Types.Request
 import InnerEar.Types.Response
 import InnerEar.Types.Server
 
-main = putStrLn "Inner Ear"
-
 main = do
   putStrLn "Inner Ear server (listening on port 4468)"
   let ourServer = newServer
@@ -53,7 +51,7 @@ processLoop ws s i = do
       putStrLn ("parse exception: " ++ e)
       processLoop ws s i
 
-close :: MVar Server -> ConnectionHandle -> String -> IO ()
+close :: MVar Server -> ConnectionIndex -> String -> IO ()
 close s i msg = do
   putStrLn $ "closing connection: " ++ msg
   updateServer s $ deleteConnection i
@@ -66,49 +64,39 @@ processResult s i (Ok x) = processRequest s i x
 
 processRequest :: MVar Server -> ConnectionIndex -> Request -> IO ()
 
-processRequest s i (CreateUser h p) = do
-  s' <- takeMVar s
-  s'' <- if handle already exists...
+processRequest s i (CreateUser h p) = withServer s $ \s' -> do
+  if userExists h s'
     then do
-      -- placeholder: send back fail message
+      respond s' i $ NotAuthenticated
       return s'
     else do
-      -- placeholder: send back authenticated message
-      return $ createUser h p s'
-  putMVar s s''
+      respond s' i $ Authenticated h
+      return $ createUser i h p s'
+
+processRequest s i (Authenticate h p) = withServer s $ \s' -> do
+  if userExists h s'
+    then do
+      if p == getPassword h s'
+        then do
+          putStrLn $ "authenticated as user " ++ h
+          respond s' i $ Authenticated h
+          return $ authenticateUser h s'
+        else do
+          putStrLn $ "failure to authenticate as user " ++ h
+          respond s' i $ NotAuthenticated
+          return $ deauthenticateUser h s'
+    else do
+      respond s' i $ NotAuthenticated
+      return s'
+
+processRequest s i (PostRecord r) = putStrLn "placeholder: PostRecord not handled yet"
+
+withServer :: MVar Server -> (Server -> IO Server) -> IO ()
+withServer s f = takeMVar s >>= f >>= putMVar s
 
 
-
-
-
-
-
-
-
-send :: ServerResponse -> [Client] -> IO ()
-send x cs = do
-  -- putStrLn $ "send to " ++ (show (length cs))
-  mapM_ f cs
-  where f c = WS.sendTextData (connection c) $ (T.pack . encodeStrict) x
-
-respond :: MVar Server -> ClientHandle -> ServerResponse -> IO ()
-respond s c x = withMVar s $ (send x) . (:[]) . (Map.! c)  . clients
-
--- respond' is for use when one already has a lock on the server MVar'
-respond' :: Server -> ClientHandle -> ServerResponse -> IO ()
-respond' s c x = send x $ (:[]) $ (Map.! c) $ clients s
-
-respondAll :: MVar Server -> ServerResponse -> IO ()
-respondAll s x = withMVar s $ (send x) . Map.elems . clients
-
-respondAllNoOrigin :: MVar Server -> ClientHandle -> ServerResponse -> IO ()
-respondAllNoOrigin s c x = withMVar s $ (send x) . Map.elems . Map.delete c . clients
-
-respondEnsemble :: MVar Server -> String -> ServerResponse -> IO ()
-respondEnsemble s e x = withMVar s $ (send x) . Map.elems . ensembleFilter e . clients
-
-respondEnsembleNoOrigin :: MVar Server -> ClientHandle -> String -> ServerResponse -> IO ()
-respondEnsembleNoOrigin s c e x = withMVar s $ (send x) . Map.elems . Map.delete c . ensembleFilter e . clients
-
-ensembleFilter :: String -> Map.Map ClientHandle Client -> Map.Map ClientHandle Client
-ensembleFilter e = Map.filter $ (==(Just e)) . ensemble
+respond :: Server -> ConnectionIndex -> Response -> IO ()
+respond s i x = WS.sendTextData c t
+  where
+    c = fst $ (Map.! i) $ (connections s)
+    t = T.pack $ encodeStrict x
