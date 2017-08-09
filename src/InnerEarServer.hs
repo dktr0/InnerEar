@@ -15,6 +15,9 @@ import Control.Exception (try)
 import InnerEar.Types.Request
 import InnerEar.Types.Response
 import InnerEar.Types.Server
+import InnerEar.Types.Handle
+import InnerEar.Types.Password
+import InnerEar.Types.Record
 
 main = do
   putStrLn "Inner Ear server (listening on port 4468)"
@@ -61,39 +64,43 @@ processResult :: MVar Server -> ConnectionIndex -> Result Request -> IO ()
 processResult _ i (Error x) = putStrLn ("Error: " ++ x)
 processResult s i (Ok x) = processRequest s i x
 
-
 processRequest :: MVar Server -> ConnectionIndex -> Request -> IO ()
+processRequest s i (CreateUser h p) = withServer s $ createUser i h p
+processRequest s i (Authenticate h p) = withServer s $ authenticate i h p
+processRequest s i (PostRecord r) = withServer s $ postRecord i r
 
-processRequest s i (CreateUser h p) = withServer s $ \s' -> do
-  if userExists h s'
-    then do
-      respond s' i $ NotAuthenticated
-      return s'
-    else do
-      respond s' i $ Authenticated h
-      return $ createUser i h p s'
+createUser :: ConnectionIndex -> Handle -> Password -> Server -> IO Server
+createUser i h p s = if userExists h s
+  then do
+    respond s i $ NotAuthenticated
+    return s
+  else do
+    respond s i $ Authenticated h
+    return $ addUser i h p s
 
-processRequest s i (Authenticate h p) = withServer s $ \s' -> do
-  if userExists h s'
-    then do
-      if p == getPassword h s'
-        then do
-          putStrLn $ "authenticated as user " ++ h
-          respond s' i $ Authenticated h
-          return $ authenticateConnection i h s'
-        else do
-          putStrLn $ "failure to authenticate as user " ++ h
-          respond s' i $ NotAuthenticated
-          return $ deauthenticateConnection i s'
-    else do
-      respond s' i $ NotAuthenticated
-      return s'
+authenticate :: ConnectionIndex -> Handle -> Password -> Server -> IO Server
+authenticate i h p s = if userExists h s
+  then do
+    if p == getPassword h s
+      then do
+        putStrLn $ "authenticated as user " ++ h
+        respond s i $ Authenticated h
+        return $ authenticateConnection i h s
+      else do
+        putStrLn $ "failure to authenticate as user " ++ h
+        respond s i $ NotAuthenticated
+        return $ deauthenticateConnection i s
+  else do
+    respond s i $ NotAuthenticated
+    return s
 
-processRequest s i (PostRecord r) = putStrLn "placeholder: PostRecord not handled yet"
+postRecord :: ConnectionIndex -> Record -> Server -> IO Server
+postRecord i r s = do
+  putStrLn "placeholder: not implemented yet - needs to check that connection is authenticated and that handle matches handle in record"
+  return s
 
 withServer :: MVar Server -> (Server -> IO Server) -> IO ()
 withServer s f = takeMVar s >>= f >>= putMVar s
-
 
 respond :: Server -> ConnectionIndex -> Response -> IO ()
 respond s i x = WS.sendTextData c t

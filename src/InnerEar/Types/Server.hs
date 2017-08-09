@@ -32,8 +32,8 @@ userExists :: Handle -> Server -> Bool
 userExists h s = member h (users s)
 
 -- | adds a user with the specified handle and password to a server, only if that user doesn't exist already
-createUser :: ConnectionIndex -> Handle -> Password -> Server -> Server
-createUser i h p s = if (userExists h s) then s else s { connections = newConnections, users = newUsers }
+addUser :: ConnectionIndex -> Handle -> Password -> Server -> Server
+addUser i h p s = if (userExists h s) then s else s { connections = newConnections, users = newUsers }
   where
     newConnections = adjust (\(ws,_) -> (ws,Just h)) i (connections s)
     newUsers = insert h (newUser h p) (users s)
