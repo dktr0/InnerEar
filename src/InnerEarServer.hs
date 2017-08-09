@@ -80,11 +80,11 @@ processRequest s i (Authenticate h p) = withServer s $ \s' -> do
         then do
           putStrLn $ "authenticated as user " ++ h
           respond s' i $ Authenticated h
-          return $ authenticateUser h s'
+          return $ authenticateConnection i h s'
         else do
           putStrLn $ "failure to authenticate as user " ++ h
           respond s' i $ NotAuthenticated
-          return $ deauthenticateUser h s'
+          return $ deauthenticateConnection i s'
     else do
       respond s' i $ NotAuthenticated
       return s'

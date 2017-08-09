@@ -41,13 +41,13 @@ createUser i h p s = if (userExists h s) then s else s { connections = newConnec
 getPassword :: Handle -> Server -> Password
 getPassword h s = password $ (users s) ! h
 
-authenticateUser :: Handle -> Server -> Server
-authenticateUser h s = if (userExists h s) then s { users = newUsers } else s
-  where newUsers = adjust authenticate h (users s)
+authenticateConnection :: ConnectionIndex -> Handle -> Server -> Server
+authenticateConnection i h s = if (userExists h s) then s { connections = newConnections } else s
+  where newConnections = adjust (\(ws,_) -> (ws,Just h)) i (connections s)
 
-deauthenticateUser :: Handle -> Server -> Server
-deauthenticateUser h s = if (userExists h s) then s { users = newUsers } else s
-  where newUsers = adjust deauthenticate h (users s)
+deauthenticateConnection :: ConnectionIndex -> Server -> Server
+deauthenticateConnection i s = s { connections = newConnections }
+  where newConnections = adjust (\(ws,_) -> (ws,Nothing)) i (connections s)
 
 updateServer :: MVar Server -> (Server -> Server) -> IO (MVar Server)
 updateServer s f = do
