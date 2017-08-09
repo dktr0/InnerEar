@@ -33,22 +33,25 @@ connect NullAudioNode _ = return ()
 connect _ NullAudioNode = return ()
 connect (WebAudioNode _ x) (WebAudioNode yt y) = F.connect x y
 
-connectGraph :: WebAudioGraph -> IO()
-connectGraph (WebAudioGraph n) = do return ()
-connectGraph (WebAudioGraph' n (WebAudioGraph n2)) = connect n n2
+connectGraph :: WebAudioGraph -> IO (WebAudioGraph)
+connectGraph (WebAudioGraph n) = return WebAudioGraph
+connectGraph (WebAudioGraph' n (WebAudioGraph n2)) = do 
+  connect n n2
+  return $ (WebAudioGraph' n (WebAudioGraph n2))
 connectGraph (WebAudioGraph' n (WebAudioGraph' n2 xs)) = do
   connect n n2
   connectGraph (WebAudioGraph' n2 xs)
+  return (WebAudioGraph' n (WebAudioGraph' n2 xs))
 
-connectGraph' :: WebAudioGraph -> IO (WebAudioNode)
-connectGraph' (WebAudioGraph n) = do return n
-connectGraph' (WebAudioGraph' n (WebAudioGraph n2)) = do 
-  connect n n2
-  return n2
-connectGraph' (WebAudioGraph' n (WebAudioGraph' n2 xs)) = do
-  connect n n2
-  endNode <- connectGraph' (WebAudioGraph' n2 xs)
-  return endNode
+--connectGraph' :: WebAudioGraph -> IO (WebAudioNode)
+--connectGraph' (WebAudioGraph n) = do return n
+--connectGraph' (WebAudioGraph' n (WebAudioGraph n2)) = do 
+--  connect n n2
+--  return n2
+--connectGraph' (WebAudioGraph' n (WebAudioGraph' n2 xs)) = do
+--  connect n n2
+--  endNode <- connectGraph' (WebAudioGraph' n2 xs)
+--  return endNode
 
 --connect (WebAudioNode _ x) (WebAudioNode yt y) = do 
 --  F.connect x y
