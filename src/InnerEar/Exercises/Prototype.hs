@@ -2,9 +2,12 @@ module InnerEar.Exercises.Prototype where
 
 import Reflex
 import Reflex.Dom
+import Control.Monad
 
 import InnerEar.Types.Request
 import InnerEar.Types.Response
+import Reflex.Synth.Synth
+
 
 prototypeExercise :: MonadWidget t m
   => Event t Response -> m (Event t Request,Event t ())
@@ -16,3 +19,6 @@ prototypeExercise responses = el "div" $ do
   drawBar score -- drawBar :: (MonadWidget t m, Num b) => Dynamic t b -> m () -- MonadWidget t m => Dynamic t Int -> m ()
   home <- button "back to splash page"
   return (never,home)
+
+
+
