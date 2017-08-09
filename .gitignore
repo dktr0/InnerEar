@@ -15,5 +15,6 @@ cabal.sandbox.config
 *.aux
 *.hp
 *.eventlog
+.DS_Store
 .stack-work/
 cabal.project.local
