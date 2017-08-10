@@ -2,9 +2,11 @@ module InnerEar.Widgets.Login where
 
 import Reflex
 import Reflex.Dom
+import Control.Monad
 
 import InnerEar.Types.Request
 import InnerEar.Types.Response
+import InnerEar.Types.Handle
 
 -- | A loginWidget appears as a single line in the interface. It displays a
 -- set of text fields and button if the user is not logged in. If the user
@@ -20,9 +22,9 @@ loginWidget responses = el "div" $ do
   let buildNotLoggedIn = fmap (const $ notLoggedInWidget responses) deauthEvents
   let rebuildEvents = leftmost [buildLoggedIn,buildNotLoggedIn]
   liftM switchPromptlyDyn $ widgetHold initialWidget rebuildEvents
-  
 
-notLoggedInWidget :: MonadWidget t m => Event t Response -> Event t Request
+
+notLoggedInWidget :: MonadWidget t m => Event t Response -> m (Event t Request)
 notLoggedInWidget responses = el "div" $ do
   handleEntry <- do
     text "Handle:"

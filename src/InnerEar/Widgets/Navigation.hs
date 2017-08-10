@@ -30,9 +30,9 @@ navigationPage :: MonadWidget t m => Event t Response -> Navigation -> m (Event 
 
 navigationPage responses SplashPage = do
   w <- liftM (CreateUserPage <$) $ el "div" $ button "CreateUser"
-  y <- liftM (ExercisePage <$)  $ el "div" $ button "Exercise"
-  z <- liftM (TestPage <$)  $ el "div" $ button "Test"
-  let navEvents = leftmost [w,x,y,z]
+  x <- liftM (ExercisePage <$)  $ el "div" $ button "Exercise"
+  y <- liftM (TestPage <$)  $ el "div" $ button "Test"
+  let navEvents = leftmost [w,x,y]
   return (never,navEvents)
 
 navigationPage responses CreateUserPage = createUserWidget responses >>= mapNavEventsToSplashPage

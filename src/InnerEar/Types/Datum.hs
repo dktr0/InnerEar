@@ -7,7 +7,7 @@ data Datum =
   SessionStart |
   SessionEnd |
   Score Int
-  deriving (Show)
+  deriving (Show,Eq)
 
 instance JSON Datum where
   showJSON SessionStart = showJSON "SessionStart"

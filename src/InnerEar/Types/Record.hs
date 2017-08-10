@@ -7,7 +7,7 @@ import InnerEar.Types.Handle
 data Record = Record {
   handle :: Handle,
   point :: Point
-} deriving (Show)
+} deriving (Show,Eq)
 
 instance JSON Record where
   showJSON (Record h p) = encJSDict [("h",showJSON h),("p",showJSON p)]

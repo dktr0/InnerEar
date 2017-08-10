@@ -9,6 +9,7 @@ data Response =
   NotAuthenticated | -- signals that client is not authenticated as any handle
   Authenticated Handle | -- signals that client is successfully authenticated as the indicated handle
   Downloaded Record
+  deriving (Show,Eq)
 
 instance JSON Response where
   showJSON (NotAuthenticated) = showJSON "NotAuthenticated"
@@ -23,4 +24,4 @@ instance JSON Response where
 
 getHandleFromAuthenticated :: Response -> Maybe Handle
 getHandleFromAuthenticated (Authenticated h) = Just h
-getHandleFromAuthenticated = Nothing
+getHandleFromAuthenticated _ = Nothing
