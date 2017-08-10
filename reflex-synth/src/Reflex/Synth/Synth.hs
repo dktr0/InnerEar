@@ -6,16 +6,11 @@ import qualified Reflex.Synth.Foreign as F
 import Reflex.Dom
 import Control.Monad.IO.Class (liftIO)
 
+
 class WebAudio a where
   createGraph :: a -> IO WebAudioGraph
 
-data Filter = NoFilter |
-              PeakingFilter Double Double Double -- Frequency Q Gain
 
-type Duration = Double
-data Source = PinkNoise Duration | Tone Oscillator Duration
-
-data Sound = NoSynth | FilteredSound Source Filter
 
 
 

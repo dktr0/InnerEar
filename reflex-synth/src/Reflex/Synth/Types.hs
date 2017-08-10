@@ -9,6 +9,15 @@ data NoiseType = White | Pink | Brownian
 
 data NodeType = Filter FilterType | Gain | Destination | Noise NoiseType | Oscillator
 
+data Filter = NoFilter |
+              PeakingFilter Double Double Double -- Frequency Q Gain
+
+type Duration = Double
+
+data Source = PinkNoise Duration | Tone Oscillator Duration
+
+data Sound = NoSynth | FilteredSound Source Filter
+
 data Oscillator = Saw Double | Sine Double | Square Double
 
 instance Show Oscillator where
