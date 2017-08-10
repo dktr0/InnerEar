@@ -8,7 +8,7 @@ import InnerEar.Types.Request
 import InnerEar.Types.Response
 import Reflex.Synth.Synth
 import Reflex.Synth.Types
-import InnerEar.Widgets.Test
+import InnerEar.Widgets.Bars
 
 prototypeExercise :: MonadWidget t m
   => Event t [Response] -> m (Event t Request,Event t ())
@@ -20,5 +20,7 @@ prototypeExercise responses = el "div" $ do
   performSound $ leftmost [makeASound,makeASound', makeASound'']
   score <- count makeASound
   drawBar score
+  drawBar' score
+  drawBar''
   home <- button "back to splash page"
   return (never,home)
