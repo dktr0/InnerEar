@@ -11,15 +11,9 @@ class WebAudio a where
   createGraph :: a -> IO WebAudioGraph
 
 
-
-
-
 instance WebAudio Filter where
   createGraph (NoFilter) = createGain 1.0 >>= return . WebAudioGraph
-  --createGraph (PeakingFilter f q g) = createBiquadFilter f q g >>= return . WebAudioGraph
-  --createGraph (LowPassFilter f q g) = createBiquadFilter f q g >>= return . WebAudioGraph
   createGraph filt = createBiquadFilter filt >>= return . WebAudioGraph
-
 
 
 instance WebAudio Source where
@@ -29,7 +23,7 @@ instance WebAudio Source where
     let graph = WebAudioGraph' x (WebAudioGraph y)
     createGraph graph
   createGraph (OscillatorSource osc dur) = do
-    x <- createSaw
+    x <- createOscillator osc
     y <- createAsrEnvelope 0.005 dur 0.005
     let graph = WebAudioGraph' x (WebAudioGraph y)
     createGraph graph
@@ -44,41 +38,6 @@ instance WebAudio Sound where
     filt <- createGraph f
     let graph = WebAudioGraph'' source filt
     connectGraph graph
-
-
---createNode:: Source -> IO (WebAudioNode)
---createNode (PinkNoise dur) = do 
---  noise <- createPinkNoise
---  env <- createAsrEnvelope 0.05 dur 0.05
---  connect noise env
-
-
---instance WebAudio Synth where
---  createGraph (NoSynth) = return $ WebAudioGraph NullAudioNode
---  createGraph (Synth g d) = 
-
---instance WebAudio Synth where
---  createGraph (NoSynth) = return $ WebAudioGraph NullAudioNode
---  createGraph (FilteredSound s f) = do 
---    source <- createGraph 
---    filt <- createGraph f
---    connectGraphs source filt
---  createGraph (Synth s f) = do
---    let dur = case s of (PinkNoise a) -> a; otherwise -> 1 -- 1s default node length
---    x <- createGraph s
---    y <- createGraph f
---    env <- createAsrEnvelope 0.05 dur 0.05
---    dest <- getDestination
---    let graph = WebAudioGraph' x (WebAudioGraph' y (WebAudioGraph' env (WebAudioGraph dest)))
---    connectGraph graph
-    
-    --connect x y
-    --connect y env
-    --connectGraph env dest
-    --return $ WebAudioGraph' s (WebAudioGraph' f (WebAudioGraph env))
-
-
---data WebAudioNode = WebAudioNode NodeType JSVal | NullAudioNode
 
 createAudioContext::IO ()
 createAudioContext = F.createAudioContext
@@ -101,32 +60,6 @@ performSound event = do
 
 
 
---main::MonadWidget t m => IO()
---main = do 
---  F.createAudioContext
---  n <- createPinkNoise
---  dest <-F.getDestination
---  connect n dest
---  startNode n
-
-
-  --createNode :: a -> IO WebAudioNode
-
-
---startNode :: WebAudioNode -> IO ()
-
---createNode :: a -> IO WebAudioNode
-
---play::IO WebAudioNode -> IO WebAudioNode
-
---performEvent_ :: MonadWidget t m => Event t (WidgetHost m ()) -> m ()
-
---iftIO :: MonadIO m => IO a -> m a
-
---doHint :: WebDirt -> Hint -> IO ()
-
---performHint :: MonadWidget t m => WebDirt -> Event t Hint -> m ()
---performHint wd ev = performEvent_ $ fmap (liftIO . (doHint wd)) ev
 
 
 

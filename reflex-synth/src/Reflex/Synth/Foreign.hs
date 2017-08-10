@@ -3,20 +3,26 @@ module Reflex.Synth.Foreign where
 -- InnerEar.WebAudio.Foreign where
 
 import GHCJS.Types (JSVal)
+--import qualified GHCJS.Prim as Prim (toJSString)
+
 
 foreign import javascript safe "___ac = new AudioContext()" createAudioContext:: IO ()
 foreign import javascript safe "$r=___ac.destination" getDestination :: IO JSVal
 foreign import javascript safe "$1.connect($2)" connect :: JSVal -> JSVal -> IO ()
 foreign import javascript safe "$r=___ac.createGain()" createGain :: IO JSVal
 foreign import javascript safe "$r=___ac.createBiquadFilter()" createBiquadFilter :: IO JSVal
+
 foreign import javascript safe "$2.gain.value = $1" setGain :: Double -> JSVal -> IO ()
+foreign import javascript safe "$2.frequency.value = $1" setFrequency :: Double -> JSVal -> IO()
 
-foreign import javascript safe "$1.frequency.value = $2" setF :: JSVal -> Double -> IO()
-foreign import javascript safe "$1.Q.value = $2" setQ :: JSVal -> Double -> IO()
-foreign import javascript safe "$1.gain.value = $2" setFilterGain :: JSVal -> Double -> IO()
+foreign import javascript safe "$2.Q.value = $1" setFilterQ :: Double -> JSVal -> IO()
+foreign import javascript safe "$2.type = $1" setFilterType :: JSVal -> JSVal -> IO()
 
-foreign import javascript safe "$1.type = 'lowpass'" setFilterLowpass :: JSVal -> IO()
-foreign import javascript safe "$1.type = 'peaking'" setFilterPeaking :: JSVal -> IO()
+  --F.setFilterType (Prim.toJSString $ fmap toLower $ show filtType) y 
+
+
+--foreign import javascript safe "$1.type = 'lowpass'" setFilterLowpass :: JSVal -> IO()
+--foreign import javascript safe "$1.type = 'peaking'" setFilterPeaking :: JSVal -> IO()
 
 
 foreign import javascript safe "$r = ___ac.currentTime" getCurrentTime :: IO Double
@@ -30,10 +36,13 @@ foreign import javascript safe "$r=___ac.createBrownNoise()" createBrownianNoise
 
 foreign import javascript safe "$r=___ac.createOscillator()" createOscillator :: IO JSVal
 
+foreign import javascript safe "$2.type = $1" setOscillatorType :: JSVal -> JSVal -> IO()
 
 foreign import javascript safe "$1.type = 'sawtooth'" setOscillatorSaw :: JSVal -> IO ()
-foreign import javascript safe "$1.frequency.value = $2" setOscillatorFrequency :: JSVal -> Double -> IO ()
+foreign import javascript safe "$2.frequency.value = $1" setOscillatorFrequency :: Double -> JSVal -> IO ()
 
 
 
 foreign import javascript safe "$1.start()" startNode :: JSVal -> IO ()
+
+foreign import javascript safe "console.log($1)" consoleLog :: JSVal -> IO()

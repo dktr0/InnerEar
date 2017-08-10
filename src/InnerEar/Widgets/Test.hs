@@ -22,10 +22,10 @@ testWidget :: MonadWidget t m
   => Event t Response -> m (Event t Request,Event t ())
 testWidget responses = el "div" $ do
   text "testpage placeholder"
-  makeASound <- liftM ((FilteredSound (OscillatorSource (Oscillator Sawtooth 440) 2.0) (Filter Peaking 100.0 1.0 1.0)) <$) $ button "Peaking (100)"
-  makeASound' <- liftM ((FilteredSound (OscillatorSource (Oscillator Sawtooth 440) 2.0) (Filter Lowpass 100.0 1.0 1.0)) <$) $ button "Lowpass (100)"
-  performSound makeASound
-  performSound makeASound'
+  makeASound <- liftM ((FilteredSound (OscillatorSource (Oscillator Sawtooth 440) 2.0) (Filter Lowpass 100 1 1)) <$) $ button "Saw Lowpass 100 1 1"
+  makeASound' <- liftM ((FilteredSound (OscillatorSource (Oscillator Sawtooth 440) 2.0) (Filter Lowpass 200 1 1)) <$) $ button "Saw Lowpass 200 1 1"
+  makeASound'' <- liftM ((FilteredSound (OscillatorSource (Oscillator Sawtooth 440) 2.0) (Filter Peaking 400 1 1)) <$) $ button "Saw Peak 400 1 1"
+  performSound $ leftmost [makeASound,makeASound', makeASound'']
   home <- button "back to splash page"
   return (never,home)
 
