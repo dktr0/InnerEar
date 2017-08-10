@@ -68,6 +68,7 @@ processResult s i (Ok x) = processRequest s i x
 processRequest :: MVar Server -> ConnectionIndex -> Request -> IO ()
 processRequest s i (CreateUser h p) = withServer s $ createUser i h p
 processRequest s i (Authenticate h p) = withServer s $ authenticate i h p
+processRequest s i Deauthenticate = withServer s $ deauthenticate i
 processRequest s i (PostRecord r) = withServer s $ postRecord i r
 
 createUser :: ConnectionIndex -> Handle -> Password -> Server -> IO Server
@@ -95,6 +96,11 @@ authenticate i h p s = if userExists h s
   else do
     respond s i $ NotAuthenticated
     return s
+
+deauthenticate :: ConnectionIndex -> Server -> Server
+deauthenticate i s = do
+  respond s i $ NotAuthenticated
+  return $ deauthenticateConnection i s
 
 postRecord :: ConnectionIndex -> Record -> Server -> IO Server
 postRecord i r@(Record h p) s = if ok then doIt else dont

@@ -20,3 +20,7 @@ instance JSON Response where
   readJSON (JSObject x) | firstKey x == "Downloaded" = Downloaded <$> valFromObj "Downloaded" x
   readJSON (JSObject x) | otherwise = Error $ "Unable to parse JSObject as Response: " ++ (show x)
   readJSON _ = Error "Unable to parse non-JSObject as Response"
+
+getHandleFromAuthenticated :: Response -> Maybe Handle
+getHandleFromAuthenticated (Authenticated h) = Just h
+getHandleFromAuthenticated = Nothing

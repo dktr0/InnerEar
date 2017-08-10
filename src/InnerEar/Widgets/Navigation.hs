@@ -8,14 +8,12 @@ import Reflex.Dom
 import InnerEar.Types.Request
 import InnerEar.Types.Response
 import InnerEar.Widgets.CreateUser
-import InnerEar.Widgets.Login
 import InnerEar.Exercises.Prototype
 import InnerEar.Widgets.Test
 
 data Navigation =
   SplashPage |
   CreateUserPage |
-  LoginPage |
   ExercisePage |
   TestPage
 
@@ -32,16 +30,23 @@ navigationPage :: MonadWidget t m => Event t Response -> Navigation -> m (Event 
 
 navigationPage responses SplashPage = do
   w <- liftM (CreateUserPage <$) $ el "div" $ button "CreateUser"
-  x <- liftM (LoginPage <$)  $ el "div" $ button "Login"
   y <- liftM (ExercisePage <$)  $ el "div" $ button "Exercise"
   z <- liftM (TestPage <$)  $ el "div" $ button "Test"
   let navEvents = leftmost [w,x,y,z]
   return (never,navEvents)
 
 navigationPage responses CreateUserPage = createUserWidget responses >>= mapNavEventsToSplashPage
-navigationPage responses LoginPage = loginWidget responses >>= mapNavEventsToSplashPage
 navigationPage responses ExercisePage = prototypeExercise responses >>= mapNavEventsToSplashPage
 navigationPage responses TestPage = testWidget responses >>= mapNavEventsToSplashPage
 
 mapNavEventsToSplashPage :: MonadWidget t m => (a, Event t b) -> m (a, Event t Navigation)
 mapNavEventsToSplashPage (x,y) = return $ (x,SplashPage <$ y)
+
+
+{-
+exerciseToPage :: MonadWidget t m
+ => m (Event t Datum, Event t ())
+ -> (Event t Response -> m (Event t Point,Event t()))
+exerciseToPage w _ = do
+  (data,navEvents) <- w
+-}
