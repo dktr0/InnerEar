@@ -9,30 +9,26 @@ import Control.Monad.IO.Class (liftIO)
 class WebAudio a where
   createGraph :: a -> IO WebAudioGraph
 
-data Filter = NoFilter |
-              PeakingFilter Double Double Double -- Frequency Q Gain
-
-type Duration = Double
-data Source = PinkNoise Duration | Tone Oscillator Duration
-
-data Sound = NoSynth | FilteredSound Source Filter
-
-
-
 instance WebAudio Filter where
   createGraph (NoFilter) = createGain 1.0 >>= return . WebAudioGraph
-  createGraph (PeakingFilter f q g) = createPeakingFilter f q g >>= return . WebAudioGraph
+  createGraph filt = createBiquadFilter filt >>= return . WebAudioGraph
 
-
+instance WebAudio Buffer where
+  createGraph (File path) = createBufferNode (File path) >>= return . WebAudioGraph
 
 instance WebAudio Source where
-  createGraph (PinkNoise dur) = do
+  createGraph (PinkNoiseSource dur) = do
     x <- createPinkNoise
     y <- createAsrEnvelope 0.005 dur 0.005 
     let graph = WebAudioGraph' x (WebAudioGraph y)
     createGraph graph
-  createGraph (Tone osc dur) = do
-    x <- createSaw
+  createGraph (OscillatorSource osc dur) = do
+    x <- createOscillator osc
+    y <- createAsrEnvelope 0.005 dur 0.005
+    let graph = WebAudioGraph' x (WebAudioGraph y)
+    createGraph graph
+  createGraph (BufferSource b dur) = do
+    x <- createBufferNode b
     y <- createAsrEnvelope 0.005 dur 0.005
     let graph = WebAudioGraph' x (WebAudioGraph y)
     createGraph graph
@@ -48,41 +44,6 @@ instance WebAudio Sound where
     let graph = WebAudioGraph'' source filt
     connectGraph graph
 
-
---createNode:: Source -> IO (WebAudioNode)
---createNode (PinkNoise dur) = do 
---  noise <- createPinkNoise
---  env <- createAsrEnvelope 0.05 dur 0.05
---  connect noise env
-
-
---instance WebAudio Synth where
---  createGraph (NoSynth) = return $ WebAudioGraph NullAudioNode
---  createGraph (Synth g d) = 
-
---instance WebAudio Synth where
---  createGraph (NoSynth) = return $ WebAudioGraph NullAudioNode
---  createGraph (FilteredSound s f) = do 
---    source <- createGraph 
---    filt <- createGraph f
---    connectGraphs source filt
---  createGraph (Synth s f) = do
---    let dur = case s of (PinkNoise a) -> a; otherwise -> 1 -- 1s default node length
---    x <- createGraph s
---    y <- createGraph f
---    env <- createAsrEnvelope 0.05 dur 0.05
---    dest <- getDestination
---    let graph = WebAudioGraph' x (WebAudioGraph' y (WebAudioGraph' env (WebAudioGraph dest)))
---    connectGraph graph
-    
-    --connect x y
-    --connect y env
-    --connectGraph env dest
-    --return $ WebAudioGraph' s (WebAudioGraph' f (WebAudioGraph env))
-
-
---data WebAudioNode = WebAudioNode NodeType JSVal | NullAudioNode
-
 createAudioContext::IO ()
 createAudioContext = F.createAudioContext
 
@@ -94,8 +55,8 @@ createSound (FilteredSound s f) = do
   let graph = WebAudioGraph'' sourceNode (WebAudioGraph'' filterNode (WebAudioGraph dest))
   connectGraph graph
 
-performSynth:: MonadWidget t m => Event t Sound -> m ()
-performSynth event = do
+performSound:: MonadWidget t m => Event t Sound -> m ()
+performSound event = do
   let n = fmap (\e-> do 
                       graph <- createGraph e
                       startGraph graph
@@ -104,32 +65,6 @@ performSynth event = do
 
 
 
---main::MonadWidget t m => IO()
---main = do 
---  F.createAudioContext
---  n <- createPinkNoise
---  dest <-F.getDestination
---  connect n dest
---  startNode n
-
-
-  --createNode :: a -> IO WebAudioNode
-
-
---startNode :: WebAudioNode -> IO ()
-
---createNode :: a -> IO WebAudioNode
-
---play::IO WebAudioNode -> IO WebAudioNode
-
---performEvent_ :: MonadWidget t m => Event t (WidgetHost m ()) -> m ()
-
---iftIO :: MonadIO m => IO a -> m a
-
---doHint :: WebDirt -> Hint -> IO ()
-
---performHint :: MonadWidget t m => WebDirt -> Event t Hint -> m ()
---performHint wd ev = performEvent_ $ fmap (liftIO . (doHint wd)) ev
 
 
 
