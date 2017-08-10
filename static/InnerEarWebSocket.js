@@ -56,6 +56,7 @@ InnerEarWebSocket.prototype.connect = function() {
 InnerEarWebSocket.prototype.onMessage = function(m) {
    try {
      var n = JSON.parse(m.data);
+     console.log(n);
    }
    catch(e) {
      this.log("parsing exception in onMessage");

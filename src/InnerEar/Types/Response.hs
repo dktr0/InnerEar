@@ -1,6 +1,8 @@
 module InnerEar.Types.Response where
 
 import Text.JSON
+import Data.List (find)
+
 import InnerEar.Types.Utility
 import InnerEar.Types.Handle
 import InnerEar.Types.Record
@@ -25,3 +27,9 @@ instance JSON Response where
 getHandleFromAuthenticated :: Response -> Maybe Handle
 getHandleFromAuthenticated (Authenticated h) = Just h
 getHandleFromAuthenticated _ = Nothing
+
+lastAuthenticationRelatedResponse :: [Response] -> Maybe Response
+lastAuthenticationRelatedResponse = find f . reverse
+  where f (Authenticated x) = True
+        f (NotAuthenticated) = True
+        f _ = False

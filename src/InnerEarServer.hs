@@ -19,12 +19,13 @@ import InnerEar.Types.Server
 import InnerEar.Types.Handle
 import InnerEar.Types.Password
 import InnerEar.Types.Record
+import InnerEar.Types.User
 
 main = do
   putStrLn "Inner Ear server (listening on port 4468)"
-  let ourServer = newServer
+  let ourServer = newServer { users = Map.singleton "test" (newUser "test" "password") }
   server <- newMVar ourServer
-  WS.runServer "0.0.0.0" 8001 $ connectionHandler server
+  WS.runServer "0.0.0.0" 4468 $ connectionHandler server
 
 connectionHandler :: MVar Server -> WS.PendingConnection -> IO ()
 connectionHandler s ws = do
@@ -94,11 +95,13 @@ authenticate i h p s = if userExists h s
         respond s i $ NotAuthenticated
         return $ deauthenticateConnection i s
   else do
+    putStrLn $ "failure to authenticate as non-existent user " ++ h
     respond s i $ NotAuthenticated
     return s
 
-deauthenticate :: ConnectionIndex -> Server -> Server
+deauthenticate :: ConnectionIndex -> Server -> IO Server
 deauthenticate i s = do
+  putStrLn $ "deauthenticating connection " ++ (show i)
   respond s i $ NotAuthenticated
   return $ deauthenticateConnection i s
 
@@ -122,4 +125,4 @@ respond :: Server -> ConnectionIndex -> Response -> IO ()
 respond s i x = WS.sendTextData c t
   where
     c = fst $ (Map.! i) $ (connections s)
-    t = T.pack $ encodeStrict x
+    t = T.pack $ encode x

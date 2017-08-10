@@ -13,19 +13,21 @@ import InnerEar.Types.Handle
 -- is logged in it displays that, as well as a button to log out.
 
 loginWidget :: MonadWidget t m
-  => Event t Response -> m (Event t Request)
+  => Event t [Response] -> m (Event t Request)
 loginWidget responses = el "div" $ do
+  let lastResponse = fmapMaybe lastAuthenticationRelatedResponse responses
   let initialWidget = notLoggedInWidget responses
-  let authEvents = fmapMaybe getHandleFromAuthenticated responses
+  let authEvents = fmapMaybe getHandleFromAuthenticated lastResponse
   let buildLoggedIn = fmap (loggedInWidget responses) authEvents
-  let deauthEvents = ffilter (==NotAuthenticated) responses
+  let deauthEvents = ffilter (==NotAuthenticated) lastResponse
   let buildNotLoggedIn = fmap (const $ notLoggedInWidget responses) deauthEvents
   let rebuildEvents = leftmost [buildLoggedIn,buildNotLoggedIn]
   liftM switchPromptlyDyn $ widgetHold initialWidget rebuildEvents
 
 
-notLoggedInWidget :: MonadWidget t m => Event t Response -> m (Event t Request)
+notLoggedInWidget :: MonadWidget t m => Event t [Response] -> m (Event t Request)
 notLoggedInWidget responses = el "div" $ do
+  let lastResponse = fmapMaybe lastAuthenticationRelatedResponse responses
   handleEntry <- do
     text "Handle:"
     let attrs = constDyn ("class" =: "webSocketTextInputs")
@@ -36,14 +38,14 @@ notLoggedInWidget responses = el "div" $ do
     liftM _textInput_value $ textInput $ def & textInputConfig_inputType .~ "password" & textInputConfig_attributes .~ attrs
   loginButton <- button "Login"
   -- when they fail to authenticate, display a message to that effect
-  let deauthEvent = ffilter (==NotAuthenticated) responses
+  let deauthEvent = ffilter (==NotAuthenticated) lastResponse
   deauthText <- holdDyn "" $ fmap (const " Incorrect login!") deauthEvent
   dynText deauthText
   loginValue <- combineDyn Authenticate handleEntry passwordEntry
   return $ tagDyn loginValue loginButton
 
 
-loggedInWidget :: MonadWidget t m => Event t Response -> Handle -> m (Event t Request)
+loggedInWidget :: MonadWidget t m => Event t [Response] -> Handle -> m (Event t Request)
 loggedInWidget _ h = el "div" $ do
   text $ "Logged in as " ++ h
   liftM (Deauthenticate <$) $ button "Logout"

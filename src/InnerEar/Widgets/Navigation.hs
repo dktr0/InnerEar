@@ -18,7 +18,7 @@ data Navigation =
   TestPage |
   TestSoundPage
 
-navigationWidget :: MonadWidget t m => Event t Response -> m (Event t Request)
+navigationWidget :: MonadWidget t m => Event t [Response] -> m (Event t Request)
 navigationWidget responses = mdo
   let initialPage = navigationPage responses SplashPage
   let rebuild = fmap (navigationPage responses) navEvents
@@ -27,7 +27,7 @@ navigationWidget responses = mdo
   navEvents <- liftM switchPromptlyDyn $ mapDyn snd w
   return requests
 
-navigationPage :: MonadWidget t m => Event t Response -> Navigation -> m (Event t Request,Event t Navigation)
+navigationPage :: MonadWidget t m => Event t [Response] -> Navigation -> m (Event t Request,Event t Navigation)
 
 navigationPage responses SplashPage = do
   w <- liftM (CreateUserPage <$) $ el "div" $ button "CreateUser"

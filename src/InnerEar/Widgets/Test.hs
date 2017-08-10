@@ -20,7 +20,7 @@ import Control.Monad
 
 
 testWidget :: MonadWidget t m
-  => Event t Response -> m (Event t Request,Event t ())
+  => Event t [Response] -> m (Event t Request,Event t ())
 testWidget responses = el "div" $ do
   text "testpage placeholder"
   makeASound <- liftM ((FilteredSound (BufferSource (File "pinknoise.wav") 2.0) (Filter Peaking 100 1 1)) <$) $ button "Pinknoise Peak 400 1 1"
@@ -31,7 +31,7 @@ testWidget responses = el "div" $ do
   return (never,home)
 
 
-testSoundWidget::MonadWidget t m => Event t Response -> m (Event t Request, Event t ())
+testSoundWidget::MonadWidget t m => Event t [Response] -> m (Event t Request, Event t ())
 testSoundWidget _ = el "div" $ do
   let attrs = constDyn $ M.fromList $ zip ["cols"] ["80"]
   x <- textArea $ def & textAreaConfig_attributes .~ attrs
@@ -39,7 +39,7 @@ testSoundWidget _ = el "div" $ do
   let text = _textArea_value x
   maybeSound <- mapDyn (\y->maybe NoSound id (readMaybe y::Maybe Sound)) text --dyn Maybe Sound
   --holdDyn "noChange" (fmap show (updated maybeSound)) >>= dynText
-  --let ev = fmap fromJust $ ffilter isJust $ updated maybeSound 
+  --let ev = fmap fromJust $ ffilter isJust $ updated maybeSound
   -- <- mapDyn (\x-> if isJust x then fromJust x else NoSound maybeSound) maybeSound
   mapDyn show maybeSound >>= dynText
   performSound $ tagDyn maybeSound eval

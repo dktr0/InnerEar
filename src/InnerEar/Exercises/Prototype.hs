@@ -11,7 +11,7 @@ import Reflex.Synth.Types
 import InnerEar.Widgets.Test
 
 prototypeExercise :: MonadWidget t m
-  => Event t Response -> m (Event t Request,Event t ())
+  => Event t [Response] -> m (Event t Request,Event t ())
 prototypeExercise responses = el "div" $ do
   text "prototype exercise placeholder"
   makeASound <- liftM ((FilteredSound (BufferSource (File "pinknoise.wav") 2.0) (Filter Peaking 100 1 1)) <$) $ button "Pinknoise Peak 100 1 1"
