@@ -5,24 +5,24 @@ import qualified Reflex.Synth.Foreign as F
 import Data.Char (toLower)
 import qualified GHCJS.Prim as Prim (toJSString)
 
-data FilterType = Peaking | Lowpass deriving (Show)
+data FilterType = Peaking | Lowpass deriving (Show,Read)
 
 data NoiseType = White | Pink | Brownian
 
 data NodeType = FilterNode FilterType | GainNode | Destination | NoiseNode NoiseType | OscillatorNode Oscillator | BufferNode Buffer
 
-data Filter = NoFilter | Filter FilterType Double Double Double
+data Filter = NoFilter | Filter FilterType Double Double Double deriving (Read,Show)
 
-data OscillatorType = Sawtooth | Sine | Square deriving (Show)
-data Oscillator = Oscillator OscillatorType Double --The Double is oscillator frequency
+data OscillatorType = Sawtooth | Sine | Square deriving (Show, Read)
+data Oscillator = Oscillator OscillatorType Double deriving (Read,Show) --The Double is oscillator frequency
 
-data Buffer = File String
+data Buffer = File String deriving (Read,Show)
 
 type Duration = Double
-data Source = PinkNoiseSource Duration | OscillatorSource Oscillator Duration | BufferSource Buffer Duration
+data Source = PinkNoiseSource Duration | OscillatorSource Oscillator Duration | BufferSource Buffer Duration deriving(Read,Show)
 
 
-data Sound = NoSynth | FilteredSound Source Filter
+data Sound = NoSound | FilteredSound Source Filter deriving (Read,Show)
 
 data WebAudioNode = WebAudioNode NodeType JSVal | NullAudioNode
 

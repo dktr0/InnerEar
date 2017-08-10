@@ -17,7 +17,8 @@ data Navigation =
   CreateUserPage |
   LoginPage |
   ExercisePage |
-  TestPage
+  TestPage |
+  TestSoundPage
 
 navigationWidget :: MonadWidget t m => Event t Response -> m (Event t Request)
 navigationWidget responses = mdo
@@ -35,13 +36,17 @@ navigationPage responses SplashPage = do
   x <- liftM (LoginPage <$)  $ el "div" $ button "Login"
   y <- liftM (ExercisePage <$)  $ el "div" $ button "Exercise"
   z <- liftM (TestPage <$)  $ el "div" $ button "Test"
-  let navEvents = leftmost [w,x,y,z]
+  z2 <- liftM (TestSoundPage <$) $ el "div" $ button "Test Sound"
+  let navEvents = leftmost [w,x,y,z,z2]
   return (never,navEvents)
 
 navigationPage responses CreateUserPage = createUserWidget responses >>= mapNavEventsToSplashPage
 navigationPage responses LoginPage = loginWidget responses >>= mapNavEventsToSplashPage
 navigationPage responses ExercisePage = prototypeExercise responses >>= mapNavEventsToSplashPage
 navigationPage responses TestPage = testWidget responses >>= mapNavEventsToSplashPage
+navigationPage responses TestSoundPage = testSoundWidget responses >>= mapNavEventsToSplashPage
+
+
 
 mapNavEventsToSplashPage :: MonadWidget t m => (a, Event t b) -> m (a, Event t Navigation)
 mapNavEventsToSplashPage (x,y) = return $ (x,SplashPage <$ y)
