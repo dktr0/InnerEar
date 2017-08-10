@@ -6,15 +6,15 @@ import qualified Reflex.Synth.Foreign as F
 import Reflex.Dom
 import Control.Monad.IO.Class (liftIO)
 
-
 class WebAudio a where
   createGraph :: a -> IO WebAudioGraph
-
 
 instance WebAudio Filter where
   createGraph (NoFilter) = createGain 1.0 >>= return . WebAudioGraph
   createGraph filt = createBiquadFilter filt >>= return . WebAudioGraph
 
+instance WebAudio Buffer where
+  createGraph (File path) = createBufferNode (File path) >>= return . WebAudioGraph
 
 instance WebAudio Source where
   createGraph (PinkNoiseSource dur) = do
@@ -24,6 +24,11 @@ instance WebAudio Source where
     createGraph graph
   createGraph (OscillatorSource osc dur) = do
     x <- createOscillator osc
+    y <- createAsrEnvelope 0.005 dur 0.005
+    let graph = WebAudioGraph' x (WebAudioGraph y)
+    createGraph graph
+  createGraph (BufferSource b dur) = do
+    x <- createBufferNode b
     y <- createAsrEnvelope 0.005 dur 0.005
     let graph = WebAudioGraph' x (WebAudioGraph y)
     createGraph graph

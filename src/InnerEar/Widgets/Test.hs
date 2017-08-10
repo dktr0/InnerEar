@@ -17,14 +17,13 @@ import Reflex.Synth.Synth
 import Control.Monad
 
 
-
 testWidget :: MonadWidget t m
   => Event t Response -> m (Event t Request,Event t ())
 testWidget responses = el "div" $ do
   text "testpage placeholder"
-  makeASound <- liftM ((FilteredSound (OscillatorSource (Oscillator Sawtooth 440) 2.0) (Filter Lowpass 100 1 1)) <$) $ button "Saw Lowpass 100 1 1"
-  makeASound' <- liftM ((FilteredSound (OscillatorSource (Oscillator Sawtooth 440) 2.0) (Filter Lowpass 200 1 1)) <$) $ button "Saw Lowpass 200 1 1"
-  makeASound'' <- liftM ((FilteredSound (OscillatorSource (Oscillator Sawtooth 440) 2.0) (Filter Peaking 400 1 1)) <$) $ button "Saw Peak 400 1 1"
+  makeASound <- liftM ((FilteredSound (BufferSource (File "pinknoise.wav") 2.0) (Filter Peaking 100 1 1)) <$) $ button "Pinknoise Peak 400 1 1"
+  makeASound' <- liftM ((FilteredSound (BufferSource (File "pinknoise.wav") 2.0) (Filter Peaking 400 1 1)) <$) $ button "Pinknoise Peak 400 1 1"
+  makeASound'' <- liftM ((FilteredSound (BufferSource (File "pinknoise.wav") 2.0) (Filter Peaking 900 1 1)) <$) $ button "Pinknoise Peak 400 1 1"
   performSound $ leftmost [makeASound,makeASound', makeASound'']
   home <- button "back to splash page"
   return (never,home)

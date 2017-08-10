@@ -9,19 +9,24 @@ data FilterType = Peaking | Lowpass deriving (Show)
 
 data NoiseType = White | Pink | Brownian
 
-data NodeType = FilterNode FilterType | GainNode | Destination | NoiseNode NoiseType | OscillatorNode Oscillator
+data NodeType = FilterNode FilterType | GainNode | Destination | NoiseNode NoiseType | OscillatorNode Oscillator | BufferNode Buffer
 
 data Filter = NoFilter | Filter FilterType Double Double Double
 
 data OscillatorType = Sawtooth | Sine | Square deriving (Show)
 data Oscillator = Oscillator OscillatorType Double --The Double is oscillator frequency
 
+data Buffer = File String
+
 type Duration = Double
-data Source = PinkNoiseSource Duration | OscillatorSource Oscillator Duration
+data Source = PinkNoiseSource Duration | OscillatorSource Oscillator Duration | BufferSource Buffer Duration
+
 
 data Sound = NoSynth | FilteredSound Source Filter
 
 data WebAudioNode = WebAudioNode NodeType JSVal | NullAudioNode
+
+
 
 -- For representing WebAudio Graphs - to be understood as hooking up a sequence of 'nodes' (or ugens)
 -- for instance, the web audio graph:
@@ -30,19 +35,11 @@ data WebAudioNode = WebAudioNode NodeType JSVal | NullAudioNode
 -- would be represented (roughly) as: WebAudioGraph' oscillator (WebAudioGraph' gain (WebAudioGraph compressor))
 data WebAudioGraph = WebAudioGraph WebAudioNode | WebAudioGraph' WebAudioNode WebAudioGraph | WebAudioGraph'' WebAudioGraph WebAudioGraph
 
-
---createSaw :: IO WebAudioNode
---createSaw = do
---  osc <- F.createOscillator
---  F.setOscillatorSaw osc
---  F.setOscillatorFrequency 220 osc
---  return (WebAudioNode (OscillatorNode $ Oscillator Sawtooth 220) osc)
-
 createOscillator :: Oscillator -> IO WebAudioNode
 createOscillator (Oscillator t freq) = do
   osc <- F.createOscillator
   F.setOscillatorType (Prim.toJSString $ fmap toLower $ show t) osc  -- Web Audio won't accept 'Sine' must be 'sine'
-  F.setOscillatorFrequency freq osc
+  F.setFrequency freq osc
   return (WebAudioNode (OscillatorNode $ Oscillator t freq) osc)
 
 createGain :: Double -> IO WebAudioNode
@@ -62,6 +59,13 @@ createBiquadFilter (Filter filtType f q g) = do
   setGain g y
   setFilterType filtType y
   return y
+
+
+createBufferNode :: Buffer -> IO WebAudioNode
+createBufferNode (File path) = do
+  x <- F.createAudioBufferSourceNode (Prim.toJSString path)
+  return (WebAudioNode (BufferNode $ File path) x)
+
 
 createWhiteNoise :: IO WebAudioNode
 createWhiteNoise = F.createWhiteNoise >>= return . WebAudioNode (NoiseNode White)

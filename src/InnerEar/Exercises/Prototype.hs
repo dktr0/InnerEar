@@ -14,8 +14,10 @@ prototypeExercise :: MonadWidget t m
   => Event t Response -> m (Event t Request,Event t ())
 prototypeExercise responses = el "div" $ do
   text "prototype exercise placeholder"
-  makeASound <- liftM ((FilteredSound (OscillatorSource (Oscillator Sawtooth 440) 2.0) (Filter Peaking 100.0 1.0 1.0)) <$) $ button "Make A Sound"
-  performSound makeASound
+  makeASound <- liftM ((FilteredSound (BufferSource (File "pinknoise.wav") 2.0) (Filter Peaking 100 1 1)) <$) $ button "Pinknoise Peak 100 1 1"
+  makeASound' <- liftM ((FilteredSound (BufferSource (File "pinknoise.wav") 2.0) (Filter Peaking 400 1 1)) <$) $ button "Pinknoise Peak 400 1 1"
+  makeASound'' <- liftM ((FilteredSound (BufferSource (File "pinknoise.wav") 2.0) (Filter Peaking 900 1 1)) <$) $ button "Pinknoise Peak 900 1 1"
+  performSound $ leftmost [makeASound,makeASound', makeASound'']
   score <- count makeASound
   drawBar score
   home <- button "back to splash page"
