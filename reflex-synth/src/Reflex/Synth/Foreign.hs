@@ -15,6 +15,10 @@ foreign import javascript safe "$1.frequency.value = $2" setF :: JSVal -> Double
 foreign import javascript safe "$1.Q.value = $2" setQ :: JSVal -> Double -> IO()
 foreign import javascript safe "$1.gain.value = $2" setFilterGain :: JSVal -> Double -> IO()
 
+foreign import javascript safe "$1.type = 'lowpass'" setFilterLowpass :: JSVal -> IO()
+foreign import javascript safe "$1.type = 'peaking'" setFilterPeaking :: JSVal -> IO()
+
+
 foreign import javascript safe "$r = ___ac.currentTime" getCurrentTime :: IO Double
 
 foreign import javascript safe "$3.gain.setValueAtTime($1,$2)" setGainAtTime :: Double -> Double -> JSVal-> IO ()

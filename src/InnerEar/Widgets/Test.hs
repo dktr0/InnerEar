@@ -22,8 +22,10 @@ testWidget :: MonadWidget t m
   => Event t Response -> m (Event t Request,Event t ())
 testWidget responses = el "div" $ do
   text "testpage placeholder"
-  makeASound <- liftM ((FilteredSound (Tone (Saw 440) 2.0) (PeakingFilter 100.0 1.0 1.0)) <$) $ button "Make A Sound"
-  performSynth makeASound
+  makeASound <- liftM ((FilteredSound (OscillatorSource (Oscillator Sawtooth 440) 2.0) (Filter Peaking 100.0 1.0 1.0)) <$) $ button "Peaking (100)"
+  makeASound' <- liftM ((FilteredSound (OscillatorSource (Oscillator Sawtooth 440) 2.0) (Filter Lowpass 100.0 1.0 1.0)) <$) $ button "Lowpass (100)"
+  performSound makeASound
+  performSound makeASound'
   home <- button "back to splash page"
   return (never,home)
 

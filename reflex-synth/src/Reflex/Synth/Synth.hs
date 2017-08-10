@@ -16,17 +16,19 @@ class WebAudio a where
 
 instance WebAudio Filter where
   createGraph (NoFilter) = createGain 1.0 >>= return . WebAudioGraph
-  createGraph (PeakingFilter f q g) = createPeakingFilter f q g >>= return . WebAudioGraph
+  --createGraph (PeakingFilter f q g) = createBiquadFilter f q g >>= return . WebAudioGraph
+  --createGraph (LowPassFilter f q g) = createBiquadFilter f q g >>= return . WebAudioGraph
+  createGraph filt = createBiquadFilter filt >>= return . WebAudioGraph
 
 
 
 instance WebAudio Source where
-  createGraph (PinkNoise dur) = do
+  createGraph (PinkNoiseSource dur) = do
     x <- createPinkNoise
     y <- createAsrEnvelope 0.005 dur 0.005 
     let graph = WebAudioGraph' x (WebAudioGraph y)
     createGraph graph
-  createGraph (Tone osc dur) = do
+  createGraph (OscillatorSource osc dur) = do
     x <- createSaw
     y <- createAsrEnvelope 0.005 dur 0.005
     let graph = WebAudioGraph' x (WebAudioGraph y)
@@ -89,8 +91,8 @@ createSound (FilteredSound s f) = do
   let graph = WebAudioGraph'' sourceNode (WebAudioGraph'' filterNode (WebAudioGraph dest))
   connectGraph graph
 
-performSynth:: MonadWidget t m => Event t Sound -> m ()
-performSynth event = do
+performSound:: MonadWidget t m => Event t Sound -> m ()
+performSound event = do
   let n = fmap (\e-> do 
                       graph <- createGraph e
                       startGraph graph

@@ -14,8 +14,8 @@ prototypeExercise :: MonadWidget t m
   => Event t Response -> m (Event t Request,Event t ())
 prototypeExercise responses = el "div" $ do
   text "prototype exercise placeholder"
-  makeASound <- liftM ((FilteredSound (Tone (Saw 440) 2.0) (PeakingFilter 100.0 1.0 1.0)) <$) $ button "Make A Sound"
-  performSynth makeASound
+  makeASound <- liftM ((FilteredSound (OscillatorSource (Oscillator Sawtooth 440) 2.0) (Filter Peaking 100.0 1.0 1.0)) <$) $ button "Make A Sound"
+  performSound makeASound
   score <- count makeASound
   drawBar score
   home <- button "back to splash page"

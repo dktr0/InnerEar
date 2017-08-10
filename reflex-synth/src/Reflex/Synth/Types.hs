@@ -3,29 +3,32 @@ module Reflex.Synth.Types where
 import GHCJS.Types (JSVal)
 import qualified Reflex.Synth.Foreign as F
 
-data FilterType = Peaking
+data FilterType = Peaking | Lowpass
 
 data NoiseType = White | Pink | Brownian
 
-data NodeType = Filter FilterType | Gain | Destination | Noise NoiseType | Oscillator
+data NodeType = FilterNode FilterType | GainNode | Destination | NoiseNode NoiseType | OscillatorNode Oscillator
 
-data Filter = NoFilter |
-              PeakingFilter Double Double Double -- Frequency Q Gain
+--data Filter = NoFilter |
+--              PeakingFilter Double Double Double -- Frequency Q Gain
+
+data Filter = NoFilter | Filter FilterType Double Double Double
 
 type Duration = Double
 
-data Source = PinkNoise Duration | Tone Oscillator Duration
+data Source = PinkNoiseSource Duration | OscillatorSource Oscillator Duration
 
 data Sound = NoSynth | FilteredSound Source Filter
 
-data Oscillator = Saw Double | Sine Double | Square Double
+--data Oscillator = Saw Double | Sine Double | Square Double
 
-instance Show Oscillator where
-  show (Saw _) = "saw"
-  show (Sine _) = "sine"
-  show (Square _) = "square"
+data Oscillator = Oscillator OscillatorType Double --The Double is oscillator frequency
+
+data OscillatorType = Sawtooth | Sine | Square deriving (Show)
 
 data WebAudioNode = WebAudioNode NodeType JSVal | NullAudioNode
+
+
 
 -- JSVal is a reference to the node furthest down the 'chain' of connected nodes
 -- for instance the Web Audio code:
@@ -43,7 +46,9 @@ createSaw = do
   osc <- F.createOscillator
   F.setOscillatorSaw osc
   F.setOscillatorFrequency osc 220
-  return (WebAudioNode (Oscillator) osc)
+  return (WebAudioNode (OscillatorNode $ Oscillator Sawtooth 220) osc)
+
+
 
 getFirstNode:: WebAudioGraph -> WebAudioNode
 getFirstNode (WebAudioGraph n) = n
@@ -111,53 +116,82 @@ connectGraph (WebAudioGraph'' a b) = do
 --  return (WebAudioGraph ())
 
 setGain :: Double -> WebAudioNode -> IO ()
-setGain g (WebAudioNode Gain x) = F.setGain g x
+setGain g (WebAudioNode GainNode x) = F.setGain g x
 setGain _ _ = error "can't set gain value of node not of type Gain"
 
 createGain :: Double -> IO WebAudioNode
 createGain g = do
   x <- F.createGain
-  setGain g (WebAudioNode Gain x)
-  return (WebAudioNode Gain x)
+  setGain g (WebAudioNode GainNode x)
+  return (WebAudioNode GainNode x)
 
-createBiquadFilter :: IO WebAudioNode
-createBiquadFilter = F.createBiquadFilter >>= return . WebAudioNode (Filter Peaking) 
+--createBiquadFilter :: IO WebAudioNode
+--createBiquadFilter = F.createBiquadFilter >>= return . WebAudioNode (FilterNode Peaking) 
 
-createPeakingFilter :: Double -> Double -> Double -> IO WebAudioNode
-createPeakingFilter f q g = do
+--createPeakingFilter :: Double -> Double -> Double -> IO WebAudioNode
+--createPeakingFilter f q g = do
+--  x <- F.createBiquadFilter
+--  let y = WebAudioNode (FilterNode Peaking) x
+--  setFilterF f y
+--  setFilterQ q y
+--  setFilterGain g y
+--  return y
+
+
+createBiquadFilter:: Filter -> IO WebAudioNode
+createBiquadFilter (NoFilter) = createGain 1
+createBiquadFilter (Filter filtType f q g) = do
   x <- F.createBiquadFilter
-  let y = WebAudioNode (Filter Peaking) x
+  let y = WebAudioNode (FilterNode filtType) x
   setFilterF f y
   setFilterQ q y
   setFilterGain g y
+  setFilterType filtType y 
   return y
 
+--createFilter:: FilterType -> Double -> Double -> Double -> IO(WebAudioNode)
+--createFilter filtType f q g = do
+--  x <- F.createBiquadFilter
+--  let y = WebAudioNode (FilterNode filtType) x
+--  setFilterF f y
+--  setFilterQ q y
+--  setFilterGain g y
+--  setFilterType filtType y 
+--  return y
+
+
 setFilterF :: Double -> WebAudioNode -> IO ()
-setFilterF f (WebAudioNode (Filter _) x) = do
+setFilterF f (WebAudioNode (FilterNode _) x) = do
   F.setF x f
   return ()
 setFilterF _ _ = error "can't setFilterF on non-filter"
 
 setFilterQ :: Double -> WebAudioNode -> IO ()
-setFilterQ q (WebAudioNode (Filter _) x) = do
+setFilterQ q (WebAudioNode (FilterNode _) x) = do
   F.setQ x q
   return ()
 setFilterQ _ _ = error "can't setFilterQ on non-filter"
 
 setFilterGain :: Double -> WebAudioNode -> IO ()
-setFilterGain g (WebAudioNode (Filter _) x) = do
+setFilterGain g (WebAudioNode (FilterNode _) x) = do
   F.setFilterGain x g
   return ()
 setFilterGain _ _ = error "can't setFilterGain on non-filter"
 
+setFilterType:: FilterType -> WebAudioNode -> IO ()
+setFilterType (Peaking) (WebAudioNode (FilterNode _) x) = F.setFilterPeaking x
+setFilterType (Lowpass) (WebAudioNode (FilterNode _) x) = F.setFilterLowpass x
+--  @Finish for rest of filter types
+setFilterType a _ = error "can't set filter type of a non-filter node"
+
 createWhiteNoise :: IO WebAudioNode
-createWhiteNoise = F.createWhiteNoise >>= return . WebAudioNode (Noise White)
+createWhiteNoise = F.createWhiteNoise >>= return . WebAudioNode (NoiseNode White)
 
 createPinkNoise :: IO WebAudioNode
-createPinkNoise = F.createPinkNoise >>= return . WebAudioNode (Noise Pink)
+createPinkNoise = F.createPinkNoise >>= return . WebAudioNode (NoiseNode Pink)
 
 createBrownianNoise :: IO WebAudioNode
-createBrownianNoise = F.createBrownianNoise >>= return . WebAudioNode (Noise Brownian)
+createBrownianNoise = F.createBrownianNoise >>= return . WebAudioNode (NoiseNode Brownian)
 
 createAsrEnvelope :: Double -> Double -> Double -> IO WebAudioNode
 createAsrEnvelope a s r = do
