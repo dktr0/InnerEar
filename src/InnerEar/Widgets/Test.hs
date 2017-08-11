@@ -1,7 +1,3 @@
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE OverloadedLists       #-}
-{-# LANGUAGE TemplateHaskell       #-}
-
 module InnerEar.Widgets.Test where
 
 import Reflex
@@ -20,7 +16,7 @@ import Control.Monad
 
 
 testWidget :: MonadWidget t m
-  => Event t Response -> m (Event t Request,Event t ())
+  => Event t [Response] -> m (Event t Request,Event t ())
 testWidget responses = el "div" $ do
   text "testpage placeholder"
   makeASound <- liftM ((FilteredSound (BufferSource (File "pinknoise.wav") 2.0) (Filter Peaking 100 1 1)) <$) $ button "Pinknoise Peak 400 1 1"
@@ -30,9 +26,9 @@ testWidget responses = el "div" $ do
   home <- button "back to splash page"
   return (never,home)
 
--- Do Not delete!
 
-testSoundWidget::MonadWidget t m => Event t Response -> m (Event t Request, Event t ())
+-- Do not delete!
+testSoundWidget::MonadWidget t m => Event t [Response] -> m (Event t Request, Event t ())
 testSoundWidget _ = el "div" $ do
   let attrs = constDyn $ M.fromList $ zip ["cols"] ["80"]
   x <- textArea $ def & textAreaConfig_attributes .~ attrs
@@ -43,18 +39,6 @@ testSoundWidget _ = el "div" $ do
   performSound $ tagDyn maybeSound eval
   home <- button "back to splash page"
   return (never,home)
-
-
-
-
-
-  --let order = (take 10 $ randomRs (0,9) (mkStdGen 6)) :: [Int]
-  --let sounds = zip [0..] $ fmap (FilteredSound (BufferSource (File "pinknoise.wav") 2.0)) filters
-  --playButton <- button "Play Sound"
-  --nextButtonCount <- button "Next sound" >>= count
-  --sound <- mapDyn (\x-> fromJust $ M.lookup order!!(mod x 10) sounds) nextButtonCount
-  --mapDyn show sound >>=dynText
-  --performSound $ tagDyn sound playButton
 
 
 drawBar ::  MonadWidget t m =>  Dynamic t Int -> m ()

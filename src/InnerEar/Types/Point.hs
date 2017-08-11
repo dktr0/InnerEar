@@ -11,7 +11,7 @@ type Time = UTCTime
 data Point = Point {
   time :: Time,
   datum :: Datum
-}
+} deriving (Eq)
 
 instance JSON Point where
   showJSON (Point t d) = encJSDict [("t",showJSON "notrecordingtime-needtofinishthislater"),("d",showJSON d)]
