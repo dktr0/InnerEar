@@ -17,5 +17,5 @@ executable InnerEarServer
   hs-source-dirs:    ../src
   main-is:           InnerEarServer.hs
   build-depends:     base, containers, text, json, websockets, time,
-                     HDBC-sqlite3, wai-websockets
+                     wai, warp, wai-websockets, http-types
   default-language:  Haskell2010

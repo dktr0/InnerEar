@@ -1,6 +1,11 @@
+{-# LANGUAGE OverloadedStrings #-}
 module Main where
 
 import qualified Network.WebSockets as WS
+import qualified Network.Wai as WS
+import qualified Network.Wai.Handler.WebSockets as WS
+import Network.Wai.Handler.Warp (run)
+import Network.HTTP.Types (status200,status404)
 import Text.JSON
 import Data.Map
 import Data.Text (Text)
@@ -24,11 +29,18 @@ import InnerEar.Types.User
 main = do
   putStrLn "Inner Ear server (listening on port 4468)"
   let ourServer = newServer
-  server <- newMVar ourServer
-  WS.runServer "0.0.0.0" 4468 $ connectionHandler server
+  s <- newMVar ourServer
+  -- WS.runServer "0.0.0.0" 4468 $ connectionHandler server
+  run 4468 $ WS.websocketsOr WS.defaultConnectionOptions (webSocketsApp s) staticApp
 
-connectionHandler :: MVar Server -> WS.PendingConnection -> IO ()
-connectionHandler s ws = do
+staticApp :: WS.Application -- = Request -> (Response -> IO ResponseReceived) -> IO ResponseReceived
+staticApp req respond = respond $ case WS.rawPathInfo req of
+  "/" -> WS.responseFile status200 [("Content-Type","text/plain")] "index.html" Nothing
+  "/index.html" -> WS.responseFile status200 [("Content-Type","text/plain")] "index.html" Nothing
+  _ -> WS.responseLBS status404 [("Content-Type","text/plain")] "404 - Not Found"
+
+webSocketsApp :: MVar Server -> WS.ServerApp -- = PendingConnection -> IO ()
+webSocketsApp s ws = do
   putStrLn "received new connection"
   ws' <- WS.acceptRequest ws
   ss <- takeMVar s
