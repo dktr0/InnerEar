@@ -13,13 +13,18 @@ import InnerEar.Types.Utility
 -- set of text fields and button if the user is not logged in. If the user
 -- is logged in it displays that, as well as a button to log out.
 
+-- needs to only rebuild when status changes!!!
+
 loginWidget :: MonadWidget t m
   => Event t [Response] -> m (Event t Request)
 loginWidget responses = el "div" $ do
   let initialWidget = notLoggedInWidget responses
-  let authEvents = fmapMaybe getHandleFromAuthenticated $ fmapMaybe (lastWithPredicate (isAuthenticated)) responses
+  let p x = ( x == NotAuthenticated || isAuthenticated x)
+  let newStatus = fmapMaybe (lastWithPredicate p) responses
+  status <- updated <$> nubDyn <$> holdDyn (NotAuthenticated) newStatus
+  let authEvents = fmapMaybe getHandleFromAuthenticated $ ffilter (isAuthenticated) status
   let buildLoggedIn = fmap (loggedInWidget responses) authEvents
-  let deauthEvents = fmapMaybe (lastWithPredicate (==NotAuthenticated)) responses
+  let deauthEvents = ffilter (==NotAuthenticated) status
   let buildNotLoggedIn = fmap (const $ notLoggedInWidget responses) deauthEvents
   let rebuildEvents = leftmost [buildLoggedIn,buildNotLoggedIn]
   liftM switchPromptlyDyn $ widgetHold initialWidget rebuildEvents

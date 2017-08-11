@@ -23,7 +23,7 @@ import InnerEar.Types.User
 
 main = do
   putStrLn "Inner Ear server (listening on port 4468)"
-  let ourServer = newServer { users = Map.singleton "test" (newUser "test" "password") }
+  let ourServer = newServer
   server <- newMVar ourServer
   WS.runServer "0.0.0.0" 4468 $ connectionHandler server
 
