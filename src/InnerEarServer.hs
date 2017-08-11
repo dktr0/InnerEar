@@ -78,7 +78,7 @@ createUser i h p s = do
     then do
       putStrLn $ "Authenticated: created new user with handle " ++ h
       respond s i $ Authenticated h
-      return $ addUser i h p s
+      return $ (authenticateConnection i h . addUser i h p) s
     else do
       when (userExists h s) $ putStrLn $ "UserNotCreated: attempt to create user for existing handle " ++ h
       when (not (isValidHandle h)) $ putStrLn $ "UserNotCreated: attempt to create invalid handle " ++ h

@@ -2,6 +2,7 @@ module InnerEar.Widgets.CreateUser where
 
 import Reflex
 import Reflex.Dom
+import Control.Monad
 
 import InnerEar.Types.Request
 import InnerEar.Types.Response
@@ -26,12 +27,12 @@ createUserWidget responses = el "div" $ do
   let requests = tagDyn createValue createButton
 
   -- when they fail to create a new user, display a message to that effect
-  let failEvent = fmapMaybe $ lastWithPredicate (==UserNotCreated) responses
+  let failEvent = fmapMaybe (lastWithPredicate (==UserNotCreated)) responses
   failText <- holdDyn "" $ fmap (const " Unable to create user!") failEvent
   dynText failText
 
   -- go back to splash page if they press the back button, or if we succeed in creating a new user
   home <- button "back to splash page"
-  let successEvent = fmapMaybe $ lastWithPredicate isAuthenticated responses
+  let successEvent = fmap (const ())$ fmapMaybe (lastWithPredicate isAuthenticated) responses
   let back = leftmost [home,successEvent]
   return (requests,back)

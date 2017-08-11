@@ -1,7 +1,6 @@
 module InnerEar.Types.Response where
 
 import Text.JSON
-import Data.List (find)
 
 import InnerEar.Types.Utility
 import InnerEar.Types.Handle

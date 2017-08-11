@@ -7,6 +7,7 @@ import Control.Monad
 import InnerEar.Types.Request
 import InnerEar.Types.Response
 import InnerEar.Types.Handle
+import InnerEar.Types.Utility
 
 -- | A loginWidget appears as a single line in the interface. It displays a
 -- set of text fields and button if the user is not logged in. If the user
@@ -16,7 +17,7 @@ loginWidget :: MonadWidget t m
   => Event t [Response] -> m (Event t Request)
 loginWidget responses = el "div" $ do
   let initialWidget = notLoggedInWidget responses
-  let authEvents = fmapMaybe getHandleFromAuthenticated $ fmapMaybe (lastWithPredicate (==Authenticated)) responses
+  let authEvents = fmapMaybe getHandleFromAuthenticated $ fmapMaybe (lastWithPredicate (isAuthenticated)) responses
   let buildLoggedIn = fmap (loggedInWidget responses) authEvents
   let deauthEvents = fmapMaybe (lastWithPredicate (==NotAuthenticated)) responses
   let buildNotLoggedIn = fmap (const $ notLoggedInWidget responses) deauthEvents
