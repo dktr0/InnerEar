@@ -18,3 +18,5 @@ cabal.sandbox.config
 .DS_Store
 .stack-work/
 cabal.project.local
+release/
+
