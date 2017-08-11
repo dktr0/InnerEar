@@ -27,7 +27,7 @@ loginWidget responses = el "div" $ do
   let deauthEvents = ffilter (==NotAuthenticated) status
   let buildNotLoggedIn = fmap (const $ notLoggedInWidget responses) deauthEvents
   let rebuildEvents = leftmost [buildLoggedIn,buildNotLoggedIn]
-  liftM switchPromptlyDyn $ widgetHold initialWidget rebuildEvents
+  switchPromptlyDyn <$> widgetHold initialWidget rebuildEvents
 
 
 notLoggedInWidget :: MonadWidget t m => Event t [Response] -> m (Event t Request)
@@ -35,11 +35,11 @@ notLoggedInWidget responses = el "div" $ do
   handleEntry <- do
     text "Handle:"
     let attrs = constDyn ("class" =: "webSocketTextInputs")
-    liftM _textInput_value $ textInput $ def & textInputConfig_attributes .~ attrs
+    _textInput_value <$> (textInput $ def & textInputConfig_attributes .~ attrs)
   passwordEntry <- do
     text "Password: "
     let attrs = constDyn ("class" =: "webSocketTextInputs")
-    liftM _textInput_value $ textInput $ def & textInputConfig_inputType .~ "password" & textInputConfig_attributes .~ attrs
+    _textInput_value <$> (textInput $ def & textInputConfig_inputType .~ "password" & textInputConfig_attributes .~ attrs)
   loginButton <- button "Login"
   -- when they fail to authenticate, display a message to that effect
   let deauthEvent = fmapMaybe (lastWithPredicate (==NotAuthenticated)) responses
@@ -52,4 +52,4 @@ notLoggedInWidget responses = el "div" $ do
 loggedInWidget :: MonadWidget t m => Event t [Response] -> Handle -> m (Event t Request)
 loggedInWidget _ h = el "div" $ do
   text $ "Logged in as " ++ h
-  liftM (Deauthenticate <$) $ button "Logout"
+  (Deauthenticate <$) <$> button "Logout"
