@@ -5,3 +5,5 @@ compiler-check: match-exact
 packages:
 - '.'
 
+extra-deps:
+- HDBC-sqlite3-2.3.3.1
