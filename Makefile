@@ -3,11 +3,11 @@ setupClient:
 
 buildClient:
 	cd client && stack build
-	cd client && cp -Rf ../static/ $$(stack path --local-install-root)/bin/InnerEarClient.jsexe/
+	cd client && cp -Rf ../static/* $$(stack path --local-install-root)/bin/InnerEarClient.jsexe/
 
 buildClientForceDirty:
 	cd client && stack build --force-dirty
-	cd client && cp -Rf ../static/ $$(stack path --local-install-root)/bin/InnerEarClient.jsexe/
+	cd client && cp -Rf ../static/* $$(stack path --local-install-root)/bin/InnerEarClient.jsexe/
 
 bootTemporaryWebServer:
 	cd client && cd $$(stack path --local-install-root)/bin/InnerEarClient.jsexe/; npm install
