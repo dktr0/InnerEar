@@ -23,7 +23,7 @@ import InnerEar.Types.User
 
 main = do
   putStrLn "Inner Ear server (listening on port 4468)"
-  let ourServer = newServer { users = Map.singleton "test" (newUser "test" "password") }
+  let ourServer = newServer
   server <- newMVar ourServer
   WS.runServer "0.0.0.0" 4468 $ connectionHandler server
 
@@ -73,13 +73,17 @@ processRequest s i Deauthenticate = withServer s $ deauthenticate i
 processRequest s i (PostRecord r) = withServer s $ postRecord i r
 
 createUser :: ConnectionIndex -> Handle -> Password -> Server -> IO Server
-createUser i h p s = if userExists h s
-  then do
-    respond s i $ NotAuthenticated
-    return s
-  else do
-    respond s i $ Authenticated h
-    return $ addUser i h p s
+createUser i h p s = do
+  if isValidHandle h && not (userExists h s)
+    then do
+      putStrLn $ "Authenticated: created new user with handle " ++ h
+      respond s i $ Authenticated h
+      return $ (authenticateConnection i h . addUser i h p) s
+    else do
+      when (userExists h s) $ putStrLn $ "UserNotCreated: attempt to create user for existing handle " ++ h
+      when (not (isValidHandle h)) $ putStrLn $ "UserNotCreated: attempt to create invalid handle " ++ h
+      respond s i $ UserNotCreated
+      return s
 
 authenticate :: ConnectionIndex -> Handle -> Password -> Server -> IO Server
 authenticate i h p s = if userExists h s
