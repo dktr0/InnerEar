@@ -19,10 +19,6 @@ prototypeExercise responses = el "div" $ do
   makeASound'' <- liftM ((FilteredSound (BufferSource (File "pinknoise.wav") 2.0) (Filter Peaking 900 1 1)) <$) $ button "Pinknoise Peak 900 1 1"
   performSound $ leftmost [makeASound,makeASound', makeASound'']
   score <- count makeASound
-  score' <- count makeASound'
-  score'' <- count makeASound'
-  drawBar score
-  drawBar' score'
-  drawBar'' score''
+  drawBar' score
   home <- button "back to splash page"
   return (never,home)

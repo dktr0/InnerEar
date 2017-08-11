@@ -5,11 +5,6 @@ import Reflex.Dom
 import Data.Map
 import Reflex.Dom.Contrib.Widgets.Svg
 
-data attributes = attributes {posX :: Float, posY :: Float, width :: Float, height :: Float, style :: String}
-
-
---labelBarButton :: MonadWidget t m => String -> Float -> Dynamic t (Maybe String) -> Dynamic t Float -> m
-
 rect :: MonadWidget t m => Dynamic t Int -> Dynamic t Int -> Dynamic t Int -> Dynamic t Int -> Dynamic t String -> m ()
 rect posX posY width height style = do
   posX' <- mapDyn (singleton "posX" . show) posX
@@ -19,11 +14,6 @@ rect posX posY width height style = do
   style' <- mapDyn (singleton "style") style
   m <- mconcatDyn [posX', posY', width', height', style']
   svgDynAttr "rect" m $ return()
-
-
---rectRoundedCorners :: MonadWidget t m => Dynamic t [attributes] -> m ()
---rectRoundCorners listOfAttr = listOfAttr
-
 
 drawBar ::  MonadWidget t m =>  Dynamic t Int -> m ()
 drawBar x =  do
@@ -45,6 +35,30 @@ drawBar' x = do
        h <- mapDyn (*32) x
        let s = constDyn "fill:green;stroke-width:5"
        rect posX posY w h s
+
+
+--elDynAttr :: (...) => Text -> Dynamic t (Map Text Text) -> m a -> m a
+
+dynButton :: MonadWidget t m => Dynamic t String -> m (Event t ())
+dynButton label = do
+  let initialButton = return never -- m (Event t ())
+  postBuildEvent <- getPostBuild -- m (Event t ())
+  let postBuildLabel = tagDyn label postBuildEvent -- Event t String
+  let postBuildButton = fmap button postBuildLabel
+  let newButtons = fmap button $ updated label
+  let newButtons' = leftmost [postBuildButton,newButtons]
+  switchPromptlyDyn <$> widgetHold initialButton newButtons'
+
+
+labelBarButton :: MonadWidget t m => String -> Float -> Dynamic t String -> Dynamic t Int -> m (Event t ())
+labelBarButton label 100.0 buttonString signal = do
+    el "div" $ text (show label)
+    drawBar' signal
+    question <- dynButton buttonString -- m (Event t ())
+    return (question)
+
+
+
 
 drawBar'' :: MonadWidget t m => Dynamic t Int -> m()
 drawBar'' x = do
