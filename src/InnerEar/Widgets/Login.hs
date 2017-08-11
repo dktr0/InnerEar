@@ -15,11 +15,10 @@ import InnerEar.Types.Handle
 loginWidget :: MonadWidget t m
   => Event t [Response] -> m (Event t Request)
 loginWidget responses = el "div" $ do
-  let lastResponse = fmapMaybe lastAuthenticationRelatedResponse responses
   let initialWidget = notLoggedInWidget responses
-  let authEvents = fmapMaybe getHandleFromAuthenticated lastResponse
+  let authEvents = fmapMaybe getHandleFromAuthenticated $ fmapMaybe (lastWithPredicate (==Authenticated)) responses
   let buildLoggedIn = fmap (loggedInWidget responses) authEvents
-  let deauthEvents = ffilter (==NotAuthenticated) lastResponse
+  let deauthEvents = fmapMaybe (lastWithPredicate (==NotAuthenticated)) responses
   let buildNotLoggedIn = fmap (const $ notLoggedInWidget responses) deauthEvents
   let rebuildEvents = leftmost [buildLoggedIn,buildNotLoggedIn]
   liftM switchPromptlyDyn $ widgetHold initialWidget rebuildEvents
@@ -27,7 +26,6 @@ loginWidget responses = el "div" $ do
 
 notLoggedInWidget :: MonadWidget t m => Event t [Response] -> m (Event t Request)
 notLoggedInWidget responses = el "div" $ do
-  let lastResponse = fmapMaybe lastAuthenticationRelatedResponse responses
   handleEntry <- do
     text "Handle:"
     let attrs = constDyn ("class" =: "webSocketTextInputs")
@@ -38,7 +36,7 @@ notLoggedInWidget responses = el "div" $ do
     liftM _textInput_value $ textInput $ def & textInputConfig_inputType .~ "password" & textInputConfig_attributes .~ attrs
   loginButton <- button "Login"
   -- when they fail to authenticate, display a message to that effect
-  let deauthEvent = ffilter (==NotAuthenticated) lastResponse
+  let deauthEvent = fmapMaybe (lastWithPredicate (==NotAuthenticated)) responses
   deauthText <- holdDyn "" $ fmap (const " Incorrect login!") deauthEvent
   dynText deauthText
   loginValue <- combineDyn Authenticate handleEntry passwordEntry
