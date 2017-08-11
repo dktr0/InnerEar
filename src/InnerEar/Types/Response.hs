@@ -23,4 +23,4 @@ instance JSON Response where
 
 getHandleFromAuthenticated :: Response -> Maybe Handle
 getHandleFromAuthenticated (Authenticated h) = Just h
-getHandleFromAuthenticated = Nothing
+getHandleFromAuthenticated _ = Nothing

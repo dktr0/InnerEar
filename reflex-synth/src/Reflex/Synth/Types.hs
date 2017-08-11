@@ -27,7 +27,6 @@ data Sound = NoSound | FilteredSound Source Filter deriving (Read,Show)
 data WebAudioNode = WebAudioNode NodeType JSVal | NullAudioNode
 
 
-
 -- For representing WebAudio Graphs - to be understood as hooking up a sequence of 'nodes' (or ugens)
 -- for instance, the web audio graph:
 --   oscillator.connect(gain)

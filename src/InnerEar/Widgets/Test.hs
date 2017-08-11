@@ -30,6 +30,7 @@ testWidget responses = el "div" $ do
   home <- button "back to splash page"
   return (never,home)
 
+-- Do Not delete!
 
 testSoundWidget::MonadWidget t m => Event t Response -> m (Event t Request, Event t ())
 testSoundWidget _ = el "div" $ do
@@ -38,13 +39,23 @@ testSoundWidget _ = el "div" $ do
   eval <- button "eval"
   let text = _textArea_value x
   maybeSound <- mapDyn (\y->maybe NoSound id (readMaybe y::Maybe Sound)) text --dyn Maybe Sound
-  --holdDyn "noChange" (fmap show (updated maybeSound)) >>= dynText
-  --let ev = fmap fromJust $ ffilter isJust $ updated maybeSound 
-  -- <- mapDyn (\x-> if isJust x then fromJust x else NoSound maybeSound) maybeSound
   mapDyn show maybeSound >>= dynText
   performSound $ tagDyn maybeSound eval
   home <- button "back to splash page"
   return (never,home)
+
+
+
+
+
+  --let order = (take 10 $ randomRs (0,9) (mkStdGen 6)) :: [Int]
+  --let sounds = zip [0..] $ fmap (FilteredSound (BufferSource (File "pinknoise.wav") 2.0)) filters
+  --playButton <- button "Play Sound"
+  --nextButtonCount <- button "Next sound" >>= count
+  --sound <- mapDyn (\x-> fromJust $ M.lookup order!!(mod x 10) sounds) nextButtonCount
+  --mapDyn show sound >>=dynText
+  --performSound $ tagDyn sound playButton
+
 
 drawBar ::  MonadWidget t m =>  Dynamic t Int -> m ()
 drawBar x =  do
