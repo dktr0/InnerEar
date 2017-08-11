@@ -5,7 +5,7 @@ module InnerEar.Exercises.Prototype where
 import Reflex
 import Reflex.Dom
 import Reflex.Dom.Contrib.Widgets.ButtonGroup (radioGroup)
-import Reflex.Dom.Contrib.Widgets.Common 
+import Reflex.Dom.Contrib.Widgets.Common
 
 import Control.Monad
 import Control.Monad.IO.Class (liftIO)
@@ -33,7 +33,6 @@ prototypeExercise responses = el "div" $ do
   score <- tenBandsExercise
   drawBar score
   drawBar' score
-  drawBar''
   home <- button "back to splash page"
   return (never,home)
 
@@ -49,7 +48,7 @@ tenBandsExercise = el "div" $ mdo
                        ,_widgetConfig_setValue = never
                        ,_widgetConfig_attributes = constDyn M.empty})
   submitButton <- buttonDynAttrs "submit" () submitAttrs
-  userAnswer <- holdDyn Nothing $ tagDyn (_hwidget_value radioWidget) submitButton 
+  userAnswer <- holdDyn Nothing $ tagDyn (_hwidget_value radioWidget) submitButton
   nextButtonWidget <- flippableWidget  (return never) (button "next") False (leftmost [(True <$) submitButton, (False <$) nextButton])
   let nextButton = switchPromptlyDyn nextButtonWidget
   submitAttrs <- toggle True (leftmost [submitButton,nextButton]) >>= mapDyn (\x-> if x then M.empty else "disabled"=:"disabled")
