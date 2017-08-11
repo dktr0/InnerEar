@@ -62,7 +62,7 @@ tenBandsExercise = el "div" $ mdo
   el "div" $ mapDyn (\x-> "Current sound is:  " ++show x) sound >>=dynText
   performSound $ tagDyn sound playButton
   home <- button "back to splash page"
-  count $ ffilter id (updated answerIsCorrect)
+  count $ ffilter id (tagDyn answerIsCorrect submitButton)
 
 
 
