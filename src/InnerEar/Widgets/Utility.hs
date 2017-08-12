@@ -7,7 +7,11 @@ import Data.Bool (bool)
 import Reflex
 import Reflex.Dom
 
-
+-- | dynE is like dyn from Reflex, specialized for widgets that return
+-- events. A dynamic argument updates the widget, and the return value is
+-- already flattened to just being the events returned by the child widget.
+dynE :: MonadWidget t m => Dynamic t (m (Event t a)) -> m (Event t a)
+dynE x = dyn x >>= switchPromptly never
 
 flippableWidget :: MonadWidget t m => m a -> m a -> Bool -> Event t Bool -> m (Dynamic t a)
 flippableWidget b1 b2 i e = widgetHold (bool b1 b2 i) $ fmap (bool b1 b2) e

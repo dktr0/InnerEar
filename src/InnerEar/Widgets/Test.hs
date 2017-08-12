@@ -31,7 +31,9 @@ testWidget responses = el "div" $ do
 --  drawBar' score'
 --  drawBar'' score''
   questionLabel <- mapDyn show score
-  dynButton questionLabel
+  pressed <- dynButton questionLabel
+  someText <- holdDyn "not pressed yet" $ "pressed" <$ pressed
+  dynText someText
   -- labelBarButton "myLabel" 100.0 questionLabel score
 
   home <- button "back to splash page"
