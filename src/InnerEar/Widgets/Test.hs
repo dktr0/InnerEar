@@ -35,20 +35,34 @@ testWidget responses = el "div" $ do
   score <- count soundEv
 --  score' <- count makeASound'
 --  score'' <- count makeASound''
-  drawBar score
+--  drawBar score
 --  drawBar' score'
 --  drawBar'' score''
+
+------first button
   questionLabel <- mapDyn show score
+--  dynButton questionLabel
+  labelBarButton "myLabel" questionLabel score
+
+---second button
   pressed <- dynButton questionLabel
   someText <- holdDyn "not pressed yet" $ "pressed" <$ pressed
   dynText someText
-  -- labelBarButton "myLabel" 100.0 questionLabel score
+
+  test
 
   home <- button "back to splash page"
   return (never,home)
 
 
 
+<<<<<<< HEAD
+=======
+
+
+
+
+>>>>>>> c62041cd60935b988cea8520c9bad88efdc7c968
 -- Do not delete!
 testSoundWidget::MonadWidget t m => Event t [Response] -> m (Event t Request, Event t ())
 testSoundWidget _ = el "div" $ do

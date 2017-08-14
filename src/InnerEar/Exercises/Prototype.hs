@@ -63,6 +63,7 @@ tenBandsExercise responses = mdo
   return (requests,reflectNav)
 
 
+
 -- returning a 'score' (count of exercises the user got correct)
 tenBandsExercise'::MonadWidget t m => m (Dynamic t Int)
 tenBandsExercise' = el "div" $ mdo
@@ -89,7 +90,6 @@ tenBandsExercise' = el "div" $ mdo
   sound <- mapDyn (\x-> fromJust $ M.lookup x sounds) soundNum
   el "div" $ mapDyn (\x-> "Current sound is:  " ++show x) sound >>=dynText
   performSound $ tagDyn sound playButton
-  home <- button "back to splash page"
   count $ ffilter id (tagDyn answerIsCorrect submitButton)
 
 
