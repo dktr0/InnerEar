@@ -1,9 +1,10 @@
-{-# LANGUAGE JavaScriptFFI #-}
+{-# LANGUAGE JavaScriptFFI, DeriveDataTypeable #-}
 module InnerEar.WebSocket where
 
 import Reflex
 import qualified Reflex.Dom as R
 import Text.JSON
+import Text.JSON.Generic
 import Data.Time.Clock
 import Data.Time.Calendar (Day(ModifiedJulianDay))
 import GHC.IORef
@@ -15,18 +16,26 @@ import JavaScript.Object.Internal as O
 import GHCJS.Foreign.Internal
 import GHCJS.Marshal.Pure
 import Control.Monad.IO.Class (liftIO)
+import Data.Text
+
+import InnerEar.Types.Request
+import InnerEar.Types.Response
 
 data WebSocket = WebSocket (Maybe T.JSVal)
 
 webSocket :: IO WebSocket
 webSocket = webSocket_ >>= return . WebSocket . Just
 
-send :: JSON a => WebSocket -> a -> IO ()
+send :: WebSocket -> Request -> IO ()
 send (WebSocket Nothing) _ = return ()
-send (WebSocket (Just ws)) x = send_ ws $ Prim.toJSString $ encode x
+send (WebSocket (Just ws)) x = send_ ws $ Prim.toJSString $ encode $ toJSON x -- was just encode
+--send (WebSocket (Just ws)) x = do
+--  let a = toJSON x :: JSValue
+--  let b = encode a :: String
+--  let c = pToJSVal b :: T.JSVal
+--  send_ ws c
 
-reflexWebSocket :: (R.MonadWidget t m, JSON a, JSON b)
-  => Event t a -> m (Event t [b],Dynamic t String)
+reflexWebSocket :: R.MonadWidget t m => Event t Request -> m (Event t [Response],Dynamic t String)
 reflexWebSocket toSend = do
   postBuild <- R.getPostBuild
   newWs <- R.performEvent $ fmap (liftIO . (const webSocket)) postBuild
@@ -43,8 +52,13 @@ reflexWebSocket toSend = do
   return (responses',status')
 
 
-getResponses :: JSON a => WebSocket -> IO (Either String [a])
-getResponses (WebSocket (Just ws)) = (f . decode . Prim.fromJSString) <$> getResponses_ ws
+getResponses :: WebSocket -> IO (Either String [Response])
+getResponses (WebSocket (Just ws)) = do
+  rs <- getResponses_ ws :: IO T.JSVal
+  let a = Prim.fromJSString rs :: String
+  let b = JSString (toJSString a) :: JSValue
+  let c = fromJSON b :: Result [Response]
+  return $ f c
   where f (Ok xs) = Right xs
         f (Error x) = Left $ "error trying to parse this in getResponses: " ++ x
 getResponses (WebSocket Nothing) = return (Right [])

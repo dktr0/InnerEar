@@ -9,6 +9,9 @@ buildClientForceDirty:
 	cd client && stack build --force-dirty
 	cd client && cp -Rf ../static/* $$(stack path --local-install-root)/bin/InnerEarClient.jsexe/
 
+cleanClient:
+	cd client && stack clean
+
 bootTemporaryWebServer:
 	cd client && cd $$(stack path --local-install-root)/bin/InnerEarClient.jsexe/; npm install
 	cd client && node $$(stack path --local-install-root)/bin/InnerEarClient.jsexe/temporaryWebServer.js;
@@ -21,6 +24,9 @@ setupServer:
 
 buildServer:
 	cd server && stack build
+
+cleanServer:
+	cd server && stack clean
 
 bootServer: 
 	cd release && ./InnerEarServer 

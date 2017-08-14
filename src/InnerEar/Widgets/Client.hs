@@ -1,8 +1,11 @@
-{-# LANGUAGE RecursiveDo, OverloadedStrings #-}
+{-# LANGUAGE RecursiveDo, OverloadedStrings, DeriveDataTypeable #-}
 module InnerEar.Widgets.Client where
 
 import Reflex
 import Reflex.Dom
+
+import Text.JSON
+import Text.JSON.Generic
 
 import InnerEar.Types.Response
 import InnerEar.Types.Request

@@ -8,6 +8,7 @@ import Network.Wai.Application.Static (staticApp, defaultWebAppSettings, ssIndic
 import Network.Wai.Handler.Warp (run)
 import WaiAppStatic.Types (unsafeToPiece)
 import Text.JSON
+import Text.JSON.Generic
 import Data.Map
 import Data.Text (Text)
 import Data.List ((\\))
@@ -48,13 +49,14 @@ processLoop ws s i = do
   m <- try $ WS.receiveData ws
   case m of
     Right x -> do
+      putStrLn $ T.unpack x
       let x' = decode (T.unpack x) :: Result JSString
       case x' of
         Ok x'' -> do
-          processResult s i $ decode (fromJSString x'')
+          processResult s i $ (fromJSON . JSString) x''
           processLoop ws s i
         Error x'' -> do
-          putStrLn $ "Error: " ++ x''
+          putStrLn $ "Error (processLoop): " ++ x''
           processLoop ws s i
     Left WS.ConnectionClosed -> close s i "unexpected loss of connection"
     Left (WS.CloseRequest _ _) -> close s i "connection closed by request from peer"
@@ -69,7 +71,7 @@ close s i msg = do
   return ()
 
 processResult :: MVar Server -> ConnectionIndex -> Result Request -> IO ()
-processResult _ i (Error x) = putStrLn ("Error: " ++ x)
+processResult _ i (Error x) = putStrLn ("Error (processResult): " ++ x)
 processResult s i (Ok x) = processRequest s i x
 
 processRequest :: MVar Server -> ConnectionIndex -> Request -> IO ()
@@ -135,4 +137,4 @@ respond :: Server -> ConnectionIndex -> Response -> IO ()
 respond s i x = WS.sendTextData c t
   where
     c = fst $ (Map.! i) $ (connections s)
-    t = T.pack $ encode x
+    t = T.pack $ encode $ toJSON x
