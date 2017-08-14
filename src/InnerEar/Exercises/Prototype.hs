@@ -22,8 +22,7 @@ import InnerEar.Widgets.Bars
 import InnerEar.Widgets.Test
 
 
-prototypeExercise :: MonadWidget t m
-  => Event t [Response] -> m (Event t Request,Event t ())
+prototypeExercise :: MonadWidget t m => Event t [Response] -> m (Event t Request,Event t ())
 prototypeExercise = tenBandsExercise
 
 tenBandsExercise :: MonadWidget t m => Event t [Response] -> m (Event t Request, Event t ())
@@ -31,35 +30,36 @@ tenBandsExercise responses = mdo
 
   mode <- holdDyn 1 modeEvents
 
-  let introVisible = mapDyn (==1) mode
+  introVisible <- mapDyn (==1) mode
   introNav <- visibleWhen introVisible $ do
     text "placeholder for ten bands intro mode"
-    (2 <$) <$> button "ok - got it..."
+    ((2::Int) <$) <$> button "ok - got it..."
 
-  let configVisible = mapDyn (==2) mode
+  configVisible <- mapDyn (==2) mode
   configNav <- visibleWhen configVisible $ do
     text "placeholder for ten bands config mode"
     (3 <$) <$> button "finished configuring..."
 
-  let challengeVisible = mapDyn (==3) mode
-  challengeNav <- visibleWhen questionVisible $ do
+  challengeVisible <- mapDyn (==3) mode
+  challengeNav <- visibleWhen challengeVisible $ do
     text "placeholder for ten bands challenge mode"
     (4 <$) <$> button "answer question"
 
-  let exploreVisible = mapDyn (==4) mode
+  exploreVisible <- mapDyn (==4) mode
   exploreNav <- visibleWhen exploreVisible $ do
     text "placeholder for ten bands explore mode"
     x <- (3 <$) <$> button "next question"
-    y <- (4 <$) <$> button "finish session with reflective question"
+    y <- (5 <$) <$> button "finish session with reflective question"
     return $ leftmost [x,y]
 
-  let reflectVisible = mapDyn (==5) mode
+  reflectVisible <- mapDyn (==5) mode
   reflectNav <- visibleWhen reflectVisible $ do
     text "placeholder for ten bands reflect mode"
     button "submit reflection and return to main menu"
 
   let modeEvents = leftmost [introNav,configNav,challengeNav,exploreNav]
-  let requests = leftmost [introRequest,configRequests,challengeRequests,exploreRequests,reflectRequests]
+  -- let requests = leftmost [introRequest,configRequests,challengeRequests,exploreRequests,reflectRequests]
+  let requests = never
   return (requests,reflectNav)
 
 
