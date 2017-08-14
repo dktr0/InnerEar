@@ -8,9 +8,10 @@ import Data.FileEmbed
 import Text.Read (readMaybe)
 import Data.Maybe (isJust, fromJust)
 import Control.Monad
+import Control.Monad.IO.Class
 
 
-
+import InnerEar.Widgets.Utility
 import InnerEar.Types.Request
 import InnerEar.Types.Response
 import Reflex.Synth.Types
@@ -20,11 +21,18 @@ import InnerEar.Widgets.Bars
 testWidget :: MonadWidget t m
   => Event t [Response] -> m (Event t Request,Event t ())
 testWidget responses = el "div" $ do
---  text "testpage placeholder"
-  makeASound <- liftM ((FilteredSound (BufferSource (File "pinknoise.wav") 2.0) (Filter Peaking 400 1 1)) <$) $ button "Pinknoise Peak 400 1 1"
---  makeASound'' <- liftM ((FilteredSound (BufferSource (File "pinknoise.wav") 2.0) (Filter Peaking 900 1 1)) <$) $ button "Pinknoise Peak 400 1 1"
---  performSound $ leftmost [makeASound,makeASound', makeASound'']
-  score <- count makeASound
+
+  source <- mediaElement
+
+  let sound = (FilteredSound source (Filter Lowpass 100 1 1))
+  soundEv <- liftM (sound <$) $ button "play sound"
+
+  --test <- button "connect graph"
+  --performEvent $ fmap liftIO $ fmap (\_-> createGraph sound) test
+  --liftIO (createGraph sound)
+
+  performSound soundEv
+  score <- count soundEv
 --  score' <- count makeASound'
 --  score'' <- count makeASound''
   drawBar score
@@ -38,6 +46,7 @@ testWidget responses = el "div" $ do
 
   home <- button "back to splash page"
   return (never,home)
+
 
 
 -- Do not delete!

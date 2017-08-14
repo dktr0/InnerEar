@@ -3,6 +3,7 @@ module Reflex.Synth.Synth where
 import Reflex.Synth.Types 
 --import InnerEar.Types.Sound
 import qualified Reflex.Synth.Foreign as F
+import qualified Data.Map as M
 import Reflex.Dom
 import Control.Monad.IO.Class (liftIO)
 
@@ -17,11 +18,6 @@ instance WebAudio Buffer where
   createGraph (File path) = createBufferNode (File path) >>= return . WebAudioGraph
 
 instance WebAudio Source where
-  createGraph (PinkNoiseSource dur) = do
-    x <- createPinkNoise
-    y <- createAsrEnvelope 0.005 dur 0.005 
-    let graph = WebAudioGraph' x (WebAudioGraph y)
-    createGraph graph
   createGraph (OscillatorSource osc dur) = do
     x <- createOscillator osc
     y <- createAsrEnvelope 0.005 dur 0.005
@@ -32,6 +28,11 @@ instance WebAudio Source where
     y <- createAsrEnvelope 0.005 dur 0.005
     let graph = WebAudioGraph' x (WebAudioGraph y)
     createGraph graph
+  createGraph (MediaSource) = createMediaNode >>= return . WebAudioGraph
+    --x <- createMediaNode
+    --y <- createAsrEnvelope 0.005 dur 0.005
+    --let graph = WebAudioGraph' x (WebAudioGraph y)
+    --createGraph graph
 
 
 instance WebAudio WebAudioGraph where
@@ -65,7 +66,35 @@ performSound event = do
 
 
 
+-- for user to enter their own sound file. must have the right 'id' to work with
+-- createUserSoundFileSource
+--soundFileInput ::MonadWidget t m => m ()
+--soundFileInput = do 
+  --let attrs = constDyn M.empty
+  --file <- fileInput $ def & _fileInputConfig_attributes ~. attrs
+--_fileInputConfig_attributes :: Dynamic t (Map String String)
+  --elDynAttr "input" (constDyn $ M.fromList [("value","browse"),("id","soundFileInput"),("type","file"),("accepted","audio/")]) (return ())
 
+-- need to create to play the user's entered soundfile. needs to use the correct 'id'
+-- (exaclty 'userAudio') to work
+audioElement::MonadWidget t m => m ()
+audioElement = elDynAttr "audio" attrs (return())
+  where attrs = constDyn $ M.fromList $ zip ["id","controls"] ["userAudio","controls"]
+
+
+mediaElement::MonadWidget t m => m (Source)
+mediaElement = do
+  let attrs = FileInputConfig (constDyn $ M.fromList $ zip ["id"] ["soundFileInput"])
+  file <- fileInput attrs
+
+  audioElement
+  performEvent $ fmap liftIO $ fmap (\_ -> createMediaNode) $ updated (_fileInput_value file)   -- loads sound player into audio tag everytime the file changes
+  
+
+  --audioElement
+  --soundFileInput
+  --createMediaNode
+  return (MediaSource)
 
 
 -- an example of how this might be used with reflex-dom:

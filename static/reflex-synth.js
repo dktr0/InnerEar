@@ -20,3 +20,21 @@ function getBufferSourceNode(url) {
   return source;
 }
 
+function loadUserSoundFile(){
+  console.log("got here.")
+  var filePicker = document.getElementById('soundFileInput')
+  var files = filePicker.files
+
+  var reader = new FileReader ();
+
+  // console.log('files: '+files)
+  // console.log('file: '+files[0])
+  reader.readAsArrayBuffer(files[0])
+  // var buff = reader.result
+  // console.log("buff length is: " +buff.length());
+  var url = URL.createObjectURL(files[0])
+  console.log("url: "+url)
+
+  var aud = document.getElementById('userAudio')
+  aud.setAttribute('src',url)
+}

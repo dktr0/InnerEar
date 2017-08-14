@@ -53,7 +53,10 @@ tenBandsExercise = el "div" $ mdo
   let nextButton = switchPromptlyDyn nextButtonWidget
   submitAttrs <- toggle True (leftmost [submitButton,nextButton]) >>= mapDyn (\x-> if x then M.empty else "disabled"=:"disabled")
   soundNumEv <- performEvent $ fmap liftIO $ (getStdRandom ((randomR (0,9))::StdGen -> (Int,StdGen)) <$)  nextButton
-  soundNum <- holdDyn (fst $ randomR (0,9) (mkStdGen 5)) soundNumEv
+  
+  iSoundNum <- liftIO ((getStdRandom (randomR (0,9)))::IO Int)
+  soundNum <- holdDyn iSoundNum soundNumEv
+  
   answerIsCorrect <- combineDyn (\x y-> maybe False (x==) y) soundNum userAnswer
   correctText <- combineDyn (\x y-> if x then "Correct!" else "The correct answer was "++(fromJust $ M.lookup y $ M.fromList radioButtonMap)) answerIsCorrect soundNum
   flippableWidget (text "") (dynText correctText) False (leftmost [(True <$) submitButton, (False <$) nextButton])

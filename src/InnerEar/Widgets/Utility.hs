@@ -22,3 +22,4 @@ buttonDynAttrs s val attrs = do
   (e, _) <- elDynAttr' "button" attrs $ text s
   let event = domEvent Click e
   return $ fmap (const val) event
+
