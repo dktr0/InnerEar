@@ -1,6 +1,12 @@
+{-# LANGUAGE OverloadedStrings #-}
 module Main where
 
 import qualified Network.WebSockets as WS
+import qualified Network.Wai as WS
+import qualified Network.Wai.Handler.WebSockets as WS
+import Network.Wai.Application.Static (staticApp, defaultWebAppSettings, ssIndices)
+import Network.Wai.Handler.Warp (run)
+import WaiAppStatic.Types (unsafeToPiece)
 import Text.JSON
 import Data.Map
 import Data.Text (Text)
@@ -23,12 +29,12 @@ import InnerEar.Types.User
 
 main = do
   putStrLn "Inner Ear server (listening on port 4468)"
-  let ourServer = newServer
-  server <- newMVar ourServer
-  WS.runServer "0.0.0.0" 4468 $ connectionHandler server
+  s <- newMVar newServer
+  let settings = (defaultWebAppSettings "InnerEarClient.jsexe") { ssIndices = [unsafeToPiece "index.html"] }
+  run 4468 $ WS.websocketsOr WS.defaultConnectionOptions (webSocketsApp s) (staticApp settings)
 
-connectionHandler :: MVar Server -> WS.PendingConnection -> IO ()
-connectionHandler s ws = do
+webSocketsApp :: MVar Server -> WS.ServerApp -- = PendingConnection -> IO ()
+webSocketsApp s ws = do
   putStrLn "received new connection"
   ws' <- WS.acceptRequest ws
   ss <- takeMVar s

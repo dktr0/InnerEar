@@ -27,8 +27,8 @@ navigationWidget responses = mdo
   navEvents <- liftM switchPromptlyDyn $ mapDyn snd w
   return requests
 
-navigationPage :: MonadWidget t m => Event t [Response] -> Navigation -> m (Event t Request,Event t Navigation)
 
+navigationPage :: MonadWidget t m => Event t [Response] -> Navigation -> m (Event t Request,Event t Navigation)
 navigationPage responses SplashPage = do
   w <- liftM (CreateUserPage <$) $ el "div" $ button "CreateUser"
   x <- liftM (ExercisePage <$)  $ el "div" $ button "Exercise"

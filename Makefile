@@ -22,5 +22,12 @@ setupServer:
 buildServer:
 	cd server && stack build
 
-bootServer:
-	cd server && cd $$(stack path --local-install-root)/bin/; ./InnerEarServer
+bootServer: 
+	cd release && ./InnerEarServer 
+
+release:
+	-rm -rf release
+	mkdir release 
+	cd client && cp -Rf $$(stack path --local-install-root)/bin/InnerEarClient.jsexe ../release/
+	cd server && cp -Rf $$(stack path --local-install-root)/bin/InnerEarServer ../release/InnerEarServer
+ 

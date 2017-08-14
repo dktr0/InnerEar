@@ -31,12 +31,21 @@ testWidget responses = el "div" $ do
 --  drawBar' score'
 --  drawBar'' score''
   questionLabel <- mapDyn show score
+<<<<<<< HEAD
 --  dynButton questionLabel
   labelBarButton "myLabel" 100.0 questionLabel score
+=======
+  pressed <- dynButton questionLabel
+  someText <- holdDyn "not pressed yet" $ "pressed" <$ pressed
+  dynText someText
+  -- labelBarButton "myLabel" 100.0 questionLabel score
+
+>>>>>>> 44bf20ff3be0d9d0ab50869ffb0e60367a69aa08
   home <- button "back to splash page"
   return (never,home)
 
 
+-- Do not delete!
 testSoundWidget::MonadWidget t m => Event t [Response] -> m (Event t Request, Event t ())
 testSoundWidget _ = el "div" $ do
   let attrs = constDyn $ M.fromList $ zip ["cols"] ["80"]
@@ -44,10 +53,18 @@ testSoundWidget _ = el "div" $ do
   eval <- button "eval"
   let text = _textArea_value x
   maybeSound <- mapDyn (\y->maybe NoSound id (readMaybe y::Maybe Sound)) text --dyn Maybe Sound
-  --holdDyn "noChange" (fmap show (updated maybeSound)) >>= dynText
-  --let ev = fmap fromJust $ ffilter isJust $ updated maybeSound
-  -- <- mapDyn (\x-> if isJust x then fromJust x else NoSound maybeSound) maybeSound
   mapDyn show maybeSound >>= dynText
   performSound $ tagDyn maybeSound eval
   home <- button "back to splash page"
   return (never,home)
+
+
+--drawBar ::  MonadWidget t m =>  Dynamic t Int -> m ()
+--drawBar x =  do
+-- let svg = Just "http://www.w3.org/2000/svg"
+-- let svgAttrs = fromList [("width", "100px")
+--                , ("height", "200px")
+--                , ("viewBox", "0 0 300 200") ]
+-- --elDynAttr "200px" svgAttrs $ do el "height" $ x
+-- elWith "svg" (ElConfig svg svgAttrs) $ do
+--   elWith "rect" (ElConfig svg (M.fromList [("width", "100%"), ("height", "100%"), ("fill", "red")])) (return ())

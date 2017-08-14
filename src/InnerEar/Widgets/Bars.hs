@@ -4,6 +4,9 @@ import Reflex
 import Reflex.Dom
 import Data.Map
 import Reflex.Dom.Contrib.Widgets.Svg
+import Control.Monad
+
+import InnerEar.Widgets.Utility
 
 rect :: MonadWidget t m => Dynamic t Int -> Dynamic t Int -> Dynamic t Int -> Dynamic t Int -> Dynamic t String -> m ()
 rect posX posY width height style = do
@@ -39,8 +42,10 @@ drawBar' x = do
 
 --elDynAttr :: (...) => Text -> Dynamic t (Map Text Text) -> m a -> m a
 
-dynButton :: MonadWidget t m => Dynamic t String -> m (Event t ())
-dynButton label = do
+-- this was our original version from Friday (4 more versions follow)
+-- after some discussion we should delete all but the final version below
+dynButton' :: MonadWidget t m => Dynamic t String -> m (Event t ())
+dynButton' label = do
   let initialButton = return never -- m (Event t ())
   postBuildEvent <- getPostBuild -- m (Event t ())
   let postBuildLabel = tagDyn label postBuildEvent -- Event t String
@@ -49,6 +54,24 @@ dynButton label = do
   let newButtons' = leftmost [postBuildButton,newButtons]
   switchPromptlyDyn <$> widgetHold initialButton newButtons'
 
+-- this second version uses "switchPromptly never" to flatten the result of "dyn"
+dynButton'' :: MonadWidget t m => Dynamic t String -> m (Event t ())
+dynButton'' label = do
+  x <- mapDyn button label
+  y <- dyn x
+  switchPromptly never y
+
+-- this third version is the same as the second but without the do notation
+dynButton''' :: MonadWidget t m => Dynamic t String -> m (Event t ())
+dynButton''' label = mapDyn button label >>= dyn >>= switchPromptly never
+
+-- this fourth version uses a more generic function "dynE" added to InnerEar.Widgets.Utility
+dynButton'''' :: MonadWidget t m => Dynamic t String -> m (Event t ())
+dynButton'''' label = mapDyn button label >>= dynE
+
+-- a final version that uses >=> from Control.Monad to compose together two a -> m b functions
+dynButton :: MonadWidget t m => Dynamic t String -> m (Event t ())
+dynButton = (mapDyn button) >=> dynE
 
 labelBarButton :: MonadWidget t m => String -> Float -> Dynamic t String -> Dynamic t Int -> m (Event t ())
 labelBarButton label 100.0 buttonString signal = do
