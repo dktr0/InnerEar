@@ -31,8 +31,6 @@ prototypeExercise :: MonadWidget t m
 prototypeExercise responses = el "div" $ do
   text "prototype exercise placeholder"
   score <- tenBandsExercise
-  drawBar score
-  drawBar' score
   home <- button "back to splash page"
   return (never,home)
 

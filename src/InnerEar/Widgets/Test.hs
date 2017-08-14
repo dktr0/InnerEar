@@ -30,19 +30,26 @@ testWidget responses = el "div" $ do
 --  drawBar score
 --  drawBar' score'
 --  drawBar'' score''
+
+------first button
   questionLabel <- mapDyn show score
-<<<<<<< HEAD
 --  dynButton questionLabel
-  labelBarButton "myLabel" 100.0 questionLabel score
-=======
+  labelBarButton "myLabel" questionLabel score
+
+---second button
   pressed <- dynButton questionLabel
   someText <- holdDyn "not pressed yet" $ "pressed" <$ pressed
   dynText someText
-  -- labelBarButton "myLabel" 100.0 questionLabel score
 
->>>>>>> 44bf20ff3be0d9d0ab50869ffb0e60367a69aa08
+  test
+
   home <- button "back to splash page"
   return (never,home)
+
+
+
+
+
 
 
 -- Do not delete!
