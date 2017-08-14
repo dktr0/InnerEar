@@ -27,13 +27,12 @@ testWidget responses = el "div" $ do
   score <- count makeASound
 --  score' <- count makeASound'
 --  score'' <- count makeASound''
-  drawBar score
+--  drawBar score
 --  drawBar' score'
 --  drawBar'' score''
   questionLabel <- mapDyn show score
-  dynButton questionLabel
-  -- labelBarButton "myLabel" 100.0 questionLabel score
-
+--  dynButton questionLabel
+  labelBarButton "myLabel" 100.0 questionLabel score
   home <- button "back to splash page"
   return (never,home)
 
