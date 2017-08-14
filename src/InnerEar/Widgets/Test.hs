@@ -56,13 +56,6 @@ testWidget responses = el "div" $ do
 
 
 
-<<<<<<< HEAD
-=======
-
-
-
-
->>>>>>> c62041cd60935b988cea8520c9bad88efdc7c968
 -- Do not delete!
 testSoundWidget::MonadWidget t m => Event t [Response] -> m (Event t Request, Event t ())
 testSoundWidget _ = el "div" $ do
