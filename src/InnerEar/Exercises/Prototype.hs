@@ -6,40 +6,66 @@ import Reflex
 import Reflex.Dom
 import Reflex.Dom.Contrib.Widgets.ButtonGroup (radioGroup)
 import Reflex.Dom.Contrib.Widgets.Common
-
 import Control.Monad
 import Control.Monad.IO.Class (liftIO)
-
+import qualified Data.Map as M
+import System.Random
+import Data.Maybe (fromJust)
+import Data.Bool (bool)
 
 import InnerEar.Widgets.Utility
 import InnerEar.Types.Request
 import InnerEar.Types.Response
 import Reflex.Synth.Synth
 import Reflex.Synth.Types
-
-import InnerEar.Widgets.Test
-import qualified Data.Map as M
-import System.Random
-import Data.Maybe (fromJust)
-import Data.Bool (bool)
-
 import InnerEar.Widgets.Bars
+import InnerEar.Widgets.Test
 
 
 prototypeExercise :: MonadWidget t m
   => Event t [Response] -> m (Event t Request,Event t ())
-prototypeExercise responses = el "div" $ do
-  text "prototype exercise placeholder"
-  score <- tenBandsExercise
-  drawBar score
-  drawBar' score
-  home <- button "back to splash page"
-  return (never,home)
+prototypeExercise = tenBandsExercise
+
+tenBandsExercise :: MonadWidget t m => Event t [Response] -> m (Event t Request, Event t ())
+tenBandsExercise responses = mdo
+
+  mode <- holdDyn 1 modeEvents
+
+  let introVisible = mapDyn (==1) mode
+  introNav <- visibleWhen introVisible $ do
+    text "placeholder for ten bands intro mode"
+    (2 <$) <$> button "ok - got it..."
+
+  let configVisible = mapDyn (==2) mode
+  configNav <- visibleWhen configVisible $ do
+    text "placeholder for ten bands config mode"
+    (3 <$) <$> button "finished configuring..."
+
+  let challengeVisible = mapDyn (==3) mode
+  challengeNav <- visibleWhen questionVisible $ do
+    text "placeholder for ten bands challenge mode"
+    (4 <$) <$> button "answer question"
+
+  let exploreVisible = mapDyn (==4) mode
+  exploreNav <- visibleWhen exploreVisible $ do
+    text "placeholder for ten bands explore mode"
+    x <- (3 <$) <$> button "next question"
+    y <- (4 <$) <$> button "finish session with reflective question"
+    return $ leftmost [x,y]
+
+  let reflectVisible = mapDyn (==5) mode
+  reflectNav <- visibleWhen reflectVisible $ do
+    text "placeholder for ten bands reflect mode"
+    button "submit reflection and return to main menu"
+
+  let modeEvents = leftmost [introNav,configNav,challengeNav,exploreNav]
+  let requests = leftmost [introRequest,configRequests,challengeRequests,exploreRequests,reflectRequests]
+  return (requests,reflectNav)
 
 
 -- returning a 'score' (count of exercises the user got correct)
-tenBandsExercise::MonadWidget t m => m (Dynamic t Int)
-tenBandsExercise = el "div" $ mdo
+tenBandsExercise'::MonadWidget t m => m (Dynamic t Int)
+tenBandsExercise' = el "div" $ mdo
   let sounds = M.fromList $ zip [0::Int,1..] $ fmap (FilteredSound (BufferSource (File "pinknoise.wav") 2.0)) filters
   let radioButtonMap = (zip [0::Int,1..] ["100 Hz","200 Hz","300 Hz","400 Hz","500 Hz","600 Hz","700 Hz","800 Hz","900 Hz","1000 Hz"])
   playButton <- button "Play Sound"
@@ -62,7 +88,6 @@ tenBandsExercise = el "div" $ mdo
   performSound $ tagDyn sound playButton
   home <- button "back to splash page"
   count $ ffilter id (tagDyn answerIsCorrect submitButton)
-
 
 
 filters:: [Filter]
