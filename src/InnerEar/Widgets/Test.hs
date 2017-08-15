@@ -30,11 +30,13 @@ test = do
 testWidget :: MonadWidget t m
   => Event t [Response] -> m (Event t Request,Event t Sound,Event t ())
 testWidget responses = el "div" $ do
-    makeASound <- liftM ((FilteredSound (BufferSource (File "pinknoise.wav") 2.0) (Filter Peaking 400 1 1)) <$) $ button "Pinknoise Peak 400 1 1"
-    test
-    home <- button "back to splash page"
-    return (never,makeASound,home)
-
+  source <- sourceWidget
+  sound <- mapDyn ((flip FilteredSound) (Filter Lowpass 100 1 1)) source
+  playButton <-  button "play sound"
+  let sounds = tagDyn sound playButton
+  test
+  home <- button "back to splash page"
+  return (never,sounds,home)
 
 
 

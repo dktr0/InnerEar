@@ -20,3 +20,5 @@ executable InnerEarClient
                      text, array, ghcjs-prim, data-default, transformers, file-embed, time,
                      monad-loops, json, bytestring, random, reflex-synth, reflex-dom-contrib
   default-language:  Haskell2010
+
+
