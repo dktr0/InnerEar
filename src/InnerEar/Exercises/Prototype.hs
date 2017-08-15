@@ -24,14 +24,6 @@ import InnerEar.Widgets.Test
 prototypeExercise :: MonadWidget t m => Event t [Response] -> m (Event t Request,Event t ())
 prototypeExercise = tenBandsExercise
 
-prototypeExercise :: MonadWidget t m
-  => Event t [Response] -> m (Event t Request,Event t ())
-prototypeExercise responses = el "div" $ do
-  text "prototype exercise placeholder"
-  score <- tenBandsExercise
-  home <- button "back to splash page"
-  return (never,home)
-
 tenBandsExercise :: MonadWidget t m => Event t [Response] -> m (Event t Request, Event t ())
 tenBandsExercise responses = mdo
 
