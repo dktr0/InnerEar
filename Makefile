@@ -5,6 +5,9 @@ buildClient:
 	cd client && stack build
 	cd client && cp -Rf ../static/* $$(stack path --local-install-root)/bin/InnerEarClient.jsexe/
 
+staticClient:
+	cd client && cp -Rf ../static/* $$(stack path --local-install-root)/bin/InnerEarClient.jsexe/	
+
 buildClientForceDirty:
 	cd client && stack build --force-dirty
 	cd client && cp -Rf ../static/* $$(stack path --local-install-root)/bin/InnerEarClient.jsexe/
