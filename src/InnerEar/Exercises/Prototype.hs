@@ -59,6 +59,9 @@ tenBandsExercise responses = mdo
 
   let modeEvents = leftmost [introNav,configNav,challengeNav,exploreNav]
   -- let requests = leftmost [introRequest,configRequests,challengeRequests,exploreRequests,reflectRequests]
+
+  sound <- filteredSoundWidget (constDyn $ Filter Lowpass 100 1 1)
+  
   let requests = never
   return (requests,reflectNav)
 

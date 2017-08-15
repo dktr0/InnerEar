@@ -161,6 +161,16 @@ startNode (WebAudioNode MediaNode _) = return ()  -- if you call 'start' on a Me
 startNode (WebAudioNode _ ref) = F.startNode ref
 startNode _ = return ()
 
+connectGraphToDest:: WebAudioGraph -> IO ()
+connectGraphToDest g = do
+  let l = getLastNode g
+  dest <- getDestination
+  connect l dest
+  return ()
+
+startFirstNode::WebAudioGraph -> IO()
+startFirstNode g = let f = getFirstNode g in startNode f 
+
 startGraph :: WebAudioGraph -> IO()
 startGraph a = do
   let f = getFirstNode a

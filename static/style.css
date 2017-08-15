@@ -13,3 +13,7 @@ button {
   font-size:100%;
   color: green;
 }
+
+.sourceWidget {
+  background-color: rgb(100,100,100);
+}

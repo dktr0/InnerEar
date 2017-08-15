@@ -64,8 +64,6 @@ performSound event = do
                       ) event          -- Event t (IO ())
   performEvent_ $ fmap liftIO n
 
-
-
 -- for user to enter their own sound file. must have the right 'id' to work with
 -- createUserSoundFileSource
 --soundFileInput ::MonadWidget t m => m ()
@@ -82,19 +80,27 @@ audioElement = elDynAttr "audio" attrs (return())
   where attrs = constDyn $ M.fromList $ zip ["id","controls"] ["userAudio","controls"]
 
 
-mediaElement::MonadWidget t m => m (Source)
-mediaElement = do
+-- Creates file input button and a play/pause/scrub interface.
+-- Returns a Source and Event that fires whenever the soundfile changes
+-- (to be used to re-connect the graph when the file switches)
+mediaElement::MonadWidget t m => m (Source,(Event t ()))
+mediaElement = el "div" $ do
   let attrs = FileInputConfig (constDyn $ M.fromList $ zip ["id"] ["soundFileInput"])
   file <- fileInput attrs
-
+  let fileChange = (()<$) $ updated $ _fileInput_value file
   audioElement
-  performEvent $ fmap liftIO $ fmap (\_ -> createMediaNode) $ updated (_fileInput_value file)   -- loads sound player into audio tag everytime the file changes
-  
+  performEvent $ fmap liftIO $ fmap (\_ -> createMediaNode) fileChange   -- loads sound player into audio tag everytime the file changes
+  return (MediaSource,fileChange)
 
-  --audioElement
-  --soundFileInput
-  --createMediaNode
-  return (MediaSource)
+
+-- Connects nodes to eachother and last node to destination
+connectGraphOnEv :: MonadWidget t m => Event t Sound -> m ()
+connectGraphOnEv sound = do 
+  performEvent $ fmap liftIO $ fmap (\x->do 
+    g <- createGraph x
+    connectGraphToDest g
+    ) sound
+  return ()
 
 
 -- an example of how this might be used with reflex-dom:

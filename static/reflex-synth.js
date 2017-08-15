@@ -25,16 +25,22 @@ function loadUserSoundFile(){
   var filePicker = document.getElementById('soundFileInput')
   var files = filePicker.files
 
-  var reader = new FileReader ();
+  if(files[0]){
 
-  // console.log('files: '+files)
-  // console.log('file: '+files[0])
-  reader.readAsArrayBuffer(files[0])
-  // var buff = reader.result
-  // console.log("buff length is: " +buff.length());
-  var url = URL.createObjectURL(files[0])
-  console.log("url: "+url)
+    var reader = new FileReader ();
 
-  var aud = document.getElementById('userAudio')
-  aud.setAttribute('src',url)
+    // console.log('files: '+files)
+    // console.log('file: '+files[0])
+    reader.readAsArrayBuffer(files[0])
+    // var buff = reader.result
+    // console.log("buff length is: " +buff.length());
+    var url = URL.createObjectURL(files[0])
+    console.log("url: "+url)
+
+    var aud = document.getElementById('userAudio')
+    aud.setAttribute('src',url)
+  }
+  else {
+    alert("Please select a sound file")
+  }
 }
