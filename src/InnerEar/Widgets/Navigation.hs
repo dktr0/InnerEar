@@ -2,13 +2,23 @@
 module InnerEar.Widgets.Navigation where
 
 import Control.Monad
+import Control.Monad.IO.Class (liftIO)
 import Reflex
 import Reflex.Dom
+import Data.Time.Clock (getCurrentTime)
 
 import InnerEar.Types.Datum
+import InnerEar.Types.Point
+import InnerEar.Types.Record
+import InnerEar.Types.Response
+import InnerEar.Types.Request
 import InnerEar.Widgets.CreateUser
 import InnerEar.Exercises.Prototype
 import InnerEar.Widgets.Test
+import Reflex.Synth.Synth
+import Reflex.Synth.Types
+import InnerEar.Types.Exercise
+
 
 data Navigation =
   SplashPage |
@@ -17,14 +27,15 @@ data Navigation =
   TestPage |
   TestSoundPage
 
-navigationWidget :: MonadWidget t m => Event t [Datum] -> m (Event t Datum)
+navigationWidget :: MonadWidget t m => Event t [Response] -> m (Event t Request,Event t Sound)
 navigationWidget responses = mdo
   let initialPage = navigationPage responses SplashPage
   let rebuild = fmap (navigationPage responses) navEvents
   w <- widgetHold initialPage rebuild
-  requests <- liftM switchPromptlyDyn $ mapDyn fst w
-  navEvents <- liftM switchPromptlyDyn $ mapDyn snd w
-  return requests
+  requests <- liftM switchPromptlyDyn $ mapDyn (\(x,_,_) -> x) w
+  sounds <- liftM switchPromptlyDyn $ mapDyn (\(_,x,_) -> x) w
+  navEvents <- liftM switchPromptlyDyn $ mapDyn (\(_,_,x) -> x) w
+  return (requests,sounds)
 
 navigationPage :: MonadWidget t m => Event t [Response] -> Navigation -> m (Event t Request,Event t Sound,Event t Navigation)
 navigationPage responses SplashPage = do
@@ -41,11 +52,10 @@ navigationPage responses CreateUserPage = do
 
 navigationPage responses ExercisePage = do
   (newData,sounds,navUnit) <- createExerciseWidget prototypeExercise
-  newPoint <- performIO $ fmap (liftIO . dataToPoint) $ newData
+  newPoint <- performEvent $ fmap (liftIO . datumToPoint) $ newData
   let newRequest = PostRecord <$> Record "placeholderHandle" <$> newPoint
   return (newRequest,sounds,SplashPage <$ navUnit)
-  where dataToPoint x = getCurrentTime >>= return . Point x
-  
+
 navigationPage responses TestPage = do
   (requests,sounds,navUnit) <- testWidget responses
   return (requests,sounds,SplashPage <$ navUnit)

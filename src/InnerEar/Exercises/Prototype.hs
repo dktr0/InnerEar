@@ -14,16 +14,17 @@ import Data.Maybe (fromJust)
 import Data.Bool (bool)
 
 import InnerEar.Widgets.Utility
-import InnerEar.Types.Request
-import InnerEar.Types.Response
+import InnerEar.Types.Datum
 import Reflex.Synth.Synth
 import Reflex.Synth.Types
 import InnerEar.Widgets.Bars
 import InnerEar.Widgets.Test
 import InnerEar.Types.Exercise
+import InnerEar.Types.ExerciseId
+import InnerEar.Types.ExerciseNavigation
 
 
-prototypeExercise :: Exercise () Int
+prototypeExercise :: MonadWidget t m => Exercise t m () Int
 prototypeExercise = Exercise {
   exerciseId = PrototypeExercise,
   defaultConfig = (),
@@ -34,7 +35,7 @@ prototypeExercise = Exercise {
 }
 
 prototypeConfigWidget :: MonadWidget t m => () -> m (Event t ())
-prototypeConfigWidget = do
+prototypeConfigWidget _ = do
   text "placeholder for prototype config widget"
   button "next"
 
@@ -65,8 +66,8 @@ prototypeQuestionWidget newQuestion = mdo
   flippableWidget (text "") (dynText correctText) False (leftmost [(True <$) submitButton, (False <$) nextButton])
   sound <- mapDyn (\x-> fromJust $ M.lookup x sounds) soundNum
   el "div" $ mapDyn (\x-> "Current sound is:  " ++show x) sound >>=dynText
-  backToConfigure <- Configure <$ button "Configure"
-  onToReflect <- Reflect <$ button "Reflect"
+  backToConfigure <- (Configure <$) <$> button "Configure"
+  onToReflect <- (Reflect <$) <$> button "Reflect"
   let navEvents = leftmost [backToConfigure,onToReflect]
   return (never,tagDyn sound playButton,navEvents)
 

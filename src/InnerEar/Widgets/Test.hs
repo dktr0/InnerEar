@@ -19,15 +19,15 @@ import Reflex.Synth.Synth
 import InnerEar.Widgets.Bars
 
 testWidget :: MonadWidget t m
-  => Event t [Response] -> m (Event t Request,Event t ())
+  => Event t [Response] -> m (Event t Request,Event t Sound,Event t ())
 testWidget responses = el "div" $ do
 
   sound <- filteredSoundWidget (constDyn $ Filter Lowpass 100 1 1)
-  
+
   --mapDyn connectGraphToDest sound
   --soundEv <- liftM (sound <$) $ button "play sound"
   playButton <-  button "play sound"
-  performSound $ tagDyn sound playButton
+  let sounds = tagDyn sound playButton
 
   soundEv <- button "soundEv button"
   --performSound $ leftmost [soundEv, fmap (const sound) fileChangeEv]
@@ -51,12 +51,12 @@ testWidget responses = el "div" $ do
   test
 
   home <- button "back to splash page"
-  return (never,home)
+  return (never,sounds,home)
 
 
 
 -- Do not delete!
-testSoundWidget::MonadWidget t m => Event t [Response] -> m (Event t Request, Event t ())
+testSoundWidget::MonadWidget t m => Event t [Response] -> m (Event t Request, Event t Sound, Event t ())
 testSoundWidget _ = el "div" $ do
   let attrs = constDyn $ M.fromList $ zip ["cols"] ["80"]
   x <- textArea $ def & textAreaConfig_attributes .~ attrs
@@ -64,9 +64,9 @@ testSoundWidget _ = el "div" $ do
   let text = _textArea_value x
   maybeSound <- mapDyn (\y->maybe NoSound id (readMaybe y::Maybe Sound)) text --dyn Maybe Sound
   mapDyn show maybeSound >>= dynText
-  performSound $ tagDyn maybeSound eval
+  let sounds = tagDyn maybeSound eval
   home <- button "back to splash page"
-  return (never,home)
+  return (never,sounds,home)
 
 
 --drawBar ::  MonadWidget t m =>  Dynamic t Int -> m ()
