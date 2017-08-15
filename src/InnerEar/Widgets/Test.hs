@@ -21,7 +21,7 @@ test :: MonadWidget t m => m ()
 test = do
    let m = fromList [("width","800px"),("height","800px"), ("viewBox", "0 0 300 200")]
    svgAttr "svg" m $ do
-    -- let n = fromList [("width","50px"),("height","100px"), ("style", "fill:red")]
+     let n = fromList [("width","50px"),("height","100px")]
      svgClass "rect" "test" $ return ()
 
 
