@@ -1,14 +1,20 @@
+{-# LANGUAGE DeriveDataTypeable #-}
+
 module InnerEar.Types.Datum where
 
 import Text.JSON
+import Text.JSON.Generic
 import InnerEar.Types.Utility
+import InnerEar.Types.Exercise
 
 data Datum =
   SessionStart |
   SessionEnd |
+  ExerciseStart Exercise |
   Score Int
-  deriving (Show,Eq)
+  deriving (Show,Eq,Data,Typeable)
 
+{-
 instance JSON Datum where
   showJSON SessionStart = showJSON "SessionStart"
   showJSON SessionEnd = showJSON "SessionEnd"
@@ -19,3 +25,4 @@ instance JSON Datum where
   readJSON (JSObject x) | firstKey x == "Score" = Score <$> valFromObj "score" x
   readJSON (JSObject x) | otherwise = Error $ "Unable to parse JSObject as Datum: " ++ (show x)
   readJSON _ = Error "Unable to parse non-JSObject or JSString as Datum"
+-}

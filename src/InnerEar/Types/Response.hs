@@ -1,6 +1,9 @@
+{-# LANGUAGE DeriveDataTypeable #-}
+
 module InnerEar.Types.Response where
 
 import Text.JSON
+import Text.JSON.Generic
 
 import InnerEar.Types.Utility
 import InnerEar.Types.Handle
@@ -11,8 +14,9 @@ data Response =
   Authenticated Handle | -- signals that client is successfully authenticated as the indicated handle
   UserNotCreated | -- signals a failure to create a new user for some reason
   Downloaded Record
-  deriving (Show,Eq)
+  deriving (Show,Eq,Data,Typeable)
 
+{-
 instance JSON Response where
   showJSON (NotAuthenticated) = showJSON "NotAuthenticated"
   showJSON (Authenticated h) = encJSDict [("Authenticated",h)]
@@ -25,6 +29,7 @@ instance JSON Response where
   readJSON (JSObject x) | otherwise = Error $ "Unable to parse JSObject as Response: " ++ (show x)
   readJSON (JSString x) | otherwise = Error $ "Unable to parse JSString as Response: " ++ (show x)
   readJSON _ = Error "Unable to parse non-JSObject as Response"
+-}
 
 getHandleFromAuthenticated :: Response -> Maybe Handle
 getHandleFromAuthenticated (Authenticated h) = Just h

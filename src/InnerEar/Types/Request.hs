@@ -1,6 +1,9 @@
+{-# LANGUAGE DeriveDataTypeable #-}
+
 module InnerEar.Types.Request where
 
 import Text.JSON
+import Text.JSON.Generic
 import InnerEar.Types.Utility
 import InnerEar.Types.Handle
 import InnerEar.Types.Password
@@ -11,7 +14,9 @@ data Request =
   Authenticate Handle Password |
   Deauthenticate |
   PostRecord Record
+  deriving (Eq,Show,Data,Typeable)
 
+{-
 instance JSON Request where
   showJSON (CreateUser h p) = encJSDict [("CreateUser",h),("p",p)]
   showJSON (Authenticate h p) = encJSDict [("Authenticate",h),("p",p)]
@@ -24,3 +29,4 @@ instance JSON Request where
   readJSON (JSObject x) | otherwise = Error $ "Unable to parse JSOBject as Request: " ++ (show x)
   readJSON (JSString x) | otherwise = Error $ "Unable to parse JSString as Request: " ++ (show x)
   readJSON _ = Error "Unable to parse non-JSObject or JSString as Request"
+-}
