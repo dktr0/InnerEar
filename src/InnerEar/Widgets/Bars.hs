@@ -28,8 +28,8 @@ rectCSS = do
 svgCssDynAttr :: MonadWidget t m => Text -> Dynamic t (Map Text Text) -> Text -> m a -> m a
 svgCssDynAttr elementTag attrs class child = snd <$> svgDynAttr' (elementTag attrs) child
 
-rectDynCSS :: MonadWidget t m => Dynamic t Int -> Dynamic t Int -> Dynamic t Float -> m ()
-rectDynCSS posX posY height = do
+rectDynCSS2 :: MonadWidget t m => Dynamic t Int -> Dynamic t Int -> Dynamic t Float -> m ()
+rectDynCSS2 posX posY height = do
     let rect = svgClass "rect" "rectStyle"
     posX' <- mapDyn (singleton "x" . show) posX
     posY' <- mapDyn (singleton "y" . show) posY
@@ -37,6 +37,15 @@ rectDynCSS posX posY height = do
     m <- mconcatDyn [posX', posY', height' ,rect]
     svgDynAttr "rect" m $ return ()
 --}
+
+rectDynCSS :: MonadWidget t m => Dynamic t Int -> Dynamic t Int -> Dynamic t Float -> m ()
+rectDynCSS posX posY height = do
+    posX' <- mapDyn (singleton "x" . show) posX
+    posY' <- mapDyn (singleton "y" . show) posY
+    height' <- mapDyn (singleton "height" . show) height
+    m <- mconcatDyn [posX', posY', height']
+    svgDynAttr "rect" m $ return ()
+
 buttonLabels :: MonadWidget t m => String -> m ()
 buttonLabels s = do
    elClass "div" "test" $ text (show s)
@@ -97,7 +106,7 @@ drawBar' x  = do
        let s = constDyn "fill:green;stroke-width:5"
        rect posX posY w h s t
 
-{--drawBarCSS :: MonadWidget t m => Dynamic t Float -> m ()
+drawBarCSS :: MonadWidget t m => Dynamic t Float -> m ()
 drawBarCSS x = do
    svgClass "svg" "svgS" $ do
     let posX = constDyn $ negate 100
@@ -106,7 +115,7 @@ drawBarCSS x = do
     --let t = constDyn "rotate(180)"
     --let s = constDyn "fill:green;"
     rectDynCSS posX posY h
---}
+
 
 drawBarwScale :: MonadWidget t m => Dynamic t Float -> m ()
 drawBarwScale x  = do
