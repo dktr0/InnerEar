@@ -3,14 +3,25 @@ body {
 }
 
 button {
-  background-color: hsl(0, 0%, 20%);
-  color: hsl(120, 100%, 70%);
+  background-color: rgb(128,128,128);
+  color: white;
   border: none;
   border-radius: 4px;
 }
 
-.test {
+.text {
   font-size:100%;
+  color: white;
+}
+
+.svgS {
+  width: 200px;
+  height: 200px;
+  background-color: rgb(128,128,128);
+}
+
+.rectStyle {
+  width: 50px;
   color: green;
 }
 

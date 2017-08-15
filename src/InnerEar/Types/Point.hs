@@ -11,9 +11,12 @@ import InnerEar.Types.Datum
 type Time = UTCTime
 
 data Point = Point {
-  time :: Time,
-  datum :: Datum
+  datum :: Datum,
+  time :: Time
 } deriving (Eq,Data,Typeable)
 
 instance Show Point where
-  show (Point t d) = show d ++ " (warning: not showing time)"
+  show (Point d t) = show d ++ " (warning: not showing time)"
+
+datumToPoint :: Datum -> IO Point
+datumToPoint x = getCurrentTime >>= return . Point x
