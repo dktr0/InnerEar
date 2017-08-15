@@ -39,3 +39,9 @@ foreign import javascript safe "$r=___ac.createBrownNoise()" createBrownianNoise
 
 
 foreign import javascript safe "$1.start()" startNode :: JSVal -> IO ()
+foreign import javascript safe "document.getElementById(\"userAudio\").play()" playMediaNode:: IO()
+
+
+-- takes 'canvas' html elements - us 'toJSVal on the html element'
+foreign import javascript safe "drawBufferWaveform($1, $2)" renderAudioWaveform :: JSVal -> JSVal -> IO()
+

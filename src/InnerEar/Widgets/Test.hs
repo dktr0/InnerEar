@@ -22,8 +22,11 @@ testWidget :: MonadWidget t m
   => Event t [Response] -> m (Event t Request,Event t ())
 testWidget responses = el "div" $ do
 
-  sound <- filteredSoundWidget (constDyn $ Filter Lowpass 100 1 1)
-  
+  --sound <- filteredSoundWidget (constDyn $ Filter Lowpass 100 1 1)
+
+  source <- sourceWidget
+  sound <- mapDyn ((flip FilteredSound) (Filter Lowpass 100 1 1)) source
+
   --mapDyn connectGraphToDest sound
   --soundEv <- liftM (sound <$) $ button "play sound"
   playButton <-  button "play sound"
