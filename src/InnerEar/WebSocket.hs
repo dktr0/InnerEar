@@ -28,7 +28,8 @@ webSocket = webSocket_ >>= return . WebSocket . Just
 
 send :: WebSocket -> Request -> IO ()
 send (WebSocket Nothing) _ = return ()
-send (WebSocket (Just ws)) x = send_ ws $ Prim.toJSString $ encode $ toJSON x -- was just encode
+-- send (WebSocket (Just ws)) x = send_ ws $ Prim.toJSString $ encode $ toJSON x -- was just encode
+send (WebSocket (Just ws)) x = send_ ws $ Prim.toJSString $ encodeJSON x
 --send (WebSocket (Just ws)) x = do
 --  let a = toJSON x :: JSValue
 --  let b = encode a :: String
@@ -56,8 +57,9 @@ getResponses :: WebSocket -> IO (Either String [Response])
 getResponses (WebSocket (Just ws)) = do
   rs <- getResponses_ ws :: IO T.JSVal
   let a = Prim.fromJSString rs :: String
-  let b = JSString (toJSString a) :: JSValue
-  let c = fromJSON b :: Result [Response]
+  let c = decodeResponses a
+  -- let b = JSString (toJSString a) :: JSValue
+  -- let c = fromJSON b :: Result [Response]
   return $ f c
   where f (Ok xs) = Right xs
         f (Error x) = Left $ "error trying to parse this in getResponses: " ++ x
