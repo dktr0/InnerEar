@@ -19,6 +19,29 @@ rect posX posY width height style transform= do
   m <- mconcatDyn [posX', posY', width', height', style', transform']
   svgDynAttr "rect" m $ return()
 
+--width and height are static
+
+rectCSS :: MonadWidget t m => m ()
+rectCSS = do
+  svgClass "rect" "rects" $ return ()
+{--
+svgCssDynAttr :: MonadWidget t m => Text -> Dynamic t (Map Text Text) -> Text -> m a -> m a
+svgCssDynAttr elementTag attrs class child = snd <$> svgDynAttr' (elementTag attrs) child
+
+rectDynCSS :: MonadWidget t m => Dynamic t Int -> Dynamic t Int -> Dynamic t Float -> m ()
+rectDynCSS posX posY height = do
+    let rect = svgClass "rect" "rectStyle"
+    posX' <- mapDyn (singleton "x" . show) posX
+    posY' <- mapDyn (singleton "y" . show) posY
+    height' <- mapDyn (singleton "height" . show) height
+    m <- mconcatDyn [posX', posY', height' ,rect]
+    svgDynAttr "rect" m $ return ()
+--}
+buttonLabels :: MonadWidget t m => String -> m ()
+buttonLabels s = do
+   elClass "div" "test" $ text (show s)
+   return ()
+
 drawBar ::  MonadWidget t m =>  Dynamic t Int -> m ()
 drawBar x =  do
  let svg = Just "http://www.w3.org/2000/svg"
@@ -74,6 +97,17 @@ drawBar' x  = do
        let s = constDyn "fill:green;stroke-width:5"
        rect posX posY w h s t
 
+{--drawBarCSS :: MonadWidget t m => Dynamic t Float -> m ()
+drawBarCSS x = do
+   svgClass "svg" "svgS" $ do
+    let posX = constDyn $ negate 100
+    let posY = constDyn $ negate 200
+    h <- mapDyn (*10) x
+    --let t = constDyn "rotate(180)"
+    --let s = constDyn "fill:green;"
+    rectDynCSS posX posY h
+--}
+
 drawBarwScale :: MonadWidget t m => Dynamic t Float -> m ()
 drawBarwScale x  = do
    let m = fromList [("width", "100px"),("height","200px"), ("viewBox", "0 0 300 200")]
@@ -86,14 +120,14 @@ drawBarwScale x  = do
      let s = constDyn "fill:yellow"
      rect posX posY w h s t
 
-
 labelBarButton :: MonadWidget t m => String ->  Dynamic t String -> Dynamic t Float -> m (Event t ())
 labelBarButton label buttonString barHeight = do
-    el "div" $ text (show label)
+    --el "div" $ text (show label)
+    buttonLabels label
     drawBar' barHeight
+    --drawBarCSS barHeight
     question <- dynButton buttonString -- m (Event t ())
     return (question)
-
 
 test :: MonadWidget t m => m ()
 test = do

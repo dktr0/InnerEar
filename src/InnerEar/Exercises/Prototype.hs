@@ -21,7 +21,6 @@ import Reflex.Synth.Types
 import InnerEar.Widgets.Bars
 import InnerEar.Widgets.Test
 
-
 prototypeExercise :: MonadWidget t m => Event t [Response] -> m (Event t Request,Event t ())
 prototypeExercise = tenBandsExercise
 
