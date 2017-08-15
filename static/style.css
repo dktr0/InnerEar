@@ -38,3 +38,7 @@ rect.test {
   fill: green;
   stroke-width:5;
 }
+
+.sourceWidget {
+  background-color: rgb(100,100,100);
+}

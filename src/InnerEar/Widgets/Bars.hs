@@ -147,9 +147,11 @@ dynButton' label = do
 -- this second version uses "switchPromptly never" to flatten the result of "dyn"
 dynButton'' :: MonadWidget t m => Dynamic t String -> m (Event t ())
 dynButton'' label = do
-  x <- mapDyn button label
-  y <- dyn x
+  x <- mapDyn button label -- Dyn (Event ())
+  y <- dyn x -- Event t (event t)
   switchPromptly never y
+
+--dyn :: MonadWidget t m => Dynamic t (m a) -> m (Event t a)
 
 -- this third version is the same as the second but without the do notation
 dynButton''' :: MonadWidget t m => Dynamic t String -> m (Event t ())
@@ -158,6 +160,9 @@ dynButton''' label = mapDyn button label >>= dyn >>= switchPromptly never
 -- this fourth version uses a more generic function "dynE" added to InnerEar.Widgets.Utility
 dynButton'''' :: MonadWidget t m => Dynamic t String -> m (Event t ())
 dynButton'''' label = mapDyn button label >>= dynE
+
+
+--dynE :: MonadWidget t m => Dynamic t (m (Event t a)) -> m (Event t a)
 
 -- a final version that uses >=> from Control.Monad to compose together two a -> m b functions
 --dynButton :: MonadWidget t m => Dynamic t String -> m (Event t ())

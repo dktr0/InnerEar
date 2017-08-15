@@ -12,6 +12,8 @@ import InnerEar.Types.Request
 import InnerEar.Widgets.Login
 import InnerEar.Widgets.Navigation
 import qualified InnerEar.WebSocket as WS
+import Reflex.Synth.Synth
+import Reflex.Synth.Types
 
 -- | The clientWidget is the top-level widget in the Inner Ear web client.
 -- If the user is logged in as an authenticated user, it displays that.
@@ -27,6 +29,7 @@ clientWidget = el "div" $ mdo
     text "wsStatus: "
     dynText wsStatus
   x <- loginWidget wsRcvd
-  y <- navigationWidget wsRcvd
+  (y,sounds) <- navigationWidget wsRcvd
   let wsSend = leftmost [x,y]
+  performSound sounds
   return ()

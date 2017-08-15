@@ -3,13 +3,16 @@ module Reflex.Synth.Types where
 import GHCJS.Types (JSVal)
 import qualified Reflex.Synth.Foreign as F
 import Data.Char (toLower)
+import GHCJS.DOM.JSFFI.Generated.HTMLElement
 import qualified GHCJS.Prim as Prim (toJSString)
+import qualified GHCJS.DOM.Types as G
 
-data FilterType = Peaking | Lowpass deriving (Show,Read)
 
-data NoiseType = White | Pink | Brownian
+data FilterType = Peaking | Lowpass | Highpass | Notch | Bandpass | Lowshelf | Highshelf | Allpass deriving (Show,Read)
 
-data NodeType = FilterNode FilterType | GainNode | Destination | NoiseNode NoiseType | OscillatorNode Oscillator | BufferNode Buffer
+data NoiseType = White | Pink | Brownian 
+
+data NodeType = FilterNode FilterType | GainNode | Destination | NoiseNode NoiseType | OscillatorNode Oscillator | BufferNode Buffer | MediaNode
 
 data Filter = NoFilter | Filter FilterType Double Double Double deriving (Read,Show)
 
@@ -18,9 +21,7 @@ data Oscillator = Oscillator OscillatorType Double deriving (Read,Show) --The Do
 
 data Buffer = File String deriving (Read,Show)
 
-type Duration = Double
-data Source = PinkNoiseSource Duration | OscillatorSource Oscillator Duration | BufferSource Buffer Duration deriving(Read,Show)
-
+data Source = OscillatorSource Oscillator Double| BufferSource Buffer Double | MediaSource deriving(Read,Show) -- 'Double' is the duration of the source
 
 data Sound = NoSound | FilteredSound Source Filter deriving (Read,Show)
 
@@ -65,6 +66,12 @@ createBufferNode (File path) = do
   x <- F.createAudioBufferSourceNode (Prim.toJSString path)
   return (WebAudioNode (BufferNode $ File path) x)
 
+
+createMediaNode:: IO WebAudioNode
+createMediaNode = do 
+  F.loadUserSoundFile
+  x <- F.createUserSoundFileNode
+  return (WebAudioNode MediaNode x)
 
 createWhiteNoise :: IO WebAudioNode
 createWhiteNoise = F.createWhiteNoise >>= return . WebAudioNode (NoiseNode White)
@@ -150,8 +157,20 @@ setGainAtTime val t (WebAudioNode _ node) = F.setGainAtTime val t node
 setGainAtTime _ _ NullAudioNode = error "Cannot set gain of a null node"
 
 startNode :: WebAudioNode -> IO ()
+startNode (WebAudioNode MediaNode _) = F.playMediaNode  -- if you call 'start' on a MediaBufferNode a js error is thrown by the WAAPI
 startNode (WebAudioNode _ ref) = F.startNode ref
 startNode _ = return ()
+
+connectGraphToDest:: WebAudioGraph -> IO ()
+connectGraphToDest g = do
+  let l = getLastNode g
+  dest <- getDestination
+  connect l dest
+  return ()
+
+
+startFirstNode::WebAudioGraph -> IO()
+startFirstNode g = let f = getFirstNode g in startNode f 
 
 startGraph :: WebAudioGraph -> IO()
 startGraph a = do
@@ -160,3 +179,9 @@ startGraph a = do
   dest <- getDestination
   connect l dest
   startNode f
+
+renderAudioWaveform:: G.HTMLCanvasElement -> G.HTMLCanvasElement -> IO()
+renderAudioWaveform l r= do 
+  let l' = G.unHTMLCanvasElement l
+  let r' = G.unHTMLCanvasElement  r
+  F.renderAudioWaveform l' r'

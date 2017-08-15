@@ -5,11 +5,11 @@ module InnerEar.Types.Datum where
 import Text.JSON
 import Text.JSON.Generic
 import InnerEar.Types.Utility
-import InnerEar.Types.Exercise
+import InnerEar.Types.ExerciseId
 
 data Datum =
   SessionStart |
   SessionEnd |
-  ExerciseStart Exercise |
+  ExerciseStart ExerciseId |
   Score Int
   deriving (Show,Eq,Data,Typeable)

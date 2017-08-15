@@ -14,6 +14,9 @@ foreign import javascript safe "$r=___ac.createGain()" createGain :: IO JSVal
 foreign import javascript safe "$r=___ac.createBiquadFilter()" createBiquadFilter :: IO JSVal
 foreign import javascript safe "$r=___ac.createOscillator()" createOscillator :: IO JSVal
 
+foreign import javascript safe "loadUserSoundFile()" loadUserSoundFile :: IO ()
+foreign import javascript safe "$r=___ac.createMediaElementSource(document.getElementById(\"userAudio\"))" createUserSoundFileNode :: IO JSVal
+
 
 foreign import javascript safe "$2.gain.value = $1" setGain :: Double -> JSVal -> IO ()
 foreign import javascript safe "$2.frequency.value = $1" setFrequency :: Double -> JSVal -> IO()
@@ -35,5 +38,10 @@ foreign import javascript safe "$r=___ac.createPinkNoise()" createPinkNoise :: I
 foreign import javascript safe "$r=___ac.createBrownNoise()" createBrownianNoise :: IO JSVal
 
 
-
 foreign import javascript safe "$1.start()" startNode :: JSVal -> IO ()
+foreign import javascript safe "document.getElementById(\"userAudio\").play()" playMediaNode:: IO()
+
+
+-- takes 'canvas' html elements - us 'toJSVal on the html element'
+foreign import javascript safe "drawBufferWaveform($1, $2)" renderAudioWaveform :: JSVal -> JSVal -> IO()
+
