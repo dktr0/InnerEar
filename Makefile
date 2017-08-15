@@ -28,12 +28,14 @@ buildServer:
 cleanServer:
 	cd server && stack clean
 
-bootServer: 
-	cd release && ./InnerEarServer 
+bootServer:
+	cd release && ./InnerEarServer
 
 release:
 	-rm -rf release
-	mkdir release 
+	mkdir release
 	cd client && cp -Rf $$(stack path --local-install-root)/bin/InnerEarClient.jsexe ../release/
 	cd server && cp -Rf $$(stack path --local-install-root)/bin/InnerEarServer ../release/InnerEarServer
- 
+
+ghciServer:
+	cd server && stack ghci

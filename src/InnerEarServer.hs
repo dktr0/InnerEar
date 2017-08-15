@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE OverloadedStrings, DeriveDataTypeable #-}
 module Main where
 
 import qualified Network.WebSockets as WS
@@ -53,7 +53,7 @@ processLoop ws s i = do
       let x' = decode (T.unpack x) :: Result JSString
       case x' of
         Ok x'' -> do
-          processResult s i $ (fromJSON . JSString) x''
+          processResult s i $ (decodeRequest . fromJSString) x''
           processLoop ws s i
         Error x'' -> do
           putStrLn $ "Error (processLoop): " ++ x''

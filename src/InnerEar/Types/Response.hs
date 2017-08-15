@@ -4,6 +4,7 @@ module InnerEar.Types.Response where
 
 import Text.JSON
 import Text.JSON.Generic
+import Text.JSON.String (runGetJSON)
 
 import InnerEar.Types.Utility
 import InnerEar.Types.Handle
@@ -16,20 +17,12 @@ data Response =
   Downloaded Record
   deriving (Show,Eq,Data,Typeable)
 
-{-
-instance JSON Response where
-  showJSON (NotAuthenticated) = showJSON "NotAuthenticated"
-  showJSON (Authenticated h) = encJSDict [("Authenticated",h)]
-  showJSON (UserNotCreated) = showJSON "UserNotCreated"
-  showJSON (Downloaded r) = encJSDict [("Downloaded",r)]
-  readJSON (JSString x) | fromJSString x == "NotAuthenticated" = Ok NotAuthenticated
-  readJSON (JSObject x) | firstKey x == "Authenticated" = Authenticated <$> valFromObj "Authenticated" x
-  readJSON (JSString x) | fromJSString x == "UserNotCreated" = Ok UserNotCreated
-  readJSON (JSObject x) | firstKey x == "Downloaded" = Downloaded <$> valFromObj "Downloaded" x
-  readJSON (JSObject x) | otherwise = Error $ "Unable to parse JSObject as Response: " ++ (show x)
-  readJSON (JSString x) | otherwise = Error $ "Unable to parse JSString as Response: " ++ (show x)
-  readJSON _ = Error "Unable to parse non-JSObject as Response"
--}
+
+-- | decodeResponse probably shouldn't be necessary but we need to do this
+-- in order to avoid "unknown constructor" errors when decoding JSON
+
+decodeResponses :: String -> Result [Response]
+decodeResponses = either Error fromJSON . runGetJSON readJSValue
 
 getHandleFromAuthenticated :: Response -> Maybe Handle
 getHandleFromAuthenticated (Authenticated h) = Just h
