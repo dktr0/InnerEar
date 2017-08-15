@@ -8,6 +8,7 @@ import Control.Monad
 
 import InnerEar.Widgets.Utility
 
+--Dynamic "rect" element
 rect :: MonadWidget t m => Dynamic t Int -> Dynamic t Int -> Dynamic t Float -> Dynamic t Float -> Dynamic t String -> Dynamic t String -> m ()
 rect posX posY width height style transform= do
   posX' <- mapDyn (singleton "x" . show) posX
@@ -19,49 +20,117 @@ rect posX posY width height style transform= do
   m <- mconcatDyn [posX', posY', width', height', style', transform']
   svgDynAttr "rect" m $ return()
 
---width and height are static
-
-rectCSS :: MonadWidget t m => m ()
-rectCSS = do
-  svgClass "rect" "rects" $ return ()
-{--
-svgCssDynAttr :: MonadWidget t m => Text -> Dynamic t (Map Text Text) -> Text -> m a -> m a
-svgCssDynAttr elementTag attrs class child = snd <$> svgDynAttr' (elementTag attrs) child
-
-rectDynCSS2 :: MonadWidget t m => Dynamic t Int -> Dynamic t Int -> Dynamic t Float -> m ()
-rectDynCSS2 posX posY height = do
-    let rect = svgClass "rect" "rectStyle"
+--Dynamic "rect" element with CSS style
+rectDynCSS :: MonadWidget t m => Dynamic t Int -> Dynamic t Int -> Dynamic t Float -> Dynamic t String -> m ()
+rectDynCSS posX posY height c = do
+    c' <- mapDyn (singleton "class") c
     posX' <- mapDyn (singleton "x" . show) posX
     posY' <- mapDyn (singleton "y" . show) posY
     height' <- mapDyn (singleton "height" . show) height
-    m <- mconcatDyn [posX', posY', height' ,rect]
-    svgDynAttr "rect" m $ return ()
---}
-
-rectDynCSS :: MonadWidget t m => Dynamic t Int -> Dynamic t Int -> Dynamic t Float -> m ()
-rectDynCSS posX posY height = do
-    posX' <- mapDyn (singleton "x" . show) posX
-    posY' <- mapDyn (singleton "y" . show) posY
-    height' <- mapDyn (singleton "height" . show) height
-    m <- mconcatDyn [posX', posY', height']
+    m <- mconcatDyn [posX', posY', height', c']
     svgDynAttr "rect" m $ return ()
 
-buttonLabels :: MonadWidget t m => String -> m ()
-buttonLabels s = do
-   elClass "div" "test" $ text (show s)
-   return ()
+rectDynCSS' :: MonadWidget t m => Dynamic t Float -> Dynamic t String -> m ()
+rectDynCSS' height c = do
+   height' <- mapDyn (singleton "height" . show) height
+   c' <- mapDyn (singleton "class") c
+   m <- mconcatDyn [height', c']
+   svgDynAttr "rect" m $ return ()
 
+--A dynamic bar
 drawBar ::  MonadWidget t m =>  Dynamic t Int -> m ()
 drawBar x =  do
- let svg = Just "http://www.w3.org/2000/svg"
- let svgAttrs = [("width", "100px")
+   let svg = Just "http://www.w3.org/2000/svg"
+   let svgAttrs = [("width", "100px")
                 ,("height", "200px")
                 ,("viewBox", "0 0 300 200")]
- --elDynAttr "200px" svgAttrs $ do el "height" $ x
- elWith "svg" (ElConfig svg (fromList svgAttrs)) $ do
-   elWith "rect" (ElConfig svg (fromList [("width", "100"), ("height", "100"), ("fill", "red")])) (return ())
+   elWith "svg" (ElConfig svg (fromList svgAttrs)) $ do
+      elWith "rect" (ElConfig svg (fromList [("width", "100"), ("height", "100"), ("fill", "red")])) (return ())
 
---elDynAttr :: (...) => Text -> Dynamic t (Map Text Text) -> m a -> m a
+--Another dynamic bar
+drawBar' :: MonadWidget t m =>  Dynamic t Float -> m ()
+drawBar' x  = do
+    let m = fromList [("width","200px"),("height","200px"), ("viewBox", "0 0 300 200")]
+    svgAttr "svg" m $ do
+       let posX = constDyn  20 -- $ negate 100
+       let posY = constDyn  50 -- $ negate 200
+       let w = constDyn 50
+       h <- mapDyn (*5) x
+       let t = constDyn "rotate(0)"
+       let s = constDyn "fill:green;stroke-width:5"
+       rect posX posY w h s t
+
+--A dynamic bar with css style and in-line attributes
+drawBarCSS :: MonadWidget t m => Dynamic t Float -> m ()
+drawBarCSS x = do
+  svgClass "svg" "svgS" $ do
+     let posX = constDyn 20 -- $ negate 100
+     let posY = constDyn 50 -- $ negate 200
+     h <- mapDyn (*10) x
+     let c = constDyn "rectStyle"
+     rectDynCSS posX posY h c
+
+--Another dynamic bar with css style an height attribute
+drawBarCSS' :: MonadWidget t m => Dynamic t Float -> m ()
+drawBarCSS' x = do
+  svgClass "svg" "svgS" $ do
+   h <- mapDyn (*10) x
+   let c = constDyn "rectStyle"
+   rectDynCSS' h c
+
+--Labels with CSS style to be used above bars
+labelsForBars :: MonadWidget t m => String -> m ()
+labelsForBars s = do
+   elClass "div" "text" $ text (show s)
+   return ()
+
+--A dynamic bar with a label, a button and CSS style
+labelBarButton :: MonadWidget t m => String ->  Dynamic t String -> Dynamic t Float -> m (Event t ())
+labelBarButton label buttonString barHeight = do
+   labelsForBars label
+   drawBarCSS barHeight
+   question <- dynButton buttonString -- m (Event t ())
+   return (question)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   {--
+   svgAttr "svg" (singleton "class" "performanceBar") $
+   x <-
+   ...
+   m <- mconcat []
+   svgDynAttr
+   --}
+   --rulesof cominations in the sgs style
+   --rect.perfomance bar
 
 -- this was our original version from Friday (4 more versions follow)
 -- after some discussion we should delete all but the final version below
@@ -91,77 +160,5 @@ dynButton'''' :: MonadWidget t m => Dynamic t String -> m (Event t ())
 dynButton'''' label = mapDyn button label >>= dynE
 
 -- a final version that uses >=> from Control.Monad to compose together two a -> m b functions
-dynButton :: MonadWidget t m => Dynamic t String -> m (Event t ())
-dynButton = (mapDyn button) >=> dynE
-
-drawBar' :: MonadWidget t m =>  Dynamic t Float -> m ()
-drawBar' x  = do
-    let m = fromList [("width","200px"),("height","200px"), ("viewBox", "0 0 300 200")]
-    svgAttr "svg" m $ do
-       let posX = constDyn $ negate 100
-       let posY = constDyn $ negate 200
-       let w = constDyn 50
-       h <- mapDyn (*5) x
-       let t = constDyn "rotate(180)"
-       let s = constDyn "fill:green;stroke-width:5"
-       rect posX posY w h s t
-
-drawBarCSS :: MonadWidget t m => Dynamic t Float -> m ()
-drawBarCSS x = do
-   svgClass "svg" "svgS" $ do
-    let posX = constDyn $ negate 100
-    let posY = constDyn $ negate 200
-    h <- mapDyn (*10) x
-    --let t = constDyn "rotate(180)"
-    --let s = constDyn "fill:green;"
-    rectDynCSS posX posY h
-
-
-drawBarwScale :: MonadWidget t m => Dynamic t Float -> m ()
-drawBarwScale x  = do
-   let m = fromList [("width", "100px"),("height","200px"), ("viewBox", "0 0 300 200")]
-   svgAttr "svg" m $ do
-     let posX = constDyn 20
-     let posY = constDyn 20
-     let w = constDyn 30
-     h <- mapDyn (*32) x
-     let t = constDyn "rotate(-90)"
-     let s = constDyn "fill:yellow"
-     rect posX posY w h s t
-
-labelBarButton :: MonadWidget t m => String ->  Dynamic t String -> Dynamic t Float -> m (Event t ())
-labelBarButton label buttonString barHeight = do
-    --el "div" $ text (show label)
-    buttonLabels label
-    drawBar' barHeight
-    --drawBarCSS barHeight
-    question <- dynButton buttonString -- m (Event t ())
-    return (question)
-
-test :: MonadWidget t m => m ()
-test = do
-   elClass "div" "test" $ text "this is a test"
-   return ()
-
-
-drawBar'' :: MonadWidget t m => Dynamic t Float -> m()
-drawBar'' x = do
-  let attr = fromList[("width", "100px"),("height", "200px"), ("viewBox", "0 0 300 200")]
-  svgAttr "svg" attr $ do
-     let posX = constDyn 50
-     let posY = constDyn 20
-     let w = constDyn 25
-     h <- mapDyn(*32) x
-     let t = constDyn "rotate(-90)"
-     let s = constDyn "fill:blue"
-     rect posX posY w h s t
-
-
-
-
-
---Datam.map
---let x = constDyn value
---holDyn
---mapDyn from Reflex.Dynamic
---combineDyn
+--dynButton :: MonadWidget t m => Dynamic t String -> m (Event t ())
+--dynButton = (mapDyn button) >=> dynE

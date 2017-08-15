@@ -6,6 +6,7 @@ import Data.Maybe
 import Data.Bool (bool)
 import Reflex
 import Reflex.Dom
+import Control.Monad ((>=>))
 
 -- | dynE is like dyn from Reflex, specialized for widgets that return
 -- events. A dynamic argument updates the widget, and the return value is
@@ -29,3 +30,7 @@ buttonDynAttrs s val attrs = do
   (e, _) <- elDynAttr' "button" attrs $ text s
   let event = domEvent Click e
   return $ fmap (const val) event
+
+--Button with dynamic label. A final version that uses >=> from Control.Monad to compose together two a -> m b functions
+dynButton :: MonadWidget t m => Dynamic t String -> m (Event t ())
+dynButton = (mapDyn button) >=> dynE

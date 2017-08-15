@@ -10,44 +10,28 @@ import Data.Maybe (isJust, fromJust)
 import Control.Monad
 
 
-
+import InnerEar.Widgets.Utility
 import InnerEar.Types.Request
 import InnerEar.Types.Response
 import Reflex.Synth.Types
 import Reflex.Synth.Synth
 import InnerEar.Widgets.Bars
 
+test :: MonadWidget t m => m ()
+test = do
+   let m = fromList [("width","800px"),("height","800px"), ("viewBox", "0 0 300 200")]
+   svgAttr "svg" m $ do
+    -- let n = fromList [("width","50px"),("height","100px"), ("style", "fill:red")]
+     svgClass "rect" "test" $ return ()
+
+
 testWidget :: MonadWidget t m
   => Event t [Response] -> m (Event t Request,Event t ())
 testWidget responses = el "div" $ do
---  text "testpage placeholder"
-  makeASound <- liftM ((FilteredSound (BufferSource (File "pinknoise.wav") 2.0) (Filter Peaking 400 1 1)) <$) $ button "Pinknoise Peak 400 1 1"
---  makeASound'' <- liftM ((FilteredSound (BufferSource (File "pinknoise.wav") 2.0) (Filter Peaking 900 1 1)) <$) $ button "Pinknoise Peak 400 1 1"
---  performSound $ leftmost [makeASound,makeASound', makeASound'']
-  score <- count makeASound
---  score' <- count makeASound'
---  score'' <- count makeASound''
---  drawBar score
---  drawBar' score'
---  drawBar'' score''
-
-------first button
-  questionLabel <- mapDyn show score
---  dynButton questionLabel
-  labelBarButton "myLabel" questionLabel score
-
----second button
-  pressed <- dynButton questionLabel
-  someText <- holdDyn "not pressed yet" $ "pressed" <$ pressed
-  dynText someText
-
-  test
-
-  home <- button "back to splash page"
-  return (never,home)
-
-
-
+    makeASound <- liftM ((FilteredSound (BufferSource (File "pinknoise.wav") 2.0) (Filter Peaking 400 1 1)) <$) $ button "Pinknoise Peak 400 1 1"
+    test
+    home <- button "back to splash page"
+    return (never,home)
 
 
 
@@ -64,14 +48,3 @@ testSoundWidget _ = el "div" $ do
   performSound $ tagDyn maybeSound eval
   home <- button "back to splash page"
   return (never,home)
-
-
---drawBar ::  MonadWidget t m =>  Dynamic t Int -> m ()
---drawBar x =  do
--- let svg = Just "http://www.w3.org/2000/svg"
--- let svgAttrs = fromList [("width", "100px")
---                , ("height", "200px")
---                , ("viewBox", "0 0 300 200") ]
--- --elDynAttr "200px" svgAttrs $ do el "height" $ x
--- elWith "svg" (ElConfig svg svgAttrs) $ do
---   elWith "rect" (ElConfig svg (M.fromList [("width", "100%"), ("height", "100%"), ("fill", "red")])) (return ())
