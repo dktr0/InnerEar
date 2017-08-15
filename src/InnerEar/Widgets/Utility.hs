@@ -10,7 +10,7 @@ import Reflex.Dom.Contrib.Widgets.ButtonGroup (radioGroup)
 import Reflex.Dom.Contrib.Widgets.Common
 import Reflex.Synth.Types
 import Reflex.Synth.Synth
-
+import Control.Monad ((>=>))
 
 -- | dynE is like dyn from Reflex, specialized for widgets that return
 -- events. A dynamic argument updates the widget, and the return value is
@@ -66,3 +66,6 @@ filteredSoundWidget filt= elClass "div" "sourceWidget" $ do
 
 
 
+--Button with dynamic label. A final version that uses >=> from Control.Monad to compose together two a -> m b functions
+dynButton :: MonadWidget t m => Dynamic t String -> m (Event t ())
+dynButton = (mapDyn button) >=> dynE

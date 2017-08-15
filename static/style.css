@@ -1,5 +1,9 @@
 body {
-  background-color: black;
+  background-color: white;
+}
+
+text {
+  color: white;
 }
 
 button {
@@ -15,14 +19,24 @@ button {
 }
 
 .svgS {
-  width: 200px;
-  height: 200px;
+  width: 800px;
+  height: 800px;
   background-color: rgb(128,128,128);
 }
 
-.rectStyle {
+rect {
   width: 50px;
-  color: green;
+  height: 100px;
+  fill: green;
+  stroke-width:5;
+
+}
+
+rect.test {
+  width: 50px;
+  height: 100px;
+  fill: green;
+  stroke-width:5;
 }
 
 .sourceWidget {
