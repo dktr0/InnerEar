@@ -23,12 +23,14 @@ data Oscillator = Oscillator OscillatorType Double Double deriving (Read,Show) -
 
 data Buffer = File String deriving (Read,Show)
 
-data Source = NodeSource Node Double  | OscillatorSource Oscillator Double| BufferSource Buffer Double | MediaSource deriving(Read,Show) -- 'Double' is the duration of the source
+data Source = NodeSource Node Double  | OscillatorSource Oscillator Double | BufferSource Buffer Double | MediaSource deriving(Read,Show) -- 'Double' is the duration of the source
 
 data Sound = NoSound | Sound Source| FilteredSound Source Filter deriving (Read,Show)
 
 data WebAudioNode = WebAudioNode Node JSVal | NullAudioNode
 
+-- Might use this eventually...
+--type JSNodeRef = (Either JSVal [JSVal],JSVal) -- fst: node that can be 'started' (if there is one), snd: node that can connect to a subsequent node
 
 -- For representing WebAudio Graphs - to be understood as hooking up a sequence of 'nodes' (or ugens)
 -- for instance, the web audio graph:

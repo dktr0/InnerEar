@@ -13,6 +13,7 @@ import InnerEar.Types.Record
 import InnerEar.Types.Response
 import InnerEar.Types.Request
 import InnerEar.Widgets.CreateUser
+import InnerEar.Widgets.Sound
 import InnerEar.Exercises.Prototype
 import InnerEar.Widgets.Test
 import Reflex.Synth.Synth

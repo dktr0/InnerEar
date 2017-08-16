@@ -8,22 +8,30 @@ import Control.Monad.IO.Class (liftIO)
 
 import InnerEar.Types.ExerciseId
 import InnerEar.Widgets.Utility
-import InnerEar.Types.Datum
+import InnerEar.Types.Data
 import Reflex.Synth.Synth
 import Reflex.Synth.Types
 import InnerEar.Types.ExerciseNavigation
 
-data Exercise t m a b = Exercise { -- where a represents config type, b represents question type
+-- | An Exercise is a uniquely typed value representing all of the components of
+-- a functioning Inner Ear ear-training exercise. The types t and m are required by Reflex.
+-- c represents the type of an exercise' configuration. q represents the type of a question.
+-- a represents the type of an answer, and e represents the type of an evaluation (i.e. running score, etc).
+
+data Exercise t m c q a e = Exercise {
   exerciseId :: ExerciseId,
-  defaultConfig :: a,
-  configWidget :: a -> m (Event t a), -- modal behaviour, i.e. issuing of config event also navigates to question
-  generateQuestion :: a -> [Datum] -> IO b,
-  questionWidget :: Event t b -> m (Event t Datum,Event t Sound,Event t ExerciseNavigation),
-  reflectiveQuestion :: Maybe String -- where Nothing means no reflective question
+  defaultConfig :: c,
+  configWidget :: c -> m (Event t c), -- modal behaviour, i.e. issuing of config event also navigates to question
+  generateQuestion :: c -> [Datum c q a e] -> IO (q,a),
+  questionWidget :: Event t (q,a) -> m (Event t (Datum c q a e),Event t Sound,Event t ExerciseNavigation),
+  reflectiveQuestion :: Maybe Reflection -- where Nothing means no reflective question stage
 }
 
-createExerciseWidget :: MonadWidget t m => Exercise t m a b -> m (Event t Datum,Event t Sound,Event t ())
-createExerciseWidget ex = mdo
+-- | runExercise takes a completely defined Exercise value and uses it to run an ear-training
+-- exercise in the browser.
+
+runExercise :: MonadWidget t m => Exercise t m c q a e -> m (Event t (ExerciseId,ExerciseDatum),Event t Sound,Event t ())
+runExercise ex = mdo
 
   currentData <- foldDyn (:) [] newData -- ultimately this will include selected data from database as well
   nav <- holdDyn Configure navEvents
@@ -56,4 +64,7 @@ createExerciseWidget ex = mdo
   let navEvents = leftmost [goToConfigure,goToQuestion,goToReflect]
   let closeExercise = fmapMaybe (\_ -> maybe (Just ()) (const Nothing) $ reflectiveQuestion ex ) maybeGoToReflect
 
-  return (newData,sounds,closeExercise)
+  -- flattening and identification of exercise data for reporting/collection upwards
+  let exerciseData = toExerciseDatum <$> newData
+  let dataWithId = (\x -> (_,x)) <$> exerciseData
+  return (toExerciseDatum <$> newData,sounds,closeExercise)

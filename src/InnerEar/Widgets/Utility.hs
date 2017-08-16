@@ -10,8 +10,8 @@ import Reflex.Dom.Contrib.Widgets.ButtonGroup (radioGroup)
 import Reflex.Dom.Contrib.Widgets.Common
 import Reflex.Synth.Types
 import Reflex.Synth.Synth
+import Control.Monad ((>=>))
 import Control.Monad.IO.Class (liftIO)
-
 import GHCJS.DOM.Types (castToHTMLCanvasElement)
 
 -- | dynE is like dyn from Reflex, specialized for widgets that return
@@ -38,7 +38,6 @@ buttonDynAttrs s val attrs = do
   return $ fmap (const val) event
 
 
--- Event for when the source changes to a sound file somewhere down the line
 sourceWidget::MonadWidget t m => m (Dynamic t Source)
 sourceWidget = elClass "div" "sourceWidget" $ do
   let radioButtonMap = zip [0::Int,1..] ["Pink Noise","White Noise","Upload Sound File"]
@@ -56,8 +55,6 @@ sourceWidget = elClass "div" "sourceWidget" $ do
 
 
 
-
--- Event for when the source changes to a sound file somewhere down the line
 filteredSoundWidget::MonadWidget t m => Dynamic t Filter -> m (Dynamic t Sound)
 filteredSoundWidget filt= elClass "div" "sourceWidget" $ do
   let radioButtonMap = zip [0::Int,1..] ["Pink Noise","White Noise","Upload Sound File"]
@@ -74,3 +71,6 @@ filteredSoundWidget filt= elClass "div" "sourceWidget" $ do
 
 
 
+--Button with dynamic label. A final version that uses >=> from Control.Monad to compose together two a -> m b functions
+dynButton :: MonadWidget t m => Dynamic t String -> m (Event t ())
+dynButton = (mapDyn button) >=> dynE
