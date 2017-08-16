@@ -11,6 +11,8 @@ import Reflex.Dom.Contrib.Widgets.Common
 import Reflex.Synth.Types
 import Reflex.Synth.Synth
 import Control.Monad ((>=>))
+import Control.Monad.IO.Class (liftIO)
+import GHCJS.DOM.Types (castToHTMLCanvasElement)
 
 -- | dynE is like dyn from Reflex, specialized for widgets that return
 -- events. A dynamic argument updates the widget, and the return value is
@@ -46,7 +48,13 @@ sourceWidget = elClass "div" "sourceWidget" $ do
                        ,_widgetConfig_attributes = constDyn M.empty})
   (fileSource,fileChangeEv) <- mediaElement
   radioVal <- mapDyn (maybe 0 id) (_hwidget_value radioWidget)
+  (cL,_) <- elAttr' "canvas" (M.fromList $ zip ["width","height"] ["1000","200"]) (return ())
+  (cR,_) <- elAttr' "canvas" (M.fromList $ zip ["width","height"] ["1000","200"]) (return ())
+  let canvasDrawEv = ((liftIO $ renderAudioWaveform (castToHTMLCanvasElement $ _el_element cL) (castToHTMLCanvasElement $ _el_element cR)) <$) fileChangeEv
+  performEvent canvasDrawEv
   mapDyn (\x-> if x==0 then BufferSource (File "pinknoise.wav") 2 else if x==1 then BufferSource (File "whitenoise.wav") 2 else fileSource) radioVal
+
+
 
 
 -- Event for when the source changes to a sound file somewhere down the line

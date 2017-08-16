@@ -3,7 +3,10 @@ module Reflex.Synth.Types where
 import GHCJS.Types (JSVal)
 import qualified Reflex.Synth.Foreign as F
 import Data.Char (toLower)
+import GHCJS.DOM.JSFFI.Generated.HTMLElement
 import qualified GHCJS.Prim as Prim (toJSString)
+import qualified GHCJS.DOM.Types as G
+
 
 data FilterType = Peaking | Lowpass | Highpass | Notch | Bandpass | Lowshelf | Highshelf | Allpass deriving (Show,Read)
 
@@ -16,12 +19,9 @@ data Filter = NoFilter | Filter FilterType Double Double Double deriving (Read,S
 data OscillatorType = Sawtooth | Sine | Square deriving (Show, Read)
 data Oscillator = Oscillator OscillatorType Double deriving (Read,Show) --The Double is oscillator frequency
 
-
 data Buffer = File String deriving (Read,Show)
 
-
 data Source = OscillatorSource Oscillator Double| BufferSource Buffer Double | MediaSource deriving(Read,Show) -- 'Double' is the duration of the source
-
 
 data Sound = NoSound | FilteredSound Source Filter deriving (Read,Show)
 
@@ -157,7 +157,7 @@ setGainAtTime val t (WebAudioNode _ node) = F.setGainAtTime val t node
 setGainAtTime _ _ NullAudioNode = error "Cannot set gain of a null node"
 
 startNode :: WebAudioNode -> IO ()
-startNode (WebAudioNode MediaNode _) = return ()  -- if you call 'start' on a MediaBufferNode a js error is thrown by the WAAPI
+startNode (WebAudioNode MediaNode _) = F.playMediaNode  -- if you call 'start' on a MediaBufferNode a js error is thrown by the WAAPI
 startNode (WebAudioNode _ ref) = F.startNode ref
 startNode _ = return ()
 
@@ -167,6 +167,7 @@ connectGraphToDest g = do
   dest <- getDestination
   connect l dest
   return ()
+
 
 startFirstNode::WebAudioGraph -> IO()
 startFirstNode g = let f = getFirstNode g in startNode f 
@@ -178,3 +179,9 @@ startGraph a = do
   dest <- getDestination
   connect l dest
   startNode f
+
+renderAudioWaveform:: G.HTMLCanvasElement -> G.HTMLCanvasElement -> IO()
+renderAudioWaveform l r= do 
+  let l' = G.unHTMLCanvasElement l
+  let r' = G.unHTMLCanvasElement  r
+  F.renderAudioWaveform l' r'
