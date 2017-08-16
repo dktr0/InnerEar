@@ -21,7 +21,8 @@ import Reflex.Synth.Types
 
 clientWidget :: MonadWidget t m => m ()
 clientWidget = el "div" $ mdo
-  el "div" $ text "Inner Ear"
+  elClass "div" "flex-container" $ do
+    elClass "h1" "header" $ text "Inner Ear"
   (wsRcvd,wsStatus) <- WS.reflexWebSocket wsSend
   wsRcvdShow <- holdDyn "" $ fmap show wsRcvd
   dynText wsRcvdShow
