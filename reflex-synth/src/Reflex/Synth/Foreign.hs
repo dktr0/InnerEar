@@ -38,7 +38,7 @@ foreign import javascript safe "$r=___ac.createPinkNoise()" createPinkNoise :: I
 foreign import javascript safe "$r=___ac.createBrownNoise()" createBrownianNoise :: IO JSVal
 
 
-foreign import javascript safe "$1.start()" startNode :: JSVal -> IO ()
+foreign import javascript safe "console.log($1);$1.start()" startNode :: JSVal -> IO ()
 foreign import javascript safe "document.getElementById(\"userAudio\").play()" playMediaNode:: IO()
 
 

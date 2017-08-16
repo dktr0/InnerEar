@@ -21,14 +21,18 @@ import InnerEar.Widgets.Bars
 testWidget :: MonadWidget t m
   => Event t [Response] -> m (Event t Request,Event t Sound,Event t ())
 testWidget responses = el "div" $ do
-  source <- sourceWidget
-  sound <- mapDyn ((flip FilteredSound) (Filter Lowpass 100 1 1)) source
+  --source <- sourceWidget
+  --sound <- mapDyn ((flip FilteredSound) (Filter Lowpass 100 1 1)) source
   --mapDyn connectGraphToDest sound
   --soundEv <- liftM (sound <$) $ button "play sound"
-  playButton <-  button "play sound"
-  let sounds = tagDyn sound playButton
+  --playButton <-  button "play sound"
+  --let sounds = tagDyn sound playButton
 
-  soundEv <- button "soundEv button"
+  --soundEv <- button "soundEv button"
+  let oscs = fmap (\(f,g)-> OscillatorNode $ Oscillator Sine f g) $ zip (fmap (220*) [1,2,3,4,5]) (repeat 0.5) -- [Node] (all OscillatorNode)
+  let sound = FilteredSound (NodeSource (AdditiveNode oscs) 4) (Filter Lowpass 400 1 1)
+  soundEv <- liftM (sound <$) $ button "play additive synth"
+  performSound soundEv
   --performSound $ leftmost [soundEv, fmap (const sound) fileChangeEv]
   score <- count soundEv
 --  score' <- count makeASound'
@@ -50,7 +54,7 @@ testWidget responses = el "div" $ do
   test
 
   home <- button "back to splash page"
-  return (never,sounds,home)
+  return (never,never,home)
 
 
 
