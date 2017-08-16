@@ -23,26 +23,37 @@ import InnerEar.Types.Exercise
 import InnerEar.Types.ExerciseId
 import InnerEar.Types.ExerciseNavigation
 
+-- | We deliberately don't give an explicit type signature to prototypeExercise
+-- so that this can change as the definition of createExerciseWidget changes.
+-- But see the comment below about the typing of the Exercise value within this definition...
 
-prototypeExercise :: MonadWidget t m => Exercise t m () Int
-prototypeExercise = Exercise {
+prototypeExercise = createExerciseWidget $ Exercise {
   exerciseId = PrototypeExercise,
   defaultConfig = (),
   configWidget = prototypeConfigWidget,
   generateQuestion = prototypeGenerateQuestion,
   questionWidget = prototypeQuestionWidget,
   reflectiveQuestion = Just "Please write some brief text reflecting on your experience:"
-}
+  } :: MonadWidget t m => Exercise t m () Int Int ()
+
+-- | The Exercise value above is a complete definition of an exercise that can be
+-- "translated" into functioning Reflex-Dom widgets in the context of our system.
+-- We explicitly type the Exercise value in order to be clear about the signatures
+-- required for the individual components of the exercise (referenced in the value
+-- above and defined fully below. The t and the m are required by Reflex. The next
+-- four types (after the m) represent the exercise's configuration, question, answer
+-- (used both for the correct answer and the user's actual answer) and evaluation (i.e.
+-- running score, etc).
 
 prototypeConfigWidget :: MonadWidget t m => () -> m (Event t ())
 prototypeConfigWidget _ = do
   text "placeholder for prototype config widget"
   button "next"
 
-prototypeGenerateQuestion :: () -> [Datum] -> IO Int
+prototypeGenerateQuestion :: () -> [Datum () Int Int ()] -> IO Int
 prototypeGenerateQuestion _ _ = getStdRandom ((randomR (0,9))::StdGen -> (Int,StdGen))
 
-prototypeQuestionWidget :: MonadWidget t m => Event t Int -> m (Event t Datum,Event t Sound,Event t ExerciseNavigation)
+prototypeQuestionWidget :: MonadWidget t m => Event t (Int,Int) -> m (Event t (Datum () Int Int ()),Event t Sound,Event t ExerciseNavigation)
 prototypeQuestionWidget newQuestion = mdo
   let sounds = M.fromList $ zip [0::Int,1..] $ fmap (FilteredSound (BufferSource (File "pinknoise.wav") 2.0)) filters
   let radioButtonMap = (zip [0::Int,1..] ["100 Hz","200 Hz","300 Hz","400 Hz","500 Hz","600 Hz","700 Hz","800 Hz","900 Hz","1000 Hz"])
