@@ -4,6 +4,7 @@ module InnerEar.Widgets.Utility where
 import qualified Data.Map as M
 import Data.Maybe
 import Data.Bool (bool)
+import Data.Map
 import Reflex
 import Reflex.Dom
 import Reflex.Dom.Contrib.Widgets.ButtonGroup (radioGroup)
@@ -80,6 +81,18 @@ buttonVal t r = do
   x <- button t
   return $ fmap (const r) x
 
+
 --Button with dynamic label. A final version that uses >=> from Control.Monad to compose together two a -> m b functions
 dynButton :: MonadWidget t m => Dynamic t String -> m (Event t ())
 dynButton = (mapDyn button) >=> dynE
+
+
+-- [Not tested]
+listOfDynToDynList :: MonadWidget t m => [Dynamic t a] -> m (Dynamic t [a])
+listOfDynToDynList xs = do
+  let m = constDyn $ fromList $ zip [1::Int,2..] xs -- Dynamic t (Map a (Dynamic t b))
+  let m' = joinDynThroughMap m
+  mapDyn elems m'
+  
+
+
