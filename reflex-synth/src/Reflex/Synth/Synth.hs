@@ -18,6 +18,11 @@ instance WebAudio Buffer where
   createGraph (File path) = createBufferNode (File path) >>= return . WebAudioGraph
 
 instance WebAudio Source where
+  createGraph (NodeSource node dur) = do
+    x <- createNode node
+    y <- createAsrEnvelope 0.005 dur 0.005
+    let graph = WebAudioGraph' x (WebAudioGraph y)
+    createGraph graph
   createGraph (OscillatorSource osc dur) = do
     x <- createOscillator osc
     y <- createAsrEnvelope 0.005 dur 0.005
@@ -29,16 +34,16 @@ instance WebAudio Source where
     let graph = WebAudioGraph' x (WebAudioGraph y)
     createGraph graph
   createGraph (MediaSource) = createMediaNode >>= return . WebAudioGraph
-    --x <- createMediaNode
-    --y <- createAsrEnvelope 0.005 dur 0.005
-    --let graph = WebAudioGraph' x (WebAudioGraph y)
-    --createGraph graph
 
 
 instance WebAudio WebAudioGraph where
   createGraph = connectGraph
 
 instance WebAudio Sound where
+  createGraph (Sound s) = do
+    graph <- createGraph s
+    connectGraph graph
+    return graph
   createGraph (FilteredSound s f) = do
     source <- createGraph s
     filt <- createGraph f
@@ -63,15 +68,6 @@ performSound event = do
                       startGraph graph
                       ) event          -- Event t (IO ())
   performEvent_ $ fmap liftIO n
-
--- for user to enter their own sound file. must have the right 'id' to work with
--- createUserSoundFileSource
---soundFileInput ::MonadWidget t m => m ()
---soundFileInput = do 
-  --let attrs = constDyn M.empty
-  --file <- fileInput $ def & _fileInputConfig_attributes ~. attrs
---_fileInputConfig_attributes :: Dynamic t (Map String String)
-  --elDynAttr "input" (constDyn $ M.fromList [("value","browse"),("id","soundFileInput"),("type","file"),("accepted","audio/")]) (return ())
 
 -- need to create to play the user's entered soundfile. needs to use the correct 'id'
 -- (exaclty 'userAudio') to work
@@ -101,29 +97,3 @@ connectGraphOnEv sound = do
     connectGraphToDest g
     ) sound
   return ()
-
-
--- an example of how this might be used with reflex-dom:
-
---example :: m (Event t ())
---example = do
---  play <- button "play"
---  let synthAction = createNode (Synth PinkNoise (PeakingFilter 1500 1.4 6.0)) <$ play
---  performEvent_ $ fmap liftIO synthAction
-
---getNewQuestion :: StdGen -> IO (Synth,StdGen)
---getNewQuestion gen = do
---  (x,g) <- randomR (0,1) gen
---  let s = if x==0 then (Synth PinkNoise NoFilter) else (Synth PinkNoise (PeakingFilter 1500 1.4 6.0))
---  return (s,g)
-
---example2 :: StdGen -> m ()
---example2 gen = el "div" $ mdo
---  newButton <- button "new"
---  gen'' <- tagPromptlyDyn gen' newButton -- m (Event t StdGen)
---  newQuestion <- performEvent $ fmap (liftIO . getNewQuestion) gen'' -- m (Event t (Synth,StdGen))
---  synth <- holdDyn (NoSynth) $ fmap fst newQuestion -- m (Dynamic t Synth)
---  gen' <- holdDyn gen $ fmap snd newQuestion -- m (Dynamic t StdGen)
---  playButton <- button "play"
---  synthAction <- tagPromptlyDyn synth playButton -- m (Event t Synth)
---  performEvent_ $ fmap (liftIO . createNode) synthAction

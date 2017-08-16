@@ -2,6 +2,7 @@ module Reflex.Synth.Types where
 
 import GHCJS.Types (JSVal)
 import qualified Reflex.Synth.Foreign as F
+import Control.Monad (mapM)
 import Data.Char (toLower)
 import GHCJS.DOM.JSFFI.Generated.HTMLElement
 import qualified GHCJS.Prim as Prim (toJSString)
@@ -12,21 +13,24 @@ data FilterType = Peaking | Lowpass | Highpass | Notch | Bandpass | Lowshelf | H
 
 data NoiseType = White | Pink | Brownian 
 
-data NodeType = FilterNode FilterType | GainNode | Destination | NoiseNode NoiseType | OscillatorNode Oscillator | BufferNode Buffer | MediaNode
+data Node = FilterNode Filter | GainNode Double | Destination | AdditiveNode [Node] | OscillatorNode Oscillator | BufferNode Buffer | MediaNode deriving(Read,Show)
 
 data Filter = NoFilter | Filter FilterType Double Double Double deriving (Read,Show)
 
 data OscillatorType = Sawtooth | Sine | Square deriving (Show, Read)
-data Oscillator = Oscillator OscillatorType Double deriving (Read,Show) --The Double is oscillator frequency
+
+data Oscillator = Oscillator OscillatorType Double Double deriving (Read,Show) --double params are freq and gain (respectively)
 
 data Buffer = File String deriving (Read,Show)
 
-data Source = OscillatorSource Oscillator Double| BufferSource Buffer Double | MediaSource deriving(Read,Show) -- 'Double' is the duration of the source
+data Source = NodeSource Node Double  | OscillatorSource Oscillator Double | BufferSource Buffer Double | MediaSource deriving(Read,Show) -- 'Double' is the duration of the source
 
-data Sound = NoSound | FilteredSound Source Filter deriving (Read,Show)
+data Sound = NoSound | Sound Source| FilteredSound Source Filter deriving (Read,Show)
 
-data WebAudioNode = WebAudioNode NodeType JSVal | NullAudioNode
+data WebAudioNode = WebAudioNode Node JSVal | NullAudioNode
 
+-- Might use this eventually...
+--type JSNodeRef = (Either JSVal [JSVal],JSVal) -- fst: node that can be 'started' (if there is one), snd: node that can connect to a subsequent node
 
 -- For representing WebAudio Graphs - to be understood as hooking up a sequence of 'nodes' (or ugens)
 -- for instance, the web audio graph:
@@ -36,24 +40,48 @@ data WebAudioNode = WebAudioNode NodeType JSVal | NullAudioNode
 data WebAudioGraph = WebAudioGraph WebAudioNode | WebAudioGraph' WebAudioNode WebAudioGraph | WebAudioGraph'' WebAudioGraph WebAudioGraph
 
 createOscillator :: Oscillator -> IO WebAudioNode
-createOscillator (Oscillator t freq) = do
+createOscillator (Oscillator t freq gain) = do
   osc <- F.createOscillator
   F.setOscillatorType (Prim.toJSString $ fmap toLower $ show t) osc  -- Web Audio won't accept 'Sine' must be 'sine'
   F.setFrequency freq osc
-  return (WebAudioNode (OscillatorNode $ Oscillator t freq) osc)
+  g <- F.createGain
+  F.setGain 0 g
+  F.connect osc g
+  F.startNode osc
+  return (WebAudioNode (OscillatorNode $ Oscillator t freq gain) g)
+
+
+createAdditiveNode:: [Node] -> IO WebAudioNode
+createAdditiveNode xs = do
+  nodes <- sequence $ fmap createNode xs -- IO [WebAudioNode]
+  g <- F.createGain
+  F.setGain 0 g
+  sequence (fmap startNode nodes)
+  mapM (maybe (return ()) ((flip F.connect) g) . getJSVal) nodes
+  return (WebAudioNode (AdditiveNode xs) g) -- returning the gain node's 
+
+
+createNode:: Node -> IO WebAudioNode
+createNode (FilterNode x) = createBiquadFilter x
+createNode (GainNode d) = createGain d
+createNode (Destination) = error "cannot create destination node"
+createNode (AdditiveNode xs) = createAdditiveNode xs
+createNode (OscillatorNode x) = createOscillator x
+createNode (BufferNode x) = createBufferNode x
+createNode (MediaNode) = createMediaNode
 
 createGain :: Double -> IO WebAudioNode
 createGain g = do
   x <- F.createGain
-  setGain g (WebAudioNode GainNode x)
-  return (WebAudioNode GainNode x)
+  F.setGain g x
+  return (WebAudioNode (GainNode g) x)
 
 
 createBiquadFilter:: Filter -> IO WebAudioNode
 createBiquadFilter (NoFilter) = createGain 1
 createBiquadFilter (Filter filtType f q g) = do
   x <- F.createBiquadFilter
-  let y = WebAudioNode (FilterNode filtType) x
+  let y = WebAudioNode (FilterNode (Filter filtType f q g)) x
   setFrequency f y
   setFilterQ q y
   setGain g y
@@ -73,15 +101,6 @@ createMediaNode = do
   x <- F.createUserSoundFileNode
   return (WebAudioNode MediaNode x)
 
-createWhiteNoise :: IO WebAudioNode
-createWhiteNoise = F.createWhiteNoise >>= return . WebAudioNode (NoiseNode White)
-
-createPinkNoise :: IO WebAudioNode
-createPinkNoise = F.createPinkNoise >>= return . WebAudioNode (NoiseNode Pink)
-
-createBrownianNoise :: IO WebAudioNode
-createBrownianNoise = F.createBrownianNoise >>= return . WebAudioNode (NoiseNode Brownian)
-
 createAsrEnvelope :: Double -> Double -> Double -> IO WebAudioNode
 createAsrEnvelope a s r = do
   now <- F.getCurrentTime
@@ -92,6 +111,10 @@ createAsrEnvelope a s r = do
   setGainAtTime 1.0 (now+a+s) n
   setGainAtTime 0.0 (now+a+s+r) n
   return n
+
+getJSVal::WebAudioNode -> Maybe JSVal
+getJSVal (WebAudioNode _ x) = Just x
+getJSVal (NullAudioNode) = Nothing
 
 -- Get the first node in a Graph - usually the first node in a graph function is the 'source' (such as a buffer or oscillator)
 -- which needs to be 'started' in the Web Audio API to hear anything.
@@ -138,7 +161,8 @@ connectGraph (WebAudioGraph'' a b) = do
 
 setGain :: Double -> WebAudioNode -> IO ()
 setGain g (WebAudioNode (FilterNode _) x) = F.setGain g x
-setGain g (WebAudioNode GainNode x) = F.setGain g x
+setGain g (WebAudioNode (GainNode _) x) = F.setGain g x
+
 
 setFrequency:: Double -> WebAudioNode -> IO ()
 setFrequency f (WebAudioNode (FilterNode _) x) = F.setFrequency f x
@@ -157,7 +181,10 @@ setGainAtTime val t (WebAudioNode _ node) = F.setGainAtTime val t node
 setGainAtTime _ _ NullAudioNode = error "Cannot set gain of a null node"
 
 startNode :: WebAudioNode -> IO ()
+startNode (WebAudioNode (AdditiveNode _) r) = F.setGain 1 r  -- @this may not be the best..
+startNode (WebAudioNode (GainNode _) _) = error "Gain node cannot bet 'started' "
 startNode (WebAudioNode MediaNode _) = F.playMediaNode  -- if you call 'start' on a MediaBufferNode a js error is thrown by the WAAPI
+startNode (WebAudioNode (OscillatorNode (Oscillator _ _ g)) r) = F.setGain g r
 startNode (WebAudioNode _ ref) = F.startNode ref
 startNode _ = return ()
 

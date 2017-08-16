@@ -38,7 +38,6 @@ buttonDynAttrs s val attrs = do
   return $ fmap (const val) event
 
 
--- Event for when the source changes to a sound file somewhere down the line
 sourceWidget::MonadWidget t m => m (Dynamic t Source)
 sourceWidget = elClass "div" "sourceWidget" $ do
   let radioButtonMap = zip [0::Int,1..] ["Pink Noise","White Noise","Upload Sound File"]
@@ -56,8 +55,6 @@ sourceWidget = elClass "div" "sourceWidget" $ do
 
 
 
-
--- Event for when the source changes to a sound file somewhere down the line
 filteredSoundWidget::MonadWidget t m => Dynamic t Filter -> m (Dynamic t Sound)
 filteredSoundWidget filt= elClass "div" "sourceWidget" $ do
   let radioButtonMap = zip [0::Int,1..] ["Pink Noise","White Noise","Upload Sound File"]

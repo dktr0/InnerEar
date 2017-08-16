@@ -56,10 +56,15 @@ function drawBufferWaveform (canvasL,canvasR) {
   if (bufferData){
     // var canvasL = document.getElementById('canvasL')
     // var canvasR = document.getElementById('canvasR')
+
     var ctxL = canvasL.getContext('2d')
     var dataL = bufferData.getChannelData(0)
     var ctxR = canvasR.getContext('2d')
     var dataR = bufferData.getChannelData(1)
+    
+    ctxL.clearRect(0, 0, canvasL.width, canvasL.height);
+    ctxR.clearRect(0, 0, canvasR.width, canvasR.height);
+
 
     ctxL.moveTo(0,100)
 
@@ -72,10 +77,8 @@ function drawBufferWaveform (canvasL,canvasR) {
 
     for (var i=0; i<canvasL.width; i++){
       // var x = Math.round(1000*i/dataL.length)
-
       var x = i*Math.round(dataL.length/canvasL.width)
       // if(x==Math.round(x)){
-      console.log(x)
       ctxL.lineTo(i,dataL[x]*100+100)
       ctxR.lineTo(i,dataR[x]*100+100)
 

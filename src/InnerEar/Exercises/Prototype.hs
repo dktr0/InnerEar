@@ -14,7 +14,10 @@ import Data.Maybe (fromJust)
 import Data.Bool (bool)
 
 import InnerEar.Widgets.Utility
+
+
 import InnerEar.Types.Data
+
 import Reflex.Synth.Synth
 import Reflex.Synth.Types
 import InnerEar.Widgets.Bars
@@ -83,3 +86,7 @@ prototypeQuestionWidget newQuestion = mdo
 
 filters:: [Filter]
 filters = fmap (flip ((flip (Filter Peaking)) 5) 40) [100,200,300,400,500,600,700,800,900,1000]
+
+
+
+

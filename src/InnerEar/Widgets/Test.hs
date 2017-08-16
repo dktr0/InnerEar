@@ -27,32 +27,30 @@ labelBarButton' label buttonString barHeight = do
    question <- dynButton buttonString -- m (Event t ())
    return (question)
 
-
 testWidget :: MonadWidget t m
   => Event t [Response] -> m (Event t Request,Event t Sound,Event t ())
-testWidget responses = el "div" $ do
-  source <- sourceWidget
-  sound <- mapDyn ((flip FilteredSound) (Filter Lowpass 100 1 1)) source
-  playButton <-  button "play sound"
-  let sounds = tagDyn sound playButton
-  let label = "my label"
-  let buttonString = constDyn "a question"
-  barHeight <- count playButton
-  labelBarButton' label buttonString barHeight
+testWidget = jamieTestWidget
+
+
+someoneTestWidget :: MonadWidget t m
+  => Event t [Response] -> m (Event t Request,Event t Sound,Event t ())
+someoneTestWidget responses = el "div" $ do
+  let oscs = fmap (\(f,g)-> OscillatorNode $ Oscillator Sine f g) $ zip (fmap (220*) [1,2,3,4,5]) (repeat 0.5) -- [Node] (all OscillatorNode)
+  let sound = FilteredSound (NodeSource (AdditiveNode oscs) 4) (Filter Lowpass 400 1 1)
+  soundEv <- liftM (sound <$) $ button "play additive synth"
+  performSound soundEv
+  score <- count soundEv
+  questionLabel <- mapDyn show score
+  labelBarButton "myLabel" questionLabel score
+  test
   home <- button "back to splash page"
-  return (never,sounds,home)
+  return (never,never,home)
 
-
-
--- Do not delete!
-testSoundWidget::MonadWidget t m => Event t [Response] -> m (Event t Request, Event t Sound, Event t ())
-testSoundWidget _ = el "div" $ do
-  let attrs = constDyn $ M.fromList $ zip ["cols"] ["80"]
-  x <- textArea $ def & textAreaConfig_attributes .~ attrs
-  eval <- button "eval"
-  let text = _textArea_value x
-  maybeSound <- mapDyn (\y->maybe NoSound id (readMaybe y::Maybe Sound)) text --dyn Maybe Sound
-  mapDyn show maybeSound >>= dynText
-  let sounds = tagDyn maybeSound eval
+jamieTestWidget::MonadWidget t m => Event t [Response] -> m (Event t Request,Event t Sound,Event t ())
+jamieTestWidget _ = el "div" $ do
+  let oscs = fmap (\(f,g)-> OscillatorNode $ Oscillator Sine f g) $ zip (fmap (220*) [1,2,3,4,5]) (repeat 0.5) -- [Node] (all OscillatorNode)
+  let sound = FilteredSound (NodeSource (AdditiveNode oscs) 4) (Filter Lowpass 400 1 1)
+  soundEv <- liftM (sound <$) $ button "play additive synth"
+  performSound soundEv
   home <- button "back to splash page"
-  return (never,sounds,home)
+  return (never,never,home)
