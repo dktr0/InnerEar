@@ -8,7 +8,7 @@ import Text.JSON.String (runGetJSON)
 
 import InnerEar.Types.Utility
 import InnerEar.Types.Handle
-import InnerEar.Types.Record
+import InnerEar.Types.Data
 
 data Response =
   NotAuthenticated | -- signals that client is not authenticated as any handle

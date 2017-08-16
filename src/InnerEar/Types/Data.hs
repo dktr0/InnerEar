@@ -9,17 +9,20 @@ module InnerEar.Types.Data where
 import Text.JSON
 import Text.JSON.Generic
 import Data.Tuple.Select
+import Data.Tuple.Curry
 import Data.Time.Clock
+import Text.Read
 
 import InnerEar.Types.Utility
 import InnerEar.Types.ExerciseId
+import InnerEar.Types.Handle
 
 type Reflection = String
 
 
 -- | Each exercise has unique strictly typed representations so there must be a type for the data
 -- specific to each exercise. (And this type, Datum c q a e, like all of the types in this module, is
--- an automatically-derived instance of JSON, to facilitate communication back and forth with a server.) 
+-- an automatically-derived instance of JSON, to facilitate communication back and forth with a server.)
 
 data Datum c q a e = -- c is configuration type, q is question type, a is answer type, e is evaluation type
   Start |
@@ -37,28 +40,28 @@ data Datum c q a e = -- c is configuration type, q is question type, a is answer
 
 data ExerciseDatum =
   ExerciseStart |
-  ExerciseConfiguration JSValue |
-  ExerciseQuestion JSValue |
-  ExerciseAnswer JSValue |
-  ExerciseEvaluation JSValue |
-  ExerciseEnd
+  ExerciseConfiguration String |
+  ExerciseQuestion String |
+  ExerciseAnswer String |
+  ExerciseEvaluation String |
+  ExerciseEnd (Maybe Reflection)
   deriving (Show,Eq,Data,Typeable)
 
-toExerciseDatum :: (JSON c,JSON q,JSON a,JSON e) => Datum c q a e -> ExerciseDatum
+toExerciseDatum :: (Show c,Show q,Show a,Show e) => Datum c q a e -> ExerciseDatum
 toExerciseDatum Start = ExerciseStart
-toExerciseDatum (Configuration c) = ExerciseConfiguration $ showJSON c
-toExerciseDatum (Question q a) = ExerciseQuestion $ showJSON (q,a)
-toExerciseDatum (Answer q a a) = ExerciseAnswer $ showJSON (q,a,a)
-toExerciseDatum (Evaluation e) = ExerciseEvaluation $ showJSON e
-toExerciseDatum End = ExerciseEnd
+toExerciseDatum (Configuration c) = ExerciseConfiguration $ show c
+toExerciseDatum (Question q correctAnswer) = ExerciseQuestion $ show (q,correctAnswer)
+toExerciseDatum (Answer q correctAnswer userAnswer) = ExerciseAnswer $ show (q,correctAnswer,userAnswer)
+toExerciseDatum (Evaluation e) = ExerciseEvaluation $ show e
+toExerciseDatum (End r) = (ExerciseEnd r)
 
-toDatum :: (JSON c,JSON q,JSON a,JSON e) => ExerciseDatum -> Result (Datum c q a e)
-toDatum ExerciseStart = Ok Start
-toDatum (ExerciseConfiguration j) = Configuration <$> readJSON j
-toDatum (ExerciseQuestion j) = Question <$> (sel1 <$> readJSON j) <*> (sel2 <$> readJSON j)
-toDatum (ExerciseAnswer j) = Answer <$> (sel1 <$> readJSON j) <*> (sel2 <$> readJSON j) <*> (sel3 <$> readJSON j)
-toDatum (ExerciseEvaluation j) = Evaluation <$> readJSON j
-toDatum (ExerciseEnd) = Ok ExerciseEnd
+toDatum :: (Read c,Read q,Read a,Read e) => ExerciseDatum -> Maybe (Datum c q a e)
+toDatum ExerciseStart = Just Start
+toDatum (ExerciseConfiguration j) = Configuration <$> readMaybe j
+toDatum (ExerciseQuestion j) = uncurry Question <$> readMaybe j
+toDatum (ExerciseAnswer j) = uncurryN Answer <$> ((readMaybe j) :: (Read q, Read a) => Maybe (q,a,a))
+toDatum (ExerciseEvaluation j) = Evaluation <$> readMaybe j
+toDatum (ExerciseEnd r) = Just $ End r
 
 
 -- | Some events of interest are not tied to a particular ear-training exercise.
