@@ -7,9 +7,7 @@ import Reflex
 import Reflex.Dom
 import Data.Time.Clock (getCurrentTime)
 
-import InnerEar.Types.Datum
-import InnerEar.Types.Point
-import InnerEar.Types.Record
+import InnerEar.Types.Data
 import InnerEar.Types.Response
 import InnerEar.Types.Request
 import InnerEar.Widgets.CreateUser
@@ -52,8 +50,8 @@ navigationPage responses CreateUserPage = do
   return (requests,never,SplashPage <$ navUnit)
 
 navigationPage responses ExercisePage = do
-  (newData,sounds,navUnit) <- createExerciseWidget prototypeExercise
-  newPoint <- performEvent $ fmap (liftIO . datumToPoint) $ newData
+  (newData,sounds,navUnit) <- runExercise prototypeExercise
+  newPoint <- performEvent $ fmap (liftIO . datumToPoint . Left) $ newData
   let newRequest = PostRecord <$> Record "placeholderHandle" <$> newPoint
   return (newRequest,sounds,SplashPage <$ navUnit)
 

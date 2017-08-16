@@ -14,6 +14,10 @@ import Data.Maybe (fromJust)
 import Data.Bool (bool)
 
 import InnerEar.Widgets.Utility
+
+
+import InnerEar.Types.Data
+
 import Reflex.Synth.Synth
 import Reflex.Synth.Types
 import InnerEar.Widgets.Bars
@@ -26,14 +30,15 @@ import InnerEar.Types.ExerciseNavigation
 -- so that this can change as the definition of createExerciseWidget changes.
 -- But see the comment below about the typing of the Exercise value within this definition...
 
-prototypeExercise = createExerciseWidget $ Exercise {
+prototypeExercise :: MonadWidget t m => Exercise t m () () Int ()
+prototypeExercise = Exercise {
   exerciseId = PrototypeExercise,
   defaultConfig = (),
   configWidget = prototypeConfigWidget,
   generateQuestion = prototypeGenerateQuestion,
   questionWidget = prototypeQuestionWidget,
   reflectiveQuestion = Just "Please write some brief text reflecting on your experience:"
-  } :: MonadWidget t m => Exercise t m () Int Int ()
+  }
 
 -- | The Exercise value above is a complete definition of an exercise that can be
 -- "translated" into functioning Reflex-Dom widgets in the context of our system.
@@ -49,10 +54,12 @@ prototypeConfigWidget _ = do
   text "placeholder for prototype config widget"
   button "next"
 
-prototypeGenerateQuestion :: () -> [Datum () Int Int ()] -> IO Int
-prototypeGenerateQuestion _ _ = getStdRandom ((randomR (0,9))::StdGen -> (Int,StdGen))
+prototypeGenerateQuestion :: () -> [Datum () () Int ()] -> IO ((),Int)
+prototypeGenerateQuestion _ _ = do
+  x <- getStdRandom ((randomR (0,9))::StdGen -> (Int,StdGen))
+  return ((),x)
 
-prototypeQuestionWidget :: MonadWidget t m => Event t (Int,Int) -> m (Event t (Datum () Int Int ()),Event t Sound,Event t ExerciseNavigation)
+prototypeQuestionWidget :: MonadWidget t m => Event t ((),Int) -> m (Event t (Datum () () Int ()),Event t Sound,Event t ExerciseNavigation)
 prototypeQuestionWidget newQuestion = mdo
   let sounds = M.fromList $ zip [0::Int,1..] $ fmap (FilteredSound (BufferSource (File "pinknoise.wav") 2.0)) filters
   let radioButtonMap = (zip [0::Int,1..] ["100 Hz","200 Hz","300 Hz","400 Hz","500 Hz","600 Hz","700 Hz","800 Hz","900 Hz","1000 Hz"])
@@ -66,14 +73,14 @@ prototypeQuestionWidget newQuestion = mdo
   nextButtonWidget <- flippableWidget  (return never) (button "next") False (leftmost [(True <$) submitButton, (False <$) nextButton])
   let nextButton = switchPromptlyDyn nextButtonWidget
   submitAttrs <- toggle True (leftmost [submitButton,nextButton]) >>= mapDyn (\x-> if x then M.empty else "disabled"=:"disabled")
-  soundNum <- holdDyn 0 newQuestion
+  soundNum <- holdDyn 0 $ fmap snd newQuestion
   answerIsCorrect <- combineDyn (\x y-> maybe False (x==) y) soundNum userAnswer
   correctText <- combineDyn (\x y-> if x then "Correct!" else "The correct answer was "++(fromJust $ M.lookup y $ M.fromList radioButtonMap)) answerIsCorrect soundNum
   flippableWidget (text "") (dynText correctText) False (leftmost [(True <$) submitButton, (False <$) nextButton])
   sound <- mapDyn (\x-> fromJust $ M.lookup x sounds) soundNum
   el "div" $ mapDyn (\x-> "Current sound is:  " ++show x) sound >>=dynText
-  backToConfigure <- (Configure <$) <$> button "Configure"
-  onToReflect <- (Reflect <$) <$> button "Reflect"
+  backToConfigure <- (InConfigure <$) <$> button "Configure"
+  onToReflect <- (InReflect <$) <$> button "Reflect"
   let navEvents = leftmost [backToConfigure,onToReflect]
   return (never,tagDyn sound playButton,navEvents)
 
@@ -83,6 +90,3 @@ filters = fmap (flip ((flip (Filter Peaking)) 5) 40) [100,200,300,400,500,600,70
 
 
 
-prototypeQuestionWidget2 :: MonadWidget t m => Event t (Int,Int) -> m (Event t (Datum () Int Int ()),Event t Sound,Event t ExerciseNavigation)
-prototypeQuestionWidget2 newQuestion = do
-  question <- holdDyn

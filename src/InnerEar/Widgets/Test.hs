@@ -45,7 +45,7 @@ someoneTestWidget responses = el "div" $ do
   home <- button "back to splash page"
   return (never,never,home)
 
-jamieTestWidget::MonadWidget t m => => Event t [Response] -> m (Event t Request,Event t Sound,Event t ())
+jamieTestWidget::MonadWidget t m => Event t [Response] -> m (Event t Request,Event t Sound,Event t ())
 jamieTestWidget _ = el "div" $ do
   let oscs = fmap (\(f,g)-> OscillatorNode $ Oscillator Sine f g) $ zip (fmap (220*) [1,2,3,4,5]) (repeat 0.5) -- [Node] (all OscillatorNode)
   let sound = FilteredSound (NodeSource (AdditiveNode oscs) 4) (Filter Lowpass 400 1 1)

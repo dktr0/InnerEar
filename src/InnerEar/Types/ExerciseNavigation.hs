@@ -1,9 +1,8 @@
 module InnerEar.Types.ExerciseNavigation where
 
 data ExerciseNavigation =
-  Configure |
-  Question |
-  Reflect |
+  InConfigure |
+  InQuestion |
+  InReflect |
   CloseExercise
   deriving (Eq,Show)
-  

@@ -25,7 +25,7 @@ import InnerEar.Types.Response
 import InnerEar.Types.Server
 import InnerEar.Types.Handle
 import InnerEar.Types.Password
-import InnerEar.Types.Record
+import InnerEar.Types.Data
 import InnerEar.Types.User
 
 main = do

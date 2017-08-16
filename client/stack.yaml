@@ -20,3 +20,5 @@ extra-deps:
 - haskell-src-exts-1.16.0.1
 - reflex-dom-contrib-0.4.1
 - string-conv-0.1.2
+- tuple-0.3.0.2
+- OneTuple-0.2.1

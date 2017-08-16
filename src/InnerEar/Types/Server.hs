@@ -9,8 +9,7 @@ import Data.Maybe (fromMaybe)
 import InnerEar.Types.Handle
 import InnerEar.Types.Password
 import InnerEar.Types.User
-import InnerEar.Types.Record
-import InnerEar.Types.Point
+import InnerEar.Types.Data
 
 type ConnectionIndex = Int
 
