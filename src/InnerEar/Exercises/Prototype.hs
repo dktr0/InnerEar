@@ -15,6 +15,7 @@ import qualified Data.Map as M
 import System.Random
 import Data.Maybe (fromJust)
 import Data.Bool (bool)
+import Data.List (findIndices)
 
 import InnerEar.Widgets.Utility
 import InnerEar.Types.Data
@@ -38,7 +39,7 @@ import InnerEar.Types.ExerciseNavigation
 prototypeExercise :: MonadWidget t m => Exercise t m [Bool] [Int] Int ()
 prototypeExercise = Exercise {
   exerciseId = PrototypeExercise,
-  defaultConfig = repeat 10 True,
+  defaultConfig = replicate 10 True,
   configWidget = prototypeConfigWidget,
   generateQuestion = prototypeGenerateQuestion,
   questionWidget = prototypeQuestionWidget,
@@ -61,7 +62,18 @@ labels = ["31 Hz","63 Hz","125 Hz","250 Hz","500 Hz","1 kHz","2 kHz","4 kHz","8 
 prototypeConfigWidget :: MonadWidget t m => [Bool] -> m (Event t [Bool])
 prototypeConfigWidget initialConfig = do
   text "Select at least 2 bands to include in questions:"
-  config <- zipWithM bandCheckBox filterLabels initialConfig
+  fcb0 <- filterCheckBox (labels!!0) (initialConfig!!0) >>= mapDyn (M.singleton (0::Int))
+  fcb1 <- filterCheckBox (labels!!1) (initialConfig!!1) >>= mapDyn (M.singleton 1)
+  fcb2 <- filterCheckBox (labels!!2) (initialConfig!!2) >>= mapDyn (M.singleton 2)
+  fcb3 <- filterCheckBox (labels!!3) (initialConfig!!3) >>= mapDyn (M.singleton 3)
+  fcb4 <- filterCheckBox (labels!!4) (initialConfig!!4) >>= mapDyn (M.singleton 4)
+  fcb5 <- filterCheckBox (labels!!5) (initialConfig!!5) >>= mapDyn (M.singleton 5)
+  fcb6 <- filterCheckBox (labels!!6) (initialConfig!!6) >>= mapDyn (M.singleton 6)
+  fcb7 <- filterCheckBox (labels!!7) (initialConfig!!7) >>= mapDyn (M.singleton 7)
+  fcb8 <- filterCheckBox (labels!!8) (initialConfig!!8) >>= mapDyn (M.singleton 8)
+  fcb9 <- filterCheckBox (labels!!9) (initialConfig!!9) >>= mapDyn (M.singleton 9)
+  fcbs <- mconcatDyn [fcb0,fcb1,fcb2,fcb3,fcb4,fcb5,fcb6,fcb7,fcb8,fcb9]
+  config <- mapDyn M.elems fcbs
   nextButton <- button "Next"
   return $ tagDyn config nextButton
 
@@ -69,7 +81,7 @@ filterCheckBox :: MonadWidget t m => String -> Bool -> m (Dynamic t Bool)
 filterCheckBox t v = el "div" $ do
   x <- checkbox v $ def
   text t
-  _checkbox_value x
+  return $ _checkbox_value x
 
 prototypeGenerateQuestion :: [Bool] -> [Datum [Bool] [Int] Int ()] -> IO ([Int],Int)
 prototypeGenerateQuestion config prevData = do
@@ -82,7 +94,7 @@ prototypeQuestionWidget e = mdo
 
   question <- holdDyn ([],0) e
   correctAnswer <- mapDyn snd question
-  userAnswer <- holdDyn Nothing $ leftmost [Nothing <$ e,answerEvent]
+  userAnswer <- holdDyn Nothing $ leftmost [Nothing <$ e,Just <$> answerEvent]
 
   playButton <- button "Listen to question"
 
@@ -108,30 +120,31 @@ prototypeQuestionWidget e = mdo
   buttonText8 <- combineDyn f userAnswer band8included
   buttonText9 <- combineDyn f userAnswer band9included
 
-  band0 <- (fmap (const 0)) <$> tempWidget filterLabels!0 buttonText0
-  band1 <- (fmap (const 1)) <$> tempWidget filterLabels!1 buttonText1
-  band2 <- (fmap (const 2)) <$> tempWidget filterLabels!2 buttonText2
-  band3 <- (fmap (const 3)) <$> tempWidget filterLabels!3 buttonText3
-  band4 <- (fmap (const 4)) <$> tempWidget filterLabels!4 buttonText4
-  band5 <- (fmap (const 5)) <$> tempWidget filterLabels!5 buttonText5
-  band6 <- (fmap (const 6)) <$> tempWidget filterLabels!6 buttonText6
-  band7 <- (fmap (const 7)) <$> tempWidget filterLabels!7 buttonText7
-  band8 <- (fmap (const 8)) <$> tempWidget filterLabels!8 buttonText8
-  band9 <- (fmap (const 9)) <$> tempWidget filterLabels!9 buttonText9
+  band0 <- (0 <$) <$> tempWidget (labels!!0) buttonText0
+  band1 <- (1 <$) <$> tempWidget (labels!!1) buttonText1
+  band2 <- (2 <$) <$> tempWidget (labels!!2) buttonText2
+  band3 <- (3 <$) <$> tempWidget (labels!!3) buttonText3
+  band4 <- (4 <$) <$> tempWidget (labels!!4) buttonText4
+  band5 <- (5 <$) <$> tempWidget (labels!!5) buttonText5
+  band6 <- (6 <$) <$> tempWidget (labels!!6) buttonText6
+  band7 <- (7 <$) <$> tempWidget (labels!!7) buttonText7
+  band8 <- (8 <$) <$> tempWidget (labels!!8) buttonText8
+  band9 <- (9 <$) <$> tempWidget (labels!!9) buttonText9
   let bandPressed = leftmost [band0,band1,band2,band3,band4,band5,band6,band7,band8,band9]
-  
+
   canAnswer <- mapDyn (==Nothing) userAnswer
-  let answerEvent = fmap Just $ gate (current canAnswer) bandPressed
+  let answerEvent = gate (current canAnswer) bandPressed
+  let correctAnswerEvent = attachDynWith (==) correctAnswer answerEvent
 
   -- display feedback
-  let resetFeedback = const "" <$ e
+  let resetFeedback = fmap (const "") e
   let answerFeedback = fmap (bool "Incorrect" "Correct!") correctAnswerEvent
   feedbackToDisplay <- holdDyn "" $ leftmost [resetFeedback,answerFeedback]
   dynText feedbackToDisplay
 
   -- generate sounds to be played
-  let playCorrectSound = fmap (sounds!!) $ tagDyn question playButton
-  let playOtherSounds = fmap (sounds!!) $ bandPressed
+  let playCorrectSound = (sounds!!) <$> tagDyn correctAnswer playButton
+  let playOtherSounds = (sounds!!) <$> bandPressed
   let playSounds = leftmost [playCorrectSound,playOtherSounds]
 
   -- generate navigation events
@@ -152,6 +165,7 @@ tempWidget labelText buttonText = el "div" $ do
   text labelText
   buttonText' <- mapDyn (maybe "" id) buttonText
   spacerOrButton <- mapDyn (maybe False (const True)) buttonText
-  flippableDynE mySpacer (dynButton buttonText')
-  where
-    mySpacer = text "-" >> return never
+  flippableDynE mySpacer (dynButton buttonText') spacerOrButton
+
+mySpacer :: MonadWidget t m => m (Event t ())
+mySpacer = button "-"

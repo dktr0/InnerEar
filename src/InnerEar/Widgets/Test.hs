@@ -42,7 +42,7 @@ someoneTestWidget responses = el "div" $ do
   score <- count soundEv
   questionLabel <- mapDyn show score
   labelBarButton "myLabel" questionLabel score
-  test
+  -- test
   home <- button "back to splash page"
   return (never,never,home)
 
