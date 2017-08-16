@@ -21,13 +21,15 @@ rect posX posY width height style transform= do
   svgDynAttr "rect" m $ return()
 
 --Dynamic "rect" element with CSS style
-rectDynCSS :: MonadWidget t m => Dynamic t Int -> Dynamic t Int -> Dynamic t Float -> Dynamic t String -> m ()
-rectDynCSS posX posY height c = do
-    c' <- mapDyn (singleton "class") c
+rectDynCSS :: MonadWidget t m => Dynamic t Int -> Dynamic t Int -> Dynamic t Float -> Dynamic t Float -> Dynamic t String -> Dynamic t String -> m ()
+rectDynCSS posX posY width height transform cssClass = do
+    cssClass' <- mapDyn (singleton "class") cssClass
     posX' <- mapDyn (singleton "x" . show) posX
     posY' <- mapDyn (singleton "y" . show) posY
     height' <- mapDyn (singleton "height" . show) height
-    m <- mconcatDyn [posX', posY', height', c']
+    width' <- mapDyn (singleton "width" . show) width
+    transform' <- mapDyn (singleton "transform") transform
+    m <- mconcatDyn [posX', posY', width',height', cssClass', transform']
     svgDynAttr "rect" m $ return ()
 
 rectDynCSS' :: MonadWidget t m => Dynamic t Float -> Dynamic t String -> m ()
@@ -61,20 +63,22 @@ drawBar' x  = do
        rect posX posY w h s t
 
 --A dynamic bar with css style and in-line attributes
-drawBarCSS :: MonadWidget t m => Dynamic t Float -> m ()
-drawBarCSS x = do
+drawBarCSS :: MonadWidget t m =>  Dynamic t Float -> Dynamic t Float -> m ()
+drawBarCSS x y = do
   svgClass "svg" "svgS" $ do
-     let posX = constDyn 20 -- $ negate 100
-     let posY = constDyn 50 -- $ negate 200
+     let posX = constDyn $ negate 30
+     let posY = constDyn $ negate 200
      h <- mapDyn (*10) x
-     let c = constDyn "rectStyle"
-     rectDynCSS posX posY h c
+     w <- mapDyn (*1) y
+     let c = constDyn "test"
+     let t = constDyn "rotate (180)"
+     rectDynCSS posX posY w h t c
 
 --Another dynamic bar with css style an height attribute
 drawBarCSS' :: MonadWidget t m => Dynamic t Float -> m ()
 drawBarCSS' x = do
   svgClass "svg" "svgS" $ do
-   h <- mapDyn (*10) x
+   h <- mapDyn (*1) x
    let c = constDyn "rectStyle"
    rectDynCSS' h c
 
@@ -88,7 +92,8 @@ labelsForBars s = do
 labelBarButton :: MonadWidget t m => String ->  Dynamic t String -> Dynamic t Float -> m (Event t ())
 labelBarButton label buttonString barHeight = do
    labelsForBars label
-   drawBarCSS barHeight
+   let barWidth = constDyn 30
+   drawBarCSS barHeight barWidth
    question <- dynButton buttonString -- m (Event t ())
    return (question)
 

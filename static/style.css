@@ -1,6 +1,29 @@
-body {
-  background-color: white;
+.flex-container {
+  display: -webkit-flex;
+  display: flex;
+  -webkit-flex-flow: row wrap;
+  flex-flow: row wrap;
+  text-align: center;
 }
+
+.flex-container > *{
+  padding: 15px;
+  -webkit-flex: 1 100%;
+  flex: 1 100%;
+}
+
+header {background: black;color:blue;}
+
+body {
+  background-color: black;
+  color: white;
+}
+
+textarea {
+	background-color: black;
+	color: white;
+}
+
 
 text {
   color: white;
@@ -19,23 +42,21 @@ button {
 }
 
 .svgS {
-  width: 800px;
-  height: 800px;
+  width: 30px;
+  height: 200px;
   background-color: rgb(128,128,128);
 }
 
 rect {
-  width: 50px;
-  height: 100px;
+  width: 300px;
+  height: 300px;
   fill: green;
   stroke-width:5;
 
 }
 
-rect.test {
-  width: 50px;
-  height: 100px;
-  fill: green;
+.test {
+  fill: blue;
   stroke-width:5;
 }
 

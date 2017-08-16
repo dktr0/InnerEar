@@ -19,12 +19,13 @@ import Reflex.Synth.Types
 import Reflex.Synth.Synth
 import InnerEar.Widgets.Bars
 
-test :: MonadWidget t m => m ()
-test = do
-   let m = M.fromList [("width","800px"),("height","800px"), ("viewBox", "0 0 300 200")]
-   svgAttr "svg" m $ do
-    -- let n = fromList [("width","50px"),("height","100px"), ("style", "fill:red")]
-     svgClass "rect" "test" $ return ()
+labelBarButton' :: MonadWidget t m => String ->  Dynamic t String -> Dynamic t Float -> m (Event t ())
+labelBarButton' label buttonString barHeight = do
+   labelsForBars label
+   let barWidth = constDyn 30
+   drawBarCSS barHeight barWidth
+   question <- dynButton buttonString -- m (Event t ())
+   return (question)
 
 
 testWidget :: MonadWidget t m
@@ -34,7 +35,10 @@ testWidget responses = el "div" $ do
   sound <- mapDyn ((flip FilteredSound) (Filter Lowpass 100 1 1)) source
   playButton <-  button "play sound"
   let sounds = tagDyn sound playButton
-  test
+  let label = "my label"
+  let buttonString = constDyn "a question"
+  barHeight <- count playButton
+  labelBarButton' label buttonString barHeight
   home <- button "back to splash page"
   return (never,sounds,home)
 
