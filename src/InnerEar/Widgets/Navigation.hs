@@ -7,6 +7,7 @@ import Reflex
 import Reflex.Dom
 import Data.Time.Clock (getCurrentTime)
 
+import InnerEar.Exercises.HarmonicsOne
 import InnerEar.Types.Data
 import InnerEar.Types.Response
 import InnerEar.Types.Request
@@ -22,7 +23,8 @@ import InnerEar.Types.Exercise
 data Navigation =
   SplashPage |
   CreateUserPage |
-  ExercisePage |
+  TenBandsExercisePage |
+  HarmonicsOneExercisePage |
   TestPage |
   TestSoundPage
 
@@ -38,19 +40,26 @@ navigationWidget responses = mdo
 
 navigationPage :: MonadWidget t m => Event t [Response] -> Navigation -> m (Event t Request,Event t Sound,Event t Navigation)
 navigationPage responses SplashPage = do
-  w <- liftM (CreateUserPage <$) $ el "div" $ button "CreateUser"
-  x <- liftM (ExercisePage <$)  $ el "div" $ button "Exercise"
-  y <- liftM (TestPage <$)  $ el "div" $ button "Test"
-  z <- liftM (TestSoundPage <$) $ el "div" $ button "Test Sound"
-  let navEvents = leftmost [w,x,y,z]
+  a <- liftM (CreateUserPage <$) $ el "div" $ button "CreateUser"
+  b <- liftM (TenBandsExercisePage <$)  $ el "div" $ button "Ten Bands Exercise"
+  c <- liftM (HarmonicsOneExercisePage <$)  $ el "div" $ button "Harmonics Exercise"
+  d <- liftM (TestPage <$)  $ el "div" $ button "Test"
+  e <- liftM (TestSoundPage <$) $ el "div" $ button "Test Sound"
+  let navEvents = leftmost [a,b,c,d,e]
   return (never,never,navEvents)
 
 navigationPage responses CreateUserPage = do
   (requests,navUnit) <- createUserWidget responses
   return (requests,never,SplashPage <$ navUnit)
 
-navigationPage responses ExercisePage = do
+navigationPage responses TenBandsExercisePage = do
   (newData,sounds,navUnit) <- runExercise prototypeExercise
+  newPoint <- performEvent $ fmap (liftIO . datumToPoint . Left) $ newData
+  let newRequest = PostRecord <$> Record "placeholderHandle" <$> newPoint
+  return (newRequest,sounds,SplashPage <$ navUnit)
+
+navigationPage responses HarmonicsOneExercisePage = do
+  (newData,sounds,navUnit) <- runExercise harmonicsOneExercise
   newPoint <- performEvent $ fmap (liftIO . datumToPoint . Left) $ newData
   let newRequest = PostRecord <$> Record "placeholderHandle" <$> newPoint
   return (newRequest,sounds,SplashPage <$ navUnit)

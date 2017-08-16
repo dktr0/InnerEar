@@ -14,10 +14,7 @@ import Data.Maybe (fromJust)
 import Data.Bool (bool)
 
 import InnerEar.Widgets.Utility
-
-
 import InnerEar.Types.Data
-
 import Reflex.Synth.Synth
 import Reflex.Synth.Types
 import InnerEar.Widgets.Bars
