@@ -4,7 +4,7 @@ import qualified Network.WebSockets as WS
 
 import InnerEar.Types.Handle
 import InnerEar.Types.Password
-import InnerEar.Types.Point
+import InnerEar.Types.Data
 
 data User = User {
   handle :: Handle,

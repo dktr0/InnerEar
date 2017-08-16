@@ -94,6 +94,6 @@ datumToPoint x = getCurrentTime >>= return . Point x
 -- When Inner Ear is used without a login/server, Records will play no role.
 
 data Record = Record {
-  handle :: Handle,
+  userHandle :: Handle,
   point :: Point
 } deriving (Show,Eq,Data,Typeable)
