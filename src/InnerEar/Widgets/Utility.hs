@@ -20,6 +20,12 @@ import GHCJS.DOM.Types (castToHTMLCanvasElement)
 dynE :: MonadWidget t m => Dynamic t (m (Event t a)) -> m (Event t a)
 dynE x = dyn x >>= switchPromptly never
 
+flippableDyn :: MonadWidget t m => m () -> m () -> Dynamic t Bool -> m ()
+flippableDyn b1 b2 x = mapDyn (bool b1 b2) x >>= dyn >> return ()
+
+flippableDynE :: MonadWidget t m => m (Event t a) -> m (Event t a) -> Dynamic t Bool -> m (Event t a)
+flippableDynE b1 b2 x = mapDyn (bool b1 b2) x >>= dynE
+
 visibleWhen :: MonadWidget t m => Dynamic t Bool -> m a -> m a
 visibleWhen visible builder = do
   attrs <- mapDyn f visible
