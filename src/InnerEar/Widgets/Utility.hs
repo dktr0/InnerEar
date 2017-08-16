@@ -75,7 +75,10 @@ filteredSoundWidget filt= elClass "div" "sourceWidget" $ do
   connectGraphOnEv $ updated sound
   return sound
 
-
+buttonVal :: (MonadWidget t m) => String -> a -> m (Event t a)
+buttonVal t r = do
+  x <- button t
+  return $ fmap (const r) x
 
 --Button with dynamic label. A final version that uses >=> from Control.Monad to compose together two a -> m b functions
 dynButton :: MonadWidget t m => Dynamic t String -> m (Event t ())
