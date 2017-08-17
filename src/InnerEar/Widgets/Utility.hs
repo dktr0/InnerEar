@@ -93,6 +93,9 @@ listOfDynToDynList xs = do
   let m = constDyn $ fromList $ zip [1::Int,2..] xs -- Dynamic t (Map a (Dynamic t b))
   let m' = joinDynThroughMap m
   mapDyn elems m'
-  
 
-
+replaceInList :: Int -> a -> [a] -> [a]
+replaceInList i x xs = firstPart ++ [x] ++ secondPart
+ where
+   firstPart = take i xs
+   secondPart = reverse $ take ((length xs) - i - 1) (reverse xs)

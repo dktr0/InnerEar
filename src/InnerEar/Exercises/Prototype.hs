@@ -152,12 +152,29 @@ prototypeQuestionWidget defaultEval e = mdo
   let answerEvent = gate (current canAnswer) bandPressed -- Event t Int
   let correctAnswerEvent = attachDynWith (==) correctAnswer answerEvent -- Event t Bool
 
-  -- prevEval -> starting evaluation condition
+  -- keeping track of how many times any question answered
+  let initialTimesHasBeenAskedThisSessionList = fmap (\(x,_,_) -> x) defaultEval
+  let whatWouldHaveBeenCorrect = tagDyn correctAnswer answerEvent -- Event t Int
+  let incTimesHasBeenAskedThisSession = fmap (\x -> replaceInList x 1 (replicate 10 0)) whatWouldHaveBeenCorrect
+  timesHasBeenAskedThisSession <- foldDyn (+) initialTimesHasBeenAskedThisSessionList incTimesHasBeenAskedThisSession
 
-  [0,0,0,0,0,0,1,0,0,0]
-  numberOfAnswersThisRun <-
-  numberOfAnswersThisRun <- count correctAnswerEvent
-  numberOfAnswersTotal <- mapDyn (+ )
+  -- keeping track of how many times answered exactly correctly
+  let indexOfAnsweredCorrectly = tagDyn correctAnswer answeredCorrectly
+  let initialTimesHasBeenAnsweredCorrectly = fmap (\(_,x,_) -> x) defaultEval
+  let answeredCorrectly = ffilter (==True) correctAnswerEvent
+  let incTimesHasBeenAnsweredCorrectly = fmap (\x -> replaceInList x 1 (replicate 10 0)) indexOfAnsweredCorrectly
+  timesHasBeenAnsweredCorrectly <- foldDyn (+) initialTimesHasBeenAnsweredCorrectly incTimesHasBeenAnsweredCorrectly
+
+  -- keeping track of how many times answered one band up or down
+  let initialTimesHasBeenOneUpOrDown = fmap (\(_,_,x) -> x) defaultEval
+  let oneUpOrDown = attachDynWith (\x y -> (y==(x-1)) || (y==(x+1))) correctAnswer answerEvent -- Event t Bool
+  let oneUpOrDownIndex = tagDyn correctAnswer $ ffilter (==True) oneUpOrDown
+  let incTimesHasBeenOneUpOrDown = fmap (\x -> replaceInList x 1 (replicate 10 0)) indexOfAnsweredCorrectly
+  timesHasBeenOneUpOrDown <- foldDyn (+) initialTimesHasBeenOneUpOrDown incTimesHasBeenOneUpOrDown
+
+  mapDyn show timesHasBeenAskedThisSession >>= dynText
+  mapDyn show timesHasBeenAnsweredCorrectly >>= dynText
+  mapDyn show timesHasBeenOneUpOrDown >>= dynText
 
   -- display feedback
   let resetFeedback = fmap (const "") e
