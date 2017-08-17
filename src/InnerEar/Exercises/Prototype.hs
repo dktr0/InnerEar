@@ -81,7 +81,7 @@ prototypeConfigWidget i = do
                          ,_widgetConfig_setValue = never
                          ,_widgetConfig_attributes = constDyn M.empty})
 
-  return $ fmap (\x-> maybe AllBands id $ M.lookup x (fromList radioButtonMap)) (_hwidget_change radioWidget)
+  return $ fmap (\x-> maybe AllBands id $ M.lookup (maybe 0 id x) (M.fromList radioButtonMap)) (_hwidget_change radioWidget)
   --userAnswer <- holdDyn Nothing $ tagDyn (_hwidget_value radioWidget)
 
   -- fcbs <- zipWithM filterCheckBox labels initialConfig -- m [Dynamic t Bool]
@@ -95,14 +95,20 @@ filterCheckBox t v = el "div" $ do
   text t
   return $ _checkbox_value x
 
-prototypeGenerateQuestion :: WhatBandsAreAllowed -> [Datum WhatBandsAreAllowed [Int] Int ()] -> IO ([Int],Int)
+
+
+prototypeGenerateQuestion :: WhatBandsAreAllowed -> [Datum WhatBandsAreAllowed [Int] Int [(Int, Int, Int)]] -> IO ([Int],Int)
 prototypeGenerateQuestion config prevData = do
   let config' = convertBands config
   let x = findIndices (==True) config'
   y <- getStdRandom ((randomR (0,(length x) - 1))::StdGen -> (Int,StdGen))
   return (x,x!!y)
 
-prototypeQuestionWidget :: MonadWidget t m => [(Int,Int,Int)] -> Event t ([Int],Int) -> m (Event t (Datum WhatBandsAreAllowed [Int] Int ()),Event t Sound,Event t ExerciseNavigation)
+
+
+
+
+prototypeQuestionWidget :: MonadWidget t m => [(Int,Int,Int)] -> Event t ([Int],Int) -> m (Event t (Datum WhatBandsAreAllowed [Int] Int [(Int, Int, Int)]), Event t Sound, Event t ExerciseNavigation)
 prototypeQuestionWidget defaultEval e = mdo
 
   question <- holdDyn ([],0) e
@@ -155,7 +161,7 @@ prototypeQuestionWidget defaultEval e = mdo
   -- keeping track of how many times any question answered
   let initialTimesHasBeenAskedThisSessionList = fmap (\(x,_,_) -> x) defaultEval
   let whatWouldHaveBeenCorrect = tagDyn correctAnswer answerEvent -- Event t Int
-  let incTimesHasBeenAskedThisSession = fmap (\x -> replaceInList x 1 (replicate 10 0)) whatWouldHaveBeenCorrect
+  let incTimesHasBeenAskedThisSession = fmap (\x -> replaceInList x (1::Int) (replicate 10 (0::Int))) whatWouldHaveBeenCorrect
   timesHasBeenAskedThisSession <- foldDyn (+) initialTimesHasBeenAskedThisSessionList incTimesHasBeenAskedThisSession
 
   -- keeping track of how many times answered exactly correctly

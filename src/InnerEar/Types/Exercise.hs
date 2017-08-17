@@ -49,7 +49,9 @@ runExercise ex = mdo
   let questionIO = fmap (\(x,y) -> (generateQuestion ex) x y) configAndData'
   question <- performEvent $ fmap liftIO $ questionIO
   questionVisible <- mapDyn (==InQuestion) nav
-  (newData,sounds,questionNav) <- visibleWhen questionVisible $ questionWidget ex $ (defaultEvaluation ex) question
+  (newData,sounds,questionNav) <- visibleWhen questionVisible $ (questionWidget ex)  (defaultEvaluation ex) question
+  
+  --visibleWhen :: MonadWidget t m => Dynamic t Bool -> m a -> m a
 
   -- Reflect
   reflectVisible <- mapDyn (==InReflect) nav

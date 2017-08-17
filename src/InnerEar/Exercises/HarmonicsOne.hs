@@ -32,7 +32,7 @@ harmonicsOneExercise :: MonadWidget t m => Exercise t m () () Int Int
 harmonicsOneExercise = Exercise {
   exerciseId = HarmonicsOne,
   defaultConfig = (),
-  defaultEvaluation = (),
+  defaultEvaluation = 0,
   configWidget = harmonicsOneConfigWidget,
   generateQuestion = harmonicsOneGenerateQuestion,
   questionWidget = harmonicsOneQuestionWidget,
@@ -51,8 +51,8 @@ harmonicsOneGenerateQuestion _ _ = do
   return ((),x)
 
 
-harmonicsOneQuestionWidget :: MonadWidget t m => Event t ((),Int) -> m (Event t (Datum () () Int Int),Event t Sound,Event t ExerciseNavigation)
-harmonicsOneQuestionWidget q = mdo
+harmonicsOneQuestionWidget :: MonadWidget t m => Int -> Event t ((),Int) -> m (Event t (Datum () () Int Int),Event t Sound,Event t ExerciseNavigation)
+harmonicsOneQuestionWidget _ q = mdo
   soundButtons <-el "table" $ do
     soundButtons <- sequence $ mapWithKey (\k v-> el "tr" $ el "td" $ do 
       chooseButton <- buttonVal (show k) k
