@@ -18,6 +18,7 @@ import Data.Bool (bool)
 import Data.List (findIndices)
 import Text.JSON
 import Text.JSON.Generic
+import Data.List(elemIndex)
 
 import InnerEar.Widgets.Utility
 import InnerEar.Types.Data
@@ -72,14 +73,17 @@ labels :: [String]
 labels = ["31 Hz","63 Hz","125 Hz","250 Hz","500 Hz","1 kHz","2 kHz","4 kHz","8 kHz","16 kHz"]
 
 prototypeConfigWidget :: MonadWidget t m => WhatBandsAreAllowed -> m (Event t WhatBandsAreAllowed)
-prototypeConfigWidget _ = do
-  text "Select at least 2 bands to include in questions:"
-  a <- (AllBands <$) <$> button "All Bands"
-  b <- (HighBands <$) <$> button "High Bands"
-  c <- (MidBands <$) <$> button "Mid Bands"
-  d <- (Mid8Bands <$) <$> button "Mid 8 Bands"
-  e <- (LowBands <$) <$> button "Low Bands"
-  return $ leftmost [a,b,c,d,e]
+prototypeConfigWidget i = do
+  let radioButtonMap =  zip [0::Int,1..] [AllBands,HighBands,MidBands,Mid8Bands,LowBands]
+  let iVal = maybe 0 id $ elemIndex i [AllBands,HighBands,MidBands,Mid8Bands,LowBands]
+  radioWidget <- radioGroup (constDyn "radioWidget") (constDyn $ fmap (\(x,y)->(x,show y)) radioButtonMap)
+           (WidgetConfig {_widgetConfig_initialValue= Just iVal
+                         ,_widgetConfig_setValue = never
+                         ,_widgetConfig_attributes = constDyn M.empty})
+
+  return $ fmap (\x-> maybe AllBands id $ M.lookup x (fromList radioButtonMap)) (_hwidget_change radioWidget)
+  --userAnswer <- holdDyn Nothing $ tagDyn (_hwidget_value radioWidget)
+
   -- fcbs <- zipWithM filterCheckBox labels initialConfig -- m [Dynamic t Bool]
   -- config <- listOfDynToDynList fcbs
   -- nextButton <- button "Next"
