@@ -32,6 +32,7 @@ harmonicsOneExercise :: MonadWidget t m => Exercise t m () () Int Int
 harmonicsOneExercise = Exercise {
   exerciseId = HarmonicsOne,
   defaultConfig = (),
+  defaultEvaluation = (),
   configWidget = harmonicsOneConfigWidget,
   generateQuestion = harmonicsOneGenerateQuestion,
   questionWidget = harmonicsOneQuestionWidget,
