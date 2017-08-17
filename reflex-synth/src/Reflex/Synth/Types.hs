@@ -207,8 +207,13 @@ startGraph a = do
   connect l dest
   startNode f
 
+
+
+
+
 renderAudioWaveform:: G.HTMLCanvasElement -> G.HTMLCanvasElement -> IO()
 renderAudioWaveform l r= do 
   let l' = G.unHTMLCanvasElement l
   let r' = G.unHTMLCanvasElement  r
   F.renderAudioWaveform l' r'
+
