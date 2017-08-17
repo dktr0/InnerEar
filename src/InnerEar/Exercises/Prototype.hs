@@ -62,18 +62,8 @@ labels = ["31 Hz","63 Hz","125 Hz","250 Hz","500 Hz","1 kHz","2 kHz","4 kHz","8 
 prototypeConfigWidget :: MonadWidget t m => [Bool] -> m (Event t [Bool])
 prototypeConfigWidget initialConfig = do
   text "Select at least 2 bands to include in questions:"
-  fcb0 <- filterCheckBox (labels!!0) (initialConfig!!0) >>= mapDyn (M.singleton (0::Int))
-  fcb1 <- filterCheckBox (labels!!1) (initialConfig!!1) >>= mapDyn (M.singleton 1)
-  fcb2 <- filterCheckBox (labels!!2) (initialConfig!!2) >>= mapDyn (M.singleton 2)
-  fcb3 <- filterCheckBox (labels!!3) (initialConfig!!3) >>= mapDyn (M.singleton 3)
-  fcb4 <- filterCheckBox (labels!!4) (initialConfig!!4) >>= mapDyn (M.singleton 4)
-  fcb5 <- filterCheckBox (labels!!5) (initialConfig!!5) >>= mapDyn (M.singleton 5)
-  fcb6 <- filterCheckBox (labels!!6) (initialConfig!!6) >>= mapDyn (M.singleton 6)
-  fcb7 <- filterCheckBox (labels!!7) (initialConfig!!7) >>= mapDyn (M.singleton 7)
-  fcb8 <- filterCheckBox (labels!!8) (initialConfig!!8) >>= mapDyn (M.singleton 8)
-  fcb9 <- filterCheckBox (labels!!9) (initialConfig!!9) >>= mapDyn (M.singleton 9)
-  fcbs <- mconcatDyn [fcb0,fcb1,fcb2,fcb3,fcb4,fcb5,fcb6,fcb7,fcb8,fcb9]
-  config <- mapDyn M.elems fcbs
+  fcbs <- zipWithM filterCheckBox labels initialConfig -- m [Dynamic t Bool]
+  config <- listOfDynToDynList fcbs
   nextButton <- button "Next"
   return $ tagDyn config nextButton
 
