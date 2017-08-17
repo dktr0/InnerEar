@@ -1,4 +1,4 @@
-{-# LANGUAGE RecursiveDo #-}
+{-# LANGUAGE RecursiveDo, DeriveDataTypeable #-}
 
 -- | We only export a single definition from an Exercise module in Inner Ear,
 -- that definition being a single value of the parameterized type Exercise.
@@ -16,6 +16,8 @@ import System.Random
 import Data.Maybe (fromJust)
 import Data.Bool (bool)
 import Data.List (findIndices)
+import Text.JSON
+import Text.JSON.Generic
 
 import InnerEar.Widgets.Utility
 import InnerEar.Types.Data
@@ -36,10 +38,20 @@ import InnerEar.Types.ExerciseNavigation
 -- Our internal answer format is an int representing the index of the correct answer to the question.
 -- And we currently have no evaluation format so have left it at ().
 
-prototypeExercise :: MonadWidget t m => Exercise t m [Bool] [Int] Int ()
+data WhatBandsAreAllowed = AllBands | HighBands | MidBands | Mid8Bands | LowBands deriving (Show,Eq,Data,Typeable)
+
+convertBands :: WhatBandsAreAllowed -> [Bool]
+convertBands AllBands = replicate 10 True
+convertBands HighBands = [False,False,False,False,False,True,True,True,True,True]
+convertBands MidBands = [False,False,False,True,True,True,True,True,False,False]
+convertBands Mid8Bands = [False,True,True,True,True,True,True,True,True,False]
+convertBands LowBands = [False,False,False,False,False,True,True,True,True,True]
+
+prototypeExercise :: MonadWidget t m => Exercise t m WhatBandsAreAllowed [Int] Int [(Int,Int,Int)]
 prototypeExercise = Exercise {
   exerciseId = PrototypeExercise,
-  defaultConfig = replicate 10 True,
+  defaultConfig = AllBands,
+  defaultEvaluation = replicate 10 (0,0,0),
   configWidget = prototypeConfigWidget,
   generateQuestion = prototypeGenerateQuestion,
   questionWidget = prototypeQuestionWidget,
@@ -51,7 +63,7 @@ prototypeExercise = Exercise {
 -- with whatever names we like, with great abandon!
 
 filters:: [Filter]
-filters = fmap (flip ((flip (Filter Peaking)) 5) 40) [31,63,125,250,500,1000,2000,4000,8000,16000]
+filters = fmap (\x -> Filter Peaking x 1.4 16.0) [31,63,125,250,500,1000,2000,4000,8000,16000]
 
 sounds :: [Sound]
 sounds = fmap (FilteredSound (BufferSource (File "pinknoise.wav") 2.0)) filters
@@ -59,13 +71,19 @@ sounds = fmap (FilteredSound (BufferSource (File "pinknoise.wav") 2.0)) filters
 labels :: [String]
 labels = ["31 Hz","63 Hz","125 Hz","250 Hz","500 Hz","1 kHz","2 kHz","4 kHz","8 kHz","16 kHz"]
 
-prototypeConfigWidget :: MonadWidget t m => [Bool] -> m (Event t [Bool])
-prototypeConfigWidget initialConfig = do
+prototypeConfigWidget :: MonadWidget t m => WhatBandsAreAllowed -> m (Event t WhatBandsAreAllowed)
+prototypeConfigWidget _ = do
   text "Select at least 2 bands to include in questions:"
-  fcbs <- zipWithM filterCheckBox labels initialConfig -- m [Dynamic t Bool]
-  config <- listOfDynToDynList fcbs
-  nextButton <- button "Next"
-  return $ tagDyn config nextButton
+  a <- (AllBands <$) <$> button "All Bands"
+  b <- (HighBands <$) <$> button "High Bands"
+  c <- (MidBands <$) <$> button "Mid Bands"
+  d <- (Mid8Bands <$) <$> button "Mid 8 Bands"
+  e <- (LowBands <$) <$> button "Low Bands"
+  return $ leftmost [a,b,c,d,e]
+  -- fcbs <- zipWithM filterCheckBox labels initialConfig -- m [Dynamic t Bool]
+  -- config <- listOfDynToDynList fcbs
+  -- nextButton <- button "Next"
+  -- return $ tagDyn config nextButton
 
 filterCheckBox :: MonadWidget t m => String -> Bool -> m (Dynamic t Bool)
 filterCheckBox t v = el "div" $ do
@@ -73,20 +91,24 @@ filterCheckBox t v = el "div" $ do
   text t
   return $ _checkbox_value x
 
-prototypeGenerateQuestion :: [Bool] -> [Datum [Bool] [Int] Int ()] -> IO ([Int],Int)
+prototypeGenerateQuestion :: WhatBandsAreAllowed -> [Datum WhatBandsAreAllowed [Int] Int ()] -> IO ([Int],Int)
 prototypeGenerateQuestion config prevData = do
-  let x = findIndices (==True) config
+  let config' = convertBands config
+  let x = findIndices (==True) config'
   y <- getStdRandom ((randomR (0,(length x) - 1))::StdGen -> (Int,StdGen))
   return (x,x!!y)
 
-prototypeQuestionWidget :: MonadWidget t m => Event t ([Int],Int) -> m (Event t (Datum [Bool] [Int] Int ()),Event t Sound,Event t ExerciseNavigation)
-prototypeQuestionWidget e = mdo
+prototypeQuestionWidget :: MonadWidget t m => [(Int,Int,Int)] -> Event t ([Int],Int) -> m (Event t (Datum WhatBandsAreAllowed [Int] Int ()),Event t Sound,Event t ExerciseNavigation)
+prototypeQuestionWidget defaultEval e = mdo
 
   question <- holdDyn ([],0) e
   correctAnswer <- mapDyn snd question
   userAnswer <- holdDyn Nothing $ leftmost [Nothing <$ e,Just <$> answerEvent]
 
+  playUnfiltered <- button "Listen to unfiltered"
   playButton <- button "Listen to question"
+
+  let unfilteredSound = Sound (BufferSource (File "pinknoise.wav") 2.0) <$ playUnfiltered
 
   band0included <- mapDyn (elem 0 . fst) question
   band1included <- mapDyn (elem 1 . fst) question
@@ -123,8 +145,15 @@ prototypeQuestionWidget e = mdo
   let bandPressed = leftmost [band0,band1,band2,band3,band4,band5,band6,band7,band8,band9]
 
   canAnswer <- mapDyn (==Nothing) userAnswer
-  let answerEvent = gate (current canAnswer) bandPressed
-  let correctAnswerEvent = attachDynWith (==) correctAnswer answerEvent
+  let answerEvent = gate (current canAnswer) bandPressed -- Event t Int
+  let correctAnswerEvent = attachDynWith (==) correctAnswer answerEvent -- Event t Bool
+
+  -- prevEval -> starting evaluation condition
+
+  [0,0,0,0,0,0,1,0,0,0]
+  numberOfAnswersThisRun <-
+  numberOfAnswersThisRun <- count correctAnswerEvent
+  numberOfAnswersTotal <- mapDyn (+ )
 
   -- display feedback
   let resetFeedback = fmap (const "") e
@@ -135,13 +164,13 @@ prototypeQuestionWidget e = mdo
   -- generate sounds to be played
   let playCorrectSound = (sounds!!) <$> tagDyn correctAnswer playButton
   let playOtherSounds = (sounds!!) <$> bandPressed
-  let playSounds = leftmost [playCorrectSound,playOtherSounds]
+  let playSounds = leftmost [playCorrectSound,playOtherSounds,unfilteredSound]
 
   -- generate navigation events
   backToConfigure <- (InConfigure <$) <$> button "Configure"
   nextQuestion <- (InQuestion <$) <$> button "New Question"
   onToReflect <- (InReflect <$) <$> button "Reflect"
-  let navEvents = leftmost [backToConfigure,onToReflect]
+  let navEvents = leftmost [backToConfigure,nextQuestion,onToReflect]
 
   return (never,playSounds,navEvents)
   where

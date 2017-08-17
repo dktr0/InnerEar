@@ -21,9 +21,10 @@ import InnerEar.Types.ExerciseNavigation
 data Exercise t m c q a e = Exercise {
   exerciseId :: ExerciseId,
   defaultConfig :: c,
+  defaultEvaluation :: e,
   configWidget :: c -> m (Event t c), -- modal behaviour, i.e. issuing of config event also navigates to question
   generateQuestion :: c -> [Datum c q a e] -> IO (q,a),
-  questionWidget :: Event t (q,a) -> m (Event t (Datum c q a e),Event t Sound,Event t ExerciseNavigation),
+  questionWidget :: e -> Event t (q,a) -> m (Event t (Datum c q a e),Event t Sound,Event t ExerciseNavigation),
   reflectiveQuestion :: Maybe Reflection -- where Nothing means no reflective question stage
 }
 
