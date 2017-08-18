@@ -1,5 +1,5 @@
 {-# LANGUAGE RecursiveDo, OverloadedStrings #-}
-module InnerEar.Widgets.Navigation where
+module InnerEar.Widgets.Navigation (navigationWidget) where
 
 import Control.Monad
 import Control.Monad.IO.Class (liftIO)
