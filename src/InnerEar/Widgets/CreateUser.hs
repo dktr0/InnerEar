@@ -10,17 +10,15 @@ import InnerEar.Types.Utility
 
 createUserWidget :: MonadWidget t m
   => Event t [Response] -> m (Event t Request,Event t ())
-createUserWidget responses = el "div" $ do
+createUserWidget responses = elClass "div" "createUserWidget" $ do
 
   text "To create a new user, enter an unclaimed handle (i.e. login name) and a password for that user:"
 
-  handleEntry <- do
+  handleEntry <- elClass "div" "createUserHandle" $ do
     text "Handle:"
-    let attrs = constDyn ("class" =: "webSocketTextInputs")
     liftM _textInput_value $ textInput $ def & textInputConfig_attributes .~ attrs
-  passwordEntry <- do
+  passwordEntry <- elClass "div" "createUserPassword" $ do
     text "Password: "
-    let attrs = constDyn ("class" =: "webSocketTextInputs")
     liftM _textInput_value $ textInput $ def & textInputConfig_inputType .~ "password" & textInputConfig_attributes .~ attrs
   createButton <- button "Create New User"
   createValue <- combineDyn CreateUser handleEntry passwordEntry
@@ -29,10 +27,10 @@ createUserWidget responses = el "div" $ do
   -- when they fail to create a new user, display a message to that effect
   let failEvent = fmapMaybe (lastWithPredicate (==UserNotCreated)) responses
   failText <- holdDyn "" $ fmap (const " Unable to create user!") failEvent
-  dynText failText
+  elClass "div" "createUserFeedback" $ dynText failText
 
   -- go back to splash page if they press the back button, or if we succeed in creating a new user
-  home <- button "back to splash page"
+  home <- elClass "div" "navButton" $ button "back to splash page"
   let successEvent = fmap (const ())$ fmapMaybe (lastWithPredicate isAuthenticated) responses
   let back = leftmost [home,successEvent]
   return (requests,back)
