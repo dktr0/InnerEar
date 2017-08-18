@@ -29,7 +29,7 @@ data Navigation =
   TestSoundPage
 
 navigationWidget :: MonadWidget t m => Event t [Response] -> m (Event t Request,Event t Sound)
-navigationWidget responses = mdo
+navigationWidget responses = el "div" $ mdo
   let initialPage = navigationPage responses SplashPage
   let rebuild = fmap (navigationPage responses) navEvents
   w <- widgetHold initialPage rebuild
@@ -39,7 +39,8 @@ navigationWidget responses = mdo
   return (requests,sounds)
 
 navigationPage :: MonadWidget t m => Event t [Response] -> Navigation -> m (Event t Request,Event t Sound,Event t Navigation)
-navigationPage responses SplashPage = do
+
+navigationPage responses SplashPage = elClass "div" "nav" $ do
   a <- liftM (CreateUserPage <$) $ el "div" $ button "CreateUser"
   b <- liftM (TenBandsExercisePage <$)  $ el "div" $ button "Ten Bands Exercise"
   c <- liftM (HarmonicsOneExercisePage <$)  $ el "div" $ button "Harmonics Exercise"
@@ -48,7 +49,7 @@ navigationPage responses SplashPage = do
   let navEvents = leftmost [a,b,c,d,e]
   return (never,never,navEvents)
 
-navigationPage responses CreateUserPage = do
+navigationPage responses CreateUserPage = el "div" $ do
   (requests,navUnit) <- createUserWidget responses
   return (requests,never,SplashPage <$ navUnit)
 
@@ -58,16 +59,16 @@ navigationPage responses TenBandsExercisePage = do
   let newRequest = PostRecord <$> Record "placeholderHandle" <$> newPoint
   return (newRequest,sounds,SplashPage <$ navUnit)
 
-navigationPage responses HarmonicsOneExercisePage = do
+navigationPage responses HarmonicsOneExercisePage = el "div" $ do
   (newData,sounds,navUnit) <- runExercise harmonicsOneExercise
   newPoint <- performEvent $ fmap (liftIO . datumToPoint . Left) $ newData
   let newRequest = PostRecord <$> Record "placeholderHandle" <$> newPoint
   return (newRequest,sounds,SplashPage <$ navUnit)
 
-navigationPage responses TestPage = do
+navigationPage responses TestPage = el "div" $ do
   (requests,sounds,navUnit) <- testWidget responses
   return (requests,sounds,SplashPage <$ navUnit)
 
-navigationPage responses TestSoundPage = do
+navigationPage responses TestSoundPage = el "div" $ do
   (requests,sounds,navUnit) <- testSoundWidget responses
   return (requests,sounds,SplashPage <$ navUnit)
