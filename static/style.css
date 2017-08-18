@@ -6,17 +6,7 @@ body {
 	font-family: sans;
 }
 
-text {
-  color: hsl(120,100%,80%);
-
-}
-
-header  {
-  wuidth 60%-- the same as
-
-
-}
-.flex-container {
+.innerEar {
   display: -webkit-flex;
   display: flex;
   -webkit-flex-flow: row wrap;
@@ -24,8 +14,45 @@ header  {
   text-align: center;
   width: 1300px;
   height: 700px;
-  background-color: black;
+  background-color: gray;
 }
+
+
+header  {
+  color: hsl(120,100%,80%);
+
+}
+
+.title {
+  color:hsl(120,100%,80%);
+
+}
+
+.wsStatus {
+ color:hsl(120,100%,80%);
+}
+
+
+.createUserHandle {
+	color: hsl(120,100%,80%);
+}
+
+.createUserPassword {
+	color: hsl(120,100%,80%);
+}
+
+.login {
+  color:  hsl(120,100%,80%);
+  width: 600px;
+  height: 50px;
+  margin: 100px;
+}
+
+
+text {
+  color: hsl(120,100%,80%);
+}
+
 
 .InnearEarHeader {
   background: black;
@@ -39,36 +66,31 @@ header  {
 .barWrapper {
   display: inline-block;
 }
-.navButton{
 
+.navButton {
+  background-color: rgb(128,128,128);
+  color: white;
+  border: none;
+  border-radius: 4px;
+}
+
+.exerciseConfig {
 
 }
 
-.creatUserHandel {
-
-
-}
-
-.createUserPassword {
-
+.exerciseQuestion {
 
 }
 
+.exerciseReflection {
+
+
+}
 .createUserFeedBack {
 
 
 }
 
-.navButton {
-
-  
-}
-
-header {background: black;color:blue;}
-
-body {
-  background-color: black;
-  color: white;
 
 .nav {
   background: black;
@@ -79,13 +101,6 @@ body {
   font-family: sans;
 }
 
-.login {
-  background: black;
-  color:  hsl(120,100%,80%);
-  width: 600px;
-  height: 50px;
-  margin: 100px;
-}
 
 
 button {

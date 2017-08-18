@@ -13,7 +13,7 @@ data AnswerButtonMode = NotPossible | Possible | IncorrectDisactivated | Incorre
 
 dynButtonClass :: MonadWidget t m => Dynamic t String -> Dynamic t String -> m (Event t ())
 dynButtonClass class label = do
-  class <- JUust
+  class' <- mapDyn Just class
   elClass "div" class $
   dynButton
 
