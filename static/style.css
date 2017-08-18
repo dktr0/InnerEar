@@ -15,6 +15,11 @@
 
 }
 
+.barWrapper {
+  display: inline-block;
+  width: 150px;
+}
+
 header {background: black;color:blue;}
 
 body {
