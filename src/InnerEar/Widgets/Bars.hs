@@ -107,7 +107,7 @@ labelBarButton label buttonString barHeight = do
    return (question)
 
 dynLabelBarButton :: MonadWidget t m => String ->  Dynamic t (Maybe Int) ->  Dynamic t (Maybe String) -> Dynamic t (Maybe Float) -> m (Event t ())
-dynLabelBarButton label p buttonString barHeight = do
+dynLabelBarButton label p buttonString barHeight = elClass "div" "barWrapper" $ do
     labelsForBars label
     let barWidth = constDyn 30
     barHeight' <- mapDyn (maybe 0.0 id) barHeight

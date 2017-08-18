@@ -142,18 +142,18 @@ prototypeQuestionWidget defaultEval e = mdo
   buttonText8 <- combineDyn f userAnswer band8included
   buttonText9 <- combineDyn f userAnswer band9included
 
-  -- dynLabelBarButton :: MonadWidget t m => String ->  Dynamic t (Maybe Int) ->  Dynamic t (Maybe String) -> Dynamic t (Maybe Float) -> m (Event t ())
-  band0 <- (0 <$) <$> tempWidget (labels!!0) band0count buttonText0 band0perf
-  band1 <- (1 <$) <$> tempWidget (labels!!1) band1count buttonText1 band1perf
-  band2 <- (2 <$) <$> tempWidget (labels!!2) band2count buttonText2 band2perf
-  band3 <- (3 <$) <$> tempWidget (labels!!3) band3count buttonText3 band3perf
-  band4 <- (4 <$) <$> tempWidget (labels!!4) band4count buttonText4 band4perf
-  band5 <- (5 <$) <$> tempWidget (labels!!5) band5count buttonText5 band5perf
-  band6 <- (6 <$) <$> tempWidget (labels!!6) band6count buttonText6 band6perf
-  band7 <- (7 <$) <$> tempWidget (labels!!7) band7count buttonText7 band7perf
-  band8 <- (8 <$) <$> tempWidget (labels!!8) band8count buttonText8 band8perf
-  band9 <- (9 <$) <$> tempWidget (labels!!9) band9count buttonText9 band9perf
-  let bandPressed = leftmost [band0,band1,band2,band3,band4,band5,band6,band7,band8,band9]
+  bandPressed <- elClass "div" "barWrapper" $ do
+    band0 <- (0 <$) <$> dynLabelBarButton  (labels!!0) band0count buttonText0 band0perf
+    band1 <- (1 <$) <$> dynLabelBarButton  (labels!!1) band1count buttonText1 band1perf
+    band2 <- (2 <$) <$> dynLabelBarButton  (labels!!2) band2count buttonText2 band2perf
+    band3 <- (3 <$) <$> dynLabelBarButton  (labels!!3) band3count buttonText3 band3perf
+    band4 <- (4 <$) <$> dynLabelBarButton  (labels!!4) band4count buttonText4 band4perf
+    band5 <- (5 <$) <$> dynLabelBarButton  (labels!!5) band5count buttonText5 band5perf
+    band6 <- (6 <$) <$> dynLabelBarButton (labels!!6) band6count buttonText6 band6perf
+    band7 <- (7 <$) <$> dynLabelBarButton  (labels!!7) band7count buttonText7 band7perf
+    band8 <- (8 <$) <$> dynLabelBarButton (labels!!8) band8count buttonText8 band8perf
+    band9 <- (9 <$) <$> dynLabelBarButton  (labels!!9) band9count buttonText9 band9perf
+    return $ leftmost [band0,band1,band2,band3,band4,band5,band6,band7,band8,band9]
 
   canAnswer <- mapDyn (==Nothing) userAnswer
   let answerEvent = gate (current canAnswer) bandPressed -- Event t Int
@@ -163,32 +163,32 @@ prototypeQuestionWidget defaultEval e = mdo
   let initialTimesHasBeenAskedThisSessionList = fmap (\(x,_,_) -> x) defaultEval
   let whatWouldHaveBeenCorrect = tagDyn correctAnswer answerEvent -- Event t Int
   let incTimesHasBeenAskedThisSession = fmap (\x -> replaceInList x (1::Int) (replicate 10 (0::Int))) whatWouldHaveBeenCorrect
-  timesHasBeenAskedThisSession <- foldDyn (+) initialTimesHasBeenAskedThisSessionList incTimesHasBeenAskedThisSession
+  timesHasBeenAskedThisSession <- foldDyn (zipWith (+)) initialTimesHasBeenAskedThisSessionList incTimesHasBeenAskedThisSession
 
   -- keeping track of how many times answered exactly correctly
   let indexOfAnsweredCorrectly = tagDyn correctAnswer answeredCorrectly
   let initialTimesHasBeenAnsweredCorrectly = fmap (\(_,x,_) -> x) defaultEval
   let answeredCorrectly = ffilter (==True) correctAnswerEvent
-  let incTimesHasBeenAnsweredCorrectly = fmap (\x -> replaceInList x 1 (replicate 10 0)) indexOfAnsweredCorrectly
-  timesHasBeenAnsweredCorrectly <- foldDyn (+) initialTimesHasBeenAnsweredCorrectly incTimesHasBeenAnsweredCorrectly
+  let incTimesHasBeenAnsweredCorrectly = fmap (\x -> replaceInList x (1::Int) (replicate 10 0)) indexOfAnsweredCorrectly
+  timesHasBeenAnsweredCorrectly <- foldDyn (zipWith (+)) initialTimesHasBeenAnsweredCorrectly incTimesHasBeenAnsweredCorrectly
 
   -- keeping track of how many times answered one band up or down
   let initialTimesHasBeenOneUpOrDown = fmap (\(_,_,x) -> x) defaultEval
   let oneUpOrDown = attachDynWith (\x y -> (y==(x-1)) || (y==(x+1))) correctAnswer answerEvent -- Event t Bool
   let oneUpOrDownIndex = tagDyn correctAnswer $ ffilter (==True) oneUpOrDown
   let incTimesHasBeenOneUpOrDown = fmap (\x -> replaceInList x 1 (replicate 10 0)) indexOfAnsweredCorrectly
-  timesHasBeenOneUpOrDown <- foldDyn (+) initialTimesHasBeenOneUpOrDown incTimesHasBeenOneUpOrDown
+  timesHasBeenOneUpOrDown <- foldDyn (zipWith (+)) initialTimesHasBeenOneUpOrDown incTimesHasBeenOneUpOrDown
 
-  band0count <- mapDyn (!!0) timesHasBeenAskedThisSession
-  band1count <- mapDyn (!!1) timesHasBeenAskedThisSession
-  band2count <- mapDyn (!!2) timesHasBeenAskedThisSession
-  band3count <- mapDyn (!!3) timesHasBeenAskedThisSession
-  band4count <- mapDyn (!!4) timesHasBeenAskedThisSession
-  band5count <- mapDyn (!!5) timesHasBeenAskedThisSession
-  band6count <- mapDyn (!!6) timesHasBeenAskedThisSession
-  band7count <- mapDyn (!!7) timesHasBeenAskedThisSession
-  band8count <- mapDyn (!!8) timesHasBeenAskedThisSession
-  band9count <- mapDyn (!!9) timesHasBeenAskedThisSession
+  band0count <- mapDyn (Just . (!!0)) timesHasBeenAskedThisSession
+  band1count <- mapDyn (Just . (!!1)) timesHasBeenAskedThisSession
+  band2count <- mapDyn (Just . (!!2)) timesHasBeenAskedThisSession
+  band3count <- mapDyn (Just . (!!3)) timesHasBeenAskedThisSession
+  band4count <- mapDyn (Just . (!!4)) timesHasBeenAskedThisSession
+  band5count <- mapDyn (Just . (!!5)) timesHasBeenAskedThisSession
+  band6count <- mapDyn (Just . (!!6)) timesHasBeenAskedThisSession
+  band7count <- mapDyn (Just . (!!7)) timesHasBeenAskedThisSession
+  band8count <- mapDyn (Just . (!!8)) timesHasBeenAskedThisSession
+  band9count <- mapDyn (Just . (!!9)) timesHasBeenAskedThisSession
 
   band0correct <- mapDyn (!!0) timesHasBeenAnsweredCorrectly
   band1correct <- mapDyn (!!1) timesHasBeenAnsweredCorrectly
@@ -241,15 +241,18 @@ prototypeQuestionWidget defaultEval e = mdo
     f _ True = Just "L"
     f _ False = Nothing
 
-calculateScore :: Int -> Int -> Float
-calculateScore x y = x/y
+calculateScore :: Int -> Maybe Int -> Maybe Float
+calculateScore x (Just y) = Just (fromIntegral(x)/fromIntegral(y))
+calculateScore x _ = Just (-1.0)
 
+{-
 tempWidget :: MonadWidget t m => String -> Dynamic t (Maybe String) -> m (Event t ())
 tempWidget labelText buttonText = el "div" $ do
   text labelText
   buttonText' <- mapDyn (maybe "" id) buttonText
   spacerOrButton <- mapDyn (maybe False (const True)) buttonText
   flippableDynE mySpacer (dynButton buttonText') spacerOrButton
+-}
 
 mySpacer :: MonadWidget t m => m (Event t ())
 mySpacer = button "-"
