@@ -1,5 +1,5 @@
 {-# LANGUAGE RecursiveDo, OverloadedStrings #-}
-module InnerEar.Widgets.Navigation where
+module InnerEar.Widgets.Navigation (navigationWidget) where
 
 import Control.Monad
 import Control.Monad.IO.Class (liftIO)
@@ -18,7 +18,7 @@ import InnerEar.Widgets.Test
 import Reflex.Synth.Synth
 import Reflex.Synth.Types
 import InnerEar.Types.Exercise
-
+import InnerEar.Widgets.Exercise
 
 data Navigation =
   SplashPage |
@@ -53,22 +53,24 @@ navigationPage responses CreateUserPage = el "div" $ do
   (requests,navUnit) <- createUserWidget responses
   return (requests,never,SplashPage <$ navUnit)
 
-navigationPage responses TenBandsExercisePage = do
-  (newData,sounds,navUnit) <- runExercise prototypeExercise
-  newPoint <- performEvent $ fmap (liftIO . datumToPoint . Left) $ newData
-  let newRequest = PostRecord <$> Record "placeholderHandle" <$> newPoint
-  return (newRequest,sounds,SplashPage <$ navUnit)
+navigationPage responses TenBandsExercisePage = runExerciseForNavigationPage prototypeExercise
 
-navigationPage responses HarmonicsOneExercisePage = el "div" $ do
-  (newData,sounds,navUnit) <- runExercise harmonicsOneExercise
-  newPoint <- performEvent $ fmap (liftIO . datumToPoint . Left) $ newData
-  let newRequest = PostRecord <$> Record "placeholderHandle" <$> newPoint
-  return (newRequest,sounds,SplashPage <$ navUnit)
+navigationPage responses HarmonicsOneExercisePage = runExerciseForNavigationPage harmonicsOneExercise
 
-navigationPage responses TestPage = el "div" $ do
+navigationPage responses TestPage = do
   (requests,sounds,navUnit) <- testWidget responses
   return (requests,sounds,SplashPage <$ navUnit)
 
-navigationPage responses TestSoundPage = el "div" $ do
+navigationPage responses TestSoundPage = do
   (requests,sounds,navUnit) <- testSoundWidget responses
   return (requests,sounds,SplashPage <$ navUnit)
+
+
+runExerciseForNavigationPage :: (MonadWidget t m, Show c, Show q, Show a, Show e)
+  => Exercise t m c q a e
+  -> m (Event t Request,Event t Sound,Event t Navigation)
+runExerciseForNavigationPage ex = do
+  (newData,sounds,navUnit) <- runExercise ex
+  newPoint <- performEvent $ fmap (liftIO . datumToPoint . Left) $ newData
+  let newRequest = PostRecord <$> Record "placeholderHandle" <$> newPoint
+  return (newRequest,sounds,SplashPage <$ navUnit)
