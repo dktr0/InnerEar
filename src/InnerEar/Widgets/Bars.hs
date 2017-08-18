@@ -65,14 +65,15 @@ drawBar' x  = do
 --A dynamic bar with css style and in-line attributes
 drawBarCSS :: MonadWidget t m =>  Dynamic t Float -> Dynamic t Float -> m ()
 drawBarCSS x y = do
-  svgClass "svg" "svgS" $ do
-     let posX = constDyn $ negate 30
-     let posY = constDyn $ negate 200
-     h <- mapDyn (*10) x
-     w <- mapDyn (*1) y
-     let c = constDyn "test"
-     let t = constDyn "rotate (180)"
-     rectDynCSS posX posY w h t c
+  elClass "div" "flex-container" $ do
+    svgClass "svg" "svgS" $ do
+      let posX = constDyn $ negate 30
+      let posY = constDyn $ negate 200
+      h <- mapDyn (*200) x
+      w <- mapDyn (*1) y
+      let c = constDyn "test"
+      let t = constDyn "rotate (180)"
+      rectDynCSS posX posY w h t c
 
 --Another dynamic bar with css style an height attribute
 drawBarCSS' :: MonadWidget t m => Dynamic t Float -> m ()
@@ -88,6 +89,14 @@ labelsForBars s = do
    elClass "div" "text" $ text (show s)
    return ()
 
+-- A percentage Dynamic label
+dynPercentage :: MonadWidget t m => Dynamic t Int -> m ()
+dynPercentage p = do
+   p' <- mapDyn show p
+   el "div" $ do
+     dynText p'
+     return ()
+
 --A dynamic bar with a label, a button and CSS style
 labelBarButton :: MonadWidget t m => String ->  Dynamic t String -> Dynamic t Float -> m (Event t ())
 labelBarButton label buttonString barHeight = do
@@ -97,10 +106,21 @@ labelBarButton label buttonString barHeight = do
    question <- dynButton buttonString -- m (Event t ())
    return (question)
 
-
-
-
-
+dynLabelBarButton :: MonadWidget t m => String ->  Dynamic t (Maybe Int) ->  Dynamic t (Maybe String) -> Dynamic t (Maybe Float) -> m (Event t ())
+dynLabelBarButton label p buttonString barHeight = do
+    labelsForBars label
+    let barWidth = constDyn 30
+    barHeight' <- mapDyn (maybe 0.0 id) barHeight
+    boolBar <- mapDyn (maybe False (const True)) barHeight
+    flippableDyn (text " ") (drawBarCSS barHeight' barWidth) boolBar
+    boolPercentage <- mapDyn (maybe False (const True)) p
+    p' <- mapDyn (maybe 0 id) p -- Dynamic t Int
+    flippableDyn (text " ") (dynPercentage p') boolPercentage
+    el "div" $ do
+      buttonString' <- mapDyn (maybe " " id) buttonString
+      boolButton <- mapDyn (maybe False (const True)) buttonString --Dynamic t bool
+      let emptyString = constDyn " "
+      flippableDynE (dynButton emptyString) (dynButton buttonString') boolButton
 
 
 

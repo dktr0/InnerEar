@@ -4,12 +4,15 @@
   -webkit-flex-flow: row wrap;
   flex-flow: row wrap;
   text-align: center;
+  width: 30px;
+  height: 200px;
 }
 
 .flex-container > *{
-  padding: 15px;
+  padding: 0px;
   -webkit-flex: 1 100%;
   flex: 1 100%;
+
 }
 
 header {background: black;color:blue;}
@@ -44,7 +47,7 @@ button {
 .svgS {
   width: 30px;
   height: 200px;
-  background-color: rgb(128,128,128);
+  background-color: gray;
 }
 
 rect {
@@ -56,7 +59,7 @@ rect {
 }
 
 .test {
-  fill: blue;
+  fill: yellow;
   stroke-width:5;
 }
 
