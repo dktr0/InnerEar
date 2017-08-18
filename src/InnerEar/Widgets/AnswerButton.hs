@@ -13,6 +13,7 @@ data AnswerButtonMode = NotPossible | Possible | IncorrectDisactivated | Incorre
 
 dynButtonClass :: MonadWidget t m => Dynamic t String -> Dynamic t String -> m (Event t ())
 dynButtonClass class label = do
+  class <- JUust
   elClass "div" class $
   dynButton
 
@@ -29,6 +30,12 @@ modeToClass Possible = "enabledButtonClass"
 modeToClass IncorrectDisactivated = "incorrectDisactivatedClass"
 modeToClass IncorrectActivated = "incorrectActivatedClass"
 modeToClass Correct = "correctButtonClass"
+dynButtonClass :: MonadWidget t m => Dynamic t String -> Dynamic t String -> m (Event t ())
+dynButtonClass = (mapDyn button) >=> dynE
+
+dynButton :: MonadWidget t m => Dynamic t String -> m (Event t ())
+dynButton = (mapDyn button) >=> dynE
+
 
 
 

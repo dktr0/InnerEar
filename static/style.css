@@ -10,6 +10,12 @@ text {
   color: hsl(120,100%,80%);
 
 }
+
+header  {
+  wuidth 60%-- the same as
+
+
+}
 .flex-container {
   display: -webkit-flex;
   display: flex;
