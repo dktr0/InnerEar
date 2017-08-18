@@ -1,5 +1,5 @@
 {-# LANGUAGE RecursiveDo, OverloadedStrings #-}
-module InnerEar.Widgets.Navigation where
+module InnerEar.Widgets.Navigation (navigationWidget) where
 
 import Control.Monad
 import Control.Monad.IO.Class (liftIO)
@@ -18,7 +18,7 @@ import InnerEar.Widgets.Test
 import Reflex.Synth.Synth
 import Reflex.Synth.Types
 import InnerEar.Types.Exercise
-
+import InnerEar.Widgets.Exercise
 
 data Navigation =
   SplashPage |
