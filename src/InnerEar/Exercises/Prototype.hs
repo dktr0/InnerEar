@@ -161,22 +161,23 @@ prototypeQuestionWidget defaultEval e = mdo
   -- keeping track of how many times any question answered
   let initialTimesHasBeenAskedThisSessionList = fmap (\(x,_,_) -> x) defaultEval
   let whatWouldHaveBeenCorrect = tagDyn correctAnswer answerEvent -- Event t Int
-  let incTimesHasBeenAskedThisSession = fmap (\x -> replaceInList x (1::Int) (replicate 10 (0::Int))) whatWouldHaveBeenCorrect
-  timesHasBeenAskedThisSession <- foldDyn (+) initialTimesHasBeenAskedThisSessionList incTimesHasBeenAskedThisSession
+  let incTimesHasBeenAskedThisSession = fmap (\x -> replaceInList x (1::Int) (replicate 10 (0::Int))) whatWouldHaveBeenCorrect -- Event [00100]
+  timesHasBeenAskedThisSession <- foldDyn (zipWith (+)) initialTimesHasBeenAskedThisSessionList incTimesHasBeenAskedThisSession --
+
 
   -- keeping track of how many times answered exactly correctly
   let indexOfAnsweredCorrectly = tagDyn correctAnswer answeredCorrectly
   let initialTimesHasBeenAnsweredCorrectly = fmap (\(_,x,_) -> x) defaultEval
   let answeredCorrectly = ffilter (==True) correctAnswerEvent
   let incTimesHasBeenAnsweredCorrectly = fmap (\x -> replaceInList x 1 (replicate 10 0)) indexOfAnsweredCorrectly
-  timesHasBeenAnsweredCorrectly <- foldDyn (+) initialTimesHasBeenAnsweredCorrectly incTimesHasBeenAnsweredCorrectly
+  timesHasBeenAnsweredCorrectly <- foldDyn (zipWith (+)) initialTimesHasBeenAnsweredCorrectly incTimesHasBeenAnsweredCorrectly
 
   -- keeping track of how many times answered one band up or down
   let initialTimesHasBeenOneUpOrDown = fmap (\(_,_,x) -> x) defaultEval
   let oneUpOrDown = attachDynWith (\x y -> (y==(x-1)) || (y==(x+1))) correctAnswer answerEvent -- Event t Bool
   let oneUpOrDownIndex = tagDyn correctAnswer $ ffilter (==True) oneUpOrDown
   let incTimesHasBeenOneUpOrDown = fmap (\x -> replaceInList x 1 (replicate 10 0)) indexOfAnsweredCorrectly
-  timesHasBeenOneUpOrDown <- foldDyn (+) initialTimesHasBeenOneUpOrDown incTimesHasBeenOneUpOrDown
+  timesHasBeenOneUpOrDown <- foldDyn (zipWith (+)) initialTimesHasBeenOneUpOrDown incTimesHasBeenOneUpOrDown
 
   mapDyn show timesHasBeenAskedThisSession >>= dynText
   mapDyn show timesHasBeenAnsweredCorrectly >>= dynText
