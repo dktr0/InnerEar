@@ -16,10 +16,10 @@ createUserWidget responses = elClass "div" "createUserWidget" $ do
 
   handleEntry <- elClass "div" "createUserHandle" $ do
     text "Handle:"
-    liftM _textInput_value $ textInput $ def & textInputConfig_attributes .~ attrs
+    liftM _textInput_value $ textInput def 
   passwordEntry <- elClass "div" "createUserPassword" $ do
     text "Password: "
-    liftM _textInput_value $ textInput $ def & textInputConfig_inputType .~ "password" & textInputConfig_attributes .~ attrs
+    liftM _textInput_value $ textInput $ def & textInputConfig_inputType .~ "password"
   createButton <- button "Create New User"
   createValue <- combineDyn CreateUser handleEntry passwordEntry
   let requests = tagDyn createValue createButton
