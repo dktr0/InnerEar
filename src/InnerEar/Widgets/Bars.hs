@@ -146,7 +146,6 @@ dynLabelBarButton label p buttonString barHeight = do
 
 
 
-
    {--
    svgAttr "svg" (singleton "class" "performanceBar") $
    x <-

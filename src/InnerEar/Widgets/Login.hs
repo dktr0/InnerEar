@@ -31,7 +31,7 @@ loginWidget responses = el "div" $ do
 
 
 notLoggedInWidget :: MonadWidget t m => Event t [Response] -> m (Event t Request)
-notLoggedInWidget responses = el "div" $ do
+notLoggedInWidget responses = elClass "div" "login" $ do
   handleEntry <- do
     text "Handle:"
     let attrs = constDyn ("class" =: "webSocketTextInputs")

@@ -1,36 +1,52 @@
+body {
+	background-color: black;
+	color: hsl(120,100%,80%);
+	height: 100%;
+	margin: 0;
+	font-family: sans;
+}
+
+text {
+  color: hsl(120,100%,80%);
+
+}
 .flex-container {
   display: -webkit-flex;
   display: flex;
   -webkit-flex-flow: row wrap;
   flex-flow: row wrap;
   text-align: center;
-  width: 30px;
-  height: 200px;
-}
-
-.flex-container > *{
-  padding: 0px;
-  -webkit-flex: 1 100%;
-  flex: 1 100%;
-
-}
-
-header {background: black;color:blue;}
-
-body {
+  width: 1300px;
+  height: 700px;
   background-color: black;
-  color: white;
 }
 
-textarea {
-	background-color: black;
-	color: white;
+.InnearEarHeader {
+  background: black;
+  color:  hsl(120,100%,80%);
+  width: 200px;
+  height: 50px;
+  margin: 100px;
+  font-family: sans;
 }
 
-
-text {
-  color: white;
+.nav {
+  background: black;
+  color:  hsl(120,100%,80%);
+  width: 200px;
+  height: 100px;
+  margin: 10px;
+  font-family: sans;
 }
+
+.login {
+  background: black;
+  color:  hsl(120,100%,80%);
+  width: 600px;
+  height: 50px;
+  margin: 100px;
+}
+
 
 button {
   background-color: rgb(128,128,128);

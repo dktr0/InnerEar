@@ -26,7 +26,7 @@ testWidget responses = el "div" $ do
   sound <- mapDyn ((flip FilteredSound) (Filter Lowpass 100 1 1)) source
   playButton <-  button "play sound"
   let sounds = tagDyn sound playButton
-  dynLabelBarButton "my label" (constDyn . Just $ 10) (constDyn . Just $ "my question") (constDyn . Just $ 1.0)
+  dynLabelBarButton "my label" (constDyn . Just $ 1) (constDyn . Just $ "my question") (constDyn . Just $ 1.0)
   home <- button "back to splash page"
   return (never,sounds,home)
 
