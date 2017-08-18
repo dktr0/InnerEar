@@ -18,7 +18,7 @@ import InnerEar.Widgets.Test
 import Reflex.Synth.Synth
 import Reflex.Synth.Types
 import InnerEar.Types.Exercise
-
+import InnerEar.Widgets.Exercise
 
 data Navigation =
   SplashPage |
