@@ -23,7 +23,7 @@ runExercise ex = mdo
 
   -- Configure
   configVisible <- mapDyn (==InConfigure) nav
-  configEvent <- visibleWhen configVisible $ configWidget ex $ defaultConfig ex
+  configEvent <- visibleWhen configVisible $ elClass "div" "exerciseConfig" $ configWidget ex $ defaultConfig ex
   config <- holdDyn (defaultConfig ex) configEvent
 
   -- Question (with generateQuestion called again with each transition to Question)
@@ -33,11 +33,11 @@ runExercise ex = mdo
   let questionIO = fmap (\(x,y) -> (generateQuestion ex) x y) configAndData'
   question <- performEvent $ fmap liftIO $ questionIO
   questionVisible <- mapDyn (==InQuestion) nav
-  (newData,sounds,questionNav) <- visibleWhen questionVisible $ (questionWidget ex) (defaultEvaluation ex) question
+  (newData,sounds,questionNav) <- visibleWhen questionVisible $ elClass "div" "exerciseQuestion" $ (questionWidget ex) (defaultEvaluation ex) question
 
   -- Reflect
   reflectVisible <- mapDyn (==InReflect) nav
-  reflectNav <- visibleWhen reflectVisible $ do
+  reflectNav <- visibleWhen reflectVisible $ elClass "div" "exerciseReflection" $ do
     text $ maybe "Uhoh - something went wrong" id (reflectiveQuestion ex)
     button "Submit Response"
 
