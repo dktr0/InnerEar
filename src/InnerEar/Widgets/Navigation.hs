@@ -41,11 +41,11 @@ navigationWidget responses = el "div" $ mdo
 navigationPage :: MonadWidget t m => Event t [Response] -> Navigation -> m (Event t Request,Event t Sound,Event t Navigation)
 
 navigationPage responses SplashPage = elClass "div" "nav" $ do
-  a <- liftM (CreateUserPage <$) $ el "div" $ button "CreateUser"
-  b <- liftM (TenBandsExercisePage <$)  $ el "div" $ button "Ten Bands Exercise"
-  c <- liftM (HarmonicsOneExercisePage <$)  $ el "div" $ button "Harmonics Exercise"
-  d <- liftM (TestPage <$)  $ el "div" $ button "Test"
-  e <- liftM (TestSoundPage <$) $ el "div" $ button "Test Sound"
+  a <- liftM (CreateUserPage <$) $ elClass "div" "navButton" $ button "CreateUser"
+  b <- liftM (TenBandsExercisePage <$)  $ elClass "div" "navButton" $ button "Ten Bands Exercise"
+  c <- liftM (HarmonicsOneExercisePage <$)  $ elClass "div" "navButton" $ button "Harmonics Exercise"
+  d <- liftM (TestPage <$)  $ elClass "div" "navButton" $ button "Test"
+  e <- liftM (TestSoundPage <$) $ elClass "div" "navButton" $ button "Test Sound"
   let navEvents = leftmost [a,b,c,d,e]
   return (never,never,navEvents)
 
