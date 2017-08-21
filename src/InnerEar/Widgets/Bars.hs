@@ -89,7 +89,7 @@ labelsForBars s = do
    elClass "div" "text" $ text (show s)
    return ()
 
--- A percentage Dynamic label
+-- A Dynamic label for percentage
 dynPercentage :: MonadWidget t m => Dynamic t Int -> m ()
 dynPercentage p = do
    p' <- mapDyn show p
@@ -106,6 +106,7 @@ labelBarButton label buttonString barHeight = do
    question <- dynButton buttonString -- m (Event t ())
    return (question)
 
+--A dynamic bar with a label, maybe percentage, maybe button label and maybe height
 dynLabelBarButton :: MonadWidget t m => String ->  Dynamic t (Maybe Int) ->  Dynamic t (Maybe String) -> Dynamic t (Maybe Float) -> m (Event t ())
 dynLabelBarButton label p buttonString barHeight = elClass "div" "barWrapper" $ do
     labelsForBars label
@@ -121,3 +122,35 @@ dynLabelBarButton label p buttonString barHeight = elClass "div" "barWrapper" $ 
       boolButton <- mapDyn (maybe False (const True)) buttonString --Dynamic t bool
       let emptyString = constDyn " "
       flippableDynE (dynButton emptyString) (dynButton buttonString') boolButton
+
+--A dynamic label for Float percentage
+dynPercentageFloat :: MonadWidget t m => Dynamic t String -> Dynamic t Float -> m ()
+dynPercentageFloat c p = do
+  c' <- mapDyn (singleton "class") c
+  p' <- mapDyn show p
+  elDynAttr "div" c' $ do
+    dynText p'
+    return ()
+
+-- A dynamic label
+dynLabelForBar :: MonadWidget t m => Dynamic t String -> Dynamic t String -> m ()
+dynLabelForBar c label = do
+  c' <- mapDyn (singleton "class") c
+  elDynAttr "div" c' $ do
+    dynText label
+    return ()
+
+--A dynamic label for count
+dynCount :: MonadWidget t m => Dynamic t String -> Dynamic t Int -> m ()
+dynCount c count = do
+  c' <- mapDyn (singleton "class") c
+  count' <- mapDyn show count
+  elDynAttr "div" c' $ do
+    dynText count'
+    return ()
+
+performanceBar :: MonadWidget t m => Dynamic t Float -> Dynamic t String -> Dynamic t Int -> m ()
+performanceBar percentage label count =  do
+  dynPercentageFloat (constDyn "percentageClass") percentage
+  dynLabelForBar (constDyn "dynLabelForBarClass") label
+  dynCount (constDyn "dynCountClass") count
