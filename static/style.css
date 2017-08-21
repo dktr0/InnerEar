@@ -110,6 +110,11 @@ button {
   border-radius: 4px;
 }
 
+.incorrectActivatedButton {
+	background-color: red;
+
+}
+
 .text {
   font-size:100%;
   color: white;
