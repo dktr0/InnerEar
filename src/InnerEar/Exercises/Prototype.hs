@@ -12,16 +12,19 @@ import Reflex.Dom.Contrib.Widgets.Common
 import Control.Monad
 import Control.Monad.IO.Class (liftIO)
 import qualified Data.Map as M
+import qualified Data.HashMap.Strict as HM
+import Data.Hashable (Hashable,hashWithSalt)
 import System.Random
 import Data.Maybe (fromJust)
 import Data.Bool (bool)
-import Data.List (findIndices)
+import Data.List (findIndices,partition)
 import Text.JSON
 import Text.JSON.Generic
 import Data.List(elemIndex)
 
 import InnerEar.Widgets.Utility
 import InnerEar.Types.Data
+import InnerEar.Types.Score
 import Reflex.Synth.Synth
 import Reflex.Synth.Types
 import InnerEar.Widgets.Bars
@@ -41,6 +44,40 @@ import InnerEar.Types.ExerciseNavigation
 
 data WhatBandsAreAllowed = AllBands | HighBands | MidBands | Mid8Bands | LowBands deriving (Show,Eq,Data,Typeable)
 
+instance Hashable WhatBandsAreAllowed where
+  hashWithSalt _ AllBands = 1
+  hashWithSalt _ HighBands = 2
+  hashWithSalt _ MidBands= 3
+  hashWithSalt _ Mid8Bands = 4
+  hashWithSalt _ LowBands= 5
+
+
+-- So e can be a Map from allowedbands to BandsEval
+instance Ord WhatBandsAreAllowed where
+  compare AllBands b = if b==AllBands then EQ else GT
+  compare HighBands b = case b of 
+    (AllBands) -> LT
+    (HighBands) -> EQ
+    otherwise -> GT
+  compare (Mid8Bands) b = case b of
+    (MidBands) -> GT
+    (LowBands) -> GT
+    (Mid8Bands) -> EQ
+    otherwise -> LT
+  compare (MidBands) b = case b of
+    (LowBands) -> GT
+    (MidBands) -> EQ
+    otherwise -> LT
+  compare (LowBands) b = if b==LowBands then EQ else LT
+
+
+-- Evaluation for a particular configuration. Map of hz to a Band Evaluation (could also be from Double to BandEval if want decimal hz)
+type ConfigEval = M.Map Int Score
+
+type TenBandsEval = HM.HashMap WhatBandsAreAllowed ConfigEval
+
+
+
 convertBands :: WhatBandsAreAllowed -> [Bool]
 convertBands AllBands = replicate 10 True
 convertBands HighBands = [False,False,False,False,False,True,True,True,True,True]
@@ -48,12 +85,16 @@ convertBands MidBands = [False,False,False,True,True,True,True,True,False,False]
 convertBands Mid8Bands = [False,True,True,True,True,True,True,True,True,False]
 convertBands LowBands = [False,False,False,False,False,True,True,True,True,True]
 
-prototypeExercise :: MonadWidget t m => Exercise t m WhatBandsAreAllowed [Int] Int [(Int,Int,Int)]
+
+
+
+prototypeExercise :: MonadWidget t m => Exercise t m WhatBandsAreAllowed [Int] Int (M.Map Int Score)
 prototypeExercise = Exercise {
   exerciseId = PrototypeExercise,
   defaultConfig = AllBands,
   configWidget = prototypeConfigWidget,
-  defaultEvaluation = replicate 10 (0,0,0),
+  defaultEvaluation = M.empty,
+  --defaultEvaluation = HM.fromList $ zipWith (\c v ->(c, M.fromList $ fmap ((\x->(x,Score 0 0 0))  . snd) $ fst $ partition fst $ zip (convertBands c) v)) [AllBands,HighBands,Mid8Bands, MidBands,LowBands] (repeat [31::Int,63,125,250,500,1000,2000,4000,8000,16000]), -- ugly yet beautiful...
   displayEvaluation = prototypeDisplayEvaluation,
   generateQuestion = prototypeGenerateQuestion,
   questionWidget = prototypeQuestionWidget,
@@ -65,7 +106,10 @@ prototypeExercise = Exercise {
 -- with whatever names we like, with great abandon!
 
 filters:: [Filter]
-filters = fmap (\x -> Filter Peaking x 1.4 16.0) [31,63,125,250,500,1000,2000,4000,8000,16000]
+filters = fmap (\x -> Filter Peaking x 1.4 16.0) filterFreqs
+
+--filterFreqs::[Int]
+filterFreqs = [31,63,125,250,500,1000,2000,4000,8000,16000]
 
 sounds :: [Sound]
 sounds = fmap (FilteredSound (BufferSource (File "pinknoise.wav") 2.0)) filters
@@ -98,7 +142,7 @@ filterCheckBox t v = el "div" $ do
 
 
 
-prototypeGenerateQuestion :: WhatBandsAreAllowed -> [Datum WhatBandsAreAllowed [Int] Int [(Int, Int, Int)]] -> IO ([Int],Int)
+prototypeGenerateQuestion :: WhatBandsAreAllowed -> [Datum WhatBandsAreAllowed [Int] Int (M.Map Int Score)] -> IO ([Int],Int)
 prototypeGenerateQuestion config prevData = do
   let config' = convertBands config
   let x = findIndices (==True) config'
@@ -109,121 +153,40 @@ prototypeGenerateQuestion config prevData = do
 
 
 
-prototypeQuestionWidget :: MonadWidget t m => [(Int,Int,Int)] -> Event t ([Int],Int) -> m (Event t (Datum WhatBandsAreAllowed [Int] Int [(Int, Int, Int)]), Event t Sound, Event t ExerciseNavigation)
-prototypeQuestionWidget defaultEval e = mdo
+
+prototypeQuestionWidget :: MonadWidget t m => WhatBandsAreAllowed -> M.Map Int Score -> Event t ([Int],Int) -> m (Event t (Datum WhatBandsAreAllowed [Int] Int (M.Map Int Score)), Event t Sound, Event t ExerciseNavigation)
+prototypeQuestionWidget c defaultEval e = mdo
 
   question <- holdDyn ([],0) e
+  -- @ questions not generated properly for this rn
   correctAnswer <- mapDyn snd question
   userAnswer <- holdDyn Nothing $ leftmost [Nothing <$ e,Just <$> answerEvent]
 
   playUnfiltered <- button "Listen to unfiltered"
   playButton <- button "Listen to question"
-
   let unfilteredSound = Sound (BufferSource (File "pinknoise.wav") 2.0) <$ playUnfiltered
 
-  band0included <- mapDyn (elem 0 . fst) question
-  band1included <- mapDyn (elem 1 . fst) question
-  band2included <- mapDyn (elem 2 . fst) question
-  band3included <- mapDyn (elem 3 . fst) question
-  band4included <- mapDyn (elem 4 . fst) question
-  band5included <- mapDyn (elem 5 . fst) question
-  band6included <- mapDyn (elem 6 . fst) question
-  band7included <- mapDyn (elem 7 . fst) question
-  band8included <- mapDyn (elem 8 . fst) question
-  band9included <- mapDyn (elem 9 . fst) question
+  bandPressed <- elClass "div" "answerButtonWrapper" $ do       -- Event t Int (int - hz corresponding to the band)
+    let x = fmap (\x-> buttonVal (show x ++" Hz") x) (fmap snd $ fst $ partition fst $ zip (convertBands c) filterFreqs) -- [ m(Event t Int) ]
+    x' <- sequence x
+    return $ fmap round $ leftmost x'
+ 
 
-  buttonText0 <- combineDyn f userAnswer band0included
-  buttonText1 <- combineDyn f userAnswer band1included
-  buttonText2 <- combineDyn f userAnswer band2included
-  buttonText3 <- combineDyn f userAnswer band3included
-  buttonText4 <- combineDyn f userAnswer band4included
-  buttonText5 <- combineDyn f userAnswer band5included
-  buttonText6 <- combineDyn f userAnswer band6included
-  buttonText7 <- combineDyn f userAnswer band7included
-  buttonText8 <- combineDyn f userAnswer band8included
-  buttonText9 <- combineDyn f userAnswer band9included
-
-  bandPressed <- elClass "div" "barWrapper" $ do
-    band0 <- (0 <$) <$> dynLabelBarButton  (labels!!0) band0count buttonText0 band0perf
-    band1 <- (1 <$) <$> dynLabelBarButton  (labels!!1) band1count buttonText1 band1perf
-    band2 <- (2 <$) <$> dynLabelBarButton  (labels!!2) band2count buttonText2 band2perf
-    band3 <- (3 <$) <$> dynLabelBarButton  (labels!!3) band3count buttonText3 band3perf
-    band4 <- (4 <$) <$> dynLabelBarButton  (labels!!4) band4count buttonText4 band4perf
-    band5 <- (5 <$) <$> dynLabelBarButton  (labels!!5) band5count buttonText5 band5perf
-    band6 <- (6 <$) <$> dynLabelBarButton (labels!!6) band6count buttonText6 band6perf
-    band7 <- (7 <$) <$> dynLabelBarButton  (labels!!7) band7count buttonText7 band7perf
-    band8 <- (8 <$) <$> dynLabelBarButton (labels!!8) band8count buttonText8 band8perf
-    band9 <- (9 <$) <$> dynLabelBarButton  (labels!!9) band9count buttonText9 band9perf
-    return $ leftmost [band0,band1,band2,band3,band4,band5,band6,band7,band8,band9]
 
   canAnswer <- mapDyn (==Nothing) userAnswer
   let answerEvent = gate (current canAnswer) bandPressed -- Event t Int
   let correctAnswerEvent = attachDynWith (==) correctAnswer answerEvent -- Event t Bool
 
-  -- keeping track of how many times any question answered
-  let initialTimesHasBeenAskedThisSessionList = fmap (\(x,_,_) -> x) defaultEval
-  let whatWouldHaveBeenCorrect = tagDyn correctAnswer answerEvent -- Event t Int
+--holdDyn "nothing yet.." (fmap show answerEvent) >>= dynText
 
-  let incTimesHasBeenAskedThisSession = fmap (\x -> replaceInList x (1::Int) (replicate 10 (0::Int))) whatWouldHaveBeenCorrect
-  timesHasBeenAskedThisSession <- foldDyn (zipWith (+)) initialTimesHasBeenAskedThisSessionList incTimesHasBeenAskedThisSession
+  -- update the scoreMap
+  let answerInfo = attachDynWith (\cor user -> if cor==user then ([(Correct,cor)],cor) else ([(FalsePositive,user), (FalseNegative,cor)],cor)) correctAnswer answerEvent -- Event t (cor,user)
+  let scoreUpdate = attachWith (\s (xs,cor) -> foldl (\b (a,i)-> M.insert i (adjustScore a (maybe (Score 0 0 0) id $ M.lookup i b)) b) s xs) (current scoreMap) answerInfo       
+  --let scoreUpdate = attachWith (\s (xs,cor) -> foldl (\b (a,i)-> M.update (Just . adjustScore a) i b) s xs) (current scoreMap) answerInfo       
+  
+  --M.insertWith (\newVal mapVal -> newVal)
 
-
-  -- keeping track of how many times answered exactly correctly
-  let indexOfAnsweredCorrectly = tagDyn correctAnswer answeredCorrectly
-  let initialTimesHasBeenAnsweredCorrectly = fmap (\(_,x,_) -> x) defaultEval
-  let answeredCorrectly = ffilter (==True) correctAnswerEvent
-
-  let incTimesHasBeenAnsweredCorrectly = fmap (\x -> replaceInList x 1 (replicate 10 0)) indexOfAnsweredCorrectly
-
-  timesHasBeenAnsweredCorrectly <- foldDyn (zipWith (+)) initialTimesHasBeenAnsweredCorrectly incTimesHasBeenAnsweredCorrectly
-
-  -- keeping track of how many times answered one band up or down
-  let initialTimesHasBeenOneUpOrDown = fmap (\(_,_,x) -> x) defaultEval
-  let oneUpOrDown = attachDynWith (\x y -> (y==(x-1)) || (y==(x+1))) correctAnswer answerEvent -- Event t Bool
-  let oneUpOrDownIndex = tagDyn correctAnswer $ ffilter (==True) oneUpOrDown
-  let incTimesHasBeenOneUpOrDown = fmap (\x -> replaceInList x 1 (replicate 10 0)) indexOfAnsweredCorrectly
-  timesHasBeenOneUpOrDown <- foldDyn (zipWith (+)) initialTimesHasBeenOneUpOrDown incTimesHasBeenOneUpOrDown
-
-
-  band0count <- mapDyn (Just . (!!0)) timesHasBeenAskedThisSession
-  band1count <- mapDyn (Just . (!!1)) timesHasBeenAskedThisSession
-  band2count <- mapDyn (Just . (!!2)) timesHasBeenAskedThisSession
-  band3count <- mapDyn (Just . (!!3)) timesHasBeenAskedThisSession
-  band4count <- mapDyn (Just . (!!4)) timesHasBeenAskedThisSession
-  band5count <- mapDyn (Just . (!!5)) timesHasBeenAskedThisSession
-  band6count <- mapDyn (Just . (!!6)) timesHasBeenAskedThisSession
-  band7count <- mapDyn (Just . (!!7)) timesHasBeenAskedThisSession
-  band8count <- mapDyn (Just . (!!8)) timesHasBeenAskedThisSession
-  band9count <- mapDyn (Just . (!!9)) timesHasBeenAskedThisSession
-
-
-  band0correct <- mapDyn (!!0) timesHasBeenAnsweredCorrectly
-  band1correct <- mapDyn (!!1) timesHasBeenAnsweredCorrectly
-  band2correct <- mapDyn (!!2) timesHasBeenAnsweredCorrectly
-  band3correct <- mapDyn (!!3) timesHasBeenAnsweredCorrectly
-  band4correct <- mapDyn (!!4) timesHasBeenAnsweredCorrectly
-  band5correct <- mapDyn (!!5) timesHasBeenAnsweredCorrectly
-  band6correct <- mapDyn (!!6) timesHasBeenAnsweredCorrectly
-  band7correct <- mapDyn (!!7) timesHasBeenAnsweredCorrectly
-  band8correct <- mapDyn (!!8) timesHasBeenAnsweredCorrectly
-  band9correct <- mapDyn (!!9) timesHasBeenAnsweredCorrectly
-
-  band0perf <- combineDyn calculateScore band0correct band0count
-  band1perf <- combineDyn calculateScore band1correct band1count
-  band2perf <- combineDyn calculateScore band2correct band2count
-  band3perf <- combineDyn calculateScore band3correct band3count
-  band4perf <- combineDyn calculateScore band4correct band4count
-  band5perf <- combineDyn calculateScore band5correct band5count
-  band6perf <- combineDyn calculateScore band6correct band6count
-  band7perf <- combineDyn calculateScore band7correct band7count
-  band8perf <- combineDyn calculateScore band8correct band8count
-  band9perf <- combineDyn calculateScore band9correct band9count
-
-
-
-  mapDyn show timesHasBeenAskedThisSession >>= dynText
-  mapDyn show timesHasBeenAnsweredCorrectly >>= dynText
-  mapDyn show timesHasBeenOneUpOrDown >>= dynText
+  scoreMap <- holdDyn defaultEval scoreUpdate
 
   -- display feedback
   let resetFeedback = fmap (const "") e
@@ -232,8 +195,8 @@ prototypeQuestionWidget defaultEval e = mdo
   dynText feedbackToDisplay
 
   -- generate sounds to be played
-  let playCorrectSound = (sounds!!) <$> tagDyn correctAnswer playButton
-  let playOtherSounds = (sounds!!) <$> bandPressed
+  let playCorrectSound = (\x-> FilteredSound (BufferSource (File "pinknoise.wav") 2.0) (Filter Peaking (fromIntegral x) 1.4 16.0)) <$> tagDyn correctAnswer playButton
+  let playOtherSounds = (\x-> FilteredSound (BufferSource (File "pinknoise.wav") 2.0) (Filter Peaking (fromIntegral x) 1.4 16.0)) <$> tagDyn correctAnswer bandPressed
   let playSounds = leftmost [playCorrectSound,playOtherSounds,unfilteredSound]
 
   -- generate navigation events
@@ -242,15 +205,32 @@ prototypeQuestionWidget defaultEval e = mdo
   onToReflect <- (InReflect <$) <$> button "Reflect"
   let navEvents = leftmost [backToConfigure,nextQuestion,onToReflect]
 
-  return (never,playSounds,navEvents)
-  where
-    f (Nothing) True = Just "?"
-    f _ True = Just "L"
-    f _ False = Nothing
+  el "div" $ do
+    text "debugging:   "
+    el "div"$ do 
+      text "correct answer:  "
+      mapDyn show correctAnswer >>= dynText
+    el "div" $ do
+      text "canAnswer: "
+      mapDyn show canAnswer >>= dynText
+    el "div"$ do 
+      text "userAnswer:  "
+      holdDyn "nothing" (fmap show bandPressed) >>= dynText
+    el "div"$ do 
+      text "Score Map:  "
+      mapDyn show scoreMap >>= dynText
+
+  return (never, playSounds,navEvents)
+
+
 
 calculateScore :: Int -> Maybe Int -> Maybe Float
 calculateScore x (Just y) = Just (fromIntegral(x)/fromIntegral(y))
 calculateScore x _ = Just (-1.0)
+
+
+prototypeDisplayEvaluation::MonadWidget t m => Dynamic t (M.Map Int Score) -> m ()
+prototypeDisplayEvaluation e = return ()
 
 {-
 tempWidget :: MonadWidget t m => String -> Dynamic t (Maybe String) -> m (Event t ())
