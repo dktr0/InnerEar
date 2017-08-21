@@ -60,7 +60,6 @@ prototypeExercise = Exercise {
   reflectiveQuestion = Just "Please write some brief text reflecting on your experience:"
   }
 
-
 -- | Because we only export the one definition above from this module, we can create other definitions
 -- with whatever names we like, with great abandon!
 

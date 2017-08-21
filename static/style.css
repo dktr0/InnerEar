@@ -10,11 +10,11 @@ body {
   display: -webkit-flex;
   display: flex;
   -webkit-flex-flow: row wrap;
-  flex-flow: row wrap;
+  flex-flow: column;
   text-align: center;
   width: 1300px;
   height: 700px;
-  background-color: gray;
+  background-color: black;
 }
 
 
@@ -151,7 +151,7 @@ border-radius: 4px;
 .svgS {
   width: 30px;
   height: 200px;
-  background-color: gray;
+  background-color: black;
 }
 
 rect {
@@ -172,9 +172,22 @@ rect {
 }
 
 .percentageClass {
-
+background-color: gray;
 }
 
 .dynLabelForBarClass {
-	
+background-color: gray;
+}
+
+.scoreLabelClass {
+background-color: gray;
+}
+
+.dynLabelClass {
+background-color: gray;
+}
+
+.countLabelClass {
+
+
 }

@@ -154,3 +154,4 @@ performanceBar percentage label count =  do
   dynPercentageFloat (constDyn "percentageClass") percentage
   dynLabelForBar (constDyn "dynLabelForBarClass") label
   dynCount (constDyn "dynCountClass") count
+  

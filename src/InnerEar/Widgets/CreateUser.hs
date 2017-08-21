@@ -7,7 +7,7 @@ import Control.Monad
 import InnerEar.Types.Request
 import InnerEar.Types.Response
 import InnerEar.Types.Utility
-
+{--
 createUserWidget :: MonadWidget t m
   => Event t [Response] -> m (Event t Request,Event t ())
 createUserWidget responses = elClass "div" "createUserWidget" $ do
@@ -34,3 +34,4 @@ createUserWidget responses = elClass "div" "createUserWidget" $ do
   let successEvent = fmap (const ())$ fmapMaybe (lastWithPredicate isAuthenticated) responses
   let back = leftmost [home,successEvent]
   return (requests,back)
+--}
