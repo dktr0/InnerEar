@@ -125,32 +125,32 @@ dynLabelBarButton label p buttonString barHeight = elClass "div" "barWrapper" $ 
 
 --A dynamic label for Float percentage
 dynPercentageFloat :: MonadWidget t m => Dynamic t String -> Dynamic t Float -> m ()
-dynPercentageFloat class p = do
-  class' <- mapDyn Just class
+dynPercentageFloat c p = do
+  c' <- mapDyn (singleton "class") c
   p' <- mapDyn show p
-  elClass "div" class $ do
+  elDynAttr "div" c' $ do
     dynText p'
     return ()
 
 -- A dynamic label
 dynLabelForBar :: MonadWidget t m => Dynamic t String -> Dynamic t String -> m ()
-dynLabelForBar class label = do
-class' <- mapDyn Just class
-  elClass "div" "class" $ do
-    dynText s'
+dynLabelForBar c label = do
+  c' <- mapDyn (singleton "class") c
+  elDynAttr "div" c' $ do
+    dynText label
     return ()
 
 --A dynamic label for count
-dynCount :: MonadWidget t m => Dynamic String -> Dynamic t Int -> m ()
-dynCount class count = do
-  class' <- mapDyn Just class
+dynCount :: MonadWidget t m => Dynamic t String -> Dynamic t Int -> m ()
+dynCount c count = do
+  c' <- mapDyn (singleton "class") c
   count' <- mapDyn show count
-  elClass "div" "class" $ do
-    dynText c'
+  elDynAttr "div" c' $ do
+    dynText count'
     return ()
 
-performanceBar :: Dynamic t Float -> Dynamic t String -> Dynamic t Int -> m ()
+performanceBar :: MonadWidget t m => Dynamic t Float -> Dynamic t String -> Dynamic t Int -> m ()
 performanceBar percentage label count =  do
-  dynPercentageFloat "percentageClass" percentage
-  dynLabelForBar "dynLabelForBarClass" label
-  dynCount "dynCountClass" count
+  dynPercentageFloat (constDyn "percentageClass") percentage
+  dynLabelForBar (constDyn "dynLabelForBarClass") label
+  dynCount (constDyn "dynCountClass") count
