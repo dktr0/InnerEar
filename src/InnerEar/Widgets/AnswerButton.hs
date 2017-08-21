@@ -25,20 +25,13 @@ answerButton buttonString buttonMode = do
     dynButtonClass curClass buttonString
 
 modeToClass :: AnswerButtonMode -> String
-modeToClass NotPossible = "disabledButtonClass"
-modeToClass Possible = "enabledButtonClass"
-modeToClass IncorrectDisactivated = "incorrectDisactivatedClass"
-modeToClass IncorrectActivated = "incorrectActivatedClass"
-modeToClass Correct = "correctButtonClass"
+modeToClass NotPossible = "disabledButton"
+modeToClass Possible = "enabledButton"
+modeToClass IncorrectDisactivated = "incorrectDisactivatedButton"
+modeToClass Correct = "correctButton"
+modeToClass IncorrectActivated = "incorrectActivatedButton"
 dynButtonClass :: MonadWidget t m => Dynamic t String -> Dynamic t String -> m (Event t ())
 dynButtonClass = (mapDyn button) >=> dynE
 
 dynButton :: MonadWidget t m => Dynamic t String -> m (Event t ())
 dynButton = (mapDyn button) >=> dynE
-
-
-
-
-1. finish modeToclASS ok
-2. make elDynButtonClass
-3. make classes

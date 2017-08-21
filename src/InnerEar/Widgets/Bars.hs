@@ -89,7 +89,7 @@ labelsForBars s = do
    elClass "div" "text" $ text (show s)
    return ()
 
--- A percentage Dynamic label
+-- A Dynamic label for percentage
 dynPercentage :: MonadWidget t m => Dynamic t Int -> m ()
 dynPercentage p = do
    p' <- mapDyn show p
@@ -106,6 +106,7 @@ labelBarButton label buttonString barHeight = do
    question <- dynButton buttonString -- m (Event t ())
    return (question)
 
+--A dynamic bar with a label, maybe percentage, maybe button label and maybe height
 dynLabelBarButton :: MonadWidget t m => String ->  Dynamic t (Maybe Int) ->  Dynamic t (Maybe String) -> Dynamic t (Maybe Float) -> m (Event t ())
 dynLabelBarButton label p buttonString barHeight = elClass "div" "barWrapper" $ do
     labelsForBars label
@@ -121,3 +122,35 @@ dynLabelBarButton label p buttonString barHeight = elClass "div" "barWrapper" $ 
       boolButton <- mapDyn (maybe False (const True)) buttonString --Dynamic t bool
       let emptyString = constDyn " "
       flippableDynE (dynButton emptyString) (dynButton buttonString') boolButton
+
+--A dynamic label for Float percentage
+dynPercentageFloat :: MonadWidget t m => Dynamic t String -> Dynamic t Float -> m ()
+dynPercentageFloat class p = do
+  class' <- mapDyn Just class
+  p' <- mapDyn show p
+  elClass "div" class $ do
+    dynText p'
+    return ()
+
+-- A dynamic label
+dynLabelForBar :: MonadWidget t m => Dynamic t String -> Dynamic t String -> m ()
+dynLabelForBar class label = do
+class' <- mapDyn Just class
+  elClass "div" "class" $ do
+    dynText s'
+    return ()
+
+--A dynamic label for count
+dynCount :: MonadWidget t m => Dynamic String -> Dynamic t Int -> m ()
+dynCount class count = do
+  class' <- mapDyn Just class
+  count' <- mapDyn show count
+  elClass "div" "class" $ do
+    dynText c'
+    return ()
+
+performanceBar :: Dynamic t Float -> Dynamic t String -> Dynamic t Int -> m ()
+performanceBar percentage label count =  do
+  dynPercentageFloat "percentageClass" percentage
+  dynLabelForBar "dynLabelForBarClass" label
+  dynCount "dynCountClass" count

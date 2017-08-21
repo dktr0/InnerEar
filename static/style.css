@@ -101,8 +101,6 @@ text {
   font-family: sans;
 }
 
-
-
 button {
   background-color: rgb(128,128,128);
   color: white;
@@ -110,9 +108,39 @@ button {
   border-radius: 4px;
 }
 
+.disabledButtonClass {
+	background-color: rgb(128,128,128);
+	color: gray;
+	border: none;
+  border-radius: 4px;
+}
+
+.enabledButtonClass {
+  background-color: rgb(128,128,128);
+  color: white;
+  border: none;
+  border-radius: 4px;
+}
+
+.incorrectDisactivatedButton{
+background-color: gray;
+color: white;
+border: none;
+border-radius: 4px;
+}
+
 .incorrectActivatedButton {
 	background-color: red;
+	color: white;
+  border: none;
+  border-radius: 4px;
+}
 
+.correctButton{
+	background-color: green;
+	color: white;
+	border: none;
+  border-radius: 4px;
 }
 
 .text {
