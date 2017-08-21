@@ -1,3 +1,5 @@
+{-# LANGUAGE RecursiveDo #-}
+
 module InnerEar.Widgets.Exercise where
 
 import Reflex
