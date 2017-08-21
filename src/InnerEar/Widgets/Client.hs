@@ -20,16 +20,16 @@ import Reflex.Synth.Types
 -- If the user is not logged in, it displays fields to enter login values.
 
 clientWidget :: MonadWidget t m => m ()
-clientWidget = el "div" $ mdo
-  elClass "div" "flex-container" $ do
-    elClass "h1" "header" $ text "Inner Ear"
+clientWidget = elClass "div" "innerEar" $ mdo
   (wsRcvd,wsStatus) <- WS.reflexWebSocket wsSend
   wsRcvdShow <- holdDyn "" $ fmap show wsRcvd
-  dynText wsRcvdShow
-  el "div" $ do
-    text "wsStatus: "
-    dynText wsStatus
-  x <- loginWidget wsRcvd
+  x <- elClass "div" "header" $ do
+    elClass "div" "title" $ do
+      text "Inner Ear"
+    elClass "div" "wsStatus" $ do
+      text "wsStatus: "
+      dynText wsStatus
+    elClass "div" "login" $ loginWidget wsRcvd
   (y,sounds) <- navigationWidget wsRcvd
   let wsSend = leftmost [x,y]
   performSound sounds
