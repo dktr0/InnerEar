@@ -18,6 +18,7 @@ import InnerEar.Types.Response
 import Reflex.Synth.Types
 import Reflex.Synth.Synth
 import InnerEar.Widgets.Bars
+import InnerEar.Widgets.AnswerButton
 
 labelBarButton' :: MonadWidget t m => String ->  Dynamic t String -> Dynamic t Float -> m (Event t ())
 labelBarButton' label buttonString barHeight = do
