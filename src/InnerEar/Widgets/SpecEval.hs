@@ -72,7 +72,7 @@ dynGraphLabel :: MonadWidget t m => Dynamic t String -> Dynamic t String -> m ()
 dynGraphLabel c label = do
   c' <- mapDyn (singleton "class") c -- m (Dynamic t String)
   elDynAttr "div" c' $ do
-    dynText label -- m () 
+    dynText label -- m ()
     return ()
 
 displaySpectrumEvaluation :: MonadWidget t m => Dynamic t String -> Dynamic t (Map Int Score) -> m ()
@@ -91,16 +91,16 @@ displaySpectrumEvaluation graphLabel score= do
   let band8Hz = (!!8) labels
   let band9Hz = (!!9) labels
 
-  band0Score <- mapDyn (maybe Nothing (Just . (questionsAsked-falseNegatives)/questionsAsked)) . lookup 0) score
-  band1Score <- mapDyn (maybe Nothing (Just . (questionsAsked-falseNegatives)/questionsAsked)) . lookup 1) score
-  band2Score <- mapDyn (maybe Nothing (Just . (questionsAsked-falseNegatives)/questionsAsked)) . lookup 2) score
-  band3Score <- mapDyn (maybe Nothing (Just . (questionsAsked-falseNegatives)/questionsAsked)) . lookup 3) score
-  band4Score <- mapDyn (maybe Nothing (Just . (questionsAsked-falseNegatives)/questionsAsked)) . lookup 4) score
-  band5Score <- mapDyn (maybe Nothing (Just . (questionsAsked-falseNegatives)/questionsAsked)) . lookup 5) score
-  band6Score <- mapDyn (maybe Nothing (Just . (questionsAsked-falseNegatives)/questionsAsked)) . lookup 6) score
-  band7Score <- mapDyn (maybe Nothing (Just . (questionsAsked-falseNegatives)/questionsAsked)) . lookup 7) score
-  band8Score <- mapDyn (maybe Nothing (Just . (questionsAsked-falseNegatives)/questionsAsked)) . lookup 8) score
-  band9Score <- mapDyn (maybe Nothing (Just . (questionsAsked-falseNegatives)/questionsAsked)) . lookup 9) score
+  band0Score <- mapDyn (maybe Nothing (Just . ((questionsAsked-falseNegatives)/questionsAsked)) . lookup 0) score
+  band1Score <- mapDyn (maybe Nothing (Just . ((questionsAsked-falseNegatives)/questionsAsked)) . lookup 1) score
+  band2Score <- mapDyn (maybe Nothing (Just . ((questionsAsked-falseNegatives)/questionsAsked)) . lookup 2) score
+  band3Score <- mapDyn (maybe Nothing (Just . ((questionsAsked-falseNegatives)/questionsAsked)) . lookup 3) score
+  band4Score <- mapDyn (maybe Nothing (Just . ((questionsAsked-falseNegatives)/questionsAsked)) . lookup 4) score
+  band5Score <- mapDyn (maybe Nothing (Just . ((questionsAsked-falseNegatives)/questionsAsked)) . lookup 5) score
+  band6Score <- mapDyn (maybe Nothing (Just . ((questionsAsked-falseNegatives)/questionsAsked)) . lookup 6) score
+  band7Score <- mapDyn (maybe Nothing (Just . ((questionsAsked-falseNegatives)/questionsAsked)) . lookup 7) score
+  band8Score <- mapDyn (maybe Nothing (Just . ((questionsAsked-falseNegatives)/questionsAsked)) . lookup 8) score
+  band9Score <- mapDyn (maybe Nothing (Just . ((questionsAsked-falseNegatives)/questionsAsked)) . lookup 9) score
 
   band0ScoreBar <- scoreBar band0Score band0Hz
   band1ScoreBar <- scoreBar band1Score band1Hz
@@ -112,7 +112,3 @@ displaySpectrumEvaluation graphLabel score= do
   band7ScoreBar <- scoreBar band7Score band7Hz
   band8ScoreBar <- scoreBar band8Score band8Hz
   band9ScoreBar <- scoreBar band9Score band9Hz
-
-
-  --m <- mapDyn (fmap (scoreBar . Just)) score
-  scoreBar m
