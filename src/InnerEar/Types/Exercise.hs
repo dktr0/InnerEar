@@ -22,6 +22,6 @@ data Exercise t m c q a e = Exercise {
   defaultEvaluation :: e,
   displayEvaluation :: Dynamic t e -> m (),
   generateQuestion :: c -> [Datum c q a e] -> IO (q,a),
-  questionWidget :: e -> Event t (q,a) -> m (Event t (Datum c q a e),Event t Sound,Event t ExerciseNavigation),
+  questionWidget ::  c -> e -> Event t (q,a) -> m (Event t (Datum c q a e),Event t Sound,Event t ExerciseNavigation),
   reflectiveQuestion :: Maybe Reflection -- where Nothing means no reflective question stage
 }

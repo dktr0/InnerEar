@@ -33,11 +33,14 @@ harmonicsOneExercise = Exercise {
   exerciseId = HarmonicsOne,
   defaultConfig = (),
   defaultEvaluation = 0,
+  displayEvaluation = harmoncsOneDisplayEvaluation,
   configWidget = harmonicsOneConfigWidget,
   generateQuestion = harmonicsOneGenerateQuestion,
   questionWidget = harmonicsOneQuestionWidget,
   reflectiveQuestion = Just "Please write some brief text reflecting on your experience:"
 }
+
+harmoncsOneDisplayEvaluation _ = return ()
 
 harmonicsOneConfigWidget::MonadWidget t m => () ->  m (Event t ())
 harmonicsOneConfigWidget _ = do
@@ -51,8 +54,8 @@ harmonicsOneGenerateQuestion _ _ = do
   return ((),x)
 
 
-harmonicsOneQuestionWidget :: MonadWidget t m => Int -> Event t ((),Int) -> m (Event t (Datum () () Int Int),Event t Sound,Event t ExerciseNavigation)
-harmonicsOneQuestionWidget _ q = mdo
+harmonicsOneQuestionWidget :: MonadWidget t m => () -> Int -> Event t ((),Int) -> m (Event t (Datum () () Int Int),Event t Sound,Event t ExerciseNavigation)
+harmonicsOneQuestionWidget _ _ q = mdo
   soundButtons <-el "table" $ do
     soundButtons <- sequence $ mapWithKey (\k v-> el "tr" $ el "td" $ do 
       chooseButton <- buttonVal (show k) k

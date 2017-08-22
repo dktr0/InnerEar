@@ -1,3 +1,5 @@
+{-# LANGUAGE RecursiveDo #-}
+
 module InnerEar.Widgets.Exercise where
 
 import Reflex
@@ -33,7 +35,8 @@ runExercise ex = mdo
   let questionIO = fmap (\(x,y) -> (generateQuestion ex) x y) configAndData'
   question <- performEvent $ fmap liftIO $ questionIO
   questionVisible <- mapDyn (==InQuestion) nav
-  (newData,sounds,questionNav) <- visibleWhen questionVisible $ elClass "div" "exerciseQuestion" $ (questionWidget ex) (defaultEvaluation ex) question
+  -- @Should be changed to include dynamic configs...
+  (newData,sounds,questionNav) <- visibleWhen questionVisible $ elClass "div" "exerciseQuestion" $ (questionWidget ex) (defaultConfig ex) (defaultEvaluation ex) question
 
   -- Reflect
   reflectVisible <- mapDyn (==InReflect) nav
