@@ -111,8 +111,8 @@ dynLabelBarButton :: MonadWidget t m => String ->  Dynamic t (Maybe Int) ->  Dyn
 dynLabelBarButton label p buttonString barHeight = elClass "div" "barWrapper" $ do
     labelsForBars label
     let barWidth = constDyn 30
-    barHeight' <- mapDyn (maybe 0.0 id) barHeight
     boolBar <- mapDyn (maybe False (const True)) barHeight
+    barHeight' <- mapDyn (maybe 0.0 id) barHeight
     flippableDyn (text " ") (drawBarCSS barHeight' barWidth) boolBar
     boolPercentage <- mapDyn (maybe False (const True)) p
     p' <- mapDyn (maybe 0 id) p -- Dynamic t Int
@@ -154,4 +154,3 @@ performanceBar percentage label count =  do
   dynPercentageFloat (constDyn "percentageClass") percentage
   dynLabelForBar (constDyn "dynLabelForBarClass") label
   dynCount (constDyn "dynCountClass") count
-  

@@ -5,6 +5,7 @@ module InnerEar.Widgets.Exercise where
 import Reflex
 import Reflex.Dom
 import Control.Monad.IO.Class (liftIO)
+import Control.Monad (liftM)
 
 import InnerEar.Types.ExerciseId
 import InnerEar.Widgets.Utility
@@ -28,15 +29,25 @@ runExercise ex = mdo
   configEvent <- visibleWhen configVisible $ elClass "div" "exerciseConfig" $ configWidget ex $ defaultConfig ex
   config <- holdDyn (defaultConfig ex) configEvent
 
+  holdDyn "##################################" (fmap show configEvent) >>= dynText 
+
   -- Question (with generateQuestion called again with each transition to Question)
   let triggerNewQuestion = ffilter (==InQuestion) navEvents
   configAndData <- combineDyn (,) config currentData -- Dynamic t (a,[Datum])
   let configAndData' = tagDyn configAndData triggerNewQuestion
   let questionIO = fmap (\(x,y) -> (generateQuestion ex) x y) configAndData'
   question <- performEvent $ fmap liftIO $ questionIO
-  questionVisible <- mapDyn (==InQuestion) nav
-  -- @Should be changed to include dynamic configs...
-  (newData,sounds,questionNav) <- visibleWhen questionVisible $ elClass "div" "exerciseQuestion" $ (questionWidget ex) (defaultConfig ex) (defaultEvaluation ex) question
+
+
+  --questionVisible <- mapDyn (==InQuestion) nav
+  --widgetHold :: MonadWidget t m => m a -> Event t (m a) -> m (Dynamic t a)
+  let qWidget = fmap (\x-> (questionWidget ex) x (defaultEvaluation ex) question) (updated config)  -- Event t (m (Event,Event,Event)) 
+  widgetEvents <- elClass "div" "exerciseQuestion" (widgetHold (return $ (never,never,never)) qWidget)  -- Dyn t (Ev, Ev, Ev)
+  newData <- liftM switchPromptlyDyn $ mapDyn (\(a,_,_)->a) widgetEvents 
+  sounds <- liftM switchPromptlyDyn $ mapDyn (\(_,a,_)->a) widgetEvents
+  questionNav <- liftM switchPromptlyDyn $ mapDyn (\(_,_,a)->a) widgetEvents
+  --let (newData,sounds,questionNav) = joinDyn x
+  --(newData,sounds,questionNav) <- visibleWhen questionVisible $ elClass "div" "exerciseQuestion" $ (questionWidget ex) (defaultConfig ex) (defaultEvaluation ex) question
 
   -- Reflect
   reflectVisible <- mapDyn (==InReflect) nav

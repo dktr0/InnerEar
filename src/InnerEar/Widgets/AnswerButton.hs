@@ -13,18 +13,15 @@ data AnswerButtonMode = NotPossible | Possible | IncorrectDisactivated | Incorre
 
 dynButtonClass :: MonadWidget t m => Dynamic t String -> Dynamic t String -> m (Event t ())
 dynButtonClass c label = do
-  c' <- mapDyn (singleton "class") c  --m (Dynamic t String)
-  elDynAttr "div" c' $
-   dynButton label  -- m (Event t ())
-
-
+  c' <- mapDyn (singleton "class") c
+  elDynAttr "div" c' $ dynButton label
 
 answerButtonVal:: MonadWidget t m => Dynamic t String -> Dynamic t AnswerButtonMode -> a -> m (Event t a)
 answerButtonVal buttonString buttonMode x = do
-  curClass <- mapDyn modeToClass buttonMode  -- m (Dynamic t String) ?
-  divAttrs <- mapDyn (singleton "class") curClass -- m (Dynamic t String)
+  curClass <- mapDyn modeToClass buttonMode
+  divAttrs <- mapDyn (singleton "class") curClass
   elDynAttr "div" divAttrs $ do
-    fmap (const x) $ dynButtonClass curClass buttonString
+    liftM (x <$) $ dynButtonClass curClass buttonString
 
 answerButton :: MonadWidget t m => Dynamic t String -> Dynamic t AnswerButtonMode -> m (Event t ())
 answerButton buttonString buttonMode = do
