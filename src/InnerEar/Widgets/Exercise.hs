@@ -55,4 +55,4 @@ runExercise ex = mdo
   -- flattening and identification of exercise data for reporting/collection upwards
   let exerciseData = toExerciseDatum <$> newData
   let dataWithId = (\x -> (exerciseId ex,x)) <$> exerciseData
-  return (dataWithId,sounds,closeExercise)s
+  return (dataWithId,sounds,closeExercise)
