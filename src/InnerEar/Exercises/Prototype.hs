@@ -151,34 +151,111 @@ prototypeGenerateQuestion config prevData = do
 
 
 
+--buttonsWidget::(MonadWidget t m , Ord k)=> M.Map k (String,a, AB.AnswerButtonMode) -> Event t (M.Map k AB.AnswerButtonMode) -> m (Event t a)
+--buttonsWidget m e = do
+--  let iModes = fmap (\(_,_,x)->x) m -- Map k AnswerButtonMode
+--  let iMap = fmap (\(a,b,_)->(a,b)) m
+--  dynModes <- holdDyn iModes e  -- Dynamic t (Map k AnswerButtonModes)
+
+
+--  dynMap <- mapDyn (\x -> M.intersectionWith (\mode (s,v)-> Just $ AB.answerButtonVal (constDyn s) mode v) x iMap) dynModes
+--  --let x = M.mapWithKey (\k (s,v,mode) -> AB.answerButtonVal (constDyn s) mode) m
+--  --dynMap <- mapDyn (\x->M.unionWith (\(s,v,_) b-> AB.answerButtonVal (constDyn s) v b) m x) dynModes  -- Dynamic t (Map k (m Event t a))
+--  dynMap' <- mapDyn sequence dynMap -- Dyn (m (Map k Event t))
+--  liftM switchPromptlyDyn $ mapDyn (leftmost . M.elems) dynMap'
+
+
+--buttonsWidget::(MonadWidget t m , Ord k)=> M.Map k (String,a, AB.AnswerButtonMode, Event t AB.AnswerButtonMode) -> m (Event t a)
+--buttonsWidget m = do
+--  x <- sequence (fmap (\(s,v,iMode,updateMode)-> do
+--    mode <- holdDyn iMode updateMode
+--    AB.answerButtonVal (constDyn s) mode v
+--    ) m)   -- m Event t []
+--  return $ leftmost x
+
+--buttonsWidget::(MonadWidget t m , Ord k)=> Dynamic t (M.Map k (String, AB.AnswerButtonMode)) -> m (Event t a)
+--buttonsWidget m = do
+--  x <- mapDyn (\x-> M.mapWithKey (\k (s,mode) -> AB.answerButtonVal (constDyn s) (constDyn mode) k) x) m
+--  x'<- mapDyn (M.elems) x  -- 
+--  x''' <- mapDyn leftmost x' -- dyn m Event ?
+--  return $ switchPromptlyDyn x'''
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+--listWithKey :: forall t k v m a. (Ord k, MonadWidget t m) => Dynamic t (Map k v) -> (k -> Dynamic t v -> m a) -> m (Dynamic t (Map k a))
+
+buttonsWidget::(MonadWidget t m , Show k,Ord k)=> Dynamic t (M.Map k (String, AB.AnswerButtonMode)) -> m (Event t k)
+buttonsWidget m = do
+  dynMap <- listWithKey m func -- m (Dynamic  t Map (k Event)
+  liftM switchPromptlyDyn $ mapDyn (leftmost . M.elems) dynMap
+
+func::(Show k,MonadWidget t m)=> k -> Dynamic t (String,AB.AnswerButtonMode) -> m (Event t k)
+func i d = do
+  (s,m) <- splitDyn d
+  AB.answerButtonVal s m i
+
+
+
 
 prototypeQuestionWidget :: MonadWidget t m => WhatBandsAreAllowed -> M.Map Int Score -> Event t ([Int],Int) -> m (Event t (Datum WhatBandsAreAllowed [Int] Int (M.Map Int Score)), Event t Sound, Event t ExerciseNavigation)
 prototypeQuestionWidget c defaultEval e = mdo
+  let possibleAnswers = [0,1,2,3,4,5,6,7,8,9]
 
   -- Get new question/correct
   question <- holdDyn ([],0) e
-  correctAnswer <- mapDyn (\x->round $ filterFreqs!!(snd x)) question
+  correctAnswer <- mapDyn  (round . (filterFreqs!!) . snd) question
   userAnswer <- holdDyn Nothing $ leftmost [Nothing <$ e,Just <$> answerEvent]
   -- Playing natural and filtered sound
   playUnfiltered <- button "Listen to unfiltered"
   playButton <- button "Listen to question"
   let unfilteredSound = Sound (BufferSource (File "pinknoise.wav") 2.0) <$ playUnfiltered
 
-
 --answerButtonVal:: MonadWidget t m => Dynamic t String -> Dynamic t AnswerButtonMode -> a -> m (Event t a)
 --answerButton buttonString buttonMode x = do
 --data AnswerButtonMode = NotPossible | Possible | IncorrectDisactivated | IncorrectActivated  | Correct deriving (Eq)
 
+  --buttonModes <- holdDyn (fmap (bool AB.NotPossible AB.Possible) (convertBands c)) $ updateButtons  -- Dynamic [AB.AnswerButtonMode]
+  --mapDyn (\modes-> fmap (\(mode,val)-> AB.answerButtonVal (constDyn $ show val++" Hz") (constDyn mode) val)  $ zip modes filterFreqs) buttonModes
+
+
+  --buttonModes <- sequence $ fmap (\defMode-> holdDyn defMode (updateButtons)) $ fmap (bool AB.NotPossible AB.Possible)  $ convertBands c  -- m [(Dynamic t ButtonMode)]
+
+  --let buttonModeUpdates =fmap (\x-> leftmost [(fmap (bool AB.NotPossible AB.Possible) <$) navEvents, buttonModeUpdateEvent]) $ [0::Int,1..9]  -- 
+  --let updateButtons = fmap (\x-> M.fromList $ zip [0::Int,1..] x) $ leftmost [(fmap (bool AB.NotPossible AB.Possible) (convertBands c) <$) $ navEvents]-- Event t (Map Int AB.AnswerButtonMode) where int = [0,1,2,3,4,5,6,7,8,9]
+  --fmap (\x-> leftmost [(fmap (bool AB.NotPossible AB.Possible) (convertBands c) <$) navEvents, ]) []
+  --buttonModes <- sequence $ zipWith (\defMode ue-> holdDyn defMode ue) (fmap (bool AB.NotPossible AB.Possible) $ convertBands c) updateButtonEvs  -- m [(Dynamic t ButtonMode)]
+
   -- answerButtons
   bandPressed <- elClass "div" "answerButtonWrapper" $ do       -- Event t Int (int - hz corresponding to the band)
     --let x = fmap (\x-> buttonVal (show x ++" Hz") x) (fmap snd $ fst $ partition fst $ zip (convertBands c) filterFreqs) -- [ m(Event t Int) ]
-    let x = fmap (\(mode,val)-> AB.answerButtonVal (constDyn $ show val++" Hz") (constDyn mode) val)  $ zip (fmap (bool AB.NotPossible AB.Possible) (convertBands c)) filterFreqs -- [(AnswerButtonMode, Int)]
-    x' <- sequence x
-    return $ fmap round $ leftmost x'
+
+    --let x = fmap (\(mode,val)-> AB.answerButtonVal (constDyn $ show val++" Hz") mode val)  $ zip buttonModes filterFreqs -- Dynamic t ([m (Evnet t a)])
+    --x' <- sequence x
+    --return $ fmap round $ leftmost x'
+    let iMap = M.fromList $ zip possibleAnswers $ fmap (\x->show x ++ " Hz") filterFreqs
+    dontKnow <-mapDyn (\x-> M.intersectionWith (\mode s-> (s,mode)) x iMap) buttonStates -- Dynamic t Map Int (s,buttonMode)
+    mapDyn show dontKnow >>= dynText
+    buttonsWidget dontKnow
 
   canAnswer <- mapDyn (==Nothing) userAnswer
   let answerEvent = gate (current canAnswer) bandPressed -- Event t Int
   let correctAnswerEvent = attachDynWith (==) correctAnswer answerEvent -- Event t Bool
+  
+  --
+  buttonStates <- holdDyn (M.fromList $ zip possibleAnswers (fmap (bool AB.NotPossible AB.Possible) (convertBands c))) buttonModeUpdateEvent'   -- Dynamic (Map Int (AB.ButtonMode))
+  let buttonModeUpdateEvent = attachDynWith (\a ev-> if a==ev then (ev,AB.Correct) else (ev,AB.IncorrectActivated)) correctAnswer answerEvent
+  let buttonModeUpdateEvent' = attachDynWith (\x (a,mode)-> M.update (const $ Just mode) a x) buttonStates buttonModeUpdateEvent
 
 --holdDyn "nothing yet.." (fmap show answerEvent) >>= dynText
 
@@ -209,6 +286,9 @@ prototypeQuestionWidget c defaultEval e = mdo
 
   el "div" $ do
     text "debugging:   "
+    el "div"$ do 
+      text "button states: "
+      mapDyn show buttonStates >>= dynText
     el "div"$ do 
       text "correct answer:  "
       mapDyn show correctAnswer >>= dynText
