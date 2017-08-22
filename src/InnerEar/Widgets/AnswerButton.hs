@@ -12,11 +12,18 @@ import InnerEar.Widgets.Bars
 data AnswerButtonMode = NotPossible | Possible | IncorrectDisactivated | IncorrectActivated  | Correct deriving (Eq)
 
 dynButtonClass :: MonadWidget t m => Dynamic t String -> Dynamic t String -> m (Event t ())
-dynButtonClass class label = do
-  class' <- mapDyn Just class
-  elClass "div" class' $
+dynButtonClass c label = do
+  c' <- mapDyn Just c
+  elClass "div" c' $
   dynButton
 
+
+answerButtonVal:: MonadWidget t m => Dynamic t String -> Dynamic t AnswerButtonMode -> a -> m (Event t a)
+answerButton buttonString buttonMode x = do
+  curClass <- mapDyn modeToClass buttonMode
+  divAttrs <- mapDyn (singleton "class") curClass
+  elDynAttr "div" divAttrs $ do
+    fmap (const x) $ dynButtonClass curClass buttonString
 answerButton :: MonadWidget t m => Dynamic t String -> Dynamic t AnswerButtonMode -> m (Event t ())
 answerButton buttonString buttonMode = do
   curClass <- mapDyn modeToClass buttonMode
