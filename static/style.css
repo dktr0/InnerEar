@@ -103,14 +103,14 @@ button {
   border-radius: 4px;
 }
 
-.disabledButtonClass {
+.notPossibleButton {
 	background-color: rgb(128,128,128);
 	color: gray;
 	border: none;
   border-radius: 4px;
 }
 
-.enabledButtonClass {
+.possibleButton {
   background-color: rgb(128,128,128);
   color: white;
   border: none;

@@ -23,7 +23,7 @@ import Text.JSON
 import Text.JSON.Generic
 import Data.List(elemIndex)
 
-import InnerEar.Widgets.Utility
+import qualified InnerEar.Widgets.AnswerButton as AB
 import InnerEar.Widgets.Utility
 import InnerEar.Types.Data
 import InnerEar.Types.Score
@@ -86,9 +86,6 @@ convertBands HighBands = [False,False,False,False,False,True,True,True,True,True
 convertBands MidBands = [False,False,False,True,True,True,True,True,False,False]
 convertBands Mid8Bands = [False,True,True,True,True,True,True,True,True,False]
 convertBands LowBands = [True,True,True,True,True,False,False,False,False,False]
-
-
-
 
 prototypeExercise :: MonadWidget t m => Exercise t m WhatBandsAreAllowed [Int] Int (M.Map Int Score)
 prototypeExercise = Exercise {
@@ -155,8 +152,6 @@ prototypeGenerateQuestion config prevData = do
 
 
 
-
-
 prototypeQuestionWidget :: MonadWidget t m => WhatBandsAreAllowed -> M.Map Int Score -> Event t ([Int],Int) -> m (Event t (Datum WhatBandsAreAllowed [Int] Int (M.Map Int Score)), Event t Sound, Event t ExerciseNavigation)
 prototypeQuestionWidget c defaultEval e = mdo
 
@@ -172,11 +167,12 @@ prototypeQuestionWidget c defaultEval e = mdo
 
 --answerButtonVal:: MonadWidget t m => Dynamic t String -> Dynamic t AnswerButtonMode -> a -> m (Event t a)
 --answerButton buttonString buttonMode x = do
-
+--data AnswerButtonMode = NotPossible | Possible | IncorrectDisactivated | IncorrectActivated  | Correct deriving (Eq)
 
   -- answerButtons
   bandPressed <- elClass "div" "answerButtonWrapper" $ do       -- Event t Int (int - hz corresponding to the band)
-    let x = fmap (\x-> buttonVal (show x ++" Hz") x) (fmap snd $ fst $ partition fst $ zip (convertBands c) filterFreqs) -- [ m(Event t Int) ]
+    --let x = fmap (\x-> buttonVal (show x ++" Hz") x) (fmap snd $ fst $ partition fst $ zip (convertBands c) filterFreqs) -- [ m(Event t Int) ]
+    let x = fmap (\(mode,val)-> AB.answerButtonVal (constDyn $ show val++" Hz") (constDyn mode) val)  $ zip (fmap (bool AB.NotPossible AB.Possible) (convertBands c)) filterFreqs -- [(AnswerButtonMode, Int)]
     x' <- sequence x
     return $ fmap round $ leftmost x'
 

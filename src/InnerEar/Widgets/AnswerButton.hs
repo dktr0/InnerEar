@@ -31,8 +31,8 @@ answerButton buttonString buttonMode = do
     dynButtonClass curClass buttonString
 
 modeToClass :: AnswerButtonMode -> String
-modeToClass NotPossible = "disabledButton"
-modeToClass Possible = "enabledButton"
+modeToClass NotPossible = "notPossibleButton"
+modeToClass Possible = "possibleButton"
 modeToClass IncorrectDisactivated = "incorrectDisactivatedButton"
 modeToClass Correct = "correctButton"
 modeToClass IncorrectActivated = "incorrectActivatedButton"
