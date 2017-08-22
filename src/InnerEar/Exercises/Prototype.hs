@@ -159,7 +159,7 @@ prototypeQuestionWidget c defaultEval e = mdo
 
   question <- holdDyn ([],0) e
   -- @ questions not generated properly for this rn
-  correctAnswer <- mapDyn snd question
+  correctAnswer <- mapDyn (\x->round $ filterFreqs!!(snd x)) question
   userAnswer <- holdDyn Nothing $ leftmost [Nothing <$ e,Just <$> answerEvent]
 
   playUnfiltered <- button "Listen to unfiltered"
@@ -184,6 +184,7 @@ prototypeQuestionWidget c defaultEval e = mdo
   let scoreUpdate = attachWith (\s (xs,cor) -> foldl (\b (a,i)-> M.insert i (adjustScore a (maybe (Score 0 0 0) id $ M.lookup i b)) b) s xs) (current scoreMap) answerInfo       
   --let scoreUpdate = attachWith (\s (xs,cor) -> foldl (\b (a,i)-> M.update (Just . adjustScore a) i b) s xs) (current scoreMap) answerInfo       
   
+
   --M.insertWith (\newVal mapVal -> newVal)
 
   scoreMap <- holdDyn defaultEval scoreUpdate
