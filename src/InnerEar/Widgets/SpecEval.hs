@@ -2,19 +2,20 @@ module InnerEar.Widgets.SpecEval where
 
 import Reflex
 import Reflex.Dom
-import Data.Map
+import Data.Map as M
 import Reflex.Dom.Contrib.Widgets.Svg
 import Control.Monad
+import Data.Maybe (isJust)
 
 import InnerEar.Widgets.Utility
 import InnerEar.Widgets.Bars
 import InnerEar.Types.Score
 
-dynLabel :: MonadWidget t m => Dynamic t String -> m ()
-dynLabel cssClass label = do
+dynLabel :: MonadWidget t m => Dynamic t String -> Dynamic t String -> m ()
+dynLabel cssClass s = do
   cssClass' <- mapDyn (singleton "class") cssClass   -- m (Dynamic t String)
   elDynAttr "div" cssClass' $ do
-    dynText label   -- m ()
+    dynText s   -- m ()
     return ()
 
 --Labels with CSS style to be used above bars
@@ -26,7 +27,7 @@ hzLabel c s = do
 
 dynScoreLabel :: MonadWidget t m => Dynamic t String -> Dynamic t (Score) -> m ()
 dynScoreLabel cssClass score = do
-  score' <- mapdDyn (questionsAsked-falseNegatives)/questionsAsked) score  --m (Dynamic t Int)
+  score' <- mapDyn  (\x ->  ((fromIntegral (questionsAsked x) :: Float) - (fromIntegral (falseNegatives x) :: Float)) / (fromIntegral (questionsAsked x) :: Float)) score   --m (Dynamic t Double)
   score''  <- mapDyn show score' -- m (Dynamic t String)
   cssClass' <- mapDyn (singleton "class") cssClass  -- m (Dynamic t String)
   elDynAttr "div" cssClass' $ do
@@ -35,7 +36,7 @@ dynScoreLabel cssClass score = do
 
 dynCountLabel :: MonadWidget t m => Dynamic t String -> Dynamic t (Score) -> m ()
 dynCountLabel cssClass count = do
-  count' <- mapdDyn (singleton questionsAsked) count  -- m (Dynamic t Int)
+  count' <- mapDyn questionsAsked count  -- m (Dynamic t Int)
   count''  <- mapDyn show count' -- m (Dynamic t String)
   cssClass' <- mapDyn (singleton "class") cssClass -- m (Dynamic t String)
   elDynAttr "div" cssClass' $ do
@@ -43,28 +44,30 @@ dynCountLabel cssClass count = do
     return ()
 
 --A dynamic bar with css style and in-line attributes
-dynBarCSS :: MonadWidget t m =>  Dynamic t score -> Dynamic t Float -> m ()
-dynBarCSS barHeight barWidth = do
+dynBarCSS :: MonadWidget t m =>  Dynamic t (Score) -> Dynamic t Float -> m ()
+dynBarCSS score barWidth = do
   elClass "div" "flex-container" $ do
     svgClass "svg" "svgS" $ do
       let posX = constDyn $ negate 30 -- Dynamic t Int
       let posY = constDyn $ negate 200  --Dynamic t Int
-      barHeight' <- mapdDyn ((* (1.0 :: Float)). (*200) . (questionsAsked-falseNegatives)/questionsAsked)) barHeight --m (Dynamic t Float)
-      barWidth' <- mapDyn (*1) barWidth --m (Dynamic t Float)
+      barHeight <- mapDyn  (\x ->  ((fromIntegral (questionsAsked x) :: Float) - (fromIntegral (falseNegatives x) :: Float)) / (fromIntegral (questionsAsked x) :: Float)) score   --m (Dynamic t Int)
+      barHeight' <- mapDyn (*200) barHeight -- m (Dynamic t Float)
+      barWidth' <- mapDyn (*1) barWidth -- m (Dynamic t Float)
       let c = constDyn "test" --Dynamic t String
       let t = constDyn "rotate (180)" --Dynamic t String
       rectDynCSS posX posY barWidth' barHeight' t c  -- m ()
 
 scoreBar :: MonadWidget t m => Dynamic t (Maybe Score) -> String ->  m ()
 scoreBar score hz = do
-    barWidth <- constDyn 30 -- Dynamic t Int
-    let scoreLabelBarCount = do
-       dynBarCSS score barWidth -- m ()
-       dynScoreLabel (constDyn "scoreLabelClass") score -- m ()
-       hzLabel (constDyn "dynLabelClass") hz -- m ()
-       dynCountLabel (constDyn "countLabelClass") score -- m ()
     bool <- mapDyn isJust score
-    flippableDyn (return ()) scoreLabelBarCount bool
+    flippableDyn (return ()) (do
+      barHeight <- mapDyn (maybe (Score 0 0 0) id) score -- Dynamic t Int
+      dynBarCSS barHeight (constDyn 30) -- m ()
+      scoreLabel <- mapDyn (maybe (Score 0 0 0) id) score
+      dynScoreLabel (constDyn "scoreLabel") scoreLabel -- m()
+      hzLabel (constDyn "dynLabel") hz
+      countLabel <- mapDyn (maybe (Score 0 0 0) id) score
+      dynCountLabel (constDyn "countLabel") countLabel) bool --m ()
     return ()
 
 -- A dynamic label with CSS style
@@ -77,10 +80,10 @@ dynGraphLabel c label = do
 
 displaySpectrumEvaluation :: MonadWidget t m => Dynamic t String -> Dynamic t (Map Int Score) -> m ()
 displaySpectrumEvaluation graphLabel score= do
-  dynGraphLabel (constDyn "graphLabelClass") graphLabel
-  let labels = constDyn $ ["31 Hz","63 Hz","125 Hz","250 Hz","500 Hz","1 kHz","2 kHz","4 kHz","8 kHz","16 kHz"]
+  dynGraphLabel (constDyn "graphLabel") graphLabel
+  let labels = ["31 Hz","63 Hz","125 Hz","250 Hz","500 Hz","1 kHz","2 kHz","4 kHz","8 kHz","16 kHz"]
 
-  let band0Hz = (!!0) labels
+  let band0Hz = (!!0) labels -- String
   let band1Hz = (!!1) labels
   let band2Hz = (!!2) labels
   let band3Hz = (!!3) labels
@@ -91,18 +94,18 @@ displaySpectrumEvaluation graphLabel score= do
   let band8Hz = (!!8) labels
   let band9Hz = (!!9) labels
 
-  band0Score <- mapDyn (maybe Nothing (Just . ((questionsAsked-falseNegatives)/questionsAsked)) . lookup 0) score
-  band1Score <- mapDyn (maybe Nothing (Just . ((questionsAsked-falseNegatives)/questionsAsked)) . lookup 1) score
-  band2Score <- mapDyn (maybe Nothing (Just . ((questionsAsked-falseNegatives)/questionsAsked)) . lookup 2) score
-  band3Score <- mapDyn (maybe Nothing (Just . ((questionsAsked-falseNegatives)/questionsAsked)) . lookup 3) score
-  band4Score <- mapDyn (maybe Nothing (Just . ((questionsAsked-falseNegatives)/questionsAsked)) . lookup 4) score
-  band5Score <- mapDyn (maybe Nothing (Just . ((questionsAsked-falseNegatives)/questionsAsked)) . lookup 5) score
-  band6Score <- mapDyn (maybe Nothing (Just . ((questionsAsked-falseNegatives)/questionsAsked)) . lookup 6) score
-  band7Score <- mapDyn (maybe Nothing (Just . ((questionsAsked-falseNegatives)/questionsAsked)) . lookup 7) score
-  band8Score <- mapDyn (maybe Nothing (Just . ((questionsAsked-falseNegatives)/questionsAsked)) . lookup 8) score
-  band9Score <- mapDyn (maybe Nothing (Just . ((questionsAsked-falseNegatives)/questionsAsked)) . lookup 9) score
+  band0Score <- mapDyn (M.lookup 0) score --  Dynamic t (Score) ?
+  band1Score <- mapDyn (M.lookup 1) score
+  band2Score <- mapDyn (M.lookup 2) score
+  band3Score <- mapDyn (M.lookup 3) score
+  band4Score <- mapDyn (M.lookup 4) score
+  band5Score <- mapDyn (M.lookup 5) score
+  band6Score <- mapDyn (M.lookup 6) score
+  band7Score <- mapDyn (M.lookup 7) score
+  band8Score <- mapDyn (M.lookup 8) score
+  band9Score <- mapDyn (M.lookup 9) score
 
-  band0ScoreBar <- scoreBar band0Score band0Hz
+  band0ScoreBar <- scoreBar band0Score band0Hz -- m ()
   band1ScoreBar <- scoreBar band1Score band1Hz
   band2ScoreBar <- scoreBar band3Score band2Hz
   band3ScoreBar <- scoreBar band3Score band3Hz
@@ -112,3 +115,4 @@ displaySpectrumEvaluation graphLabel score= do
   band7ScoreBar <- scoreBar band7Score band7Hz
   band8ScoreBar <- scoreBar band8Score band8Hz
   band9ScoreBar <- scoreBar band9Score band9Hz
+  return ()

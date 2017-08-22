@@ -103,12 +103,16 @@ button {
   border-radius: 4px;
 }
 
+
 .notPossibleButton {
 	background-color: rgb(128,128,128);
+	background-color: black;
+	border: 1px solid gray; /* fainted borders */
 	color: gray;
 	border: none;
   border-radius: 4px;
 }
+
 
 .possibleButton {
   background-color: rgb(128,128,128);
@@ -125,14 +129,16 @@ border-radius: 4px;
 }
 
 .incorrectActivatedButton {
-	background-color: red;
+	background-color: gray;
+	border: 10px solid red; /* red borders */
 	color: white;
   border: none;
   border-radius: 4px;
 }
 
 .correctButton{
-	background-color: green;
+	background-color: gray;
+  border: 10px solid green; /* green borders */
 	color: white;
 	border: none;
   border-radius: 4px;
@@ -173,19 +179,23 @@ background-color: black;
 
 }
 
-.scoreLabelClass {
+.scoreLabel {
 background-color: black;
     color: hsl(120,100%,80%);
 
 }
 
-.dynLabelClass {
+.dynLabel {
 background-color: black;
     color: hsl(120,100%,80%);
-
 }
 
-.countLabelClass {
+.countLabel {
   background-color: black;
   color: hsl(120,100%,80%);
+}
+
+.graphLabel {
+	background-color: black;
+	color: hsl(120,100%,80%);
 }

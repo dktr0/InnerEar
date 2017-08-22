@@ -14,7 +14,7 @@ data AnswerButtonMode = NotPossible | Possible | IncorrectDisactivated | Incorre
 dynButtonClass :: MonadWidget t m => Dynamic t String -> Dynamic t String -> m (Event t ())
 dynButtonClass c label = do
   c' <- mapDyn (singleton "class") c
-  elDynAttr "div" c' $ dynButton label 
+  elDynAttr "div" c' $ dynButton label
 
 answerButtonVal:: MonadWidget t m => Dynamic t String -> Dynamic t AnswerButtonMode -> a -> m (Event t a)
 answerButtonVal buttonString buttonMode x = do
