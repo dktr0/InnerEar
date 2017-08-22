@@ -3,7 +3,8 @@
 -- | We only export a single definition from an Exercise module in Inner Ear,
 -- that definition being a single value of the parameterized type Exercise.
 
-module InnerEar.Exercises.Prototype (prototypeExercise) where
+--module InnerEar.Exercises.Prototype (prototypeExercise) where
+module InnerEar.Exercises.Prototype where
 
 import Reflex
 import Reflex.Dom

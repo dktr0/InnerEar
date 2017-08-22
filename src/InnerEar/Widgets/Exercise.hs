@@ -11,7 +11,7 @@ import Reflex.Synth.Types
 import InnerEar.Types.ExerciseNavigation
 import InnerEar.Types.Exercise
 
-{--
+
 -- | runExercise takes a completely defined Exercise value and uses it to run an ear-training
 -- exercise in the browser.
 
@@ -53,4 +53,3 @@ runExercise ex = mdo
   let exerciseData = toExerciseDatum <$> newData
   let dataWithId = (\x -> (exerciseId ex,x)) <$> exerciseData
   return (dataWithId,sounds,closeExercise)s
---}
