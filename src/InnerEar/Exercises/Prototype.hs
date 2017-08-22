@@ -23,6 +23,7 @@ import Text.JSON.Generic
 import Data.List(elemIndex)
 
 import InnerEar.Widgets.Utility
+import InnerEar.Widgets.Utility
 import InnerEar.Types.Data
 import InnerEar.Types.Score
 import Reflex.Synth.Synth
@@ -83,7 +84,7 @@ convertBands AllBands = replicate 10 True
 convertBands HighBands = [False,False,False,False,False,True,True,True,True,True]
 convertBands MidBands = [False,False,False,True,True,True,True,True,False,False]
 convertBands Mid8Bands = [False,True,True,True,True,True,True,True,True,False]
-convertBands LowBands = [False,False,False,False,False,True,True,True,True,True]
+convertBands LowBands = [True,True,True,True,True,False,False,False,False,False]
 
 
 
@@ -125,8 +126,10 @@ prototypeConfigWidget i = do
            (WidgetConfig {_widgetConfig_initialValue= Just iVal
                          ,_widgetConfig_setValue = never
                          ,_widgetConfig_attributes = constDyn M.empty})
+  dynConfig<- holdDyn AllBands $ fmap (\x-> maybe AllBands id $ M.lookup (maybe 0 id x) (M.fromList radioButtonMap)) (_hwidget_change radioWidget)
+  b<-button "Continue to Exercise"
+  return $ tagDyn dynConfig b
 
-  return $ fmap (\x-> maybe AllBands id $ M.lookup (maybe 0 id x) (M.fromList radioButtonMap)) (_hwidget_change radioWidget)
   --userAnswer <- holdDyn Nothing $ tagDyn (_hwidget_value radioWidget)
 
   -- fcbs <- zipWithM filterCheckBox labels initialConfig -- m [Dynamic t Bool]
@@ -157,21 +160,25 @@ prototypeGenerateQuestion config prevData = do
 prototypeQuestionWidget :: MonadWidget t m => WhatBandsAreAllowed -> M.Map Int Score -> Event t ([Int],Int) -> m (Event t (Datum WhatBandsAreAllowed [Int] Int (M.Map Int Score)), Event t Sound, Event t ExerciseNavigation)
 prototypeQuestionWidget c defaultEval e = mdo
 
+  -- Get new question/correct
   question <- holdDyn ([],0) e
-  -- @ questions not generated properly for this rn
   correctAnswer <- mapDyn (\x->round $ filterFreqs!!(snd x)) question
   userAnswer <- holdDyn Nothing $ leftmost [Nothing <$ e,Just <$> answerEvent]
-
+  -- Playing natural and filtered sound
   playUnfiltered <- button "Listen to unfiltered"
   playButton <- button "Listen to question"
   let unfilteredSound = Sound (BufferSource (File "pinknoise.wav") 2.0) <$ playUnfiltered
 
+
+--answerButtonVal:: MonadWidget t m => Dynamic t String -> Dynamic t AnswerButtonMode -> a -> m (Event t a)
+--answerButton buttonString buttonMode x = do
+
+
+  -- answerButtons
   bandPressed <- elClass "div" "answerButtonWrapper" $ do       -- Event t Int (int - hz corresponding to the band)
     let x = fmap (\x-> buttonVal (show x ++" Hz") x) (fmap snd $ fst $ partition fst $ zip (convertBands c) filterFreqs) -- [ m(Event t Int) ]
     x' <- sequence x
     return $ fmap round $ leftmost x'
- 
-
 
   canAnswer <- mapDyn (==Nothing) userAnswer
   let answerEvent = gate (current canAnswer) bandPressed -- Event t Int
@@ -184,9 +191,7 @@ prototypeQuestionWidget c defaultEval e = mdo
   let scoreUpdate = attachWith (\s (xs,cor) -> foldl (\b (a,i)-> M.insert i (adjustScore a (maybe (Score 0 0 0) id $ M.lookup i b)) b) s xs) (current scoreMap) answerInfo       
   --let scoreUpdate = attachWith (\s (xs,cor) -> foldl (\b (a,i)-> M.update (Just . adjustScore a) i b) s xs) (current scoreMap) answerInfo       
   
-
   --M.insertWith (\newVal mapVal -> newVal)
-
   scoreMap <- holdDyn defaultEval scoreUpdate
 
   -- display feedback
