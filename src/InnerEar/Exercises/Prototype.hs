@@ -3,7 +3,8 @@
 -- | We only export a single definition from an Exercise module in Inner Ear,
 -- that definition being a single value of the parameterized type Exercise.
 
-module InnerEar.Exercises.Prototype (prototypeExercise) where
+--module InnerEar.Exercises.Prototype (prototypeExercise) where
+module InnerEar.Exercises.Prototype where
 
 import Reflex
 import Reflex.Dom
@@ -101,7 +102,6 @@ prototypeExercise = Exercise {
   questionWidget = prototypeQuestionWidget,
   reflectiveQuestion = Just "Please write some brief text reflecting on your experience:"
   }
-
 
 -- | Because we only export the one definition above from this module, we can create other definitions
 -- with whatever names we like, with great abandon!

@@ -10,95 +10,90 @@ body {
   display: -webkit-flex;
   display: flex;
   -webkit-flex-flow: row wrap;
-  flex-flow: row wrap;
-  text-align: center;
+  flex-flow: column;
   width: 1300px;
   height: 700px;
-  background-color: gray;
-}
-
-
-header  {
-  color: hsl(120,100%,80%);
+  background-color: black;
+  margin: 100px;
 
 }
 
 .title {
   color:hsl(120,100%,80%);
-
+  font-size: 40px;
+  text-align: left;
 }
 
 .wsStatus {
- color:hsl(120,100%,80%);
+ color:white;
+ text-align: left;
 }
 
+.createUserWidget {
+  color: white;
+  text-align: center;
+  margin: 40px;
+}
 
 .createUserHandle {
 	color: hsl(120,100%,80%);
+  text-align: center;
+  padding: 20px;
 }
 
 .createUserPassword {
 	color: hsl(120,100%,80%);
+  text-align: center;
+  padding: 20px;
 }
 
 .login {
   color:  hsl(120,100%,80%);
-  width: 600px;
-  height: 50px;
-  margin: 100px;
+  padding: 30px;
+  text-align: center;
 }
-
 
 text {
   color: hsl(120,100%,80%);
-}
-
-
-.InnearEarHeader {
-  background: black;
-  color:  hsl(120,100%,80%);
-  width: 200px;
-  height: 50px;
-  margin: 100px;
-  font-family: sans;
 }
 
 .barWrapper {
   display: inline-block;
 }
 
-.navButton {
-  background-color: rgb(128,128,128);
-  color: white;
-  border: none;
-  border-radius: 4px;
-}
-
-.exerciseConfig {
-
-}
-
-.exerciseQuestion {
-
-}
-
-.exerciseReflection {
-
-
-}
-.createUserFeedBack {
-
-
-}
-
-
 .nav {
   background: black;
   color:  hsl(120,100%,80%);
-  width: 200px;
-  height: 100px;
-  margin: 10px;
-  font-family: sans;
+  margin: 10x;
+  text-align: left;
+  padding: 40px;
+}
+
+.navButton {
+  background-color: black;
+  border: none;
+  border-radius: 4px;
+  padding: 2px;
+}
+
+.exerciseConfig {
+  background-color: black;
+   color: hsl(120,100%,80%);
+}
+
+.exerciseQuestion {
+  background-color: black;
+  color: hsl(120,100%,80%);
+}
+
+.exerciseReflection {
+  background-color: black;
+  color: hsl(120,100%,80%);
+}
+
+.createUserFeedBack {
+  background-color: black;
+  color: hsl(120,100%,80%);
 }
 
 button {
@@ -143,15 +138,10 @@ border-radius: 4px;
   border-radius: 4px;
 }
 
-.text {
-  font-size:100%;
-  color: white;
-}
-
 .svgS {
   width: 30px;
   height: 200px;
-  background-color: gray;
+  background-color: black;
 }
 
 rect {
@@ -172,9 +162,30 @@ rect {
 }
 
 .percentageClass {
+background-color: black;
+    color: hsl(120,100%,80%);
 
 }
 
 .dynLabelForBarClass {
-	
+    background-color: black;
+    color: hsl(120,100%,80%);
+
+}
+
+.scoreLabelClass {
+background-color: black;
+    color: hsl(120,100%,80%);
+
+}
+
+.dynLabelClass {
+background-color: black;
+    color: hsl(120,100%,80%);
+
+}
+
+.countLabelClass {
+  background-color: black;
+  color: hsl(120,100%,80%);
 }

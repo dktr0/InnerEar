@@ -13,6 +13,7 @@ import Control.Monad.IO.Class
 
 
 import InnerEar.Widgets.Utility
+import InnerEar.Widgets.AnswerButton
 import InnerEar.Types.Request
 import InnerEar.Types.Response
 import Reflex.Synth.Types
