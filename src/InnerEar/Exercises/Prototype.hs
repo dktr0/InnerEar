@@ -136,39 +136,37 @@ prototypeQuestionWidget :: MonadWidget t m
 prototypeQuestionWidget config defaultEval newQuestion = mdo
 
   -- produce events for correct and incorrect answers
-  question <- holdDyn ([],0) newQuestion
-  answer <- mapDyn snd question
+  question <- holdDyn ([],F 31 "31") newQuestion
+  answer <- mapDyn snd question  -- Dyn t Frequency
   let answerEvent = gate (current canAnswer) bandPressed -- Event t Frequency
   userAnswer <- holdDyn Nothing $ leftmost [Nothing <$ newQuestion,Just <$> answerEvent]
   canAnswer <- mapDyn (==Nothing) userAnswer
-  let correctOrIncorrect = attachDynWith (\a u -> if a==u then Right a else Left u) answer answerEvent
-  let correctAnswer = fmapMaybe (either (const Nothing) Just) correctOrIncorrect
-  let incorrectAnswer = fmapMaybe (either Just (const Nothing)) correctOrIncorrect  -- Event Frequency if incorrect, no event if correct
+  let correctOrIncorrect = attachDynWith (\a u -> if a==u then Right a else Left u) answer answerEvent   -- Event (Either Frequency Frequency)
+  let correctAnswer = fmapMaybe (either (const Nothing) Just) correctOrIncorrect    -- Event t Frequency
+  let incorrectAnswer = fmapMaybe (either Just (const Nothing)) correctOrIncorrect  -- Event t Frequency if incorrect, no event if correct
 
   -- use new questions, correct and incorrect answer events to calculate button modes
   let initialModes = fmap (bool AB.NotPossible AB.Possible) $ convertBands config
 
+  let initialModes = fmap (bool NotPossible Possible) $ convertBands config
+  modes <- foldDyn initialModes $ leftmost [
+    (const initialModes) <$ newQuestion,                         -- Event t ([AnswerButtonMode] -> [answerButtonMode])
+    fmap changeModesForCorrectAnswer correctAnswer,
+    fmap (flip replaceInList $ IncorrectDisactivated) incorrectAnswer
+  ]
 
-  
-  modes <- holdDyn initialModes $ leftmost [
-    fmap (const initialModes) newQuestion,            -- Event t [AnswerButtonMode]
-    
-    -- fmap changeModesForCorrectAnswer correctAnswer,   -- Event t ([AnswerButtonMode] -> [AnswerButtonMode])
-    attachDynWith (flip changeModesForCorrectAnswer) modes correctAnswer,
-
-    -- fmap 
-    fmap (flip replaceInList $ AB.IncorrectDisactivated) incorrectAnswer -- Event t (??) (unsure what 'replaceInList' should do)
-    ]
+  -- changeModesForCorrectAnswer :: Int -> [AnswerButtonMode] -> [AnswerButtonMode]
+  -- replaceInList:: Frequency -> AnswerButtonMode -> [AnswerButtonMode] -> [AnswerButtonMode]
 
   -- buttons
   playUnfiltered <- button "Listen to unfiltered"
   bandPressed <- elClass "div" "answerButtonWrapper" $ -- m (Event t Frequency)
     leftmost <$> zipWithM (\f m -> answerButtonVal (constDyn $ show f) m f) frequencies modes
 
-  -- update the scoreMap
-  let answerInfo = attachDynWith (\cor user -> if cor==user then ([(Correct,cor)],cor) else ([(FalsePositive,user), (FalseNegative,cor)],cor)) answer answerEvent -- Event t (cor,user)
-  let scoreUpdate = attachWith (\s (xs,cor) -> foldl (\b (a,i)-> M.insert i (adjustScore a (maybe (Score 0 0 0) id $ M.lookup i b)) b) s xs) (current scoreMap) answerInfo
+  -- update scoreMap
+  let scoreUpdate = attachDynWith (\m a-> either (\k-> M.update (Just . incFalsePositive) k m) (\k-> M.update (Just. incCorrectAnswer) k m ) a ) scoreMap correctOrIncorrect
   scoreMap <- holdDyn defaultEval scoreUpdate
+
 
   -- display feedback
   let resetFeedback = fmap (const "") e
