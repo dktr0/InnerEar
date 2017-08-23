@@ -8,7 +8,7 @@ import Control.Monad
 import InnerEar.Widgets.Utility
 import InnerEar.Widgets.Bars
 
-data AnswerButtonMode = NotPossible | Possible | IncorrectDisactivated | IncorrectActivated  | Correct deriving (Eq)
+data AnswerButtonMode = NotPossible | Possible | IncorrectDisactivated | IncorrectActivated  | Correct deriving (Eq,Show)
 
 dynButtonClass :: MonadWidget t m => Dynamic t String -> Dynamic t String -> m (Event t ())
 dynButtonClass c label = do
@@ -25,9 +25,20 @@ answerButton buttonString buttonMode = elClass "div" "answerButtonWrapper" $ do
   curClass <- mapDyn modeToClass buttonMode --m (Dynamic t String)
   dynButtonClass curClass buttonString
 
+answerButton:: MonadWidget t m => Dynamic t String -> Dynamic t AnswerButtonMode -> a -> m (Event t a)
+answerButtonVal buttonString buttonMode x =  elClass "div" "answerButtonWrapper" $ do
+  curClass <- mapDyn modeToClass buttonMode
+  clickableDivDynClass buttonString curClass x
+
+
+answerButton :: MonadWidget t m => Dynamic t String -> Dynamic t AnswerButtonMode -> m (Event t ())
+answerButton buttonString buttonMode = elClass "div" "answerButtonWrapper" $ do
+  curClass <- mapDyn modeToClass buttonMode --m (Dynamic t String)
+  dynButtonClass curClass buttonString
+
 modeToClass :: AnswerButtonMode -> String
-modeToClass NotPossible = "disabledButton"
-modeToClass Possible = "enabledButton"
+modeToClass NotPossible = "notPossibleButton"
+modeToClass Possible = "possibleButton"
 modeToClass IncorrectDisactivated = "incorrectDisactivatedButton"
 modeToClass Correct = "correctButton"
 modeToClass IncorrectActivated = "incorrectActivatedButton"

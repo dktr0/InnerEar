@@ -14,6 +14,7 @@ import Reflex.Synth.Synth
 import Control.Monad ((>=>))
 import Control.Monad.IO.Class (liftIO)
 import GHCJS.DOM.Types (castToHTMLCanvasElement)
+import GHCJS.DOM.EventM
 
 -- | dynE is like dyn from Reflex, specialized for widgets that return
 -- events. A dynamic argument updates the widget, and the return value is
@@ -34,6 +35,8 @@ visibleWhen visible builder = do
   where
     f = bool (M.singleton "style" "display: none;") M.empty
 
+
+
 flippableWidget :: MonadWidget t m => m a -> m a -> Bool -> Event t Bool -> m (Dynamic t a)
 flippableWidget b1 b2 i e = widgetHold (bool b1 b2 i) $ fmap (bool b1 b2) e
 
@@ -44,6 +47,18 @@ buttonDynAttrs s val attrs = do
   let event = domEvent Click e
   return $ fmap (const val) event
 
+<<<<<<< HEAD
+=======
+-- with displayed text that can change
+clickableDivDynClass:: MonadWidget t m => Dynamic t String -> Dynamic t String -> a -> m (Event t a)
+clickableDivDynClass label c val = do
+  attrs <- mapDyn (singleton "class") c
+  (element, _) <- elDynAttr' "div" attrs $ dynText label
+  clickEv <- wrapDomEvent (_el_element element) (onEventName Click) (mouseXY)
+  return $ (val <$) clickEv
+
+
+>>>>>>> 90df6077d64c8c007ac7cb1001f1b89ee4ff15b2
 sourceWidget::MonadWidget t m => m (Dynamic t Source)
 sourceWidget = elClass "div" "sourceWidget" $ do
   let radioButtonMap = zip [0::Int,1..] ["Pink Noise","White Noise","Upload Sound File"]

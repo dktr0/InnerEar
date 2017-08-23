@@ -104,6 +104,7 @@ button {
 }
 
 
+<<<<<<< HEAD
 .specEvalWrapper {
 	display: inline-block;
 }
@@ -117,6 +118,10 @@ button {
 }
 
 button.disabledButton {
+=======
+.notPossibleButton {
+	background-color: rgb(128,128,128);
+>>>>>>> 90df6077d64c8c007ac7cb1001f1b89ee4ff15b2
 	background-color: black;
 	color: gray;
 	border: none;
@@ -124,7 +129,12 @@ button.disabledButton {
  	border: 1px solid gray; /* fainted borders */
 }
 
+<<<<<<< HEAD
 button.enabledButton {
+=======
+
+.possibleButton {
+>>>>>>> 90df6077d64c8c007ac7cb1001f1b89ee4ff15b2
   background-color: rgb(128,128,128);
   color: white;
   border: none;
