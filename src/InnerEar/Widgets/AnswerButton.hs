@@ -16,15 +16,14 @@ dynButtonClass c label = do
   c' <- mapDyn (singleton "class") c
   elDynAttr "div" c' $ dynButton label
 
-answerButtonVal:: MonadWidget t m => Dynamic t String -> Dynamic t AnswerButtonMode -> a -> m (Event t a)
-answerButtonVal buttonString buttonMode x = do
+answerButton:: MonadWidget t m => Dynamic t String -> Dynamic t AnswerButtonMode -> a -> m (Event t a)
+answerButton buttonString buttonMode x = do
   curClass <- mapDyn modeToClass buttonMode
-  divAttrs <- mapDyn (singleton "class") curClass
-  elDynAttr "div" divAttrs $ do
-    liftM (x <$) $ dynButtonClass curClass buttonString
+  clickableDivDynClass buttonString curClass x
 
-answerButton :: MonadWidget t m => Dynamic t String -> Dynamic t AnswerButtonMode -> m (Event t ())
-answerButton buttonString buttonMode = do
+
+answerButton' :: MonadWidget t m => Dynamic t String -> Dynamic t AnswerButtonMode -> m (Event t ())
+answerButton' buttonString buttonMode = do
   curClass <- mapDyn modeToClass buttonMode
   divAttrs <- mapDyn (singleton "class") curClass
   elDynAttr "div" divAttrs $ do

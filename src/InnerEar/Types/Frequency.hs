@@ -1,6 +1,9 @@
-{-# DeriveDataTypeable #-}
+{-# LANGUAGE DeriveDataTypeable #-}
 
 module InnerEar.Types.Frequency where
+
+import Text.JSON
+import Text.JSON.Generic
 
 data Frequency = F {
   freqAsDouble :: Double,

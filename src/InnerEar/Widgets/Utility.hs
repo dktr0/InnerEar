@@ -46,6 +46,14 @@ buttonDynAttrs s val attrs = do
   let event = domEvent Click e
   return $ fmap (const val) event
 
+-- with displayed text that can change
+clickableDivDynClass:: MonadWidget t m => Dynamic t String -> Dynamic t String -> a -> m (Event t a)
+clickableDivDynClass label c val = do
+  attrs <- mapDyn (singleton "class") c
+  (element, _) <- elDynAttr' "div" attrs $ dynText label
+  clickEv <- wrapDomEvent (_el_element element) (onEventName Click) (mouseXY)
+return $ (val <$) clickEv
+
 
 sourceWidget::MonadWidget t m => m (Dynamic t Source)
 sourceWidget = elClass "div" "sourceWidget" $ do
