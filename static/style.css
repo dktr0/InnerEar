@@ -99,8 +99,8 @@ text {
 button {
   background-color: rgb(128,128,128);
   color: white;
-  border: none;
   border-radius: 4px;
+ 	border: none;
 }
 
 
@@ -112,29 +112,33 @@ button {
 	display: inline-block;
 }
 
-.disabledButton {
-	background-color: black;
-	border: 1px solid gray; /* fainted borders */
-	color: gray;
-	border: none;
-  border-radius: 4px;
+.buttonWrapper {
+    display: inline-block;
 }
 
-.enabledButton {
+button.disabledButton {
+	background-color: black;
+	color: gray;
+	border: none;
+  border-radius: 40px;
+ 	border: 1px solid gray; /* fainted borders */
+}
+
+button.enabledButton {
   background-color: rgb(128,128,128);
   color: white;
   border: none;
   border-radius: 4px;
 }
 
-.incorrectDisactivatedButton{
+button.incorrectDisactivatedButton{
 background-color: gray;
 color: white;
 border: none;
 border-radius: 4px;
 }
 
-.incorrectActivatedButton {
+button.incorrectActivatedButton {
 	background-color: gray;
 	border: 10px solid red; /* red borders */
 	color: white;

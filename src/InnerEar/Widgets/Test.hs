@@ -10,7 +10,7 @@ import Text.Read (readMaybe)
 import Data.Maybe (isJust, fromJust)
 import Control.Monad
 import Control.Monad.IO.Class
-
+import Data.Map
 
 import InnerEar.Widgets.Utility
 import InnerEar.Widgets.AnswerButton
@@ -31,14 +31,14 @@ labelBarButton' label buttonString barHeight = do
    question <- dynButton buttonString -- m (Event t ())
    return (question)
 
+answerButton' :: MonadWidget t m => Dynamic t String -> Dynamic t AnswerButtonMode -> m (Event t ())
+answerButton' buttonString buttonMode = elClass "div" "answerButtonWrapper" $ do
+  curClass <- mapDyn modeToClass buttonMode --m (Dynamic t String)
+  dynButtonClass curClass buttonString
+
 testWidget :: MonadWidget t m
   => Event t [Response] -> m (Event t Request,Event t Sound,Event t ())
-testWidget = jamieTestWidget
-
-
-someoneTestWidget :: MonadWidget t m
-  => Event t [Response] -> m (Event t Request,Event t Sound,Event t ())
-someoneTestWidget responses = el "div" $ do
+testWidget responses = el "div" $ do
   let oscs = fmap (\(f,g)-> OscillatorNode $ Oscillator Sine f g) $ zip (fmap (220*) [1,2,3,4,5]) (repeat 0.5) -- [Node] (all OscillatorNode)
   let sound = FilteredSound (NodeSource (AdditiveNode oscs) 4) (Filter Lowpass 400 1 1)
   soundEv <- liftM (sound <$) $ button "play additive synth"
@@ -46,7 +46,6 @@ someoneTestWidget responses = el "div" $ do
   score <- count soundEv
   questionLabel <- mapDyn show score
   labelBarButton "myLabel" questionLabel score
-  -- test
   home <- button "back to splash page"
   return (never,never,home)
 

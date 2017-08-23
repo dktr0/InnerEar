@@ -44,7 +44,6 @@ buttonDynAttrs s val attrs = do
   let event = domEvent Click e
   return $ fmap (const val) event
 
-
 sourceWidget::MonadWidget t m => m (Dynamic t Source)
 sourceWidget = elClass "div" "sourceWidget" $ do
   let radioButtonMap = zip [0::Int,1..] ["Pink Noise","White Noise","Upload Sound File"]
