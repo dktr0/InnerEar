@@ -3,7 +3,6 @@ module InnerEar.Widgets.AnswerButton where
 import Reflex
 import Reflex.Dom
 import Data.Map
-import Reflex.Dom.Contrib.Widgets.Svg
 import Control.Monad
 
 import InnerEar.Widgets.Utility
@@ -17,18 +16,14 @@ dynButtonClass c label = do
   elDynAttr "div" c' $ dynButton label
 
 answerButtonVal:: MonadWidget t m => Dynamic t String -> Dynamic t AnswerButtonMode -> a -> m (Event t a)
-answerButtonVal buttonString buttonMode x = do
-  curClass <- mapDyn modeToClass buttonMode
-  divAttrs <- mapDyn (singleton "class") curClass
-  elDynAttr "div" divAttrs $ do
-    liftM (x <$) $ dynButtonClass curClass buttonString
+answerButtonVal buttonString buttonMode x =  elClass "div" "answerButtonWrapper" $ do
+  curClass <- mapDyn modeToClass buttonMode --m (Dynamic t String)
+  liftM (x <$) $ dynButtonClass curClass buttonString
 
 answerButton :: MonadWidget t m => Dynamic t String -> Dynamic t AnswerButtonMode -> m (Event t ())
-answerButton buttonString buttonMode = do
-  curClass <- mapDyn modeToClass buttonMode
-  divAttrs <- mapDyn (singleton "class") curClass
-  elDynAttr "div" divAttrs $ do
-    dynButtonClass curClass buttonString
+answerButton buttonString buttonMode = elClass "div" "answerButtonWrapper" $ do
+  curClass <- mapDyn modeToClass buttonMode --m (Dynamic t String)
+  dynButtonClass curClass buttonString
 
 modeToClass :: AnswerButtonMode -> String
 modeToClass NotPossible = "disabledButton"

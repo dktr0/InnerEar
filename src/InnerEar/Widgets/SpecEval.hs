@@ -3,83 +3,15 @@ module InnerEar.Widgets.SpecEval where
 import Reflex
 import Reflex.Dom
 import Data.Map as M
-import Reflex.Dom.Contrib.Widgets.Svg
 import Control.Monad
-import Data.Maybe (isJust)
 
 import InnerEar.Widgets.Utility
 import InnerEar.Widgets.Bars
 import InnerEar.Types.Score
-
-dynLabel :: MonadWidget t m => Dynamic t String -> Dynamic t String -> m ()
-dynLabel cssClass s = do
-  cssClass' <- mapDyn (singleton "class") cssClass   -- m (Dynamic t String)
-  elDynAttr "div" cssClass' $ do
-    dynText s   -- m ()
-    return ()
-
---Labels with CSS style to be used above bars
-hzLabel :: MonadWidget t m => Dynamic t String -> String ->  m ()
-hzLabel c s = do
-   c' <- mapDyn (singleton "class") c -- m (Dynamic t String)
-   elDynAttr "div" c' $ text (show s) -- m ()
-   return ()
-
-dynScoreLabel :: MonadWidget t m => Dynamic t String -> Dynamic t (Score) -> m ()
-dynScoreLabel cssClass score = do
-  score' <- mapDyn  (\x ->  ((fromIntegral (questionsAsked x) :: Float) - (fromIntegral (falseNegatives x) :: Float)) / (fromIntegral (questionsAsked x) :: Float)) score   --m (Dynamic t Double)
-  score''  <- mapDyn show score' -- m (Dynamic t String)
-  cssClass' <- mapDyn (singleton "class") cssClass  -- m (Dynamic t String)
-  elDynAttr "div" cssClass' $ do
-    dynText score'' -- m ()
-    return ()
-
-dynCountLabel :: MonadWidget t m => Dynamic t String -> Dynamic t (Score) -> m ()
-dynCountLabel cssClass count = do
-  count' <- mapDyn questionsAsked count  -- m (Dynamic t Int)
-  count''  <- mapDyn show count' -- m (Dynamic t String)
-  cssClass' <- mapDyn (singleton "class") cssClass -- m (Dynamic t String)
-  elDynAttr "div" cssClass' $ do
-    dynText count'' -- m ()
-    return ()
-
---A dynamic bar with css style and in-line attributes
-dynBarCSS :: MonadWidget t m =>  Dynamic t (Score) -> Dynamic t Float -> m ()
-dynBarCSS score barWidth = do
-  elClass "div" "flex-container" $ do
-    svgClass "svg" "svgS" $ do
-      let posX = constDyn $ negate 30 -- Dynamic t Int
-      let posY = constDyn $ negate 200  --Dynamic t Int
-      barHeight <- mapDyn  (\x ->  ((fromIntegral (questionsAsked x) :: Float) - (fromIntegral (falseNegatives x) :: Float)) / (fromIntegral (questionsAsked x) :: Float)) score   --m (Dynamic t Int)
-      barHeight' <- mapDyn (*200) barHeight -- m (Dynamic t Float)
-      barWidth' <- mapDyn (*1) barWidth -- m (Dynamic t Float)
-      let c = constDyn "test" --Dynamic t String
-      let t = constDyn "rotate (180)" --Dynamic t String
-      rectDynCSS posX posY barWidth' barHeight' t c  -- m ()
-
-scoreBar :: MonadWidget t m => Dynamic t (Maybe Score) -> String ->  m ()
-scoreBar score hz = do
-    bool <- mapDyn isJust score
-    flippableDyn (return ()) (do
-      barHeight <- mapDyn (maybe (Score 0 0 0) id) score -- Dynamic t Int
-      dynBarCSS barHeight (constDyn 30) -- m ()
-      scoreLabel <- mapDyn (maybe (Score 0 0 0) id) score
-      dynScoreLabel (constDyn "scoreLabel") scoreLabel -- m()
-      hzLabel (constDyn "dynLabel") hz
-      countLabel <- mapDyn (maybe (Score 0 0 0) id) score
-      dynCountLabel (constDyn "countLabel") countLabel) bool --m ()
-    return ()
-
--- A dynamic label with CSS style
-dynGraphLabel :: MonadWidget t m => Dynamic t String -> Dynamic t String -> m ()
-dynGraphLabel c label = do
-  c' <- mapDyn (singleton "class") c -- m (Dynamic t String)
-  elDynAttr "div" c' $ do
-    dynText label -- m ()
-    return ()
+import InnerEar.Widgets.Labels
 
 displaySpectrumEvaluation :: MonadWidget t m => Dynamic t String -> Dynamic t (Map Int Score) -> m ()
-displaySpectrumEvaluation graphLabel score= do
+displaySpectrumEvaluation graphLabel score= elClass "div" "specEvalWrapper" $ do
   dynGraphLabel (constDyn "graphLabel") graphLabel
   let labels = ["31 Hz","63 Hz","125 Hz","250 Hz","500 Hz","1 kHz","2 kHz","4 kHz","8 kHz","16 kHz"]
 

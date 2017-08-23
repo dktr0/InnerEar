@@ -103,6 +103,15 @@ button {
   border-radius: 4px;
 }
 
+
+.specEvalWrapper {
+	display: inline-block;
+}
+
+.answerButtonWrapper {
+	display: inline-block;
+}
+
 .disabledButton {
 	background-color: black;
 	border: 1px solid gray; /* fainted borders */
