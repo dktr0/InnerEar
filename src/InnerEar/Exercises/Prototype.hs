@@ -154,7 +154,7 @@ prototypeQuestionWidget config defaultEval newQuestion = mdo
     fmap (flip changeModesForCorrectAnswer frequencies) correctAnswer,
     fmap (\x-> replaceAtSameIndex x frequencies AB.IncorrectDisactivated) incorrectAnswer
     ]
-  
+
   modes' <- zipWithM (\x y -> mapDyn (!!y) x) (repeat modes) [0,1..9]
   -- buttons
   playUnfiltered <- button "Listen to unfiltered"
@@ -163,7 +163,7 @@ prototypeQuestionWidget config defaultEval newQuestion = mdo
     leftmost <$> zipWithM (\f m -> AB.answerButton (constDyn $ show f) m f) frequencies modes'
 
 
---insertWith :: Ord k => (a -> a -> a) -> k -> a -> Map k a -> Map k a 
+--insertWith :: Ord k => (a -> a -> a) -> k -> a -> Map k a -> Map k a
 
   --(\k -> M.insertWith (\a _->incFalsePositive a) k (Score 0 0 0) m)
 
@@ -240,7 +240,7 @@ replaceAtSameIndex k l mode = maybe id (\x->replaceAt x mode) index
 --    buttons::MonadWidget t m => Dynamic t [(a,AnswerButtonMode)] -> m (Event t a)
 --    buttons l = do
 --      dynMap <- mapDyn fromList l
---      evMap <- listViewWithKey dynMap AB.answerButton 
+--      evMap <- listViewWithKey dynMap AB.answerButton
 
 
 --answerButton:: MonadWidget t m => a -> Dynamic t AnswerButtonMode  -> m (Event t a)

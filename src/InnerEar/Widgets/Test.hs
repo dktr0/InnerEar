@@ -23,18 +23,6 @@ import InnerEar.Widgets.AnswerButton
 import InnerEar.Widgets.SpecEval
 import InnerEar.Widgets.Labels
 
-labelBarButton' :: MonadWidget t m => String ->  Dynamic t String -> Dynamic t Float -> m (Event t ())
-labelBarButton' label buttonString barHeight = do
-   labelsForBars label
-   let barWidth = constDyn 30
-   drawBarCSS barHeight barWidth
-   question <- dynButton buttonString -- m (Event t ())
-   return (question)
-
-answerButton' :: MonadWidget t m => Dynamic t String -> Dynamic t AnswerButtonMode -> m (Event t ())
-answerButton' buttonString buttonMode = elClass "div" "answerButtonWrapper" $ do
-  curClass <- mapDyn modeToClass buttonMode --m (Dynamic t String)
-  dynButtonClass curClass buttonString
 
 testWidget :: MonadWidget t m
   => Event t [Response] -> m (Event t Request,Event t Sound,Event t ())
@@ -42,6 +30,7 @@ testWidget responses = el "div" $ do
   let oscs = fmap (\(f,g)-> OscillatorNode $ Oscillator Sine f g) $ zip (fmap (220*) [1,2,3,4,5]) (repeat 0.5) -- [Node] (all OscillatorNode)
   let sound = FilteredSound (NodeSource (AdditiveNode oscs) 4) (Filter Lowpass 400 1 1)
   soundEv <- liftM (sound <$) $ button "play additive synth"
+  answerButton' "answerButton" (constDyn Possible)
   performSound soundEv
   score <- count soundEv
   questionLabel <- mapDyn show score

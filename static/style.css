@@ -103,25 +103,21 @@ button {
  	border: none;
 }
 
-
-<<<<<<< HEAD
 .specEvalWrapper {
 	display: inline-block;
 }
 
 .answerButtonWrapper {
 	display: inline-block;
+
+
 }
 
 .buttonWrapper {
     display: inline-block;
 }
 
-button.disabledButton {
-=======
-.notPossibleButton {
-	background-color: rgb(128,128,128);
->>>>>>> 90df6077d64c8c007ac7cb1001f1b89ee4ff15b2
+button.notPossibleButton {
 	background-color: black;
 	color: gray;
 	border: none;
@@ -129,12 +125,7 @@ button.disabledButton {
  	border: 1px solid gray; /* fainted borders */
 }
 
-<<<<<<< HEAD
-button.enabledButton {
-=======
-
-.possibleButton {
->>>>>>> 90df6077d64c8c007ac7cb1001f1b89ee4ff15b2
+button.possibleButton {
   background-color: rgb(128,128,128);
   color: white;
   border: none;
@@ -142,7 +133,7 @@ button.enabledButton {
 }
 
 button.incorrectDisactivatedButton{
-background-color: gray;
+background-color: red;
 color: white;
 border: none;
 border-radius: 4px;
@@ -150,18 +141,17 @@ border-radius: 4px;
 
 button.incorrectActivatedButton {
 	background-color: gray;
-	border: 10px solid red; /* red borders */
+	border: none;
 	color: white;
-  border: none;
   border-radius: 4px;
 }
 
-.correctButton{
-	background-color: gray;
-  border: 10px solid green; /* green borders */
+button.correctButton{
+	background-color: green;
 	color: white;
 	border: none;
   border-radius: 4px;
+  border: 7px solid green;
 }
 
 .svgS {

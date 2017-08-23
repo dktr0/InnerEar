@@ -8,33 +8,24 @@ import Control.Monad
 import InnerEar.Widgets.Utility
 import InnerEar.Widgets.Bars
 
+
 data AnswerButtonMode = NotPossible | Possible | IncorrectDisactivated | IncorrectActivated  | Correct deriving (Eq,Show)
 
-dynButtonClass :: MonadWidget t m => Dynamic t String -> Dynamic t String -> m (Event t ())
-dynButtonClass c label = do
-  c' <- mapDyn (singleton "class") c
-  elDynAttr "div" c' $ dynButton label
-
-answerButtonVal:: MonadWidget t m => Dynamic t String -> Dynamic t AnswerButtonMode -> a -> m (Event t a)
-answerButtonVal buttonString buttonMode x =  elClass "div" "answerButtonWrapper" $ do
-  curClass <- mapDyn modeToClass buttonMode --m (Dynamic t String)
-  liftM (x <$) $ dynButtonClass curClass buttonString
-
-answerButton :: MonadWidget t m => Dynamic t String -> Dynamic t AnswerButtonMode -> m (Event t ())
-answerButton buttonString buttonMode = elClass "div" "answerButtonWrapper" $ do
-  curClass <- mapDyn modeToClass buttonMode --m (Dynamic t String)
-  dynButtonClass curClass buttonString
+buttonDynCss :: MonadWidget t m => String -> Dynamic t String -> m (Event t ())
+buttonDynCss label cssClass = do
+  cssClass' <- mapDyn (singleton "class") cssClass
+  (element, _) <- elDynAttr' "button" cssClass' $ text label -- m
+  return $ domEvent Click element  -- domEvent :: EventName en -> a -> Event t (EventResultType en)
 
 answerButton:: MonadWidget t m => Dynamic t String -> Dynamic t AnswerButtonMode -> a -> m (Event t a)
-answerButtonVal buttonString buttonMode x =  elClass "div" "answerButtonWrapper" $ do
+answerButton buttonString buttonMode x = do
   curClass <- mapDyn modeToClass buttonMode
   clickableDivDynClass buttonString curClass x
 
-
-answerButton :: MonadWidget t m => Dynamic t String -> Dynamic t AnswerButtonMode -> m (Event t ())
-answerButton buttonString buttonMode = elClass "div" "answerButtonWrapper" $ do
-  curClass <- mapDyn modeToClass buttonMode --m (Dynamic t String)
-  dynButtonClass curClass buttonString
+answerButton' :: MonadWidget t m => String -> Dynamic t AnswerButtonMode -> m (Event t ())
+answerButton' buttonString buttonMode = do
+  curClass <- mapDyn modeToClass buttonMode
+  buttonDynCss buttonString curClass
 
 modeToClass :: AnswerButtonMode -> String
 modeToClass NotPossible = "notPossibleButton"
