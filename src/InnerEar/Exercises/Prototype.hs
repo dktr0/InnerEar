@@ -134,13 +134,33 @@ prototypeQuestionWidget :: MonadWidget t m
   -> m (Event t (Datum WhatBandsAreAllowed [Frequency] Frequency (M.Map Frequency Score)), Event t Sound, Event t ExerciseNavigation)
 
 prototypeQuestionWidget config defaultEval newQuestion = mdo
+  let maxTries = 3::Int
+
+  -- calculate tries so far
+
+  --listOfClicked <- foldDyn ($) [] $ leftmost [fmap (x-> (maybe (-1) id $ elemIndex x frequencies):) bandPressed, (const []) <$ newQuestion]
+  listOfClicked <- foldDyn ($) [] $ leftmost [fmap (:) bandPressed, (const []) <$ newQuestion]
+  let tryEv = attachWithMaybe (\l e -> if elem e l then Nothing else Just e) (current listOfClicked) bandPressed
+  
+  --tries <- foldDyn ($) 0 $ leftmost [(+1) bandPressed, (const 0) <$ nextQuestion]
+
+  tries <- foldDyn ($) 0 $ leftmost [(+1) <$ tryEv, (const 0) <$ nextQuestion]
+  canTry <- mapDyn (<maxTries) tries >>= combineDyn (&&) notCorrectYet
+  let cannotTryEv = ffilter not $ updated canTry
+  --let cannotTryEv = fmap not $ updated canTry
+  --let cannotTryEv' = attachDynWith (const $ fmap (\x->case x of)) answer cannotTryEv
+  holdDyn "test" (fmap show cannotTryEv) >>= dynText
 
   -- produce events for correct and incorrect answers
   question <- holdDyn ([],F 31 "31") newQuestion
   answer <- mapDyn snd question  -- Dyn t Frequency
-  let answerEvent = gate (current canAnswer) bandPressed -- Event t Frequency
-  userAnswer <- holdDyn Nothing $ leftmost [Nothing <$ newQuestion,Just <$> answerEvent]
-  canAnswer <- mapDyn (==Nothing) userAnswer
+  let answerEvent = gate (current canTry) tryEv -- Event t Frequency
+  
+  notCorrectYet <- holdDyn True $ leftmost [True <$ newQuestion, False <$ correctAnswer]
+  --userAnswer <- holdDyn Nothing $ leftmost [Nothing <$ newQuestion,Just <$> answerEvent]
+  --canAnswer <- mapDyn (==Nothing) userAnswer
+  --canAnswer <- mapDyn (==Nothing) userAnswer >>= combineDyn (&&) canTry
+
   let correctOrIncorrect = attachDynWith (\a u -> if a==u then Right a else Left u) answer answerEvent   -- Event (Either Frequency Frequency)
   let correctAnswer = fmapMaybe (either (const Nothing) Just) correctOrIncorrect    -- Event t Frequency
   let incorrectAnswer = fmapMaybe (either Just (const Nothing)) correctOrIncorrect  -- Event t Frequency if incorrect, no event if correct
@@ -148,31 +168,25 @@ prototypeQuestionWidget config defaultEval newQuestion = mdo
   -- use new questions, correct and incorrect answer events to calculate button modes
   let initialModes = fmap (bool AB.NotPossible AB.Possible) $ convertBands config
 
-
   modes <- foldDyn ($) initialModes $ leftmost [
     (const initialModes) <$ newQuestion,                         -- Event t ([AnswerButtonMode] -> [answerButtonMode])
     fmap (flip changeModesForCorrectAnswer frequencies) correctAnswer,
-    fmap (\x-> replaceAtSameIndex x frequencies AB.IncorrectDisactivated) incorrectAnswer
+    fmap (\x-> replaceAtSameIndex x frequencies AB.IncorrectDisactivated) incorrectAnswer,
+    (fmap (\x-> case x of AB.IncorrectActivated-> AB.IncorrectDisactivated; otherwise->x)) <$ cannotTryEv  --Once tries are up,
     ]
-  
-  modes' <- zipWithM (\x y -> mapDyn (!!y) x) (repeat modes) [0,1..9]
+
+  --modes' <- zipWithM (\x y -> mapDyn (!!y) x) (repeat modes) [0,1..9]
+  modes' <- mapM (\x-> mapDyn (!!x) modes) [0,1..9]
   -- buttons
   playUnfiltered <- button "Listen to unfiltered"
   playButton <- button "Play question"
   bandPressed <- elClass "div" "answerButtonWrapper" $ -- m (Event t Frequency)
     leftmost <$> zipWithM (\f m -> AB.answerButton (constDyn $ show f) m f) frequencies modes'
 
-
---insertWith :: Ord k => (a -> a -> a) -> k -> a -> Map k a -> Map k a 
-
-  --(\k -> M.insertWith (\a _->incFalsePositive a) k (Score 0 0 0) m)
-
   -- update scoreMap
   let answerInfo = attachDyn answer correctOrIncorrect  -- Event t (Frequency,Either Frequency Frequency)  (answer, user answer)
   let scoreUpdate = attachWith updateScore (current scoreMap) answerInfo
   scoreMap <- holdDyn defaultEval scoreUpdate
-
-
 
   -- display feedback
   let resetFeedback = fmap (const "") navEvents
@@ -195,11 +209,14 @@ prototypeQuestionWidget config defaultEval newQuestion = mdo
   el "div" $ do
     text "debugging:   "
     el "div"$ do
+      text "tries:  "
+      mapDyn show tries >>= dynText
+    el "div"$ do
       text "correct answer:  "
       mapDyn show answer >>= dynText
     el "div" $ do
       text "canAnswer: "
-      mapDyn show canAnswer >>= dynText
+      mapDyn show canTry >>= dynText
     el "div"$ do
       text "userAnswer:  "
       holdDyn "nothing" (fmap show bandPressed) >>= dynText
