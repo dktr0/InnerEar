@@ -34,6 +34,7 @@ import InnerEar.Widgets.Test
 import InnerEar.Types.Exercise
 import InnerEar.Types.ExerciseId
 import InnerEar.Types.ExerciseNavigation
+import InnerEar.Types.Frequency
 
 -- | We need to carefully and explicitly give a type signature with the definition
 -- of each specific exercise value. In the parameters after Exercise in the type signature
@@ -57,7 +58,7 @@ instance Hashable WhatBandsAreAllowed where
 -- So e can be a Map from allowedbands to BandsEval
 instance Ord WhatBandsAreAllowed where
   compare AllBands b = if b==AllBands then EQ else GT
-  compare HighBands b = case b of 
+  compare HighBands b = case b of
     (AllBands) -> LT
     (HighBands) -> EQ
     otherwise -> GT
@@ -76,9 +77,6 @@ instance Ord WhatBandsAreAllowed where
 -- Evaluation for a particular configuration. Map of hz to a Band Evaluation (could also be from Double to BandEval if want decimal hz)
 type ConfigEval = M.Map Int Score
 
-type TenBandsEval = HM.HashMap WhatBandsAreAllowed ConfigEval
-
-
 
 convertBands :: WhatBandsAreAllowed -> [Bool]
 convertBands AllBands = replicate 10 True
@@ -87,13 +85,12 @@ convertBands MidBands = [False,False,False,True,True,True,True,True,False,False]
 convertBands Mid8Bands = [False,True,True,True,True,True,True,True,True,False]
 convertBands LowBands = [True,True,True,True,True,False,False,False,False,False]
 
-prototypeExercise :: MonadWidget t m => Exercise t m WhatBandsAreAllowed [Int] Int (M.Map Int Score)
+prototypeExercise :: MonadWidget t m => Exercise t m WhatBandsAreAllowed [Frequency] Frequency (M.Map Frequency Score)
 prototypeExercise = Exercise {
   exerciseId = PrototypeExercise,
   defaultConfig = AllBands,
   configWidget = prototypeConfigWidget,
   defaultEvaluation = M.empty,
-  --defaultEvaluation = HM.fromList $ zipWith (\c v ->(c, M.fromList $ fmap ((\x->(x,Score 0 0 0))  . snd) $ fst $ partition fst $ zip (convertBands c) v)) [AllBands,HighBands,Mid8Bands, MidBands,LowBands] (repeat [31::Int,63,125,250,500,1000,2000,4000,8000,16000]), -- ugly yet beautiful...
   displayEvaluation = prototypeDisplayEvaluation,
   generateQuestion = prototypeGenerateQuestion,
   questionWidget = prototypeQuestionWidget,
@@ -103,17 +100,11 @@ prototypeExercise = Exercise {
 -- | Because we only export the one definition above from this module, we can create other definitions
 -- with whatever names we like, with great abandon!
 
-filters:: [Filter]
-filters = fmap (\x -> Filter Peaking x 1.4 16.0) filterFreqs
+frequencies :: [Frequency]
+frequencies = [
+  F 31 "31", F 63 "63", F 125 "125", F 250 "250", F 500 "500",
+  F 1000 "1k", F 2000 "2k", F 4000 "4k", F 8000 "8k", F 16000 "16k"]
 
---filterFreqs::[Int]
-filterFreqs = [31,63,125,250,500,1000,2000,4000,8000,16000]
-
-sounds :: [Sound]
-sounds = fmap (FilteredSound (BufferSource (File "pinknoise.wav") 2.0)) filters
-
-labels :: [String]
-labels = ["31 Hz","63 Hz","125 Hz","250 Hz","500 Hz","1 kHz","2 kHz","4 kHz","8 kHz","16 kHz"]
 
 prototypeConfigWidget :: MonadWidget t m => WhatBandsAreAllowed -> m (Event t WhatBandsAreAllowed)
 prototypeConfigWidget i = do
@@ -123,23 +114,9 @@ prototypeConfigWidget i = do
            (WidgetConfig {_widgetConfig_initialValue= Just iVal
                          ,_widgetConfig_setValue = never
                          ,_widgetConfig_attributes = constDyn M.empty})
-  dynConfig<- holdDyn AllBands $ fmap (\x-> maybe AllBands id $ M.lookup (maybe 0 id x) (M.fromList radioButtonMap)) (_hwidget_change radioWidget)
-  b<-button "Continue to Exercise"
+  dynConfig <- holdDyn AllBands $ fmap (\x-> maybe AllBands id $ M.lookup (maybe 0 id x) (M.fromList radioButtonMap)) (_hwidget_change radioWidget)
+  b <- button "Continue to Exercise"
   return $ tagDyn dynConfig b
-
-  --userAnswer <- holdDyn Nothing $ tagDyn (_hwidget_value radioWidget)
-
-  -- fcbs <- zipWithM filterCheckBox labels initialConfig -- m [Dynamic t Bool]
-  -- config <- listOfDynToDynList fcbs
-  -- nextButton <- button "Next"
-  -- return $ tagDyn config nextButton
-
-filterCheckBox :: MonadWidget t m => String -> Bool -> m (Dynamic t Bool)
-filterCheckBox t v = el "div" $ do
-  x <- checkbox v $ def
-  text t
-  return $ _checkbox_value x
-
 
 
 prototypeGenerateQuestion :: WhatBandsAreAllowed -> [Datum WhatBandsAreAllowed [Int] Int (M.Map Int Score)] -> IO ([Int],Int)
@@ -150,121 +127,40 @@ prototypeGenerateQuestion config prevData = do
   return (x,x!!y)
 
 
+prototypeQuestionWidget :: MonadWidget t m
+  => WhatBandsAreAllowed
+  -> M.Map Frequency Score
+  -> Event t ([Frequency],Frequency)
+  -> m (Event t (Datum WhatBandsAreAllowed [Frequency] Frequency (M.Map Frequency Score)), Event t Sound, Event t ExerciseNavigation)
 
---buttonsWidget::(MonadWidget t m , Ord k)=> M.Map k (String,a, AB.AnswerButtonMode) -> Event t (M.Map k AB.AnswerButtonMode) -> m (Event t a)
---buttonsWidget m e = do
---  let iModes = fmap (\(_,_,x)->x) m -- Map k AnswerButtonMode
---  let iMap = fmap (\(a,b,_)->(a,b)) m
---  dynModes <- holdDyn iModes e  -- Dynamic t (Map k AnswerButtonModes)
+prototypeQuestionWidget config defaultEval newQuestion = mdo
 
-
---  dynMap <- mapDyn (\x -> M.intersectionWith (\mode (s,v)-> Just $ AB.answerButtonVal (constDyn s) mode v) x iMap) dynModes
---  --let x = M.mapWithKey (\k (s,v,mode) -> AB.answerButtonVal (constDyn s) mode) m
---  --dynMap <- mapDyn (\x->M.unionWith (\(s,v,_) b-> AB.answerButtonVal (constDyn s) v b) m x) dynModes  -- Dynamic t (Map k (m Event t a))
---  dynMap' <- mapDyn sequence dynMap -- Dyn (m (Map k Event t))
---  liftM switchPromptlyDyn $ mapDyn (leftmost . M.elems) dynMap'
-
-
---buttonsWidget::(MonadWidget t m , Ord k)=> M.Map k (String,a, AB.AnswerButtonMode, Event t AB.AnswerButtonMode) -> m (Event t a)
---buttonsWidget m = do
---  x <- sequence (fmap (\(s,v,iMode,updateMode)-> do
---    mode <- holdDyn iMode updateMode
---    AB.answerButtonVal (constDyn s) mode v
---    ) m)   -- m Event t []
---  return $ leftmost x
-
---buttonsWidget::(MonadWidget t m , Ord k)=> Dynamic t (M.Map k (String, AB.AnswerButtonMode)) -> m (Event t a)
---buttonsWidget m = do
---  x <- mapDyn (\x-> M.mapWithKey (\k (s,mode) -> AB.answerButtonVal (constDyn s) (constDyn mode) k) x) m
---  x'<- mapDyn (M.elems) x  -- 
---  x''' <- mapDyn leftmost x' -- dyn m Event ?
---  return $ switchPromptlyDyn x'''
-
-
-
-
-
-
-
-
-
-
-
-
-
-
---listWithKey :: forall t k v m a. (Ord k, MonadWidget t m) => Dynamic t (Map k v) -> (k -> Dynamic t v -> m a) -> m (Dynamic t (Map k a))
-
-buttonsWidget::(MonadWidget t m , Show k,Ord k)=> Dynamic t (M.Map k (String, AB.AnswerButtonMode)) -> m (Event t k)
-buttonsWidget m = do
-  dynMap <- listWithKey m func -- m (Dynamic  t Map (k Event)
-  liftM switchPromptlyDyn $ mapDyn (leftmost . M.elems) dynMap
-
-func::(Show k,MonadWidget t m)=> k -> Dynamic t (String,AB.AnswerButtonMode) -> m (Event t k)
-func i d = do
-  (s,m) <- splitDyn d
-  AB.answerButtonVal s m i
-
-
-
-
-prototypeQuestionWidget :: MonadWidget t m => WhatBandsAreAllowed -> M.Map Int Score -> Event t ([Int],Int) -> m (Event t (Datum WhatBandsAreAllowed [Int] Int (M.Map Int Score)), Event t Sound, Event t ExerciseNavigation)
-prototypeQuestionWidget c defaultEval e = mdo
-  let possibleAnswers = [0,1,2,3,4,5,6,7,8,9]
-
-  -- Get new question/correct
-  question <- holdDyn ([],0) e
-  correctAnswer <- mapDyn  (round . (filterFreqs!!) . snd) question
-  userAnswer <- holdDyn Nothing $ leftmost [Nothing <$ e,Just <$> answerEvent]
-  -- Playing natural and filtered sound
-  playUnfiltered <- button "Listen to unfiltered"
-  playButton <- button "Listen to question"
-  let unfilteredSound = Sound (BufferSource (File "pinknoise.wav") 2.0) <$ playUnfiltered
-
---answerButtonVal:: MonadWidget t m => Dynamic t String -> Dynamic t AnswerButtonMode -> a -> m (Event t a)
---answerButton buttonString buttonMode x = do
---data AnswerButtonMode = NotPossible | Possible | IncorrectDisactivated | IncorrectActivated  | Correct deriving (Eq)
-
-  --buttonModes <- holdDyn (fmap (bool AB.NotPossible AB.Possible) (convertBands c)) $ updateButtons  -- Dynamic [AB.AnswerButtonMode]
-  --mapDyn (\modes-> fmap (\(mode,val)-> AB.answerButtonVal (constDyn $ show val++" Hz") (constDyn mode) val)  $ zip modes filterFreqs) buttonModes
-
-
-  --buttonModes <- sequence $ fmap (\defMode-> holdDyn defMode (updateButtons)) $ fmap (bool AB.NotPossible AB.Possible)  $ convertBands c  -- m [(Dynamic t ButtonMode)]
-
-  --let buttonModeUpdates =fmap (\x-> leftmost [(fmap (bool AB.NotPossible AB.Possible) <$) navEvents, buttonModeUpdateEvent]) $ [0::Int,1..9]  -- 
-  --let updateButtons = fmap (\x-> M.fromList $ zip [0::Int,1..] x) $ leftmost [(fmap (bool AB.NotPossible AB.Possible) (convertBands c) <$) $ navEvents]-- Event t (Map Int AB.AnswerButtonMode) where int = [0,1,2,3,4,5,6,7,8,9]
-  --fmap (\x-> leftmost [(fmap (bool AB.NotPossible AB.Possible) (convertBands c) <$) navEvents, ]) []
-  --buttonModes <- sequence $ zipWith (\defMode ue-> holdDyn defMode ue) (fmap (bool AB.NotPossible AB.Possible) $ convertBands c) updateButtonEvs  -- m [(Dynamic t ButtonMode)]
-
-  -- answerButtons
-  bandPressed <- elClass "div" "answerButtonWrapper" $ do       -- Event t Int (int - hz corresponding to the band)
-    --let x = fmap (\x-> buttonVal (show x ++" Hz") x) (fmap snd $ fst $ partition fst $ zip (convertBands c) filterFreqs) -- [ m(Event t Int) ]
-
-    --let x = fmap (\(mode,val)-> AB.answerButtonVal (constDyn $ show val++" Hz") mode val)  $ zip buttonModes filterFreqs -- Dynamic t ([m (Evnet t a)])
-    --x' <- sequence x
-    --return $ fmap round $ leftmost x'
-    let iMap = M.fromList $ zip possibleAnswers $ fmap (\x->show x ++ " Hz") filterFreqs
-    dontKnow <-mapDyn (\x-> M.intersectionWith (\mode s-> (s,mode)) x iMap) buttonStates -- Dynamic t Map Int (s,buttonMode)
-    mapDyn show dontKnow >>= dynText
-    buttonsWidget dontKnow
-
+  -- produce events for correct and incorrect answers
+  question <- holdDyn ([],0) newQuestion
+  answer <- mapDyn snd question
+  let answerEvent = gate (current canAnswer) bandPressed -- Event t Frequency
+  userAnswer <- holdDyn Nothing $ leftmost [Nothing <$ newQuestion,Just <$> answerEvent]
   canAnswer <- mapDyn (==Nothing) userAnswer
-  let answerEvent = gate (current canAnswer) bandPressed -- Event t Int
-  let correctAnswerEvent = attachDynWith (==) correctAnswer answerEvent -- Event t Bool
-  
-  --
-  buttonStates <- holdDyn (M.fromList $ zip possibleAnswers (fmap (bool AB.NotPossible AB.Possible) (convertBands c))) buttonModeUpdateEvent'   -- Dynamic (Map Int (AB.ButtonMode))
-  let buttonModeUpdateEvent = attachDynWith (\a ev-> if a==ev then (ev,AB.Correct) else (ev,AB.IncorrectActivated)) correctAnswer answerEvent
-  let buttonModeUpdateEvent' = attachDynWith (\x (a,mode)-> M.update (const $ Just mode) a x) buttonStates buttonModeUpdateEvent
+  let correctOrIncorrect = attachDynWith (\a u -> if a==u then Right a else Left u) answer answerEvent
+  let correctAnswer = fmapMaybe (either (const Nothing) Just) correctOrIncorrect
+  let incorrectAnswer = fmapMaybe (either Just (const Nothing)) correctOrIncorrect
 
---holdDyn "nothing yet.." (fmap show answerEvent) >>= dynText
+  -- use new questions, correct and incorrect answer events to calculate button modes
+  let initialModes = fmap (bool NotPossible Possible) $ convertBands config
+  modes <- foldDyn initialModes $ leftmost [
+    fmap (const initialModes) newQuestion,
+    fmap changeModesForCorrectAnswer correctAnswer,
+    fmap (flip replaceInList $ IncorrectDisactivated) incorrectAnswer
+  ]
+
+  -- buttons
+  playUnfiltered <- button "Listen to unfiltered"
+  bandPressed <- elClass "div" "answerButtonWrapper" $ -- m (Event t Frequency)
+    leftmost <$> zipWithM (\f m -> answerButtonVal (constDyn $ show f) m f) frequencies modes
 
   -- update the scoreMap
-  let answerInfo = attachDynWith (\cor user -> if cor==user then ([(Correct,cor)],cor) else ([(FalsePositive,user), (FalseNegative,cor)],cor)) correctAnswer answerEvent -- Event t (cor,user)
-  let scoreUpdate = attachWith (\s (xs,cor) -> foldl (\b (a,i)-> M.insert i (adjustScore a (maybe (Score 0 0 0) id $ M.lookup i b)) b) s xs) (current scoreMap) answerInfo       
-  --let scoreUpdate = attachWith (\s (xs,cor) -> foldl (\b (a,i)-> M.update (Just . adjustScore a) i b) s xs) (current scoreMap) answerInfo       
-  
-  --M.insertWith (\newVal mapVal -> newVal)
+  let answerInfo = attachDynWith (\cor user -> if cor==user then ([(Correct,cor)],cor) else ([(FalsePositive,user), (FalseNegative,cor)],cor)) answer answerEvent -- Event t (cor,user)
+  let scoreUpdate = attachWith (\s (xs,cor) -> foldl (\b (a,i)-> M.insert i (adjustScore a (maybe (Score 0 0 0) id $ M.lookup i b)) b) s xs) (current scoreMap) answerInfo
   scoreMap <- holdDyn defaultEval scoreUpdate
 
   -- display feedback
@@ -274,8 +170,9 @@ prototypeQuestionWidget c defaultEval e = mdo
   dynText feedbackToDisplay
 
   -- generate sounds to be played
-  let playCorrectSound = (\x-> FilteredSound (BufferSource (File "pinknoise.wav") 2.0) (Filter Peaking (fromIntegral x) 1.4 16.0)) <$> tagDyn correctAnswer playButton
-  let playOtherSounds = (\x-> FilteredSound (BufferSource (File "pinknoise.wav") 2.0) (Filter Peaking (fromIntegral x) 1.4 16.0)) <$> tagDyn correctAnswer bandPressed
+  let playCorrectSound = (\x-> FilteredSound (BufferSource (File "pinknoise.wav") 2.0) (Filter Peaking (fromIntegral x) 1.4 16.0)) <$> tagDyn answer playButton
+  let playOtherSounds = (\x-> FilteredSound (BufferSource (File "pinknoise.wav") 2.0) (Filter Peaking (fromIntegral x) 1.4 16.0)) <$> tagDyn answer bandPressed
+  let unfilteredSound = Sound (BufferSource (File "pinknoise.wav") 2.0) <$ playUnfiltered
   let playSounds = leftmost [playCorrectSound,playOtherSounds,unfilteredSound]
 
   -- generate navigation events
@@ -286,42 +183,30 @@ prototypeQuestionWidget c defaultEval e = mdo
 
   el "div" $ do
     text "debugging:   "
-    el "div"$ do 
+    el "div"$ do
       text "button states: "
       mapDyn show buttonStates >>= dynText
-    el "div"$ do 
+    el "div"$ do
       text "correct answer:  "
       mapDyn show correctAnswer >>= dynText
     el "div" $ do
       text "canAnswer: "
       mapDyn show canAnswer >>= dynText
-    el "div"$ do 
+    el "div"$ do
       text "userAnswer:  "
       holdDyn "nothing" (fmap show bandPressed) >>= dynText
-    el "div"$ do 
+    el "div"$ do
       text "Score Map:  "
       mapDyn show scoreMap >>= dynText
 
   return (never, playSounds,navEvents)
 
 
-
-calculateScore :: Int -> Maybe Int -> Maybe Float
-calculateScore x (Just y) = Just (fromIntegral(x)/fromIntegral(y))
-calculateScore x _ = Just (-1.0)
+changeModesForCorrectAnswer :: Int -> [AnswerButtonMode] -> [AnswerButtonMode]
+changeModesForCorrectAnswer i xs = fmap f $ replaceInList i Correct
+  where f IncorrectDisactivated = IncorrectActivated
+        f x = x
 
 
 prototypeDisplayEvaluation::MonadWidget t m => Dynamic t (M.Map Int Score) -> m ()
 prototypeDisplayEvaluation e = return ()
-
-{-
-tempWidget :: MonadWidget t m => String -> Dynamic t (Maybe String) -> m (Event t ())
-tempWidget labelText buttonText = el "div" $ do
-  text labelText
-  buttonText' <- mapDyn (maybe "" id) buttonText
-  spacerOrButton <- mapDyn (maybe False (const True)) buttonText
-  flippableDynE mySpacer (dynButton buttonText') spacerOrButton
--}
-
-mySpacer :: MonadWidget t m => m (Event t ())
-mySpacer = button "-"
