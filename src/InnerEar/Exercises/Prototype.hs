@@ -143,15 +143,22 @@ prototypeQuestionWidget config defaultEval newQuestion = mdo
   canAnswer <- mapDyn (==Nothing) userAnswer
   let correctOrIncorrect = attachDynWith (\a u -> if a==u then Right a else Left u) answer answerEvent
   let correctAnswer = fmapMaybe (either (const Nothing) Just) correctOrIncorrect
-  let incorrectAnswer = fmapMaybe (either Just (const Nothing)) correctOrIncorrect
+  let incorrectAnswer = fmapMaybe (either Just (const Nothing)) correctOrIncorrect  -- Event Frequency if incorrect, no event if correct
 
   -- use new questions, correct and incorrect answer events to calculate button modes
-  let initialModes = fmap (bool NotPossible Possible) $ convertBands config
-  modes <- foldDyn initialModes $ leftmost [
-    fmap (const initialModes) newQuestion,
-    fmap changeModesForCorrectAnswer correctAnswer,
-    fmap (flip replaceInList $ IncorrectDisactivated) incorrectAnswer
-  ]
+  let initialModes = fmap (bool AB.NotPossible AB.Possible) $ convertBands config
+
+
+  
+  modes <- holdDyn initialModes $ leftmost [
+    fmap (const initialModes) newQuestion,            -- Event t [AnswerButtonMode]
+    
+    -- fmap changeModesForCorrectAnswer correctAnswer,   -- Event t ([AnswerButtonMode] -> [AnswerButtonMode])
+    attachDynWith (flip changeModesForCorrectAnswer) modes correctAnswer,
+
+    -- fmap 
+    fmap (flip replaceInList $ AB.IncorrectDisactivated) incorrectAnswer -- Event t (??) (unsure what 'replaceInList' should do)
+    ]
 
   -- buttons
   playUnfiltered <- button "Listen to unfiltered"
@@ -203,10 +210,12 @@ prototypeQuestionWidget config defaultEval newQuestion = mdo
 
 
 changeModesForCorrectAnswer :: Int -> [AnswerButtonMode] -> [AnswerButtonMode]
-changeModesForCorrectAnswer i xs = fmap f $ replaceInList i Correct
-  where f IncorrectDisactivated = IncorrectActivated
+changeModesForCorrectAnswer i xs = fmap f $ replaceInList i AB.Correct xs
+  where f AB.IncorrectDisactivated = AB.IncorrectActivated
         f x = x
 
 
 prototypeDisplayEvaluation::MonadWidget t m => Dynamic t (M.Map Int Score) -> m ()
 prototypeDisplayEvaluation e = return ()
+
+
