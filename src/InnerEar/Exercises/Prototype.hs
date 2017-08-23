@@ -149,22 +149,24 @@ prototypeQuestionWidget config defaultEval newQuestion = mdo
   let initialModes = fmap (bool AB.NotPossible AB.Possible) $ convertBands config
 
 
-  modes <- foldDyn (\a b-> a b) initialModes $ leftmost [
+  modes <- foldDyn ($) initialModes $ leftmost [
     (const initialModes) <$ newQuestion,                         -- Event t ([AnswerButtonMode] -> [answerButtonMode])
     fmap (flip changeModesForCorrectAnswer frequencies) correctAnswer,
     fmap (\x-> replaceAtSameIndex x frequencies AB.IncorrectDisactivated) incorrectAnswer
     ]
+  modes' <- zipWithM (\x y -> mapDyn (!!y) x) (repeat modes) [0,1..9]
 
   -- buttons
   playUnfiltered <- button "Listen to unfiltered"
   playButton <- button "Play question"
   bandPressed <- elClass "div" "answerButtonWrapper" $ -- m (Event t Frequency)
-    leftmost <$> zipWithM (\f m -> AB.answerButton (constDyn $ show f) m f) frequencies modes
+    leftmost <$> zipWithM (\f m -> AB.answerButton (constDyn $ show f) m f) frequencies modes'
 
 
   -- update scoreMap
-  let scoreUpdate = attachDynWith (\m a-> either (\k-> M.update (Just . incFalsePositive) k m) (\k-> M.update (Just . incCorrect) k m ) a ) scoreMap correctOrIncorrect
+  let scoreUpdate = attachWith (\m a-> either (\k-> M.update (Just . incFalsePositive) k m) (\k-> M.update (Just . incCorrect) k m ) a ) (current scoreMap) correctOrIncorrect
   scoreMap <- holdDyn defaultEval scoreUpdate
+
 
 
   -- display feedback
@@ -226,3 +228,26 @@ replaceAtSameIndex k l mode = maybe id (\x->replaceAt x mode) index
   where
     index = elemIndex k l
     replaceAt n item ls = a ++ (item:b) where (a, (_:b)) = splitAt n ls
+
+
+
+--    buttons::MonadWidget t m => [a] -> Dynamic t [AnswerButtonMode] -> Event t a
+--    buttons::MonadWidget t m => Dynamic t [(a,AnswerButtonMode)] -> m (Event t a)
+--    buttons l = do
+--      dynMap <- mapDyn fromList l
+--      evMap <- listViewWithKey dynMap AB.answerButton 
+
+
+--answerButton:: MonadWidget t m => a -> Dynamic t AnswerButtonMode  -> m (Event t a)
+
+
+--toListDyn::Dynamic [] ->[Dyn]
+
+
+--assume that w is Dynamic t [a]
+--x <- mapDyn (!!0) w :: m (Dynamic t a)
+--y <- mapDyn (!!1) w :: m (Dynamic t a)
+
+--let z = [x,y] :: [Dynamic t a]
+
+--listViewWithKey::Dynamic (Map k v) -> (k -> Dynamic v -> m (Event a)) -> m (Event   (Map k a))
