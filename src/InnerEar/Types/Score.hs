@@ -33,8 +33,11 @@ incCorrect (Score a b c) = Score (a+1) b c
 
 -- second param is to be interpreted as: (correctA)
 updateScore::(Ord k)=> Map k Score -> (k,Either k k) -> Map k Score
-updateScore m (a,(Left b)) = insertWith (\x _->incFalseNegative x) a (Score 0 0 1) $ insertWith (\x _->incFalsePositive x) b (Score 0 1 0) m
-updateScore m (_,(Right b)) = insertWith (\x _->incCorrect x) b (Score 1 0 0) m
+updateScore m (a,(Left b)) = insertWith (\_ x->incFalseNegative x) a (Score 0 0 1) $ insertWith (\x _->incFalsePositive x) b (Score 0 1 0) m
+updateScore m (_,(Right b)) = insertWith (\_ x->incCorrect x) b (Score 1 0 0) m
+
+m = fromList $ [(250,Score 0 0 1)]
+b =  250
 
 
 
