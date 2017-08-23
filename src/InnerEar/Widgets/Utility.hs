@@ -14,6 +14,7 @@ import Reflex.Synth.Synth
 import Control.Monad ((>=>))
 import Control.Monad.IO.Class (liftIO)
 import GHCJS.DOM.Types (castToHTMLCanvasElement)
+import GHCJS.DOM.EventM
 
 -- | dynE is like dyn from Reflex, specialized for widgets that return
 -- events. A dynamic argument updates the widget, and the return value is
@@ -52,7 +53,7 @@ clickableDivDynClass label c val = do
   attrs <- mapDyn (singleton "class") c
   (element, _) <- elDynAttr' "div" attrs $ dynText label
   clickEv <- wrapDomEvent (_el_element element) (onEventName Click) (mouseXY)
-return $ (val <$) clickEv
+  return $ (val <$) clickEv
 
 
 sourceWidget::MonadWidget t m => m (Dynamic t Source)
