@@ -154,8 +154,8 @@ prototypeQuestionWidget config defaultEval newQuestion = mdo
     fmap (flip changeModesForCorrectAnswer frequencies) correctAnswer,
     fmap (\x-> replaceAtSameIndex x frequencies AB.IncorrectDisactivated) incorrectAnswer
     ]
+  
   modes' <- zipWithM (\x y -> mapDyn (!!y) x) (repeat modes) [0,1..9]
-
   -- buttons
   playUnfiltered <- button "Listen to unfiltered"
   playButton <- button "Play question"
@@ -163,8 +163,13 @@ prototypeQuestionWidget config defaultEval newQuestion = mdo
     leftmost <$> zipWithM (\f m -> AB.answerButton (constDyn $ show f) m f) frequencies modes'
 
 
+--insertWith :: Ord k => (a -> a -> a) -> k -> a -> Map k a -> Map k a 
+
+  --(\k -> M.insertWith (\a _->incFalsePositive a) k (Score 0 0 0) m)
+
   -- update scoreMap
-  let scoreUpdate = attachWith (\m a-> either (\k-> M.update (Just . incFalsePositive) k m) (\k-> M.update (Just . incCorrect) k m ) a ) (current scoreMap) correctOrIncorrect
+  let answerInfo = attachDyn answer correctOrIncorrect  -- Event t (Frequency,Either Frequency Frequency)  (answer, user answer)
+  let scoreUpdate = attachWith updateScore (current scoreMap) answerInfo
   scoreMap <- holdDyn defaultEval scoreUpdate
 
 

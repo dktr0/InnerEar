@@ -5,6 +5,7 @@ module InnerEar.Types.Score where
 
 import Text.JSON
 import Text.JSON.Generic
+import Data.Map
 
 data Score = Score {
   correctAnswers :: Int,
@@ -30,7 +31,14 @@ incCorrect:: Score -> Score
 incCorrect (Score a b c) = Score (a+1) b c
 
 
-adjustScore::ScorePossibility -> Score -> Score
-adjustScore (Correct) (Score a b c) = Score (a+1) b c
-adjustScore (FalsePositive) (Score a b c) = Score a (b+1) c
-adjustScore (FalseNegative) (Score a b c) = Score (a+1) b (c+1)
+-- second param is to be interpreted as: (correctA)
+updateScore::(Ord k)=> Map k Score -> (k,Either k k) -> Map k Score
+updateScore m (a,(Left b)) = insertWith (\x _->incFalseNegative x) a (Score 0 0 1) $ insertWith (\x _->incFalsePositive x) b (Score 0 1 0) m
+updateScore m (_,(Right b)) = insertWith (\x _->incCorrect x) b (Score 1 0 0) m
+
+
+
+--adjustScore::ScorePossibility -> Score -> Score
+--adjustScore (Correct) (Score a b c) = Score (a+1) b c
+--adjustScore (FalsePositive) (Score a b c) = Score a (b+1) c
+--adjustScore (FalseNegative) (Score a b c) = Score (a+1) b (c+1)
