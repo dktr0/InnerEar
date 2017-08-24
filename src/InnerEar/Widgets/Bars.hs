@@ -62,6 +62,22 @@ drawBarCSS x y = do
       let t = constDyn "rotate (180)"
       rectDynCSS posX posY w h t c
 
+--A dynamic bar with css style and in-line attributes
+drawBarCSS'' :: MonadWidget t m =>  Dynamic t Float -> Dynamic t Float -> m ()
+drawBarCSS'' x y = do
+    let class' = constDyn (singleton "class" "svgS")
+    height' <- mapDyn (* 200) x
+    height'' <- mapDyn (singleton "height" . show) height'
+    attrs <- mconcatDyn [class', height'']
+    svgDynAttr "svg" attrs $ do
+       let posX = constDyn $ negate 30
+       let posY = constDyn $ negate 200
+       h <- mapDyn (*200) x
+       w <- mapDyn (*1) y
+       let c = constDyn "test"
+       let t = constDyn "rotate (180)"
+       rectDynCSS posX posY w h t c
+
 --A dynamic bar with a label, a button and CSS style
 labelBarButton :: MonadWidget t m => String ->  Dynamic t String -> Dynamic t Float -> m (Event t ())
 labelBarButton label buttonString barHeight = do
@@ -108,6 +124,24 @@ dynBarCSS score barWidth = do
         let t = constDyn "rotate (180)" --Dynamic t String
         rectDynCSS posX posY barWidth' barHeight' t c  -- m ()
 
+dynBarCSS' :: MonadWidget t m =>  Dynamic t (Score) -> Dynamic t Float -> m ()
+dynBarCSS' score barWidth = do
+    elClass "div" "flex-container" $ do
+       let class' = constDyn (singleton "class" "svgS")
+       svgHeight <- mapDyn  (\x ->  ((fromIntegral (questionsAsked x) :: Float) - (fromIntegral (falseNegatives x) :: Float)) / (fromIntegral (questionsAsked x) :: Float)) score   --m (Dynamic t Int)
+       svgHeight' <- mapDyn (* 200) svgHeight
+       svgHeight'' <- mapDyn (singleton "height" . show) svgHeight'
+       attrs <- mconcatDyn [class', svgHeight'']
+       svgDynAttr "svg" attrs $ do
+          let posX = constDyn $ negate 30 -- Dynamic t Int
+          let posY = constDyn $ negate 200  --Dynamic t Int
+          --barHeight <- mapDyn  (\x ->  ((fromIntegral (questionsAsked x) :: Float) - (fromIntegral (falseNegatives x) :: Float)) / (fromIntegral (questionsAsked x) :: Float)) score   --m (Dynamic t Int)
+          let barHeight' = constDyn 200 -- m (Dynamic t Float) ?? should be m (Dynamic t Int)
+          barWidth' <- mapDyn (*1) barWidth -- m (Dynamic t Float)
+          let c = constDyn "bars" --Dynamic t String
+          let t = constDyn "rotate (180)" --Dynamic t String
+          rectDynCSS posX posY barWidth' barHeight' t c  -- m ()
+
 -- A dynamic bar for (Maybe Score)
 scoreBar :: MonadWidget t m => Dynamic t (Maybe Score) -> String ->  m ()
 scoreBar score hz = elClass "div" "scoreBarWrapper" $ do
@@ -117,7 +151,7 @@ scoreBar score hz = elClass "div" "scoreBarWrapper" $ do
         scoreLabel <- mapDyn (maybe (Score 0 0 0) id) score
         countLabel <- mapDyn (maybe (Score 0 0 0) id) score
         dynScoreLabel (constDyn "scoreLabel") scoreLabel -- m()
-        dynBarCSS barHeight (constDyn 30) -- m ()
+        dynBarCSS' barHeight (constDyn 30) -- m ()
         hzLabel (constDyn "dynLabel") hz
         dynCountLabel (constDyn "countLabel") countLabel) bool --m ()
       return ()

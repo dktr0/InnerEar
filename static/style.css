@@ -117,7 +117,6 @@ button {
 }
 
 button.notPossibleButton {
-<<<<<<< HEAD
   background-color: black;
   color: gray;
   border: none;
@@ -208,14 +207,14 @@ div.correctButton{
 
 .svgS {
   width: 30px;
-  height: 200px;
   background-color: black;
-  margin: 17px;
+  margin: 0px;
 }
 
 .bars {
   fill: yellow;
-  stroke-width:5;
+  stroke: black;
+  stroke-width: 2px;
 }
 
 rect {
@@ -225,7 +224,6 @@ rect {
   stroke-width:5;
 }
 
-
 .sourceWidget {
   background-color: rgb(100,100,100);
 }
@@ -233,7 +231,6 @@ rect {
 .percentageClass {
 background-color: black;
     color: hsl(120,100%,80%);
-
 }
 
 .dynLabelForBarClass {
@@ -243,25 +240,39 @@ background-color: black;
 
 .scoreBarWrapper {
 	display: inline-block;
-  padding: 5px;
+  padding: 0px;
 }
 
 .scoreLabel {
  background-color: black;
  color: hsl(120,100%,80%);
- margin: 15px;
+ margin: 0px;
+  font-size: 10px;
 
 }
 
 .dynLabel {
-background-color: black;
-    color: hsl(120,100%,80%);
+  background-color: black;
+  color: hsl(120,100%,80%);
+  font-size: 7px;
+
 }
 
+.hzTitleLabel {
+  display: inline-block;
+  padding-right: 10px;
+}
+
+.countTitleLabel {
+  display: inline-block;
+  padding-right: 10px;
+}
 .countLabel {
   background-color: black;
   color: hsl(120,100%,80%);
-  margin: 20px;
+  margin: 0px;
+  padding-top: 10px;
+  font-size: 10px;
 }
 
 .graphLabel {

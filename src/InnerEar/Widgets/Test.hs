@@ -25,11 +25,13 @@ import InnerEar.Widgets.Labels
 import InnerEar.Types.Score
 
 
-displaySpectrumEvaluation' :: MonadWidget t m => Dynamic t String -> Dynamic t (Map Int Score) -> m ()
-displaySpectrumEvaluation' graphLabel score= elClass "div" "specEvalWrapper" $ do
+displaySpectrumEvaluation'' :: MonadWidget t m => Dynamic t String -> Dynamic t (Map Int Score) -> m ()
+displaySpectrumEvaluation'' graphLabel score= elClass "div" "specEvalWrapper" $ do
   dynGraphLabel (constDyn "graphLabel") graphLabel
-  let labels = ["31 Hz","63 Hz","125 Hz","250 Hz","500 Hz","1 kHz","2 kHz","4 kHz","8 kHz","16 kHz"]
+  --elClass "div" "hzTitleLabel" $ text "Hz"
+  elClass "div" "countTitleLabel" $ text "#"
 
+  let labels = Prelude.map (++ " Hz") (Prelude.map show [31 :: Int, 63 :: Int, 125 :: Int, 250 :: Int, 500 :: Int, 1 :: Int, 2 :: Int, 4 :: Int, 8 :: Int, 16 :: Int])
   let band0Hz = (!!0) labels -- String
   let band1Hz = (!!1) labels
   let band2Hz = (!!2) labels
@@ -54,7 +56,7 @@ displaySpectrumEvaluation' graphLabel score= elClass "div" "specEvalWrapper" $ d
 
   band0ScoreBar <- scoreBar band0Score band0Hz -- m ()
   band1ScoreBar <- scoreBar band1Score band1Hz
-  band2ScoreBar <- scoreBar band3Score band2Hz
+  band2ScoreBar <- scoreBar band2Score band2Hz
   band3ScoreBar <- scoreBar band3Score band3Hz
   band4ScoreBar <- scoreBar band4Score band4Hz
   band5ScoreBar <- scoreBar band5Score band5Hz
@@ -67,17 +69,8 @@ displaySpectrumEvaluation' graphLabel score= elClass "div" "specEvalWrapper" $ d
 testWidget :: MonadWidget t m
   => Event t [Response] -> m (Event t Request,Event t Sound,Event t ())
 testWidget responses = el "div" $ do
-  let oscs = fmap (\(f,g)-> OscillatorNode $ Oscillator Sine f g) $ zip (fmap (220*) [1,2,3,4,5]) (repeat 0.5) -- [Node] (all OscillatorNode)
-  let sound = FilteredSound (NodeSource (AdditiveNode oscs) 4) (Filter Lowpass 400 1 1)
-  soundEv <- liftM (sound <$) $ button "play additive synth"
---  answerButton' "answerButton" (constDyn Possible)
---  scoreBar (constDyn (Just (Score 10 2 3))) "120 Hz"
-  performSound soundEv
   let m = constDyn (M.fromList [(0, (Score 1 3 9)), (1, (Score 2 3 8)), (2, (Score 3 3 7)), (3, (Score 4 3 6)), (4, (Score 5 3 5)), (5, (Score 6 3 4)), (6, (Score 7 3 3)), (7, (Score 8 3 2)), (8, (Score 9 3 1)), (9, (Score 10 3 0))])
-  displaySpectrumEvaluation' (constDyn"My graphLabel") m
-  --score <- count soundEv
-  --questionLabel <- mapDyn show score
-  --labelBarButton "myLabel" questionLabel score
+  displaySpectrumEvaluation'' (constDyn"My graph") m
   home <- button "back to splash page"
   return (never,never,home)
 
