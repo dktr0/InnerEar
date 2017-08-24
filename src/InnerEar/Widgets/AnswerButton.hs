@@ -20,7 +20,12 @@ buttonDynCss label cssClass = do
 answerButton:: MonadWidget t m => Dynamic t String -> Dynamic t AnswerButtonMode -> a -> m (Event t a)
 answerButton buttonString buttonMode x = do
   curClass <- mapDyn modeToClass buttonMode
-  clickableDivDynClass buttonString curClass x
+
+  ev <- clickableDivDynClass buttonString curClass x
+  return $ attachWithMaybe f (current buttonMode) ev
+  where
+    f (NotPossible) _ = Nothing
+    f a b = Just b
 
 answerButton' :: MonadWidget t m => String -> Dynamic t AnswerButtonMode -> m (Event t ())
 answerButton' buttonString buttonMode = do

@@ -13,7 +13,7 @@ data Score = Score {
   falseNegatives::Int  -- times user thinks it is another answer but this is the correct answer
 } deriving (Show, Eq,Typeable,Data)
 
-data ScorePossibility = Correct | FalsePositive | FalseNegative deriving (Show, Eq)
+--data ScorePossibility = Correct | FalsePositive | FalseNegative deriving (Show, Eq)
 
 -- Times that the answer this score pertains to has been
 -- the answer 
