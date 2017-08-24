@@ -91,7 +91,7 @@ prototypeExercise = Exercise {
   exerciseId = PrototypeExercise,
   defaultConfig = AllBands,
   configWidget = prototypeConfigWidget,
-  defaultEvaluation = M.empty,
+  defaultEvaluation = M.fromList $ zip frequencies (repeat $ Score 0 0 0),
   displayEvaluation = prototypeDisplayEvaluation,
   generateQuestion = prototypeGenerateQuestion,
   questionWidget = prototypeQuestionWidget,
@@ -155,15 +155,21 @@ prototypeQuestionWidget config defaultEval newQuestion = mdo
   let correctOrIncorrect = attachDynWith (\a u -> if a==u then Right a else Left u) answer answerEvent   -- Event (Either Frequency Frequency)
   let correctAnswer = fmapMaybe (either (const Nothing) Just) correctOrIncorrect    -- Event t Frequency
   let incorrectAnswer = fmapMaybe (either Just (const Nothing)) correctOrIncorrect  -- Event t Frequency if incorrect, no event if correct
-
+  lastIncorrectAndCorrect <- holdDyn (F 0 "") incorrectAnswer >>= combineDyn (,) answer
   -- use new questions, correct and incorrect answer events to calculate button modes
   let initialModes = fmap (bool NotPossible Possible) $ convertBands config
 
   modes <- foldDyn ($) initialModes $ leftmost [
     (const initialModes) <$ newQuestion,                         -- Event t ([AnswerButtonMode] -> [answerButtonMode])
-    fmap (flip changeModesForCorrectAnswer frequencies) $ leftmost [correctAnswer, tagDyn answer cannotTryEv],
+    --fmap (flip changeModesForCorrectAnswer frequencies) $ leftmost [correctAnswer, tagDyn answer cannotTryEv],
+    fmap (either (\(x,y)->flip changeModesForCorrectAnswer frequencies x . replaceAtSameIndex y frequencies IncorrectActivated)  (flip changeModesForCorrectAnswer frequencies . fst)) $ leftmost [fmap (\x->Right(x,x)) correctAnswer, attachDynWith (\(x,y) _->Left (x,y)) lastIncorrectAndCorrect cannotTryEv],
+
+    --fmap (\(cor,inc)->flip changeModesForCorrectAnswer frequencies cor . replaceAtSameIndex inc frequencies IncorrectActivated) $ mergeWith (,) [tagDyn answer cannotTryEv, incorrectAnswer]
+
     fmap (\x-> replaceAtSameIndex x frequencies IncorrectActivated) incorrectAnswer
     ]
+
+
 
 
   modes' <- mapM (\x-> mapDyn (!!x) modes) [0,1..9]
