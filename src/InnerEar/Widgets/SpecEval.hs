@@ -19,9 +19,6 @@ displaySpectrumEvaluation graphLabel score= elClass "div" "specEvalWrapper" $ do
   listWithKey maybeScore (flip scoreBar)
   return ()
 
-          --Dynamic (Map k v) -> (k -> Dynamic v -> m        a ) -> m (Dynamic (Map k a))
---scoreBar :: MonadWidget t m => Dynamic t (Maybe Score) -> String ->  m ()
-
 
 displaySpectrumEvaluation' :: MonadWidget t m => Dynamic t String -> Dynamic t (Map Frequency Score) -> m ()
 displaySpectrumEvaluation' graphLabel score= elClass "div" "specEvalWrapper" $ do

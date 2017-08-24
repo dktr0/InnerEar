@@ -161,16 +161,10 @@ prototypeQuestionWidget config defaultEval newQuestion = mdo
 
   modes <- foldDyn ($) initialModes $ leftmost [
     (const initialModes) <$ newQuestion,                         -- Event t ([AnswerButtonMode] -> [answerButtonMode])
-    --fmap (flip changeModesForCorrectAnswer frequencies) $ leftmost [correctAnswer, tagDyn answer cannotTryEv],
+    -- @ make this simpler/neater
     fmap (either (\(x,y)->flip changeModesForCorrectAnswer frequencies x . replaceAtSameIndex y frequencies IncorrectActivated)  (flip changeModesForCorrectAnswer frequencies . fst)) $ leftmost [fmap (\x->Right(x,x)) correctAnswer, attachDynWith (\(x,y) _->Left (x,y)) lastIncorrectAndCorrect cannotTryEv],
-
-    --fmap (\(cor,inc)->flip changeModesForCorrectAnswer frequencies cor . replaceAtSameIndex inc frequencies IncorrectActivated) $ mergeWith (,) [tagDyn answer cannotTryEv, incorrectAnswer]
-
     fmap (\x-> replaceAtSameIndex x frequencies IncorrectActivated) incorrectAnswer
     ]
-
-
-
 
   modes' <- mapM (\x-> mapDyn (!!x) modes) [0,1..9]
 
@@ -178,7 +172,7 @@ prototypeQuestionWidget config defaultEval newQuestion = mdo
   playUnfiltered <- button "Listen to unfiltered"
   playButton <- button "Play question"
   bandPressed <- elClass "div" "answerButtonWrapper" $ -- m (Event t Frequency)
-    leftmost <$> zipWithM (\f m -> answerButton (constDyn $ show f) m f) frequencies modes'
+    leftmost <$> zipWithM (\f m -> answerButton (freqAsString f) m f) frequencies modes'
 
   -- update scoreMap
   let answerInfo = attachDyn answer correctOrIncorrect  -- Event t (Frequency,Either Frequency Frequency)  (answer, user answer)
