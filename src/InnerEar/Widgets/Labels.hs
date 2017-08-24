@@ -66,11 +66,11 @@ hzLabel c s = do
 -- A dynamic label for Score with CSS style
 dynScoreLabel :: MonadWidget t m => Dynamic t String -> Dynamic t (Score) -> m ()
 dynScoreLabel cssClass score = do
-  score' <- mapDyn  (\x ->  ((fromIntegral (questionsAsked x) :: Float) - (fromIntegral (falseNegatives x) :: Float)) / (fromIntegral (questionsAsked x) :: Float)) score   --m (Dynamic t Double)
+  score' <- mapDyn ((* 100) . (\x ->  ((fromIntegral (questionsAsked x) :: Float) - (fromIntegral (falseNegatives x) :: Float)) / (fromIntegral (questionsAsked x) :: Float))) score   --m (Dynamic t Double)
   score''  <- mapDyn show score' -- m (Dynamic t String)
   cssClass' <- mapDyn (singleton "class") cssClass  -- m (Dynamic t String)
   elDynAttr "div" cssClass' $ do
-    dynText score'' -- m ()
+    dynText  score'' -- m ()
     return ()
 
 -- A dynamic label for Count with CSS style
