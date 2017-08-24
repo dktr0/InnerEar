@@ -104,7 +104,7 @@ dynBarCSS score barWidth = do
         barHeight <- mapDyn  (\x ->  ((fromIntegral (questionsAsked x) :: Float) - (fromIntegral (falseNegatives x) :: Float)) / (fromIntegral (questionsAsked x) :: Float)) score   --m (Dynamic t Int)
         barHeight' <- mapDyn (*200) barHeight -- m (Dynamic t Float)
         barWidth' <- mapDyn (*1) barWidth -- m (Dynamic t Float)
-        let c = constDyn "test" --Dynamic t String
+        let c = constDyn "bars" --Dynamic t String
         let t = constDyn "rotate (180)" --Dynamic t String
         rectDynCSS posX posY barWidth' barHeight' t c  -- m ()
 
@@ -114,10 +114,10 @@ scoreBar score hz = do
       bool <- mapDyn isJust score
       flippableDyn (return ()) (do
         barHeight <- mapDyn (maybe (Score 0 0 0) id) score -- Dynamic t Int
-        dynBarCSS barHeight (constDyn 30) -- m ()
         scoreLabel <- mapDyn (maybe (Score 0 0 0) id) score
-        dynScoreLabel (constDyn "scoreLabel") scoreLabel -- m()
-        hzLabel (constDyn "dynLabel") hz
         countLabel <- mapDyn (maybe (Score 0 0 0) id) score
+        dynScoreLabel (constDyn "scoreLabel") scoreLabel -- m()
+        dynBarCSS barHeight (constDyn 30) -- m ()
+        hzLabel (constDyn "dynLabel") hz
         dynCountLabel (constDyn "countLabel") countLabel) bool --m ()
       return ()

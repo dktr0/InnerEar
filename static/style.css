@@ -217,6 +217,12 @@ div.correctButton{
   width: 30px;
   height: 200px;
   background-color: black;
+  margin: 17px;
+}
+
+.bars {
+  fill: yellow;
+  stroke-width:5;
 }
 
 rect {
@@ -224,13 +230,8 @@ rect {
   height: 300px;
   fill: green;
   stroke-width:5;
-
 }
 
-.test {
-  fill: yellow;
-  stroke-width:5;
-}
 
 .sourceWidget {
   background-color: rgb(100,100,100);
@@ -245,12 +246,16 @@ background-color: black;
 .dynLabelForBarClass {
     background-color: black;
     color: hsl(120,100%,80%);
+}
 
+.scoreBarWrapper {
+	display: center;
+  padding: 5px;
 }
 
 .scoreLabel {
-background-color: black;
-    color: hsl(120,100%,80%);
+ background-color: black;
+ color: hsl(120,100%,80%);
 
 }
 
@@ -262,6 +267,7 @@ background-color: black;
 .countLabel {
   background-color: black;
   color: hsl(120,100%,80%);
+  margin: 20px;
 }
 
 .graphLabel {
