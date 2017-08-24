@@ -11,8 +11,17 @@ import InnerEar.Widgets.Bars
 import InnerEar.Types.Score
 import InnerEar.Widgets.Labels
 
+
 displaySpectrumEvaluation :: MonadWidget t m => Dynamic t String -> Dynamic t (Map Frequency Score) -> m ()
 displaySpectrumEvaluation graphLabel score= elClass "div" "specEvalWrapper" $ do
+  dynGraphLabel (constDyn "graphLabel") graphLabel
+  maybeScore<- mapDyn (mapKeys (freqAsString) . fmap (\v-> case v of (Score 0 0 0)-> Nothing;otherwise->Just v)) score
+  listWithKey maybeScore (flip scoreBar)
+  return ()
+
+
+displaySpectrumEvaluation' :: MonadWidget t m => Dynamic t String -> Dynamic t (Map Frequency Score) -> m ()
+displaySpectrumEvaluation' graphLabel score= elClass "div" "specEvalWrapper" $ do
   dynGraphLabel (constDyn "graphLabel") graphLabel
   let labels = ["31 Hz","63 Hz","125 Hz","250 Hz","500 Hz","1 kHz","2 kHz","4 kHz","8 kHz","16 kHz"]
   let frequencies = zipWith F [31::Double,63,125,250,500,1000,2000,4000,8000,16000] labels -- [Frequency]

@@ -117,6 +117,7 @@ button {
 }
 
 button.notPossibleButton {
+<<<<<<< HEAD
   background-color: black;
   color: gray;
   border: none;
@@ -153,14 +154,6 @@ button.correctButton{
   border: 7px solid green;
 }
 
-
-
-
-
-
-
-
-
 div.notPossibleButton {
   width:80px;
   text-align: center;
@@ -186,9 +179,9 @@ div.incorrectDisactivatedButton{
   width:80px;
   text-align: center;
   display: inline-block;
-  background-color: gray;
-  border: none;
+  background-color: red;
   color: white;
+  border: none;
   border-radius: 4px;
 }
 
@@ -196,9 +189,9 @@ div.incorrectActivatedButton {
   width:80px;
   text-align: center;
   display: inline-block;
-  background-color: red;
-  color: white;
+  background-color: gray;
   border: none;
+  color: white;
   border-radius: 4px;
 }
 

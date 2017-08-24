@@ -17,20 +17,19 @@ buttonDynCss label cssClass = do
   (element, _) <- elDynAttr' "button" cssClass' $ text label -- m
   return $ domEvent Click element  -- domEvent :: EventName en -> a -> Event t (EventResultType en)
 
-answerButton:: MonadWidget t m => Dynamic t String -> Dynamic t AnswerButtonMode -> a -> m (Event t a)
+answerButton:: MonadWidget t m => String -> Dynamic t AnswerButtonMode -> a -> m (Event t a)
 answerButton buttonString buttonMode x = do
-  curClass <- mapDyn modeToClass buttonMode
-
-  ev <- clickableDivDynClass buttonString curClass x
+  c <- mapDyn modeToClass buttonMode
+  ev <-  liftM (x <$) $ buttonDynCss buttonString c
   return $ attachWithMaybe f (current buttonMode) ev
   where
     f (NotPossible) _ = Nothing
     f a b = Just b
 
-answerButton' :: MonadWidget t m => String -> Dynamic t AnswerButtonMode -> m (Event t ())
-answerButton' buttonString buttonMode = do
-  curClass <- mapDyn modeToClass buttonMode
-  buttonDynCss buttonString curClass
+--answerButton' :: MonadWidget t m => String -> Dynamic t AnswerButtonMode -> m (Event t ())
+--answerButton' buttonString buttonMode = do
+--  curClass <- mapDyn modeToClass buttonMode
+--  buttonDynCss buttonString curClass
 
 modeToClass :: AnswerButtonMode -> String
 modeToClass NotPossible = "notPossibleButton"
