@@ -72,12 +72,12 @@ testWidget responses = el "div" $ do
   soundEv <- liftM (sound <$) $ button "play additive synth"
 --  answerButton' "answerButton" (constDyn Possible)
 --  scoreBar (constDyn (Just (Score 10 2 3))) "120 Hz"
---  m <- mapDyn (singleton 9) score
---  displaySpectrumEvaluation' (constDyn"My graphLabel") m
   performSound soundEv
-  score <- count soundEv
-  questionLabel <- mapDyn show score
-  labelBarButton "myLabel" questionLabel score
+  let m = constDyn (M.fromList [(0, (Score 1 3 9)), (1, (Score 2 3 8)), (2, (Score 3 3 7)), (3, (Score 4 3 6)), (4, (Score 5 3 5)), (5, (Score 6 3 4)), (6, (Score 7 3 3)), (7, (Score 8 3 2)), (8, (Score 9 3 1)), (9, (Score 10 3 0))])
+  displaySpectrumEvaluation' (constDyn"My graphLabel") m
+  --score <- count soundEv
+  --questionLabel <- mapDyn show score
+  --labelBarButton "myLabel" questionLabel score
   home <- button "back to splash page"
   return (never,never,home)
 

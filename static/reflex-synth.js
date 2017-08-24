@@ -49,6 +49,7 @@ function loadUserSoundFile(){
   }
   else {
     alert("Please select a sound file")
+    console.log("unsucessful load user soundfile")
   }
 }
 

@@ -81,7 +81,7 @@ audioElement = elDynAttr "audio" attrs (return())
 -- (to be used to re-connect the graph when the file switches)
 mediaElement::MonadWidget t m => m (Source,(Event t ()))
 mediaElement = el "div" $ do
-  let attrs = FileInputConfig (constDyn $ M.fromList $ zip ["id"] ["soundFileInput"])
+  let attrs = FileInputConfig (constDyn $ M.fromList $ zip ["id","accept"] ["soundFileInput","audio/*"])
   file <- fileInput attrs
   let fileChange = (()<$) $ updated $ _fileInput_value file
   audioElement

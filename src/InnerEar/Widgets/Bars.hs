@@ -110,7 +110,7 @@ dynBarCSS score barWidth = do
 
 -- A dynamic bar for (Maybe Score)
 scoreBar :: MonadWidget t m => Dynamic t (Maybe Score) -> String ->  m ()
-scoreBar score hz = do
+scoreBar score hz = elClass "div" "scoreBarWrapper" $ do
       bool <- mapDyn isJust score
       flippableDyn (return ()) (do
         barHeight <- mapDyn (maybe (Score 0 0 0) id) score -- Dynamic t Int

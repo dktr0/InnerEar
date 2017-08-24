@@ -26,6 +26,7 @@ import Data.List(elemIndex)
 import InnerEar.Widgets.AnswerButton
 import InnerEar.Widgets.Utility
 import InnerEar.Widgets.SpecEval
+import InnerEar.Widgets.UserMedia
 import InnerEar.Types.Data
 import InnerEar.Types.Score
 import Reflex.Synth.Synth
@@ -137,6 +138,10 @@ prototypeQuestionWidget :: MonadWidget t m
 
 prototypeQuestionWidget config defaultEval newQuestion = mdo
   let maxTries = 3::Int
+
+  -- UserMedia widget
+  dynFilt <- mapDyn (\x->Filter Peaking (freqAsDouble x) 1.4 16.0) answer
+  userMediaWidget dynFilt
 
   -- Managing number of tries
   listOfClicked <- foldDyn ($) [] $ leftmost [fmap (:) bandPressed, (const []) <$ newQuestion]

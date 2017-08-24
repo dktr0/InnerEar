@@ -98,7 +98,7 @@ createBufferNode (File path) = do
 createMediaNode:: IO WebAudioNode
 createMediaNode = do 
   F.loadUserSoundFile
-  x <- F.createUserSoundFileNode
+  x <- F.createMediaNode
   return (WebAudioNode MediaNode x)
 
 createAsrEnvelope :: Double -> Double -> Double -> IO WebAudioNode
@@ -216,4 +216,56 @@ renderAudioWaveform l r= do
   let l' = G.unHTMLCanvasElement l
   let r' = G.unHTMLCanvasElement  r
   F.renderAudioWaveform l' r'
+
+
+
+
+
+
+
+
+main :: IO ()
+main = mainWidget $ do
+
+  filesDyn <- value <$> fileInput def
+  urlE <- fmap (ffilter ("data:image" `T.isPrefixOf`)) . dataURLFileReader . fmapMaybe listToMaybe . updated $ filesDyn
+  el "div" . widgetHold blank . ffor urlE $ \url ->
+    elAttr "img" ("src" =: url <> "style" =: "max-width: 80%") blank
+
+
+-- returns Event with file's url as a string
+fileToURL :: (MonadWidget t m) => Event t File -> m (Event t String)
+fileToURL file =do
+  fileReader <- liftIO newFileReader
+  performEvent_ (fmap (\f -> readAsDataURL fileReader (Just f)) file)
+  wrapDomEvent fileReader (`on` load) . liftIO $ do
+      v <- getResult fileReader
+      fromJSVal v
+
+
+
+
+
+createMediaNode = do
+  let attrs = ???
+  --input <- _fileInput_value <$> fileInput attrs
+  input <- fileInput attrs
+  audioSrc <- holdDyn "" $ fileToURL $ updated $  _fileInput_value input
+  audioAttrs <- mapDyn (fromList . zip ["class","src"] . ["audioElement"]++) audioSrc
+  elDynAttr "audio" audioAttrs (return ())
+
+  
+
+
+
+  <- dataURLFileReader $ updated input  --Event t JSVal
+  (element,_)<- elClass' "audio" "audioElement" $ return ()
+
+
+
+
+
+
+
+
 

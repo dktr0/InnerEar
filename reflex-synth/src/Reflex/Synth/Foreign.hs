@@ -17,6 +17,9 @@ foreign import javascript safe "$r=___ac.createOscillator()" createOscillator ::
 foreign import javascript safe "loadUserSoundFile()" loadUserSoundFile :: IO ()
 foreign import javascript safe "$r=___ac.createMediaElementSource(document.getElementById(\"userAudio\"))" createUserSoundFileNode :: IO JSVal
 
+-- If you try to create more than one node from the same media element, WAAPI throws error - need safe createMediaNode to protect against this
+foreign import javascript safe "$r=safeCreateMediaNode()" createMediaNode :: IO JSVal
+
 
 foreign import javascript safe "$2.gain.value = $1" setGain :: Double -> JSVal -> IO ()
 foreign import javascript safe "$2.frequency.value = $1" setFrequency :: Double -> JSVal -> IO()
