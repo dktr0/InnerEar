@@ -162,7 +162,7 @@ button.correctButton{
 
 
 div.notPossibleButton {
-  width:80px;  
+  width:80px;
   text-align: center;
   display: inline-block;
   background-color: black;
@@ -173,7 +173,7 @@ div.notPossibleButton {
 }
 
 div.possibleButton {
-  width:80px;  
+  width:80px;
   text-align: center;
   display: inline-block;
   background-color: rgb(128,128,128);
@@ -183,7 +183,7 @@ div.possibleButton {
 }
 
 div.incorrectDisactivatedButton{
-  width:80px;  
+  width:80px;
   text-align: center;
   display: inline-block;
   background-color: gray;
@@ -193,7 +193,7 @@ div.incorrectDisactivatedButton{
 }
 
 div.incorrectActivatedButton {
-  width:80px;  
+  width:80px;
   text-align: center;
   display: inline-block;
   background-color: red;
@@ -203,7 +203,7 @@ div.incorrectActivatedButton {
 }
 
 div.correctButton{
-  width:80px;  
+  width:80px;
   text-align: center;
   display: inline-block;
   background-color: green;
@@ -249,13 +249,14 @@ background-color: black;
 }
 
 .scoreBarWrapper {
-	display: center;
+	display: inline-block;
   padding: 5px;
 }
 
 .scoreLabel {
  background-color: black;
  color: hsl(120,100%,80%);
+ margin: 15px;
 
 }
 
@@ -273,4 +274,6 @@ background-color: black;
 .graphLabel {
   background-color: black;
   color: hsl(120,100%,80%);
+  font-size: 30px;
+  padding: 10px;
 }
