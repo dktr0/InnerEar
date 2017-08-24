@@ -23,8 +23,9 @@ import Text.JSON
 import Text.JSON.Generic
 import Data.List(elemIndex)
 
-import qualified InnerEar.Widgets.AnswerButton as AB
+import InnerEar.Widgets.AnswerButton
 import InnerEar.Widgets.Utility
+import InnerEar.Widgets.SpecEval
 import InnerEar.Types.Data
 import InnerEar.Types.Score
 import Reflex.Synth.Synth
@@ -110,6 +111,7 @@ prototypeConfigWidget :: MonadWidget t m => WhatBandsAreAllowed -> m (Event t Wh
 prototypeConfigWidget i = do
   let radioButtonMap =  zip [0::Int,1..] [AllBands,HighBands,MidBands,Mid8Bands,LowBands]
   let iVal = maybe 0 id $ elemIndex i [AllBands,HighBands,MidBands,Mid8Bands,LowBands]
+  elClass "div" "configText" $ text "Please choose the spectrum range you would like to practice:"
   radioWidget <- radioGroup (constDyn "radioWidget") (constDyn $ fmap (\(x,y)->(x,show y)) radioButtonMap)
            (WidgetConfig {_widgetConfig_initialValue= Just iVal
                          ,_widgetConfig_setValue = never
@@ -136,20 +138,12 @@ prototypeQuestionWidget :: MonadWidget t m
 prototypeQuestionWidget config defaultEval newQuestion = mdo
   let maxTries = 3::Int
 
-  -- calculate tries so far
-
-  --listOfClicked <- foldDyn ($) [] $ leftmost [fmap (x-> (maybe (-1) id $ elemIndex x frequencies):) bandPressed, (const []) <$ newQuestion]
+  -- Managing number of tries
   listOfClicked <- foldDyn ($) [] $ leftmost [fmap (:) bandPressed, (const []) <$ newQuestion]
   let tryEv = attachWithMaybe (\l e -> if elem e l then Nothing else Just e) (current listOfClicked) bandPressed
-  
-  --tries <- foldDyn ($) 0 $ leftmost [(+1) bandPressed, (const 0) <$ nextQuestion]
-
   tries <- foldDyn ($) 0 $ leftmost [(+1) <$ tryEv, (const 0) <$ nextQuestion]
   canTry <- mapDyn (<maxTries) tries >>= combineDyn (&&) notCorrectYet
   let cannotTryEv = ffilter not $ updated canTry
-  --let cannotTryEv = fmap not $ updated canTry
-  --let cannotTryEv' = attachDynWith (const $ fmap (\x->case x of)) answer cannotTryEv
-  holdDyn "test" (fmap show cannotTryEv) >>= dynText
 
   -- produce events for correct and incorrect answers
   question <- holdDyn ([],F 31 "31") newQuestion
@@ -157,31 +151,28 @@ prototypeQuestionWidget config defaultEval newQuestion = mdo
   let answerEvent = gate (current canTry) tryEv -- Event t Frequency
   
   notCorrectYet <- holdDyn True $ leftmost [True <$ newQuestion, False <$ correctAnswer]
-  --userAnswer <- holdDyn Nothing $ leftmost [Nothing <$ newQuestion,Just <$> answerEvent]
-  --canAnswer <- mapDyn (==Nothing) userAnswer
-  --canAnswer <- mapDyn (==Nothing) userAnswer >>= combineDyn (&&) canTry
 
   let correctOrIncorrect = attachDynWith (\a u -> if a==u then Right a else Left u) answer answerEvent   -- Event (Either Frequency Frequency)
   let correctAnswer = fmapMaybe (either (const Nothing) Just) correctOrIncorrect    -- Event t Frequency
   let incorrectAnswer = fmapMaybe (either Just (const Nothing)) correctOrIncorrect  -- Event t Frequency if incorrect, no event if correct
 
   -- use new questions, correct and incorrect answer events to calculate button modes
-  let initialModes = fmap (bool AB.NotPossible AB.Possible) $ convertBands config
+  let initialModes = fmap (bool NotPossible Possible) $ convertBands config
 
   modes <- foldDyn ($) initialModes $ leftmost [
     (const initialModes) <$ newQuestion,                         -- Event t ([AnswerButtonMode] -> [answerButtonMode])
-    fmap (flip changeModesForCorrectAnswer frequencies) correctAnswer,
-    fmap (\x-> replaceAtSameIndex x frequencies AB.IncorrectDisactivated) incorrectAnswer,
-    (fmap (\x-> case x of AB.IncorrectActivated-> AB.IncorrectDisactivated; otherwise->x)) <$ cannotTryEv  --Once tries are up,
+    fmap (flip changeModesForCorrectAnswer frequencies) $ leftmost [correctAnswer, tagDyn answer cannotTryEv],
+    fmap (\x-> replaceAtSameIndex x frequencies IncorrectActivated) incorrectAnswer
     ]
 
-  --modes' <- zipWithM (\x y -> mapDyn (!!y) x) (repeat modes) [0,1..9]
+
   modes' <- mapM (\x-> mapDyn (!!x) modes) [0,1..9]
+
   -- buttons
   playUnfiltered <- button "Listen to unfiltered"
   playButton <- button "Play question"
   bandPressed <- elClass "div" "answerButtonWrapper" $ -- m (Event t Frequency)
-    leftmost <$> zipWithM (\f m -> AB.answerButton (constDyn $ show f) m f) frequencies modes'
+    leftmost <$> zipWithM (\f m -> answerButton (constDyn $ show f) m f) frequencies modes'
 
   -- update scoreMap
   let answerInfo = attachDyn answer correctOrIncorrect  -- Event t (Frequency,Either Frequency Frequency)  (answer, user answer)
@@ -201,10 +192,9 @@ prototypeQuestionWidget config defaultEval newQuestion = mdo
   let playSounds = leftmost [playCorrectSound,playOtherSounds,unfilteredSound]
 
   -- generate navigation events
-  backToConfigure <- (InConfigure <$) <$> button "Configure"
   nextQuestion <- (InQuestion <$) <$> button "New Question"
   onToReflect <- (InReflect <$) <$> button "Reflect"
-  let navEvents = leftmost [backToConfigure,nextQuestion,onToReflect]
+  let navEvents = leftmost [nextQuestion,onToReflect]
 
   el "div" $ do
     text "debugging:   "
@@ -224,25 +214,17 @@ prototypeQuestionWidget config defaultEval newQuestion = mdo
       text "Score Map:  "
       mapDyn show scoreMap >>= dynText
 
-  return (never, playSounds,navEvents)
+  return (fmap Evaluation (updated scoreMap), playSounds,navEvents)
 
 
---changeModesForCorrectAnswer :: Int -> [AnswerButtonMode] -> [AnswerButtonMode]
---changeModesForCorrectAnswer i xs = fmap f $ replaceInList i AB.Correct xs
---  where f AB.IncorrectDisactivated = AB.IncorrectActivated
---        f x = x
-
---replaceInList:: Int -> AnswerButtonMode -> [AnswerButtonMode] -> [AnswerButtonMode]
-
-
-changeModesForCorrectAnswer::(Eq a)=> a -> [a] -> [AB.AnswerButtonMode] -> [AB.AnswerButtonMode]
-changeModesForCorrectAnswer answer possibleAnswers xs = fmap f $ replaceAtSameIndex answer possibleAnswers AB.Correct xs
-  where f AB.IncorrectDisactivated = AB.IncorrectActivated
+changeModesForCorrectAnswer::(Eq a)=> a -> [a] -> [AnswerButtonMode] -> [AnswerButtonMode]
+changeModesForCorrectAnswer answer possibleAnswers xs = fmap f $ replaceAtSameIndex answer possibleAnswers Correct xs
+  where
+        f Possible = IncorrectDisactivated
         f x = x
 
 prototypeDisplayEvaluation::MonadWidget t m => Dynamic t (M.Map Frequency Score) -> m ()
-prototypeDisplayEvaluation e = return ()
-
+prototypeDisplayEvaluation = displaySpectrumEvaluation (constDyn "Session Performance")
 
 -- replaces b in [b] at the same index that a is in [a]
 replaceAtSameIndex::(Eq a)=>a -> [a] -> b -> [b] -> [b]
@@ -251,25 +233,3 @@ replaceAtSameIndex k l mode = maybe id (\x->replaceAt x mode) index
     index = elemIndex k l
     replaceAt n item ls = a ++ (item:b) where (a, (_:b)) = splitAt n ls
 
-
-
---    buttons::MonadWidget t m => [a] -> Dynamic t [AnswerButtonMode] -> Event t a
---    buttons::MonadWidget t m => Dynamic t [(a,AnswerButtonMode)] -> m (Event t a)
---    buttons l = do
---      dynMap <- mapDyn fromList l
---      evMap <- listViewWithKey dynMap AB.answerButton 
-
-
---answerButton:: MonadWidget t m => a -> Dynamic t AnswerButtonMode  -> m (Event t a)
-
-
---toListDyn::Dynamic [] ->[Dyn]
-
-
---assume that w is Dynamic t [a]
---x <- mapDyn (!!0) w :: m (Dynamic t a)
---y <- mapDyn (!!1) w :: m (Dynamic t a)
-
---let z = [x,y] :: [Dynamic t a]
-
---listViewWithKey::Dynamic (Map k v) -> (k -> Dynamic v -> m (Event a)) -> m (Event   (Map k a))

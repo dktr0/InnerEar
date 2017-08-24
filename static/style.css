@@ -1,9 +1,9 @@
 body {
-	background-color: black;
-	color: hsl(120,100%,80%);
-	height: 100%;
-	margin: 0;
-	font-family: sans;
+  background-color: black;
+  color: hsl(120,100%,80%);
+  height: 100%;
+  margin: 0;
+  font-family: sans;
 }
 
 .innerEar {
@@ -36,13 +36,13 @@ body {
 }
 
 .createUserHandle {
-	color: hsl(120,100%,80%);
+  color: hsl(120,100%,80%);
   text-align: center;
   padding: 20px;
 }
 
 .createUserPassword {
-	color: hsl(120,100%,80%);
+  color: hsl(120,100%,80%);
   text-align: center;
   padding: 20px;
 }
@@ -99,49 +99,118 @@ text {
 button {
   background-color: rgb(128,128,128);
   color: white;
+  border-radius: 4px;
   border: none;
-  border-radius: 4px;
 }
 
-
-.notPossibleButton {
-	background-color: rgb(128,128,128);
-	background-color: black;
-	border: 1px solid gray; /* fainted borders */
-	color: gray;
-	border: none;
-  border-radius: 4px;
+.specEvalWrapper {
+  display: inline-block;
 }
 
+.answerButtonWrapper {
 
-.possibleButton {
+
+}
+
+.buttonWrapper {
+    display: inline-block;
+}
+
+button.notPossibleButton {
+  background-color: black;
+  color: gray;
+  border: none;
+  border-radius: 40px;
+  border: 1px solid gray; /* fainted borders */
+}
+
+button.possibleButton {
   background-color: rgb(128,128,128);
   color: white;
   border: none;
   border-radius: 4px;
 }
 
-.incorrectDisactivatedButton{
-background-color: gray;
+button.incorrectDisactivatedButton{
+background-color: red;
 color: white;
 border: none;
 border-radius: 4px;
 }
 
-.incorrectActivatedButton {
-	background-color: gray;
-	border: 10px solid red; /* red borders */
-	color: white;
+button.incorrectActivatedButton {
+  background-color: gray;
+  border: none;
+  color: white;
+  border-radius: 4px;
+}
+
+button.correctButton{
+  background-color: green;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  border: 7px solid green;
+}
+
+
+
+
+
+
+
+
+
+div.notPossibleButton {
+  width:80px;  
+  text-align: center;
+  display: inline-block;
+  background-color: black;
+  color: gray;
+  border: none;
+  border-radius: 40px;
+  border: 1px solid gray; /* fainted borders */
+}
+
+div.possibleButton {
+  width:80px;  
+  text-align: center;
+  display: inline-block;
+  background-color: rgb(128,128,128);
+  color: white;
   border: none;
   border-radius: 4px;
 }
 
-.correctButton{
-	background-color: gray;
-  border: 10px solid green; /* green borders */
-	color: white;
-	border: none;
+div.incorrectDisactivatedButton{
+  width:80px;  
+  text-align: center;
+  display: inline-block;
+  background-color: gray;
+  border: none;
+  color: white;
   border-radius: 4px;
+}
+
+div.incorrectActivatedButton {
+  width:80px;  
+  text-align: center;
+  display: inline-block;
+  background-color: red;
+  color: white;
+  border: none;
+  border-radius: 4px;
+}
+
+div.correctButton{
+  width:80px;  
+  text-align: center;
+  display: inline-block;
+  background-color: green;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  border: 7px solid green;
 }
 
 .svgS {
@@ -196,6 +265,6 @@ background-color: black;
 }
 
 .graphLabel {
-	background-color: black;
-	color: hsl(120,100%,80%);
+  background-color: black;
+  color: hsl(120,100%,80%);
 }

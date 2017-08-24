@@ -35,8 +35,6 @@ visibleWhen visible builder = do
   where
     f = bool (M.singleton "style" "display: none;") M.empty
 
-
-
 flippableWidget :: MonadWidget t m => m a -> m a -> Bool -> Event t Bool -> m (Dynamic t a)
 flippableWidget b1 b2 i e = widgetHold (bool b1 b2 i) $ fmap (bool b1 b2) e
 
@@ -54,7 +52,6 @@ clickableDivDynClass label c val = do
   (element, _) <- elDynAttr' "div" attrs $ dynText label
   clickEv <- wrapDomEvent (_el_element element) (onEventName Click) (mouseXY)
   return $ (val <$) clickEv
-
 
 sourceWidget::MonadWidget t m => m (Dynamic t Source)
 sourceWidget = elClass "div" "sourceWidget" $ do

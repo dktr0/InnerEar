@@ -29,8 +29,6 @@ runExercise ex = mdo
   configEvent <- visibleWhen configVisible $ elClass "div" "exerciseConfig" $ configWidget ex $ defaultConfig ex
   config <- holdDyn (defaultConfig ex) configEvent
 
-  holdDyn "##################################" (fmap show configEvent) >>= dynText 
-
   -- Question (with generateQuestion called again with each transition to Question)
   let triggerNewQuestion = ffilter (==InQuestion) navEvents
   configAndData <- combineDyn (,) config currentData -- Dynamic t (a,[Datum])
@@ -38,16 +36,20 @@ runExercise ex = mdo
   let questionIO = fmap (\(x,y) -> (generateQuestion ex) x y) configAndData'
   question <- performEvent $ fmap liftIO $ questionIO
 
-
-  --questionVisible <- mapDyn (==InQuestion) nav
-  --widgetHold :: MonadWidget t m => m a -> Event t (m a) -> m (Dynamic t a)
+  -- Question Widget
   let qWidget = fmap (\x-> (questionWidget ex) x (defaultEvaluation ex) question) (updated config)  -- Event t (m (Event,Event,Event)) 
   widgetEvents <- elClass "div" "exerciseQuestion" (widgetHold (return $ (never,never,never)) qWidget)  -- Dyn t (Ev, Ev, Ev)
   newData <- liftM switchPromptlyDyn $ mapDyn (\(a,_,_)->a) widgetEvents 
   sounds <- liftM switchPromptlyDyn $ mapDyn (\(_,a,_)->a) widgetEvents
   questionNav <- liftM switchPromptlyDyn $ mapDyn (\(_,_,a)->a) widgetEvents
-  --let (newData,sounds,questionNav) = joinDyn x
-  --(newData,sounds,questionNav) <- visibleWhen questionVisible $ elClass "div" "exerciseQuestion" $ (questionWidget ex) (defaultConfig ex) (defaultEvaluation ex) question
+
+  -- Display Evaluation
+  displayEvalVisibile <- mapDyn (==InQuestion) nav
+  let evalDataEv = fmapMaybe (\x-> case x of (Evaluation a)->Just a; otherwise->Nothing) newData
+  evalData <- holdDyn (defaultEvaluation ex) evalDataEv
+  displayEval <- visibleWhen displayEvalVisibile $ elClass "div" "displayEvaluation" $ do
+    (displayEvaluation ex) evalData
+
 
   -- Reflect
   reflectVisible <- mapDyn (==InReflect) nav
