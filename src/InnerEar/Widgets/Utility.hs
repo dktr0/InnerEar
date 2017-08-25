@@ -60,13 +60,13 @@ sourceWidget = elClass "div" "sourceWidget" $ do
          (WidgetConfig {_widgetConfig_initialValue = Just 0
                        ,_widgetConfig_setValue = never
                        ,_widgetConfig_attributes = constDyn M.empty})
-  (fileSource,fileChangeEv) <- mediaElement
+  fileSource <- mediaElement "userSource"
   radioVal <- mapDyn (maybe 0 id) (_hwidget_value radioWidget)
   (cL,_) <- elAttr' "canvas" (M.fromList $ zip ["width","height"] ["1000","200"]) (return ())
   (cR,_) <- elAttr' "canvas" (M.fromList $ zip ["width","height"] ["1000","200"]) (return ())
-  let canvasDrawEv = ((liftIO $ renderAudioWaveform (castToHTMLCanvasElement $ _el_element cL) (castToHTMLCanvasElement $ _el_element cR)) <$) fileChangeEv
+  let canvasDrawEv = ((liftIO $ renderAudioWaveform (castToHTMLCanvasElement $ _el_element cL) (castToHTMLCanvasElement $ _el_element cR)) <$) never -- @ change to something usefule
   performEvent canvasDrawEv
-  mapDyn (\x-> if x==0 then BufferSource (File "pinknoise.wav") 2 else if x==1 then BufferSource (File "whitenoise.wav") 2 else fileSource) radioVal
+  mapDyn (\x-> if x==0 then (NodeSource (BufferNode $ File "pinknoise.wav") 2) else if x==1 then NodeSource (BufferNode $ File "whitenoise.wav") 2 else fileSource) radioVal
 
 
 
@@ -77,9 +77,9 @@ filteredSoundWidget filt= elClass "div" "sourceWidget" $ do
          (WidgetConfig {_widgetConfig_initialValue = Just 0
                        ,_widgetConfig_setValue = never
                        ,_widgetConfig_attributes = constDyn M.empty})
-  (fileSource,fileChangeEv) <- mediaElement
+  fileSource <- mediaElement "userSource"
   radioVal <- mapDyn (maybe 0 id) (_hwidget_value radioWidget)
-  source <- mapDyn (\x-> if x==0 then BufferSource (File "pinknoise.wav") 2 else if x==1 then BufferSource (File "whitenoise.wav") 2 else fileSource) radioVal
+  source <- mapDyn (\x-> if x==0 then NodeSource (BufferNode $ File "pinknoise.wav") 2 else if x==1 then NodeSource (BufferNode $ File "whitenoise.wav") 2 else fileSource) radioVal
   sound <- combineDyn FilteredSound source filt
   connectGraphOnEv $ updated sound
   return sound

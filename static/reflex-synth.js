@@ -1,5 +1,6 @@
 var bufferData
 
+
 function getBufferSourceNode(url) {
   source = ___ac.createBufferSource();
   var request = new XMLHttpRequest();
@@ -52,6 +53,8 @@ function loadUserSoundFile(){
     console.log("unsucessful load user soundfile")
   }
 }
+
+
 
 function drawBufferWaveform (canvasL,canvasR) {
   if (bufferData){

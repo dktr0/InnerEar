@@ -2,7 +2,7 @@ module Reflex.Synth.Foreign where
 
 -- InnerEar.WebAudio.Foreign where
 
-import GHCJS.Types (JSVal)
+import GHCJS.Types (JSVal,JSString)
 --import qualified GHCJS.Prim as Prim (toJSString)
 
 
@@ -15,10 +15,13 @@ foreign import javascript safe "$r=___ac.createBiquadFilter()" createBiquadFilte
 foreign import javascript safe "$r=___ac.createOscillator()" createOscillator :: IO JSVal
 
 foreign import javascript safe "loadUserSoundFile()" loadUserSoundFile :: IO ()
-foreign import javascript safe "$r=___ac.createMediaElementSource(document.getElementById(\"userAudio\"))" createUserSoundFileNode :: IO JSVal
 
--- If you try to create more than one node from the same media element, WAAPI throws error - need safe createMediaNode to protect against this
-foreign import javascript safe "$r=safeCreateMediaNode()" createMediaNode :: IO JSVal
+
+--foreign import javascript safe "$r=___ac.createMediaElementSource(document.getElementById(\"userAudio\"))" createMediaNode :: IO JSVal
+foreign import javascript safe "$r = ___ac.createMediaElementSource(document.getElementById($1))" createMediaNode:: JSString -> IO JSVal
+--foreign import javascript safe "$r = ___ac.createMediaElementSource($1)" createMediaNode :: JSVal -> IO JSVal
+
+
 
 
 foreign import javascript safe "$2.gain.value = $1" setGain :: Double -> JSVal -> IO ()

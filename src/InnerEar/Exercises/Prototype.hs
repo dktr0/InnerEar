@@ -191,10 +191,12 @@ prototypeQuestionWidget config defaultEval newQuestion = mdo
   dynText feedbackToDisplay
 
   -- generate sounds to be played
-  let playCorrectSound = (\x-> FilteredSound (BufferSource (File "pinknoise.wav") 2.0) (Filter Peaking (freqAsDouble x) 1.4 16.0)) <$> tagDyn answer playButton
-  let playOtherSounds = (\x-> FilteredSound (BufferSource (File "pinknoise.wav") 2.0) (Filter Peaking (freqAsDouble x) 1.4 16.0)) <$> bandPressed
-  let unfilteredSound = Sound (BufferSource (File "pinknoise.wav") 2.0) <$ playUnfiltered
+  let playCorrectSound = (\x-> FilteredSound (NodeSource (BufferNode $ File "pinknoise.wav") 2.0) (Filter Peaking (freqAsDouble x) 1.4 16.0)) <$> tagDyn answer playButton
+  let playOtherSounds = (\x-> FilteredSound (NodeSource (BufferNode $ File "pinknoise.wav") 2.0) (Filter Peaking (freqAsDouble x) 1.4 16.0)) <$> bandPressed
+  let unfilteredSound = Sound (NodeSource (BufferNode $ File "pinknoise.wav") 2.0) <$ playUnfiltered
   let playSounds = leftmost [playCorrectSound,playOtherSounds,unfilteredSound]
+
+
 
   -- generate navigation events
   nextQuestion <- (InQuestion <$) <$> button "New Question"

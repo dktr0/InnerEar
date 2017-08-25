@@ -1,29 +1,59 @@
 module Reflex.Synth.Types where
 
+--module Reflex.Synth.Types(
+--  FilterType (..),
+--  NoiseType (..),
+--  Node (..),
+--  Filter (..),
+--  OscillatorType(..),
+--  Oscillator(..),
+--  Buffer (..),
+--  Source (),
+--  nodeSource,
+--  Sound (..),
+--  WebAudioNode (..),
+--  WebAudioGraph(..),
+--  createGain, createBiquadFilter, createBufferNode, createAsrEnvelope, getJSVal, getFirstNode, getDestination, setFrequency, setFilterQ,
+--  setFilterType, setGainAtTime, startNode, connectGraphToDest, startGraph, startFirstNodeconnect, connectGraph, setGain
+--  ) where
+
+
+
+
 import GHCJS.Types (JSVal)
 import qualified Reflex.Synth.Foreign as F
 import Control.Monad (mapM)
 import Data.Char (toLower)
-import GHCJS.DOM.JSFFI.Generated.HTMLElement
 import qualified GHCJS.Prim as Prim (toJSString)
-import qualified GHCJS.DOM.Types as G
 
 
-data FilterType = Peaking | Lowpass | Highpass | Notch | Bandpass | Lowshelf | Highshelf | Allpass deriving (Show,Read)
+data FilterType = Peaking | Lowpass | Highpass | Notch | Bandpass | Lowshelf | Highshelf | Allpass deriving (Show,Read,Eq)
 
 data NoiseType = White | Pink | Brownian 
 
-data Node = FilterNode Filter | GainNode Double | Destination | AdditiveNode [Node] | OscillatorNode Oscillator | BufferNode Buffer | MediaNode deriving(Read,Show)
+data Node = FilterNode Filter | GainNode Double | Destination | AdditiveNode [Node] | OscillatorNode Oscillator | BufferNode Buffer | MediaNode String deriving(Read,Show,Eq)
 
-data Filter = NoFilter | Filter FilterType Double Double Double deriving (Read,Show)
+data Filter = NoFilter | Filter FilterType Double Double Double deriving (Read,Show,Eq)
 
-data OscillatorType = Sawtooth | Sine | Square deriving (Show, Read)
+data OscillatorType = Sawtooth | Sine | Square deriving (Show, Read,Eq)
 
-data Oscillator = Oscillator OscillatorType Double Double deriving (Read,Show) --double params are freq and gain (respectively)
+data Oscillator = Oscillator OscillatorType Double Double deriving (Read,Show,Eq) --double params are freq and gain (respectively)
 
-data Buffer = File String deriving (Read,Show)
+data Buffer = File String deriving (Read,Show,Eq)
 
-data Source = NodeSource Node Double  | OscillatorSource Oscillator Double | BufferSource Buffer Double | MediaSource deriving(Read,Show) -- 'Double' is the duration of the source
+--data Source = NodeSource Node Double  | OscillatorSource Oscillator Double | BufferSource Buffer Double | MediaSource deriving(Read,Show) -- 'Double' is the duration of the source
+
+data Source = NodeSource Node Double deriving (Show,Eq,Read)
+
+
+
+--nodeSource::Node-> Double -> Source
+--nodeSource (OscillatorNode a) b = NodeSource (OscillatorNode a) b
+--nodeSource (BufferNode a) b = NodeSource (BufferNode a) b
+--nodeSource (AdditiveNode xs) b = NodeSource (AdditiveNode xs) b
+--nodeSource (MediaNode s) b = MediaSource (MediaNode s) b
+--nodeSource x _ = error "cannot create a Source for this type of node: "++(show x)
+
 
 data Sound = NoSound | Sound Source| FilteredSound Source Filter deriving (Read,Show)
 
@@ -51,24 +81,6 @@ createOscillator (Oscillator t freq gain) = do
   return (WebAudioNode (OscillatorNode $ Oscillator t freq gain) g)
 
 
-createAdditiveNode:: [Node] -> IO WebAudioNode
-createAdditiveNode xs = do
-  nodes <- sequence $ fmap createNode xs -- IO [WebAudioNode]
-  g <- F.createGain
-  F.setGain 0 g
-  sequence (fmap startNode nodes)
-  mapM (maybe (return ()) ((flip F.connect) g) . getJSVal) nodes
-  return (WebAudioNode (AdditiveNode xs) g) -- returning the gain node's 
-
-
-createNode:: Node -> IO WebAudioNode
-createNode (FilterNode x) = createBiquadFilter x
-createNode (GainNode d) = createGain d
-createNode (Destination) = error "cannot create destination node"
-createNode (AdditiveNode xs) = createAdditiveNode xs
-createNode (OscillatorNode x) = createOscillator x
-createNode (BufferNode x) = createBufferNode x
-createNode (MediaNode) = createMediaNode
 
 createGain :: Double -> IO WebAudioNode
 createGain g = do
@@ -95,11 +107,11 @@ createBufferNode (File path) = do
   return (WebAudioNode (BufferNode $ File path) x)
 
 
-createMediaNode:: IO WebAudioNode
-createMediaNode = do 
-  F.loadUserSoundFile
-  x <- F.createMediaNode
-  return (WebAudioNode MediaNode x)
+--createMediaNode:: IO WebAudioNode
+--createMediaNode = do 
+--  F.loadUserSoundFile
+--  x <- F.createMediaNode
+--  return (WebAudioNode MediaNode x)
 
 createAsrEnvelope :: Double -> Double -> Double -> IO WebAudioNode
 createAsrEnvelope a s r = do
@@ -183,7 +195,7 @@ setGainAtTime _ _ NullAudioNode = error "Cannot set gain of a null node"
 startNode :: WebAudioNode -> IO ()
 startNode (WebAudioNode (AdditiveNode _) r) = F.setGain 1 r  -- @this may not be the best..
 startNode (WebAudioNode (GainNode _) _) = error "Gain node cannot bet 'started' "
-startNode (WebAudioNode MediaNode _) = F.playMediaNode  -- if you call 'start' on a MediaBufferNode a js error is thrown by the WAAPI
+startNode (WebAudioNode (MediaNode _) _) = F.playMediaNode  -- if you call 'start' on a MediaBufferNode a js error is thrown by the WAAPI
 startNode (WebAudioNode (OscillatorNode (Oscillator _ _ g)) r) = F.setGain g r
 startNode (WebAudioNode _ ref) = F.startNode ref
 startNode _ = return ()
@@ -206,66 +218,5 @@ startGraph a = do
   dest <- getDestination
   connect l dest
   startNode f
-
-
-
-
-
-renderAudioWaveform:: G.HTMLCanvasElement -> G.HTMLCanvasElement -> IO()
-renderAudioWaveform l r= do 
-  let l' = G.unHTMLCanvasElement l
-  let r' = G.unHTMLCanvasElement  r
-  F.renderAudioWaveform l' r'
-
-
-
-
-
-
-
-
-main :: IO ()
-main = mainWidget $ do
-
-  filesDyn <- value <$> fileInput def
-  urlE <- fmap (ffilter ("data:image" `T.isPrefixOf`)) . dataURLFileReader . fmapMaybe listToMaybe . updated $ filesDyn
-  el "div" . widgetHold blank . ffor urlE $ \url ->
-    elAttr "img" ("src" =: url <> "style" =: "max-width: 80%") blank
-
-
--- returns Event with file's url as a string
-fileToURL :: (MonadWidget t m) => Event t File -> m (Event t String)
-fileToURL file =do
-  fileReader <- liftIO newFileReader
-  performEvent_ (fmap (\f -> readAsDataURL fileReader (Just f)) file)
-  wrapDomEvent fileReader (`on` load) . liftIO $ do
-      v <- getResult fileReader
-      fromJSVal v
-
-
-
-
-
-createMediaNode = do
-  let attrs = ???
-  --input <- _fileInput_value <$> fileInput attrs
-  input <- fileInput attrs
-  audioSrc <- holdDyn "" $ fileToURL $ updated $  _fileInput_value input
-  audioAttrs <- mapDyn (fromList . zip ["class","src"] . ["audioElement"]++) audioSrc
-  elDynAttr "audio" audioAttrs (return ())
-
-  
-
-
-
-  <- dataURLFileReader $ updated input  --Event t JSVal
-  (element,_)<- elClass' "audio" "audioElement" $ return ()
-
-
-
-
-
-
-
 
 
