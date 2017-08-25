@@ -10,7 +10,6 @@ import Prelude as P
 import InnerEar.Widgets.Utility
 import InnerEar.Types.Score
 
-
 --Labels with CSS style to be used above bars
 labelsForBars :: MonadWidget t m => String -> m ()
 labelsForBars s = do
