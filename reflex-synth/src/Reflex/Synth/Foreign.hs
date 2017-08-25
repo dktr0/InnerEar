@@ -18,7 +18,11 @@ foreign import javascript safe "loadUserSoundFile()" loadUserSoundFile :: IO ()
 
 
 --foreign import javascript safe "$r=___ac.createMediaElementSource(document.getElementById(\"userAudio\"))" createMediaNode :: IO JSVal
-foreign import javascript safe "$r = ___ac.createMediaElementSource(document.getElementById($1))" createMediaNode:: JSString -> IO JSVal
+--foreign import javascript safe "console.log($1);$r = setTimeout(function(){return ___ac.createMediaElementSource(document.getElementById($1))},2000)" createMediaNode:: JSString -> IO JSVal
+
+foreign import javascript safe "console.log($1);$r = ___ac.createMediaElementSource(document.getElementById($1))" createMediaNode:: JSString -> IO JSVal
+--foreign import javascript safe "$r = test($1)" createMediaNode:: JSString -> IO JSVal
+
 --foreign import javascript safe "$r = ___ac.createMediaElementSource($1)" createMediaNode :: JSVal -> IO JSVal
 
 

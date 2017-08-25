@@ -15,16 +15,16 @@ import InnerEar.Types.Score
 userMediaWidget::MonadWidget t m => Dynamic t Filter -> m ()
 userMediaWidget filt = elClass "div" "userMediaWrapper" $ do
 
-
-
-  source <- mediaElement "userSource"
+  source <- mediaElement "userSource"	
   radioWidget <- radioGroup (constDyn "radioWidget") (constDyn $ [(1::Int,"Natural"),(2,"With filter")])
            (WidgetConfig {_widgetConfig_initialValue= Just 2
                          ,_widgetConfig_setValue = never
                          ,_widgetConfig_attributes = constDyn M.empty})
   radioSelection <- mapDyn (maybe 2 id) (_hwidget_value radioWidget)
   dynSound <- combineDyn (\f i-> if i==1 then Sound source else FilteredSound source f) filt radioSelection
-  connectGraphOnEv $ leftmost [updated dynSound]
+  --connectGraphOnEv $ leftmost [updated dynSound]
+  playButton <- button "play"
+  performSound $ tagDyn dynSound playButton
 
 
 

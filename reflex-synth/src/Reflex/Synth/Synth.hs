@@ -98,15 +98,19 @@ audioElement = elDynAttr "audio" attrs (return())
 --  return (WebAudioNode (MediaNode "id") x)
 
 mediaElement::MonadWidget t m => String -> m Source
-mediaElement audioId = do
+mediaElement audioId = elClass "div" "userAudio" $ do
   let attrs = FileInputConfig $ constDyn $ M.singleton "accept" "audio/*"
   input <- fileInput attrs
-  fileUrlEv <-fileToURL $ fmap (!!0) $ updated $ _fileInput_value input
+  fileUrlEv <- fileToURL $ fmap (!!0) $ updated $ _fileInput_value input
+  let fileUrlEv = never
   audioSrc <- holdDyn "" fileUrlEv
   audioAttrs <- mapDyn (M.fromList . zip ["src","class","id"] . (:["audioElement",audioId])) audioSrc
-  elDynAttr "audio" audioAttrs (return ())
-  liftIO $ createMediaNode audioId
+  elDynAttr "audio" audioAttrs (return())
+  --liftIO $ createMediaNode audioId' 
   return $ NodeSource (MediaNode audioId) 0  -- @ '0' is temporary, this should be a more meaningful duration derrived perhaps from the soundfile
+
+createAudioElement::MonadWidget t m => String -> Dynamic t (M.Map String String) -> m (String)
+createAudioElement s m = elDynAttr "audio" m (return s)
 
 -- Creates file input button and a play/pause/scrub interface.
 -- Returns a Source and Event that fires whenever the soundfile changes

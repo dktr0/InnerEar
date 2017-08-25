@@ -1,5 +1,16 @@
 var bufferData
 
+function test(s){
+  console.log(s)
+  var a = document.getElementById(s);
+  while (a==null){
+    a = document.getElementById(s);
+  }
+  console.log(a)
+  console.log(typeof(document.getElementById(s)))
+
+  return ___ac.createMediaElementSource(a)
+}
 
 function getBufferSourceNode(url) {
   source = ___ac.createBufferSource();
