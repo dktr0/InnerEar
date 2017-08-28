@@ -105,6 +105,7 @@ button {
 
 .specEvalWrapper {
   display: inline-block;
+  padding: 50px;
 }
 
 .answerButtonWrapper {
@@ -205,16 +206,34 @@ div.correctButton{
   border: 7px solid green;
 }
 
-.svgForBars {
+.svgBarContainer {
   width: 30px;
   background-color: black;
   margin: 0px;
 }
 
+.svgFaintedLine {
+  width: 1px;
+  height: 5px;
+  background-color: gray;
+  position: relative;
+  right: 45%;
+ }
+
+ .svgFaintedBottomLine {
+   width : 310px;
+   height: 1px;
+   transform: rotate(0deg);
+   background-color: gray;
+   position: relative;
+   right: 310px;
+   top: -29px;
+ }
+
 .bars {
   fill: yellow;
   stroke: black;
-  stroke-width: 2px;
+  stroke-width: 0.5px;
 }
 
 rect {
@@ -240,22 +259,21 @@ background-color: black;
 
 .scoreBarWrapper {
 	display: inline-block;
-  padding: 0px;
 }
 
 .scoreLabel {
  background-color: black;
  color: hsl(120,100%,80%);
  margin: 0px;
-  font-size: 10px;
-
+  font-size: 5px;
+  text-align: center;
 }
 
 .dynLabel {
   background-color: black;
   color: hsl(120,100%,80%);
   font-size: 7px;
-
+  text-align: center;
 }
 
 .hzTitleLabel {
@@ -272,12 +290,50 @@ background-color: black;
   color: hsl(120,100%,80%);
   margin: 0px;
   padding-top: 10px;
-  font-size: 10px;
+  font-size: 7px;
+  text-align: center;
 }
 
 .graphLabel {
   background-color: black;
   color: hsl(120,100%,80%);
-  font-size: 30px;
-  padding: 10px;
+  font-size: 20px;
+  padding-right: 0px;
+  padding-top: 20px;
+  text-align: left;
+
 }
+
+.alignGraphLine {
+background-color: black;
+height: 200px;
+width:1px;
+
+}
+
+
+
+.countMainLabel {
+  color: white;
+  font-size:  10px;
+  position: relative;
+  bottom:  24px;
+  left: -15px;
+
+}
+
+.percentageMainLabel {
+  color: white;
+  font-size:  9px;
+  position: relative;
+  left: -15px;
+  top: 60px;
+}
+
+.hzMainLabel {
+  color: white;
+  font-size:  9px;
+  position: relative;
+  left: -15px;
+  top: -32px;
+  }

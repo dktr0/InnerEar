@@ -132,7 +132,7 @@ dynBarCSS score barWidth = do
 
 dynBarCSS' :: MonadWidget t m =>  Dynamic t (Score) -> Dynamic t Float -> m ()
 dynBarCSS' score barWidth = do
-    let class' = constDyn (singleton "class" "svgForBars")
+    let class' = constDyn (singleton "class" "svgBarContainer")
     svgHeight <- mapDyn (\x -> case x of (Score 0 0 0) -> (fromIntegral (questionsAsked x) :: Float); otherwise -> (((fromIntegral (questionsAsked x) :: Float)-(fromIntegral (falseNegatives x) :: Float))/(fromIntegral (questionsAsked x) :: Float))) score   --m (Dynamic t Int)
     svgHeight' <- mapDyn (* 200) svgHeight
     svgHeight'' <- mapDyn (singleton "height" . show) svgHeight'
@@ -146,6 +146,19 @@ dynBarCSS' score barWidth = do
           let transform = constDyn "rotate (180)" --Dynamic t String
           rectDynCSS posX posY barWidth' barHeight' transform cssClass  -- m ()
 
+-- A small fainted line to use in performance graphs
+faintedLineCSS :: MonadWidget t m => m ()
+faintedLineCSS = svgClass "svg" "svgFaintedLine" $ return ()
+
+--A fainted line to use at the bottom of performance graphs
+faintedBottomLine :: MonadWidget t m => m ()
+faintedBottomLine =  svgClass "svg" "svgFaintedBottomLine" $ return ()
+
+-- A small fainted line to use in performance graphs
+alignGraphLine :: MonadWidget t m => m ()
+alignGraphLine = do
+        svgClass "svg" "alignGraphLine" $ return ()
+
 -- A dynamic bar for (Maybe Score)
 scoreBar :: MonadWidget t m => Dynamic t (Maybe Score) -> String ->  m ()
 scoreBar score hz = elClass "div" "scoreBarWrapper" $ do
@@ -153,7 +166,9 @@ scoreBar score hz = elClass "div" "scoreBarWrapper" $ do
       flippableDyn (do
         barHeight <- mapDyn (maybe (Score 0 0 0) id) score
         countLabel <- mapDyn (maybe (Score 0 0 0) id) score
-        dynBarCSS' barHeight (constDyn 30)
+        dynBarCSS' barHeight (constDyn 30) -- m ()
+        faintedLineCSS
+        alignGraphLine
         hzLabel (constDyn "dynLabel") hz
         dynCountLabel (constDyn "countLabel") countLabel) (do
         barHeight <- mapDyn (maybe (Score 0 0 0) id) score -- Dynamic t Int
