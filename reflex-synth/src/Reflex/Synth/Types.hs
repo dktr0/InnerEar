@@ -18,8 +18,7 @@ module Reflex.Synth.Types where
 --  ) where
 
 
-
-
+import GHCJS.DOM.Types(toJSString)
 import GHCJS.Types (JSVal)
 import qualified Reflex.Synth.Foreign as F
 import Control.Monad (mapM)
@@ -124,9 +123,9 @@ createAsrEnvelope a s r = do
   setGainAtTime 0.0 (now+a+s+r) n
   return n
 
-getJSVal::WebAudioNode -> Maybe JSVal
-getJSVal (WebAudioNode _ x) = Just x
-getJSVal (NullAudioNode) = Nothing
+getJSVal::WebAudioNode -> JSVal
+getJSVal (WebAudioNode _ x) = x
+getJSVal (NullAudioNode) = error "no JSVal for null audio node"
 
 -- Get the first node in a Graph - usually the first node in a graph function is the 'source' (such as a buffer or oscillator)
 -- which needs to be 'started' in the Web Audio API to hear anything.
@@ -154,6 +153,10 @@ connect a NullAudioNode = return (WebAudioGraph a)
 connect (WebAudioNode xt x) (WebAudioNode yt y) = do 
   F.connect x y
   return $ WebAudioGraph' (WebAudioNode xt x) (WebAudioGraph (WebAudioNode yt y))
+
+disconnect:: WebAudioNode -> WebAudioNode -> IO ()
+disconnect (WebAudioNode _ a) (WebAudioNode _ b) = F.disconnect a b
+
 
 connectGraph :: WebAudioGraph -> IO (WebAudioGraph)
 connectGraph (WebAudioGraph n) = return $ WebAudioGraph n
@@ -195,7 +198,7 @@ setGainAtTime _ _ NullAudioNode = error "Cannot set gain of a null node"
 startNode :: WebAudioNode -> IO ()
 startNode (WebAudioNode (AdditiveNode _) r) = F.setGain 1 r  -- @this may not be the best..
 startNode (WebAudioNode (GainNode _) _) = error "Gain node cannot bet 'started' "
-startNode (WebAudioNode (MediaNode _) _) = F.playMediaNode  -- if you call 'start' on a MediaBufferNode a js error is thrown by the WAAPI
+startNode (WebAudioNode (MediaNode s) _) = F.playMediaNode (toJSString s) -- if you call 'start' on a MediaBufferNode a js error is thrown by the WAAPI
 startNode (WebAudioNode (OscillatorNode (Oscillator _ _ g)) r) = F.setGain g r
 startNode (WebAudioNode _ ref) = F.startNode ref
 startNode _ = return ()

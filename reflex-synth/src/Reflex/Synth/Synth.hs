@@ -26,6 +26,11 @@ instance WebAudio Filter where
 instance WebAudio Buffer where
   createGraph (File path) = createBufferNode (File path) >>= return . WebAudioGraph
 
+instance WebAudio Node where
+  createGraph n = do 
+    node <- createNode n
+    return $ WebAudioGraph $ WebAudioNode n (getJSVal node)
+
 instance WebAudio Source where
   createGraph (NodeSource node dur) = 
     case node of
@@ -97,12 +102,22 @@ audioElement = elDynAttr "audio" attrs (return())
 --  x<-liftIO (F.createMediaNode elementJSVal)
 --  return (WebAudioNode (MediaNode "id") x)
 
+
+bufferInput::MonadWidget t m => m (Dynamic t String)
+bufferInput = do
+  let attrs = FileInputConfig $ constDyn $ M.singleton "accept" "audio/*"
+  input <- fileInput attrs
+  --fileName <- mapDyn getName $ _fileInput_value input -- Dyn string
+  --performEvent $ fmap (liftIO . F.loadBuffer) $ updated fileName
+  fileUrlEv <- fileToURL $ fmap (!!0) $ updated $ _fileInput_value input
+  --performEvent $ fmap (liftIO . F.loadBuffer) $ fmap toJSString fileUrlEv
+  holdDyn "" fileUrlEv
+
 mediaElement::MonadWidget t m => String -> m Source
 mediaElement audioId = elClass "div" "userAudio" $ do
   let attrs = FileInputConfig $ constDyn $ M.singleton "accept" "audio/*"
   input <- fileInput attrs
   fileUrlEv <- fileToURL $ fmap (!!0) $ updated $ _fileInput_value input
-  let fileUrlEv = never
   audioSrc <- holdDyn "" fileUrlEv
   audioAttrs <- mapDyn (M.fromList . zip ["src","class","id"] . (:["audioElement",audioId])) audioSrc
   elDynAttr "audio" audioAttrs (return())
@@ -125,6 +140,38 @@ createAudioElement s m = elDynAttr "audio" m (return s)
 --  return (NodeSource (MediaNode "@change") 0,fileChange)
 
 
+
+
+
+
+updatableSound::MonadWidget t m => Dynamic t WebAudioGraph -> Dynamic t WebAudioGraph -> m (Dynamic t  WebAudioGraph)
+updatableSound first next = do
+  x<-combineDyn (,) first next
+
+  e <- performEvent $ fmap liftIO $ fmap (\_->do
+    let y = fmap (\(a,b)->(getLastNode a,getFirstNode b)) $ current x
+    return $ fmap (\(a,b)->disconnect a b) y
+    ) $ tagDyn x $ leftmost [updated first, updated next]
+  graph <- combineDyn (WebAudioGraph'') first next
+  performEvent $ fmap (liftIO . connectGraph) $ tagDyn graph e
+  return graph
+
+
+--updatableSound::MonadWidget t m => Dynamic t Node -> Dynamic t Node -> m (Dynamic t  WebAudioGraph)
+--updatableSound first next = do
+--  x<-combineDyn (,) first next
+--  e <- performEvent $ fmap liftIO $ fmap (\(a,b)->do
+--    disconnect a b
+--    a' <- createNode a
+--    b' <- createNode b
+--    return (WebAudioGraph' a' $ WebAudioGraph b')
+--    ) $ updated x
+--  performEvent $ fmap (liftIO . connectGraph) e
+--  combineDyn (\a b -> WebAudioGraph' a $ WebAudioGraph b) first next
+
+
+
+
 -- Connects nodes to eachother and last node to destination
 connectGraphOnEv :: MonadWidget t m => Event t Sound -> m ()
 connectGraphOnEv sound = do 
@@ -143,8 +190,10 @@ createAdditiveNode xs = do
   g <- F.createGain
   F.setGain 0 g
   sequence (fmap startNode nodes)
-  mapM (maybe (return ()) ((flip F.connect) g) . getJSVal) nodes
+  mapM (((flip F.connect) g) . getJSVal) nodes
   return (WebAudioNode (AdditiveNode xs) g) -- returning the gain node's 
+
+
 
 
 createNode:: Node -> IO WebAudioNode
@@ -162,8 +211,6 @@ createMediaNode:: String -> IO WebAudioNode
 createMediaNode s = F.createMediaNode (toJSString s) >>= return . (WebAudioNode (MediaNode s))
 
 
-
--- Experimenting://///////
 
 
 -- returns Event with file's url as a string
@@ -186,36 +233,10 @@ fileToURL file = do
 --  let elementJSVal = G.unElement $ _el_element element
 --  x<-liftIO (F.createMediaNode elementJSVal)
 --  return (WebAudioNode (MediaNode "id") x)
-
-
 --  return (WebAudioNode MediaNode x)
 
 
 
---data WebAudioNode = WebAudioNode Node JSVal | NullAudioNode
-
---class WebAudio a where
---  createGraph :: a -> IO WebAudioGraph
-
-
---instance WebAudio Source where
---  createGraph (MediaSource) = ??? cannot be createMediaNode???
-
----- F - refers to FFI
----- where first argument is JSVal of the <audio> element
----- creates the WAAPI audio node and returns JSVal reference to it
---F.createMediaNode :: JSVal -> IO JSVal
-
----- (not FFI)
----- Calls F.createMediaNode to get a JSVal
----- returns WebAudioNode constructed with the JSVal gotten from F.createMediaNode
---createMediaNode::MonadWidget t m => m (IO WebAudioNode)
-
-
----- the problem: running 'createGraph' on a WebAudioNode containing a 
----- media element won't work because createGraph for a Media element would 
----- have to have a type 'tainted' by the MonadWidget monad (incompatible with
----- the signature for createGraph::a->IO WebAudioGraph)
 
 
 

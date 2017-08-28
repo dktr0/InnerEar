@@ -9,6 +9,7 @@ import GHCJS.Types (JSVal,JSString)
 foreign import javascript safe "___ac = new AudioContext()" createAudioContext:: IO ()
 foreign import javascript safe "$r=___ac.destination" getDestination :: IO JSVal
 foreign import javascript safe "$1.connect($2)" connect :: JSVal -> JSVal -> IO ()
+foreign import javascript safe "$1.disconnect($2)" disconnect ::JSVal -> JSVal -> IO() 
 
 foreign import javascript safe "$r=___ac.createGain()" createGain :: IO JSVal
 foreign import javascript safe "$r=___ac.createBiquadFilter()" createBiquadFilter :: IO JSVal
@@ -20,11 +21,16 @@ foreign import javascript safe "loadUserSoundFile()" loadUserSoundFile :: IO ()
 --foreign import javascript safe "$r=___ac.createMediaElementSource(document.getElementById(\"userAudio\"))" createMediaNode :: IO JSVal
 --foreign import javascript safe "console.log($1);$r = setTimeout(function(){return ___ac.createMediaElementSource(document.getElementById($1))},2000)" createMediaNode:: JSString -> IO JSVal
 
-foreign import javascript safe "console.log($1);$r = ___ac.createMediaElementSource(document.getElementById($1))" createMediaNode:: JSString -> IO JSVal
---foreign import javascript safe "$r = test($1)" createMediaNode:: JSString -> IO JSVal
+-- foreign import javascript safe "$r = test($1)" createMediaNode:: JSString -> IO JSVal
 
 --foreign import javascript safe "$r = ___ac.createMediaElementSource($1)" createMediaNode :: JSVal -> IO JSVal
 
+
+
+
+
+-- foreign import javascript safe "console.log($1);var a=document.getElementById($1);$r = ___ac.createMediaElementSource(a)" createMediaNode:: JSString -> IO JSVal
+foreign import javascript safe "$r=test($1)" createMediaNode::JSString -> IO JSVal
 
 
 
@@ -35,7 +41,7 @@ foreign import javascript safe "$2.Q.value = $1" setFilterQ :: Double -> JSVal -
 foreign import javascript safe "$2.type = $1" setFilterType :: JSVal -> JSVal -> IO()
 foreign import javascript safe "$2.type = $1" setOscillatorType :: JSVal -> JSVal -> IO()
 
-
+foreign import javascript safe "loadBuffer($1)" loadBuffer:: JSString -> IO ()
 foreign import javascript safe "$r = getBufferSourceNode($1)" createAudioBufferSourceNode :: JSVal -> IO JSVal  -- Js string to IO JSVal...
 
 foreign import javascript safe "$r = ___ac.currentTime" getCurrentTime :: IO Double
@@ -49,7 +55,7 @@ foreign import javascript safe "$r=___ac.createBrownNoise()" createBrownianNoise
 
 
 foreign import javascript safe "console.log($1);$1.start()" startNode :: JSVal -> IO ()
-foreign import javascript safe "document.getElementById(\"userAudio\").play()" playMediaNode:: IO()
+foreign import javascript safe "playMediaNode($1)" playMediaNode:: JSString -> IO()
 
 
 -- takes 'canvas' html elements - us 'toJSVal on the html element'

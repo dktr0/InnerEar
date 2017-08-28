@@ -1,37 +1,79 @@
 var bufferData
+var buffers = {}
+
+
 
 function test(s){
   console.log(s)
+  console.log(typeof(s))
   var a = document.getElementById(s);
   while (a==null){
     a = document.getElementById(s);
   }
   console.log(a)
-  console.log(typeof(document.getElementById(s)))
 
   return ___ac.createMediaElementSource(a)
 }
 
+function loadBuffer(filename){
+
+  console.log('entered loadBuffer...')
+  if (buffers[filename]==undefined){
+
+    console.log('loading file: '+filename)
+    var request = new XMLHttpRequest();
+    request.open('GET',filename, true);
+    request.responseType = 'arraybuffer'
+    request.onload=function(){
+
+       var audioData = request.response;
+
+        ___ac.decodeAudioData(audioData, function(buffer) {
+          buffers[filename] = buffer;
+        },
+      function(e){ console.log("Error with decoding audio data in 'loadBuffer()'" + e); });
+    })
+
+  } else {
+    console.log ("buffer loaded")
+  }
+}
+
+function playMediaNode(s){
+  var a = document.getElementById(s);
+  if (a){
+    a.play()
+  } else {
+    console.log('Error playing media node')
+  }
+}
+
 function getBufferSourceNode(url) {
   source = ___ac.createBufferSource();
-  var request = new XMLHttpRequest();
-
-  request.open('GET', url, true);
-
-  request.responseType = 'arraybuffer';
-
-
-  request.onload = function() {
-    var audioData = request.response;
-
-    ___ac.decodeAudioData(audioData, function(buffer) {
-        source.buffer = buffer;
-      },
-
-      function(e){ console.log("Error with decoding audio data " + e); });
+  
+  if (buffers[url]==undefined){
+    console.log('WARNING: No buffer loaded')
+    console.log('attempting to load buffer...')
+    loadBuffer(url)
   }
-  request.send();
-  return source;
+
+  source.buffer = buffers[url]
+  return source
+
+  // var request = new XMLHttpRequest();
+  // request.open('GET', url, true);
+  // request.responseType = 'arraybuffer';
+  // request.onload = function() {
+  //   var audioData = request.response;
+
+  //   ___ac.decodeAudioData(audioData, function(buffer) {
+  //       source.buffer = buffer;
+  //     },
+
+  //     function(e){ console.log("Error with decoding audio data " + e); });
+  // }
+  // request.send();
+  // return source;
 }
 
 
