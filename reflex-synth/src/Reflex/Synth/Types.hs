@@ -143,6 +143,8 @@ connect (WebAudioNode xt x) (WebAudioNode yt y) = do
 disconnect:: WebAudioNode -> WebAudioNode -> IO ()
 disconnect (WebAudioNode _ a) (WebAudioNode _ b) = F.disconnect a b
 
+disconnectAll::WebAudioNode -> IO ()
+disconnectAll (WebAudioNode _ a) = F.disconnectAll a
 
 connectGraph :: WebAudioGraph -> IO (WebAudioGraph)
 connectGraph (WebAudioGraph n) = return $ WebAudioGraph n
