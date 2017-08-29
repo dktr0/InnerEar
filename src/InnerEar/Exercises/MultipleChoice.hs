@@ -72,10 +72,7 @@ multipleChoiceQuestionWidget answers sound config initialEval newQuestion = do
 
   -- use new questions, correct and incorrect answer events to calculate button modes
   let initialModes = fmap (const NotPossible) answers -- [AnswerButtonMode]
-
-  let newQuestionModes = fmap (     fst) newQuestion -- *** working here
-   -- *** need to triangulate between fixed answers list and list with new question
-   -- *** then continue below with refactor towards abstract multiple choice questions
+  let newQuestionModes = fmap ((\xs -> fmap (flip elem $ xs) answers) . fst) newQuestion
 
   modes <- foldDyn ($) initialModes $ leftmost [
     (const initialModes) <$ newQuestion,  -- Event t ([AnswerButtonMode] -> [answerButtonMode])
