@@ -10,6 +10,7 @@ foreign import javascript safe "___ac = new AudioContext()" createAudioContext::
 foreign import javascript safe "$r=___ac.destination" getDestination :: IO JSVal
 foreign import javascript safe "$1.connect($2)" connect :: JSVal -> JSVal -> IO ()
 foreign import javascript safe "$1.disconnect($2)" disconnect ::JSVal -> JSVal -> IO() 
+foreign import javascript safe "$1.disconnect()" disconnectAll::JSVal -> IO()
 
 foreign import javascript safe "$r=___ac.createGain()" createGain :: IO JSVal
 foreign import javascript safe "$r=___ac.createBiquadFilter()" createBiquadFilter :: IO JSVal
@@ -31,7 +32,7 @@ foreign import javascript safe "loadBuffer($1)" loadBuffer:: JSString -> IO ()
 foreign import javascript safe "$r = createBufferSourceNodeFromURL($1)" createBufferSourceNodeFromURL :: JSVal -> IO JSVal  -- Js string to IO JSVal...
 foreign import javascript safe "$r = createBufferSourceNodeFromID($1)" createBufferSourceNodeFromID :: JSVal -> IO JSVal  -- Js string to IO JSVal...
 
-
+foreign import javascript safe "setAudioSrc($1)" setAudioSrc :: JSString -> IO ()
 
 foreign import javascript safe "$r = ___ac.currentTime" getCurrentTime :: IO Double
 

@@ -1,6 +1,7 @@
 var bufferData
 var buffers = {}
 
+var userAudioNodes = {}
 
 
 function test(s){
@@ -25,15 +26,15 @@ function loadBuffer(inputId){
     
     if (files[0]){
       var file = files[0]
-      var reader = new FileReader ();
-      reader.readAsArrayBuffer(file)
+      var bufferReader = new FileReader ();
 
-
-      reader.addEventListener('loadend',function(e){
+      // Decode and store the buffer in userAudioNodes
+      bufferReader.readAsArrayBuffer(file)
+      bufferReader.addEventListener('loadend',function(e){
         console.log('file loaded')
-        ___ac.decodeAudioData(reader.result,
+        ___ac.decodeAudioData(bufferReader.result,
           function(buffer){
-            buffers[inputId] = buffer
+            userAudioNodes[inputId].buffer = buffer
             console.log("Buffer "+inputId+" successfully decoded.")
         },function(e){
             alert("Error decoding audio data, please try to load another file.")
@@ -75,10 +76,10 @@ function createBufferSourceNodeFromURL(url) {
   return source;
 }
 
-
 function createBufferSourceNodeFromID(id){
   var source = ___ac.createBufferSource();
-  if (buffers[id]==undefined){
+
+  if (userAudioNodes[id].buffer==undefined){
     console.log('WARNING: No buffer loaded')
     console.log('attempting to load buffer...')
     loadBuffer(id)
@@ -116,6 +117,42 @@ function loadUserSoundFile(){
     console.log("unsucessful load user soundfile")
   }
 }
+
+function setAudioSrc(id){
+  if (userAudioNodes[id]){
+    var x = userAudioNodes[id]
+    // loads buffer and sets userAduioNodes[id].buffer to result
+    loadBuffer(id)
+    
+
+      // Get the file's URL
+      urlReader.readAsDataURL(file)
+      urlReader.addEventListener('loadend', function(e){
+        console.log('url loaded')
+        userAudioNodes[inputId].url = urlReader.result;
+      })
+
+
+
+
+
+
+    x.audioElement.setAttribute('src',)
+
+  } else {
+    var audioEl = document.getElementById(id++"Audio")
+    var inputEl = document.getElementById(id++"Input")
+    userAudioNodes[id] = {}
+  }
+
+}
+
+
+
+
+
+
+
 
 
 

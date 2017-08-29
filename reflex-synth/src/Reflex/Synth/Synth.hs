@@ -102,12 +102,39 @@ bufferInput s = do
   performEvent_ $ fmap (liftIO . const (F.loadBuffer $ toJSString s)) ev
   return ev
 
+bufferInput'::MonadWidget t m => String -> m (Event t ())
+bufferInput' s = do
+  let attrs = FileInputConfig $ constDyn $ M.fromList $ zip ["accept","id"] ["audio/*",s]
+  input <- fileInput attrs
+  let ev = (() <$) $ updated $ _fileInput_value input
+  performEvent_ $ fmap (liftIO . const (F.setAudioSrc $ toJSString s)) ev
+  return ev
 
 
 
 
 createAudioElement::MonadWidget t m => String -> Dynamic t (M.Map String String) -> m (String)
 createAudioElement s m = elDynAttr "audio" m (return s)
+
+
+
+-- creates graph and connects it to dest for initial source.
+-- when event fires, disconnects source from everything and connects source to
+-- the Node contained in the event. connects the node to the dest.
+-- useful for swapping 'effects' on MediaNodes
+holdAndConnectSound:: MonadWidget t m => Source -> Event t Node -> m ()
+holdAndConnectSound s ev = do
+  g <- liftIO (createGraph s)
+  liftIO (connectGraphToDest g)
+  performEvent $ fmap liftIO $ fmap (\n -> do
+    let gLast = getLastNode g
+    disconnectAll gLast
+    newNode <- createNode n
+    newGraph <- connect gLast newNode
+    connectGraphToDest newGraph
+    ) ev
+  return ()
+
 
 
 -- @Might want this again at some point..
