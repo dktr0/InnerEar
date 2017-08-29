@@ -103,16 +103,8 @@ bufferInput s = do
   return ev
 
 
-mediaElement::MonadWidget t m => String -> m Source
-mediaElement audioId = elClass "div" "userAudio" $ do
-  let attrs = FileInputConfig $ constDyn $ M.singleton "accept" "audio/*"
-  input <- fileInput attrs
-  fileUrlEv <- fileToURL $ fmap (!!0) $ updated $ _fileInput_value input
-  audioSrc <- holdDyn "" fileUrlEv
-  audioAttrs <- mapDyn (M.fromList . zip ["src","class","id"] . (:["audioElement",audioId])) audioSrc
-  elDynAttr "audio" audioAttrs (return())
-  --liftIO $ createMediaNode audioId' 
-  return $ NodeSource (MediaNode audioId) 0  -- @ '0' is temporary, this should be a more meaningful duration derrived perhaps from the soundfile
+
+
 
 createAudioElement::MonadWidget t m => String -> Dynamic t (M.Map String String) -> m (String)
 createAudioElement s m = elDynAttr "audio" m (return s)
@@ -175,6 +167,14 @@ createAdditiveNode xs = do
   mapM (((flip F.connect) g) . getJSVal) nodes
   return (WebAudioNode (AdditiveNode xs) g) -- returning the gain node's 
 
+renderAudioWaveform:: G.HTMLCanvasElement -> G.HTMLCanvasElement -> IO()
+renderAudioWaveform l r= do 
+  let l' = G.unHTMLCanvasElement l
+  let r' = G.unHTMLCanvasElement  r
+  F.renderAudioWaveform l' r'
+
+
+
 
 
 -- returns Event with file's url as a string
@@ -186,11 +186,15 @@ createAdditiveNode xs = do
 --  liftM (fmapMaybe id) $ wrapDomEvent fileReader (`on` load) . liftIO $ do
 --      v <- getResult fileReader
 --      fromJSVal v
-
-renderAudioWaveform:: G.HTMLCanvasElement -> G.HTMLCanvasElement -> IO()
-renderAudioWaveform l r= do 
-  let l' = G.unHTMLCanvasElement l
-  let r' = G.unHTMLCanvasElement  r
-  F.renderAudioWaveform l' r'
+--mediaElement::MonadWidget t m => String -> m Source
+--mediaElement audioId = elClass "div" "userAudio" $ do
+--  let attrs = FileInputConfig $ constDyn $ M.singleton "accept" "audio/*"
+--  input <- fileInput attrs
+--  fileUrlEv <- fileToURL $ fmap (!!0) $ updated $ _fileInput_value input
+--  audioSrc <- holdDyn "" fileUrlEv
+--  audioAttrs <- mapDyn (M.fromList . zip ["src","class","id"] . (:["audioElement",audioId])) audioSrc
+--  elDynAttr "audio" audioAttrs (return())
+--  --liftIO $ createMediaNode audioId' 
+--  return $ NodeSource (MediaNode audioId) 0  -- @ '0' is temporary, this should be a more meaningful duration derrived perhaps from the soundfile
 
 

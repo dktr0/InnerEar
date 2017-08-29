@@ -59,7 +59,7 @@ function playMediaNode(s){
 }
 
 function createBufferSourceNodeFromURL(url) {
-
+  var source = ___ac.createBufferSource()
   var request = new XMLHttpRequest();
   request.open('GET', url, true);
   request.responseType = 'arraybuffer';

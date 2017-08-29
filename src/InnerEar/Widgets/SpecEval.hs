@@ -17,7 +17,7 @@ displaySpectrumEvaluation graphLabel score= elClass "div" "specEvalWrapper" $ do
   dynGraphLabel (constDyn "graphLabel") graphLabel
   maybeScore<- mapDyn (mapKeys (freqAsString) . fmap (\v-> case v of (Score 0 0 0)-> Nothing;otherwise->Just v)) score
   listWithKey maybeScore (flip scoreBar)
-return ()
+  return ()
 
 displayCurrentSpectrumEvaluation :: MonadWidget t m => Dynamic t String -> Dynamic t (Map Frequency Score) -> m ()
 displayCurrentSpectrumEvaluation graphLabel score = elClass "div" "specEvalWrapper" $ do

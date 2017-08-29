@@ -151,7 +151,7 @@ button.incorrectActivatedButton{
 }
 
 
-button.incorrectDisacivatedButton {
+button.incorrectDisactivatedButton {
   width:80px;
   text-align: center;
   display: inline-block;
