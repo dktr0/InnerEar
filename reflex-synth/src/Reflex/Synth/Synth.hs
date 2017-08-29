@@ -8,6 +8,9 @@ import Reflex
 import Reflex.Dom
 import Control.Monad (liftM)
 import GHCJS.DOM.JSFFI.Generated.HTMLElement
+
+--import GHCJS.DOM.JSFFI.Generated.File (getName)
+import GHCJS.DOM.File (getName)
 import GHCJS.DOM.FileReader (newFileReader,getResult, readAsDataURL,load)
 import GHCJS.DOM.EventM(on)
 import GHCJS.DOM.Types(toJSString)
@@ -41,6 +44,9 @@ instance WebAudio Source where
       (Destination) -> error "Destination cannot be a source node"
       (GainNode _) -> error "GainNode cannot be a source node"
       (FilterNode _) -> error "FilterNode cannot be a source node"
+      (BufferNode (LoadedFile _)) -> do 
+        x <- createNode node
+        createGraph (WebAudioGraph x)
       otherwise -> do
         x <- createNode node
         y <- createAsrEnvelope 0.005 dur 0.005
@@ -88,30 +94,14 @@ audioElement = elDynAttr "audio" attrs (return())
 
   
 
-
-
---createMediaNode'::MonadWidget t m => m (IO WebAudioNode)
---createMediaNode' = do
-  --let attrs = FileInputConfig $ constDyn $ M.singleton "accept" "audio/*"
-  --input <- fileInput attrs
-  --fileUrlEv <-fileToURL $ fmap (!!0) $ updated $ _fileInput_value input
-  --audioSrc <- holdDyn "" fileUrlEv
-  --audioAttrs <- mapDyn (M.fromList . zip ["src","class"] . (:["audioElement"])) audioSrc
---  (element,_) <- elDynAttr' "audio" audioAttrs (return ())
---  let elementJSVal = G.unElement $ _el_element element
---  x<-liftIO (F.createMediaNode elementJSVal)
---  return (WebAudioNode (MediaNode "id") x)
-
-
-bufferInput::MonadWidget t m => m (Dynamic t String)
-bufferInput = do
-  let attrs = FileInputConfig $ constDyn $ M.singleton "accept" "audio/*"
+bufferInput::MonadWidget t m => String -> m (Event t ())
+bufferInput s = do
+  let attrs = FileInputConfig $ constDyn $ M.fromList $ zip ["accept","id"] ["audio/*",s]
   input <- fileInput attrs
-  --fileName <- mapDyn getName $ _fileInput_value input -- Dyn string
-  --performEvent $ fmap (liftIO . F.loadBuffer) $ updated fileName
-  fileUrlEv <- fileToURL $ fmap (!!0) $ updated $ _fileInput_value input
-  --performEvent $ fmap (liftIO . F.loadBuffer) $ fmap toJSString fileUrlEv
-  holdDyn "" fileUrlEv
+  let ev = (() <$) $ updated $ _fileInput_value input
+  performEvent_ $ fmap (liftIO . const (F.loadBuffer $ toJSString s)) ev
+  return ev
+
 
 mediaElement::MonadWidget t m => String -> m Source
 mediaElement audioId = elClass "div" "userAudio" $ do
@@ -127,36 +117,18 @@ mediaElement audioId = elClass "div" "userAudio" $ do
 createAudioElement::MonadWidget t m => String -> Dynamic t (M.Map String String) -> m (String)
 createAudioElement s m = elDynAttr "audio" m (return s)
 
--- Creates file input button and a play/pause/scrub interface.
--- Returns a Source and Event that fires whenever the soundfile changes
--- (to be used to re-connect the graph when the file switches)
---mediaElement::MonadWidget t m => m (Source,(Event t ()))
---mediaElement = el "div" $ do
---  let attrs = FileInputConfig (constDyn $ M.fromList $ zip ["id","accept"] ["soundFileInput","audio/*"])
---  file <- fileInput attrs
---  let fileChange = (()<$) $ updated $ _fileInput_value file
---  audioElement
---  performEvent $ fmap liftIO $ fmap (\_ -> createMediaNode) fileChange   -- loads sound player into audio tag everytime the file changes
---  return (NodeSource (MediaNode "@change") 0,fileChange)
 
-
-
-
-
-
-updatableSound::MonadWidget t m => Dynamic t WebAudioGraph -> Dynamic t WebAudioGraph -> m (Dynamic t  WebAudioGraph)
-updatableSound first next = do
-  x<-combineDyn (,) first next
-
-  e <- performEvent $ fmap liftIO $ fmap (\_->do
-    let y = fmap (\(a,b)->(getLastNode a,getFirstNode b)) $ current x
-    return $ fmap (\(a,b)->disconnect a b) y
-    ) $ tagDyn x $ leftmost [updated first, updated next]
-  graph <- combineDyn (WebAudioGraph'') first next
-  performEvent $ fmap (liftIO . connectGraph) $ tagDyn graph e
-  return graph
-
-
+-- @Might want this again at some point..
+--updatableSound::MonadWidget t m => Dynamic t WebAudioGraph -> Dynamic t WebAudioGraph -> m (Dynamic t  WebAudioGraph)
+--updatableSound first next = do
+--  x<-combineDyn (,) first next
+--  e <- performEvent $ fmap liftIO $ fmap (\_->do
+--    let y = fmap (\(a,b)->(getLastNode a,getFirstNode b)) $ current x
+--    return $ fmap (\(a,b)->disconnect a b) y
+--    ) $ tagDyn x $ leftmost [updated first, updated next]
+--  graph <- combineDyn (WebAudioGraph'') first next
+--  performEvent $ fmap (liftIO . connectGraph) $ tagDyn graph e
+--  return graph
 --updatableSound::MonadWidget t m => Dynamic t Node -> Dynamic t Node -> m (Dynamic t  WebAudioGraph)
 --updatableSound first next = do
 --  x<-combineDyn (,) first next
@@ -181,8 +153,18 @@ connectGraphOnEv sound = do
     ) sound
   return ()
 
+createNode:: Node -> IO WebAudioNode
+createNode (FilterNode x) = createBiquadFilter x
+createNode (GainNode d) = createGain d
+createNode (Destination) = error "cannot create destination node"
+createNode (AdditiveNode xs) = createAdditiveNode xs
+createNode (OscillatorNode x) = createOscillator x
+createNode (BufferNode x) = createBufferNode x
+createNode (MediaNode s) = createMediaNode s
 
 
+createMediaNode:: String -> IO WebAudioNode
+createMediaNode s = F.createMediaNode (toJSString s) >>= return . (WebAudioNode (MediaNode s))
 
 createAdditiveNode:: [Node] -> IO WebAudioNode
 createAdditiveNode xs = do
@@ -195,50 +177,15 @@ createAdditiveNode xs = do
 
 
 
-
-createNode:: Node -> IO WebAudioNode
-createNode (FilterNode x) = createBiquadFilter x
-createNode (GainNode d) = createGain d
-createNode (Destination) = error "cannot create destination node"
-createNode (AdditiveNode xs) = createAdditiveNode xs
-createNode (OscillatorNode x) = createOscillator x
-createNode (BufferNode x) = createBufferNode x
-createNode (MediaNode s) = createMediaNode s
-
-
-
-createMediaNode:: String -> IO WebAudioNode
-createMediaNode s = F.createMediaNode (toJSString s) >>= return . (WebAudioNode (MediaNode s))
-
-
-
-
 -- returns Event with file's url as a string
-fileToURL :: (MonadWidget t m) => Event t G.File -> m (Event t String)
-fileToURL file = do
-  fileReader <- liftIO newFileReader
-  performEvent_ (fmap (\f -> readAsDataURL fileReader (Just f)) file)
-  liftM (fmapMaybe id) $ wrapDomEvent fileReader (`on` load) . liftIO $ do
-      v <- getResult fileReader
-      fromJSVal v
-
---createMediaNode'::MonadWidget t m => m (IO WebAudioNode)
---createMediaNode' = do
---  let attrs = FileInputConfig $ constDyn $ M.singleton "accept" "audio/*"
---  input <- fileInput attrs
---  fileUrlEv <-fileToURL $ fmap (!!0) $ updated $ _fileInput_value input
---  audioSrc <- holdDyn "" fileUrlEv
---  audioAttrs <- mapDyn (M.fromList . zip ["src","class"] . (:["audioElement"])) audioSrc
---  (element,_) <- elDynAttr' "audio" audioAttrs (return ())
---  let elementJSVal = G.unElement $ _el_element element
---  x<-liftIO (F.createMediaNode elementJSVal)
---  return (WebAudioNode (MediaNode "id") x)
---  return (WebAudioNode MediaNode x)
-
-
-
-
-
+-- @ I think this is causing weird runtime errors, do not use until understanding, but may be useful at some point
+--fileToURL :: (MonadWidget t m) => Event t G.File -> m (Event t String)
+--fileToURL file = do
+--  fileReader <- liftIO newFileReader
+--  performEvent_ (fmap (\f -> readAsDataURL fileReader (Just f)) file)
+--  liftM (fmapMaybe id) $ wrapDomEvent fileReader (`on` load) . liftIO $ do
+--      v <- getResult fileReader
+--      fromJSVal v
 
 renderAudioWaveform:: G.HTMLCanvasElement -> G.HTMLCanvasElement -> IO()
 renderAudioWaveform l r= do 

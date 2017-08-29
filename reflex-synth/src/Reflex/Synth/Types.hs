@@ -38,20 +38,9 @@ data OscillatorType = Sawtooth | Sine | Square deriving (Show, Read,Eq)
 
 data Oscillator = Oscillator OscillatorType Double Double deriving (Read,Show,Eq) --double params are freq and gain (respectively)
 
-data Buffer = File String deriving (Read,Show,Eq)
-
---data Source = NodeSource Node Double  | OscillatorSource Oscillator Double | BufferSource Buffer Double | MediaSource deriving(Read,Show) -- 'Double' is the duration of the source
+data Buffer = File String | LoadedFile String deriving (Read,Show,Eq)
 
 data Source = NodeSource Node Double deriving (Show,Eq,Read)
-
-
-
---nodeSource::Node-> Double -> Source
---nodeSource (OscillatorNode a) b = NodeSource (OscillatorNode a) b
---nodeSource (BufferNode a) b = NodeSource (BufferNode a) b
---nodeSource (AdditiveNode xs) b = NodeSource (AdditiveNode xs) b
---nodeSource (MediaNode s) b = MediaSource (MediaNode s) b
---nodeSource x _ = error "cannot create a Source for this type of node: "++(show x)
 
 
 data Sound = NoSound | Sound Source| FilteredSound Source Filter deriving (Read,Show)
@@ -102,15 +91,12 @@ createBiquadFilter (Filter filtType f q g) = do
 
 createBufferNode :: Buffer -> IO WebAudioNode
 createBufferNode (File path) = do
-  x <- F.createAudioBufferSourceNode (Prim.toJSString path)
+  x <- F.createBufferSourceNodeFromURL (Prim.toJSString path)
   return (WebAudioNode (BufferNode $ File path) x)
+createBufferNode (LoadedFile inputId) = do
+  x <- F.createBufferSourceNodeFromID (Prim.toJSString inputId)
+  return (WebAudioNode (BufferNode $ LoadedFile inputId) x)
 
-
---createMediaNode:: IO WebAudioNode
---createMediaNode = do 
---  F.loadUserSoundFile
---  x <- F.createMediaNode
---  return (WebAudioNode MediaNode x)
 
 createAsrEnvelope :: Double -> Double -> Double -> IO WebAudioNode
 createAsrEnvelope a s r = do
@@ -221,5 +207,3 @@ startGraph a = do
   dest <- getDestination
   connect l dest
   startNode f
-
-

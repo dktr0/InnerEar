@@ -17,22 +17,7 @@ foreign import javascript safe "$r=___ac.createOscillator()" createOscillator ::
 
 foreign import javascript safe "loadUserSoundFile()" loadUserSoundFile :: IO ()
 
-
---foreign import javascript safe "$r=___ac.createMediaElementSource(document.getElementById(\"userAudio\"))" createMediaNode :: IO JSVal
---foreign import javascript safe "console.log($1);$r = setTimeout(function(){return ___ac.createMediaElementSource(document.getElementById($1))},2000)" createMediaNode:: JSString -> IO JSVal
-
--- foreign import javascript safe "$r = test($1)" createMediaNode:: JSString -> IO JSVal
-
---foreign import javascript safe "$r = ___ac.createMediaElementSource($1)" createMediaNode :: JSVal -> IO JSVal
-
-
-
-
-
--- foreign import javascript safe "console.log($1);var a=document.getElementById($1);$r = ___ac.createMediaElementSource(a)" createMediaNode:: JSString -> IO JSVal
 foreign import javascript safe "$r=test($1)" createMediaNode::JSString -> IO JSVal
-
-
 
 foreign import javascript safe "$2.gain.value = $1" setGain :: Double -> JSVal -> IO ()
 foreign import javascript safe "$2.frequency.value = $1" setFrequency :: Double -> JSVal -> IO()
@@ -42,7 +27,11 @@ foreign import javascript safe "$2.type = $1" setFilterType :: JSVal -> JSVal ->
 foreign import javascript safe "$2.type = $1" setOscillatorType :: JSVal -> JSVal -> IO()
 
 foreign import javascript safe "loadBuffer($1)" loadBuffer:: JSString -> IO ()
-foreign import javascript safe "$r = getBufferSourceNode($1)" createAudioBufferSourceNode :: JSVal -> IO JSVal  -- Js string to IO JSVal...
+
+foreign import javascript safe "$r = createBufferSourceNodeFromURL($1)" createBufferSourceNodeFromURL :: JSVal -> IO JSVal  -- Js string to IO JSVal...
+foreign import javascript safe "$r = createBufferSourceNodeFromID($1)" createBufferSourceNodeFromID :: JSVal -> IO JSVal  -- Js string to IO JSVal...
+
+
 
 foreign import javascript safe "$r = ___ac.currentTime" getCurrentTime :: IO Double
 

@@ -141,7 +141,7 @@ prototypeQuestionWidget config defaultEval newQuestion = mdo
 
   -- UserMedia widget
   dynFilt <- mapDyn (\x->Filter Peaking (freqAsDouble x) 1.4 16.0) answer
-  userMediaWidget dynFilt
+  userMediaWidget "prototypeQuestionUserAudio" dynFilt
 
   -- Managing number of tries
   listOfClicked <- foldDyn ($) [] $ leftmost [fmap (:) bandPressed, (const []) <$ newQuestion]

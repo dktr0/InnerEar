@@ -15,27 +15,37 @@ function test(s){
   return ___ac.createMediaElementSource(a)
 }
 
-function loadBuffer(filename){
 
-  console.log('entered loadBuffer...')
-  if (buffers[filename]==undefined){
+function loadBuffer(inputId){
 
-    console.log('loading file: '+filename)
-    var request = new XMLHttpRequest();
-    request.open('GET',filename, true);
-    request.responseType = 'arraybuffer'
-    request.onload=function(){
+  var inputElement = document.getElementById(inputId)
 
-       var audioData = request.response;
+  if (inputElement){
+    var files = inputElement.files
+    
+    if (files[0]){
+      var file = files[0]
+      var reader = new FileReader ();
+      reader.readAsArrayBuffer(file)
 
-        ___ac.decodeAudioData(audioData, function(buffer) {
-          buffers[filename] = buffer;
-        },
-      function(e){ console.log("Error with decoding audio data in 'loadBuffer()'" + e); });
-    })
 
-  } else {
-    console.log ("buffer loaded")
+      reader.addEventListener('loadend',function(e){
+        console.log('file loaded')
+        ___ac.decodeAudioData(reader.result,
+          function(buffer){
+            buffers[inputId] = buffer
+            console.log("Buffer "+inputId+" successfully decoded.")
+        },function(e){
+            alert("Error decoding audio data, please try to load another file.")
+        })
+      })
+
+    } else {
+      alert('Please select a sound file to load')
+    }
+  } else {  // no element 'inputId'
+    console.log('Could not find dom element with id: '+inputId)
+    alert('An error occurred, you may need to reload the page')
   }
 }
 
@@ -48,34 +58,34 @@ function playMediaNode(s){
   }
 }
 
-function getBufferSourceNode(url) {
-  source = ___ac.createBufferSource();
-  
-  if (buffers[url]==undefined){
-    console.log('WARNING: No buffer loaded')
-    console.log('attempting to load buffer...')
-    loadBuffer(url)
-  }
+function createBufferSourceNodeFromURL(url) {
 
-  source.buffer = buffers[url]
-  return source
+  var request = new XMLHttpRequest();
+  request.open('GET', url, true);
+  request.responseType = 'arraybuffer';
+  request.onload = function() {
+    var audioData = request.response;
 
-  // var request = new XMLHttpRequest();
-  // request.open('GET', url, true);
-  // request.responseType = 'arraybuffer';
-  // request.onload = function() {
-  //   var audioData = request.response;
-
-  //   ___ac.decodeAudioData(audioData, function(buffer) {
-  //       source.buffer = buffer;
-  //     },
-
-  //     function(e){ console.log("Error with decoding audio data " + e); });
-  // }
-  // request.send();
-  // return source;
+    ___ac.decodeAudioData(audioData, function(buffer) {
+        source.buffer = buffer;
+      },
+      function(e){ console.log("Error with decoding audio data " + e); });
+  } //request onload
+  request.send();
+  return source;
 }
 
+
+function createBufferSourceNodeFromID(id){
+  var source = ___ac.createBufferSource();
+  if (buffers[id]==undefined){
+    console.log('WARNING: No buffer loaded')
+    console.log('attempting to load buffer...')
+    loadBuffer(id)
+  } 
+  source.buffer = buffers[id]
+  return source
+}
 
 function loadUserSoundFile(){
 
