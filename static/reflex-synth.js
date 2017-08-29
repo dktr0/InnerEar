@@ -1,27 +1,91 @@
 var bufferData
+var buffers = {}
 
-function getBufferSourceNode(url) {
-  source = ___ac.createBufferSource();
+
+
+function test(s){
+  console.log(s)
+  console.log(typeof(s))
+  var a = document.getElementById(s);
+  while (a==null){
+    a = document.getElementById(s);
+  }
+  console.log(a)
+
+  return ___ac.createMediaElementSource(a)
+}
+
+
+function loadBuffer(inputId){
+
+  var inputElement = document.getElementById(inputId)
+
+  if (inputElement){
+    var files = inputElement.files
+    
+    if (files[0]){
+      var file = files[0]
+      var reader = new FileReader ();
+      reader.readAsArrayBuffer(file)
+
+
+      reader.addEventListener('loadend',function(e){
+        console.log('file loaded')
+        ___ac.decodeAudioData(reader.result,
+          function(buffer){
+            buffers[inputId] = buffer
+            console.log("Buffer "+inputId+" successfully decoded.")
+        },function(e){
+            alert("Error decoding audio data, please try to load another file.")
+        })
+      })
+
+    } else {
+      alert('Please select a sound file to load')
+    }
+  } else {  // no element 'inputId'
+    console.log('Could not find dom element with id: '+inputId)
+    alert('An error occurred, you may need to reload the page')
+  }
+}
+
+function playMediaNode(s){
+  var a = document.getElementById(s);
+  if (a){
+    a.play()
+  } else {
+    console.log('Error playing media node')
+  }
+}
+
+function createBufferSourceNodeFromURL(url) {
+  var source = ___ac.createBufferSource()
   var request = new XMLHttpRequest();
-
   request.open('GET', url, true);
-
   request.responseType = 'arraybuffer';
-
-
   request.onload = function() {
     var audioData = request.response;
 
     ___ac.decodeAudioData(audioData, function(buffer) {
         source.buffer = buffer;
       },
-
       function(e){ console.log("Error with decoding audio data " + e); });
-  }
+  } //request onload
   request.send();
   return source;
 }
 
+
+function createBufferSourceNodeFromID(id){
+  var source = ___ac.createBufferSource();
+  if (buffers[id]==undefined){
+    console.log('WARNING: No buffer loaded')
+    console.log('attempting to load buffer...')
+    loadBuffer(id)
+  } 
+  source.buffer = buffers[id]
+  return source
+}
 
 function loadUserSoundFile(){
 
@@ -52,6 +116,8 @@ function loadUserSoundFile(){
     console.log("unsucessful load user soundfile")
   }
 }
+
+
 
 function drawBufferWaveform (canvasL,canvasR) {
   if (bufferData){

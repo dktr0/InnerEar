@@ -2,24 +2,22 @@ module Reflex.Synth.Foreign where
 
 -- InnerEar.WebAudio.Foreign where
 
-import GHCJS.Types (JSVal)
+import GHCJS.Types (JSVal,JSString)
 --import qualified GHCJS.Prim as Prim (toJSString)
 
 
 foreign import javascript safe "___ac = new AudioContext()" createAudioContext:: IO ()
 foreign import javascript safe "$r=___ac.destination" getDestination :: IO JSVal
 foreign import javascript safe "$1.connect($2)" connect :: JSVal -> JSVal -> IO ()
+foreign import javascript safe "$1.disconnect($2)" disconnect ::JSVal -> JSVal -> IO() 
 
 foreign import javascript safe "$r=___ac.createGain()" createGain :: IO JSVal
 foreign import javascript safe "$r=___ac.createBiquadFilter()" createBiquadFilter :: IO JSVal
 foreign import javascript safe "$r=___ac.createOscillator()" createOscillator :: IO JSVal
 
 foreign import javascript safe "loadUserSoundFile()" loadUserSoundFile :: IO ()
-foreign import javascript safe "$r=___ac.createMediaElementSource(document.getElementById(\"userAudio\"))" createUserSoundFileNode :: IO JSVal
 
--- If you try to create more than one node from the same media element, WAAPI throws error - need safe createMediaNode to protect against this
-foreign import javascript safe "$r=safeCreateMediaNode()" createMediaNode :: IO JSVal
-
+foreign import javascript safe "$r=test($1)" createMediaNode::JSString -> IO JSVal
 
 foreign import javascript safe "$2.gain.value = $1" setGain :: Double -> JSVal -> IO ()
 foreign import javascript safe "$2.frequency.value = $1" setFrequency :: Double -> JSVal -> IO()
@@ -28,8 +26,12 @@ foreign import javascript safe "$2.Q.value = $1" setFilterQ :: Double -> JSVal -
 foreign import javascript safe "$2.type = $1" setFilterType :: JSVal -> JSVal -> IO()
 foreign import javascript safe "$2.type = $1" setOscillatorType :: JSVal -> JSVal -> IO()
 
+foreign import javascript safe "loadBuffer($1)" loadBuffer:: JSString -> IO ()
 
-foreign import javascript safe "$r = getBufferSourceNode($1)" createAudioBufferSourceNode :: JSVal -> IO JSVal  -- Js string to IO JSVal...
+foreign import javascript safe "$r = createBufferSourceNodeFromURL($1)" createBufferSourceNodeFromURL :: JSVal -> IO JSVal  -- Js string to IO JSVal...
+foreign import javascript safe "$r = createBufferSourceNodeFromID($1)" createBufferSourceNodeFromID :: JSVal -> IO JSVal  -- Js string to IO JSVal...
+
+
 
 foreign import javascript safe "$r = ___ac.currentTime" getCurrentTime :: IO Double
 
@@ -42,7 +44,7 @@ foreign import javascript safe "$r=___ac.createBrownNoise()" createBrownianNoise
 
 
 foreign import javascript safe "console.log($1);$1.start()" startNode :: JSVal -> IO ()
-foreign import javascript safe "document.getElementById(\"userAudio\").play()" playMediaNode:: IO()
+foreign import javascript safe "playMediaNode($1)" playMediaNode:: JSString -> IO()
 
 
 -- takes 'canvas' html elements - us 'toJSVal on the html element'

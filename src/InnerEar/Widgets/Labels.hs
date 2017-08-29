@@ -1,17 +1,19 @@
+{-# LANGUAGE ScopedTypeVariables #-}
+
 module InnerEar.Widgets.Labels where
 
 import Reflex
 import Reflex.Dom
 import Data.Map as M
 import Control.Monad
-
+import Prelude as P
 import InnerEar.Widgets.Utility
 import InnerEar.Types.Score
 
 --Labels with CSS style to be used above bars
 labelsForBars :: MonadWidget t m => String -> m ()
 labelsForBars s = do
-   elClass "div" "text" $ text (show s)
+   elClass "div" "text" $ text s
    return ()
 
 -- A Dynamic label for percentage
@@ -60,14 +62,15 @@ dynLabel cssClass s = do
 hzLabel :: MonadWidget t m => Dynamic t String -> String ->  m ()
 hzLabel c s = do
    c' <- mapDyn (singleton "class") c -- m (Dynamic t String)
-   elDynAttr "div" c' $ text (show s) -- m ()
+   elDynAttr "div" c' $ text s -- m ()
    return ()
 
 -- A dynamic label for Score with CSS style
-dynScoreLabel :: MonadWidget t m => Dynamic t String -> Dynamic t (Score) -> m ()
+dynScoreLabel :: forall t m. MonadWidget t m => Dynamic t String -> Dynamic t (Score) -> m ()
 dynScoreLabel cssClass score = do
-  score' <- mapDyn ((* 100) . (\x ->  ((fromIntegral (questionsAsked x) :: Float) - (fromIntegral (falseNegatives x) :: Float)) / (fromIntegral (questionsAsked x) :: Float))) score   --m (Dynamic t Double)
-  score''  <- mapDyn show score' -- m (Dynamic t String)
+  score' <- ((mapDyn ((* 100) . (\x ->  ((fromIntegral (questionsAsked x)) - (fromIntegral (falseNegatives x))) / (fromIntegral (questionsAsked x)))) score) ::  m (Dynamic t Float))   --m (Dynamic t Float)
+  roundScore <- ((mapDyn round score') :: m (Dynamic t Int))
+  score''  <- mapDyn show roundScore -- m (Dynamic t String)
   cssClass' <- mapDyn (singleton "class") cssClass  -- m (Dynamic t String)
   elDynAttr "div" cssClass' $ do
     dynText  score'' -- m ()
@@ -83,6 +86,20 @@ dynCountLabel cssClass count = do
     dynText count'' -- m ()
     return ()
 
+--A label for "Hz"
+hzMainLabel :: MonadWidget t m => m ()
+hzMainLabel = elClass "div" "hzMainLabel" $ text "Hz"
+
+
+-- A label for "#"
+countMainLabel :: MonadWidget t m => m ()
+countMainLabel = elClass "div" "countMainLabel" $ text "#"
+
+--A label for "%"
+
+percentageMainLabel :: MonadWidget t m => m ()
+percentageMainLabel = elClass "div" "percentageMainLabel" $ text "%"
+  
 -- A dynamic label with CSS style
 dynGraphLabel :: MonadWidget t m => Dynamic t String -> Dynamic t String -> m ()
 dynGraphLabel c label = do
