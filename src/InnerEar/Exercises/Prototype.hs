@@ -18,10 +18,9 @@ import Data.Hashable (Hashable,hashWithSalt)
 import System.Random
 import Data.Maybe (fromJust)
 import Data.Bool (bool)
-import Data.List (findIndices,partition)
+import Data.List (findIndices,partition,elemIndex)
 import Text.JSON
 import Text.JSON.Generic
-import Data.List(elemIndex)
 
 import InnerEar.Widgets.AnswerButton
 import InnerEar.Widgets.Utility
@@ -154,7 +153,7 @@ prototypeQuestionWidget config defaultEval newQuestion = mdo
   question <- holdDyn ([],F 31 "31") newQuestion
   answer <- mapDyn snd question  -- Dyn t Frequency
   let answerEvent = gate (current canTry) tryEv -- Event t Frequency
-  
+
   notCorrectYet <- holdDyn True $ leftmost [True <$ newQuestion, False <$ correctAnswer]
 
   let correctOrIncorrect = attachDynWith (\a u -> if a==u then Right a else Left u) answer answerEvent   -- Event (Either Frequency Frequency)
