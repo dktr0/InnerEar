@@ -11,6 +11,13 @@ import InnerEar.Widgets.Utility
 import InnerEar.Widgets.Labels
 import InnerEar.Types.Score
 
+-- a svg with dynamic CSS and height
+dynSvgCss :: MonadWidget t m => Dynamic t String -> Dynamic t Float -> m ()
+dynSvgCss cssClass height = do
+  cssClass' <- mapDyn (singleton "class") cssClass
+  height' <- mapDyn (singleton "height" . show) height
+  attrs <- mconcatDyn [cssClass', height']
+  svgDynAttr "svg" attrs $ return ()
 
 --Dynamic "rect" element
 rect :: MonadWidget t m => Dynamic t Int -> Dynamic t Int -> Dynamic t Float -> Dynamic t Float -> Dynamic t String -> Dynamic t String -> m ()
@@ -52,8 +59,7 @@ drawBar' x  = do
 --A dynamic bar with css style and in-line attributes
 drawBarCSS :: MonadWidget t m =>  Dynamic t Float -> Dynamic t Float -> m ()
 drawBarCSS x y = do
-  elClass "div" "flex-container" $ do
-    svgClass "svg" "svgS" $ do
+    svgClass "svg" "svgForBars" $ do
       let posX = constDyn $ negate 30
       let posY = constDyn $ negate 200
       h <- mapDyn (*200) x
@@ -61,6 +67,22 @@ drawBarCSS x y = do
       let c = constDyn "test"
       let t = constDyn "rotate (180)"
       rectDynCSS posX posY w h t c
+
+--A dynamic bar with css style and in-line attributes
+drawBarCSS'' :: MonadWidget t m =>  Dynamic t Float -> Dynamic t Float -> m ()
+drawBarCSS'' x y = do
+    let class' = constDyn (singleton "class" "svgForBars")
+    height' <- mapDyn (* 200) x
+    height'' <- mapDyn (singleton "height" . show) height'
+    attrs <- mconcatDyn [class', height'']
+    svgDynAttr "svg" attrs $ do
+       let posX = constDyn $ negate 30
+       let posY = constDyn $ negate 200
+       h <- mapDyn (*200) x
+       w <- mapDyn (*1) y
+       let c = constDyn "test"
+       let t = constDyn "rotate (180)"
+       rectDynCSS posX posY w h t c
 
 --A dynamic bar with a label, a button and CSS style
 labelBarButton :: MonadWidget t m => String ->  Dynamic t String -> Dynamic t Float -> m (Event t ())
@@ -97,8 +119,7 @@ performanceBar percentage label count =  do
   --A dynamic bar with css style and in-line attribute
 dynBarCSS :: MonadWidget t m =>  Dynamic t (Score) -> Dynamic t Float -> m ()
 dynBarCSS score barWidth = do
-    elClass "div" "flex-container" $ do
-      svgClass "svg" "svgS" $ do
+      svgClass "svg" "svgForBars" $ do
         let posX = constDyn $ negate 30 -- Dynamic t Int
         let posY = constDyn $ negate 200  --Dynamic t Int
         barHeight <- mapDyn  (\x ->  ((fromIntegral (questionsAsked x) :: Float) - (fromIntegral (falseNegatives x) :: Float)) / (fromIntegral (questionsAsked x) :: Float)) score   --m (Dynamic t Int)
@@ -108,16 +129,53 @@ dynBarCSS score barWidth = do
         let t = constDyn "rotate (180)" --Dynamic t String
         rectDynCSS posX posY barWidth' barHeight' t c  -- m ()
 
+
+dynBarCSS' :: MonadWidget t m =>  Dynamic t (Score) -> Dynamic t Float -> m ()
+dynBarCSS' score barWidth = do
+    let class' = constDyn (singleton "class" "svgBarContainer")
+    svgHeight <- mapDyn (\x -> case x of (Score 0 0 0) -> (fromIntegral (questionsAsked x) :: Float); otherwise -> (((fromIntegral (questionsAsked x) :: Float)-(fromIntegral (falseNegatives x) :: Float))/(fromIntegral (questionsAsked x) :: Float))) score   --m (Dynamic t Int)
+    svgHeight' <- mapDyn (* 200) svgHeight
+    svgHeight'' <- mapDyn (singleton "height" . show) svgHeight'
+    attrs <- mconcatDyn [class', svgHeight'']
+    svgDynAttr "svg" attrs $ do
+          let posX = constDyn $ negate 30 -- Dynamic t Int
+          let posY = constDyn $ negate 200  --Dynamic t Int
+          let barHeight' = constDyn 200.0 -- m (Dynamic t Float) ?? should be m (Dynamic t Int)
+          barWidth' <- mapDyn (*1) barWidth -- m (Dynamic t Float)
+          let cssClass = constDyn "bars" --Dynamic t String
+          let transform = constDyn "rotate (180)" --Dynamic t String
+          rectDynCSS posX posY barWidth' barHeight' transform cssClass  -- m ()
+
+-- A small fainted line to use in performance graphs
+faintedLineCSS :: MonadWidget t m => m ()
+faintedLineCSS = svgClass "svg" "svgFaintedLine" $ return ()
+
+--A fainted line to use at the bottom of performance graphs
+faintedBottomLine :: MonadWidget t m => m ()
+faintedBottomLine =  svgClass "svg" "svgFaintedBottomLine" $ return ()
+
+-- A small fainted line to use in performance graphs
+alignGraphLine :: MonadWidget t m => m ()
+alignGraphLine = do
+        svgClass "svg" "alignGraphLine" $ return ()
+
 -- A dynamic bar for (Maybe Score)
 scoreBar :: MonadWidget t m => Dynamic t (Maybe Score) -> String ->  m ()
 scoreBar score hz = elClass "div" "scoreBarWrapper" $ do
-      bool <- mapDyn isJust score
-      flippableDyn (return ()) (do
+      bool <-  mapDyn (maybe False (const True)) score
+      flippableDyn (do
+        barHeight <- mapDyn (maybe (Score 0 0 0) id) score
+        countLabel <- mapDyn (maybe (Score 0 0 0) id) score
+        dynBarCSS' barHeight (constDyn 30) -- m ()
+        faintedLineCSS
+        alignGraphLine
+        hzLabel (constDyn "dynLabel") hz
+        dynCountLabel (constDyn "countLabel") countLabel) (do
         barHeight <- mapDyn (maybe (Score 0 0 0) id) score -- Dynamic t Int
         scoreLabel <- mapDyn (maybe (Score 0 0 0) id) score
         countLabel <- mapDyn (maybe (Score 0 0 0) id) score
         dynScoreLabel (constDyn "scoreLabel") scoreLabel -- m()
-        dynBarCSS barHeight (constDyn 30) -- m ()
+        dynBarCSS' barHeight (constDyn 30) -- m ()
         hzLabel (constDyn "dynLabel") hz
         dynCountLabel (constDyn "countLabel") countLabel) bool --m ()
       return ()
