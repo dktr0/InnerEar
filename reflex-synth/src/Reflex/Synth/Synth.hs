@@ -38,7 +38,7 @@ instance WebAudio Source where
   createGraph (NodeSource node dur) = 
     case node of
       (MediaNode a) ->do
-        v<-createMediaNode a
+        v <- createMediaNode a
         let graph = WebAudioGraph v
         createGraph graph
       (Destination) -> error "Destination cannot be a source node"
@@ -104,7 +104,7 @@ bufferInput s = do
 
 bufferInput'::MonadWidget t m => String -> m (Event t ())
 bufferInput' s = do
-  let attrs = FileInputConfig $ constDyn $ M.fromList $ zip ["accept","id"] ["audio/*",s]
+  let attrs = FileInputConfig $ constDyn $ M.fromList $ zip ["accept","id"] ["audio/*",s++"Input"]
   input <- fileInput attrs
   let ev = (() <$) $ updated $ _fileInput_value input
   performEvent_ $ fmap (liftIO . const (F.setAudioSrc $ toJSString s)) ev
