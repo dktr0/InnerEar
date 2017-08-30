@@ -141,7 +141,6 @@ modesForNewQuestion possibleAnswers question _ = fmap f $ fmap (flip elem $ fst 
   where f True = Possible
         f False = NotPossible
 
-
 modesForCorrectAnswer :: (Eq a) => [a] -> a -> [AnswerButtonMode] -> [AnswerButtonMode]
 modesForCorrectAnswer possibleAnswers answer xs = replaceAtSameIndex answer possibleAnswers Correct xs
 

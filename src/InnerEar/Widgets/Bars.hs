@@ -161,17 +161,12 @@ faintedXaxis = svgClass "svg" "faintedXaxis" $ return ()
 -- A dynamic bar for (Maybe Score)
 scoreBar :: MonadWidget t m => Dynamic t (Maybe Score) -> String ->  m ()
 scoreBar score hz = elClass "div" "scoreBarWrapper" $ do
-      bool <-  mapDyn (maybe False (const True)) score
-      barHeight <- mapDyn (maybe (Score 0 0 0) id) score -- Dynamic t Int
-      scoreLabel <- mapDyn (maybe (Score 0 0 0) id) score
-      countLabel <- mapDyn (maybe (Score 0 0 0) id) score
-      flippableDyn (do
-        dynBarCSS' barHeight (constDyn 30) -- m ()
-        faintedLineCSS
-        hzLabel (constDyn "hzLabel") hz
-        dynCountLabel (constDyn "countLabel") countLabel) (do
-        dynScoreLabel (constDyn "scoreLabel") scoreLabel -- m()
-        dynBarCSS' barHeight (constDyn 30) -- m ()
-        hzLabel (constDyn "hzLabel") hz
-        dynCountLabel (constDyn "countLabel") countLabel) bool --m ()
-      return ()
+  bool <-  mapDyn (maybe False (const True)) score
+  barHeight <- mapDyn (maybe (Score 0 0 0) id) score -- Dynamic t Int
+  scoreLabel <- mapDyn (maybe (Score 0 0 0) id) score
+  countLabel <- mapDyn (maybe (Score 0 0 0) id) score
+  flippableDyn (return ())  (dynScoreLabel (constDyn "scoreLabel") scoreLabel) bool
+  dynBarCSS' barHeight (constDyn 30) -- m ()
+  flippableDyn faintedLineCSS (return ()) bool
+  hzLabel (constDyn "hzLabel") hz
+  dynCountLabel (constDyn "countLabel") countLabel

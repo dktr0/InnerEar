@@ -9,7 +9,13 @@ import InnerEar.Widgets.Utility
 import InnerEar.Widgets.Bars
 
 
-data AnswerButtonMode = NotPossible | Possible | IncorrectDisactivated | IncorrectActivated  | Correct deriving (Eq,Show)
+data AnswerButtonMode =
+  NotPossible |
+  Possible |
+  IncorrectDisactivated | -- should become IncorrectChosen (i.e. can't press anymore)
+  IncorrectActivated | -- should become IncorrectReactivated (i.e. can press to make sound, still marked as wrong)
+  Correct deriving (Eq,Show) -- should become CorrectChosen
+  -- should add: CorrectMissed (i.e. what correct answer becomes when tries run out)
 
 buttonDynCss :: MonadWidget t m => String -> Dynamic t String -> m (Event t ())
 buttonDynCss label cssClass = do

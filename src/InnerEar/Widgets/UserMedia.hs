@@ -11,9 +11,6 @@ import Control.Monad.IO.Class(liftIO)
 import qualified Data.Map as M
 
 import InnerEar.Types.Score
---import InnerEar.Widgets.Utility
-
-
 
 
 userMediaWidget'::MonadWidget t m => String -> Dynamic t Filter -> m ()
@@ -28,7 +25,7 @@ userMediaWidget' s filt = do
   dynSound <- combineDyn (\x f-> if x ==1 then Sound source else FilteredSound source f) radioSelection filt
   soundEv <- button "play"
   performSound $ tagDyn dynSound soundEv
- 
+
 userMediaWidget::MonadWidget t m => String -> Dynamic t Filter -> m ()
 userMediaWidget s filt = do
   elClass "audio" s (return ())
