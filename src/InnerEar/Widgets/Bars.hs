@@ -170,4 +170,8 @@ scoreBar score hz = elClass "div" "scoreBarWrapper" $ do
         faintedLineCSS
         hzLabel (constDyn "hzLabel") hz
         dynCountLabel (constDyn "countLabel") countLabel) (do
+        dynScoreLabel (constDyn "scoreLabel") scoreLabel -- m()
+        dynBarCSS' barHeight (constDyn 30) -- m ()
+        hzLabel (constDyn "hzLabel") hz
+        dynCountLabel (constDyn "countLabel") countLabel) bool --m ()
       return ()
