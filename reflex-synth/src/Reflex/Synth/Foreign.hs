@@ -18,7 +18,8 @@ foreign import javascript safe "$r=___ac.createOscillator()" createOscillator ::
 
 foreign import javascript safe "loadUserSoundFile()" loadUserSoundFile :: IO ()
 
-foreign import javascript safe "$r=test($1)" createMediaNode::JSString -> IO JSVal
+foreign import javascript safe "$r= createMediaNode($1)" createMediaNode :: JSString -> IO JSVal
+
 
 foreign import javascript safe "$2.gain.value = $1" setGain :: Double -> JSVal -> IO ()
 foreign import javascript safe "$2.frequency.value = $1" setFrequency :: Double -> JSVal -> IO()

@@ -16,10 +16,31 @@ function test(s){
   return ___ac.createMediaElementSource(a)
 }
 
+function createMediaNode (id){
+  var node
+  console.log(id)
+  if (userAudioNodes[id]){
+    var obj = userAudioNodes[id]
+    console.log('is in here')
+    if (obj.audioElement){
+      node = ___ac.createMediaElementSource(obj.audioElement)
+    } else{
+      var audioElement = document.getElementById(id+"Audio")
+      node = ___ac.createMediaElementSource(obj.audioElement)
+    }
+    userAudioNodes[id].node = node
+  } else {
+    console.log('else')
+    var audioElement = document.getElementById(id+"Audio")
+    node = ___ac.createMediaElementSource(audioElement)
+    userAudioNodes[id] = {node:node, audioElement:audioElement}
+  }
+  return node
+}
 
 function loadBuffer(inputId){
 
-  var inputElement = document.getElementById(inputId)
+  var inputElement = document.getElementById(inputId+"Input")
 
   if (inputElement){
     var files = inputElement.files
@@ -34,11 +55,19 @@ function loadBuffer(inputId){
         console.log('file loaded')
         ___ac.decodeAudioData(bufferReader.result,
           function(buffer){
-            userAudioNodes[inputId].buffer = buffer
+            // Set object of id's buffer to the decoded buffer
+            if(userAudioNodes[inputId]){
+              userAudioNodes[inputId].buffer = buffer
+            } else {
+              userAudioNodes[inputId] = {buffer:buffer}
+            }
+
+            // If the user hasn't changed the loopend, set loopend to the end of the soundfile
+            if (userAudioNodes[inputId].loopEnd==undefined){
+              userAudioNodes[inputId].loopEnd = buffer.duration
+            }
             console.log("Buffer "+inputId+" successfully decoded.")
-        },function(e){
-            alert("Error decoding audio data, please try to load another file.")
-        })
+          },function(e){alert("Error decoding audio data, please try to load another file.")})
       })
 
     } else {
@@ -58,6 +87,10 @@ function playMediaNode(s){
     console.log('Error playing media node')
   }
 }
+
+
+
+
 
 function createBufferSourceNodeFromURL(url) {
   var source = ___ac.createBufferSource()
@@ -125,29 +158,50 @@ function setAudioSrc(id){
     loadBuffer(id)
     
 
+    if (x.inputElement.files){
+      var file = files[0];
+    
+
+      var urlReader = new FileReader();
       // Get the file's URL
       urlReader.readAsDataURL(file)
       urlReader.addEventListener('loadend', function(e){
         console.log('url loaded')
-        userAudioNodes[inputId].url = urlReader.result;
+        x.url = urlReader.result;
+        x.audioElement.setAttribute('src',x.url)
       })
-
-
-
-
-
-
-    x.audioElement.setAttribute('src',)
-
+    } else {
+      console.log ('error in setAudioSrc: no files for userAudioNodes['+id+']')
+    }
   } else {
-    var audioEl = document.getElementById(id++"Audio")
-    var inputEl = document.getElementById(id++"Input")
-    userAudioNodes[id] = {}
+    var audioElement = document.getElementById(id+"Audio")
+    var inputElement = document.getElementById(id+"Input")
+    if (audioElement && inputElement){
+      userAudioNodes[id].audioElement = audioElement
+      userAudioNodes[id].inputElement = inputElement
+      userAudioNodes[id].loopStart = 0;
+      userAudioNodes[id].loopEnd = undefined; 
+      userAudioNodes[id].audioElement.ontimeupdate = audioOnTimeUpdate(userAudioNodes[id])
+
+    } else{
+      console.log('Error in setAudioSrc: either no input or audio element for: '+id)
+    }
+
   }
 
 }
 
-
+function audioOnTimeUpdate(obj){
+  if (obj.audioElement.loop){
+    if(obj.loopEnd==undefined){obj.loopEnd = obj.buffer.duration}
+    if(obj.audioElement.currentTime<obj.loopStart){
+      obj.audioElement.currentTime = obj.loopStart
+    }
+    if(obj.audioElement.currentTime>=obj.loopEnd){
+      obj.audioElement.currentTime = obj.loopEnd
+    }
+  }
+}
 
 
 
@@ -182,7 +236,7 @@ function drawBufferWaveform (canvasL,canvasR) {
     for (var i=0; i<canvasL.width; i++){
       // var x = Math.round(1000*i/dataL.length)
       var x = i*Math.round(dataL.length/canvasL.width)
-      // if(x==Math.round(x)){
+
       ctxL.lineTo(i,dataL[x]*100+100)
       ctxR.lineTo(i,dataR[x]*100+100)
 
@@ -192,5 +246,9 @@ function drawBufferWaveform (canvasL,canvasR) {
 
   } else{
   console.log("WARNING - canvas drawn before buffer loaded")
+  }
 }
-}
+
+
+
+
