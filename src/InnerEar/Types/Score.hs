@@ -13,8 +13,6 @@ data Score = Score {
   falseNegatives::Int  -- times user thinks it is another answer but this is the correct answer
 } deriving (Show, Eq,Typeable,Data)
 
---data ScorePossibility = Correct | FalsePositive | FalseNegative deriving (Show, Eq)
-
 -- Times that the answer this score pertains to has been
 -- the answer 
 questionsAsked::Score -> Int
@@ -31,7 +29,7 @@ incCorrect:: Score -> Score
 incCorrect (Score a b c) = Score (a+1) b c
 
 
--- second param is to be interpreted as: (correctA)
+-- second param is to be interpreted as: (correctA, Either (correctA) (inCorrectA))
 updateScore::(Ord k)=> Map k Score -> (k,Either k k) -> Map k Score
 updateScore m (a,(Left b)) = insertWith (\x _->incFalseNegative x) a (Score 0 0 0) $ insertWith (\x _->incFalsePositive x) b (Score 0 0 0) m
 updateScore m (_,(Right b)) = insertWith (\x _->incCorrect x) b (Score 0 0 0) m

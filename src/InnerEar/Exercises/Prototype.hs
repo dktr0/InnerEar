@@ -26,6 +26,7 @@ import Data.List(elemIndex)
 import InnerEar.Widgets.AnswerButton
 import InnerEar.Widgets.Utility
 import InnerEar.Widgets.SpecEval
+import InnerEar.Widgets.UserMedia
 import InnerEar.Types.Data
 import InnerEar.Types.Score
 import Reflex.Synth.Synth
@@ -138,6 +139,10 @@ prototypeQuestionWidget :: MonadWidget t m
 prototypeQuestionWidget config defaultEval newQuestion = mdo
   let maxTries = 3::Int
 
+  -- UserMedia widget
+  dynFilt <- mapDyn (\x->Filter Peaking (freqAsDouble x) 1.4 16.0) answer
+  userMediaWidget "prototypeQuestionUserAudio" dynFilt
+
   -- Managing number of tries
   listOfClicked <- foldDyn ($) [] $ leftmost [fmap (:) bandPressed, (const []) <$ newQuestion]
   let tryEv = attachWithMaybe (\l e -> if elem e l then Nothing else Just e) (current listOfClicked) bandPressed
@@ -186,10 +191,12 @@ prototypeQuestionWidget config defaultEval newQuestion = mdo
   dynText feedbackToDisplay
 
   -- generate sounds to be played
-  let playCorrectSound = (\x-> FilteredSound (BufferSource (File "pinknoise.wav") 2.0) (Filter Peaking (freqAsDouble x) 1.4 16.0)) <$> tagDyn answer playButton
-  let playOtherSounds = (\x-> FilteredSound (BufferSource (File "pinknoise.wav") 2.0) (Filter Peaking (freqAsDouble x) 1.4 16.0)) <$> bandPressed
-  let unfilteredSound = Sound (BufferSource (File "pinknoise.wav") 2.0) <$ playUnfiltered
+  let playCorrectSound = (\x-> FilteredSound (NodeSource (BufferNode $ File "pinknoise.wav") 2.0) (Filter Peaking (freqAsDouble x) 1.4 16.0)) <$> tagDyn answer playButton
+  let playOtherSounds = (\x-> FilteredSound (NodeSource (BufferNode $ File "pinknoise.wav") 2.0) (Filter Peaking (freqAsDouble x) 1.4 16.0)) <$> bandPressed
+  let unfilteredSound = Sound (NodeSource (BufferNode $ File "pinknoise.wav") 2.0) <$ playUnfiltered
   let playSounds = leftmost [playCorrectSound,playOtherSounds,unfilteredSound]
+
+
 
   -- generate navigation events
   nextQuestion <- (InQuestion <$) <$> button "New Question"

@@ -53,36 +53,7 @@ clickableDivDynClass label c val = do
   clickEv <- wrapDomEvent (_el_element element) (onEventName Click) (mouseXY)
   return $ (val <$) clickEv
 
-sourceWidget::MonadWidget t m => m (Dynamic t Source)
-sourceWidget = elClass "div" "sourceWidget" $ do
-  let radioButtonMap = zip [0::Int,1..] ["Pink Noise","White Noise","Upload Sound File"]
-  radioWidget <- radioGroup (constDyn "Source Selector") (constDyn radioButtonMap)
-         (WidgetConfig {_widgetConfig_initialValue = Just 0
-                       ,_widgetConfig_setValue = never
-                       ,_widgetConfig_attributes = constDyn M.empty})
-  (fileSource,fileChangeEv) <- mediaElement
-  radioVal <- mapDyn (maybe 0 id) (_hwidget_value radioWidget)
-  (cL,_) <- elAttr' "canvas" (M.fromList $ zip ["width","height"] ["1000","200"]) (return ())
-  (cR,_) <- elAttr' "canvas" (M.fromList $ zip ["width","height"] ["1000","200"]) (return ())
-  let canvasDrawEv = ((liftIO $ renderAudioWaveform (castToHTMLCanvasElement $ _el_element cL) (castToHTMLCanvasElement $ _el_element cR)) <$) fileChangeEv
-  performEvent canvasDrawEv
-  mapDyn (\x-> if x==0 then BufferSource (File "pinknoise.wav") 2 else if x==1 then BufferSource (File "whitenoise.wav") 2 else fileSource) radioVal
 
-
-
-filteredSoundWidget::MonadWidget t m => Dynamic t Filter -> m (Dynamic t Sound)
-filteredSoundWidget filt= elClass "div" "sourceWidget" $ do
-  let radioButtonMap = zip [0::Int,1..] ["Pink Noise","White Noise","Upload Sound File"]
-  radioWidget <- radioGroup (constDyn "Source Selector") (constDyn radioButtonMap)
-         (WidgetConfig {_widgetConfig_initialValue = Just 0
-                       ,_widgetConfig_setValue = never
-                       ,_widgetConfig_attributes = constDyn M.empty})
-  (fileSource,fileChangeEv) <- mediaElement
-  radioVal <- mapDyn (maybe 0 id) (_hwidget_value radioWidget)
-  source <- mapDyn (\x-> if x==0 then BufferSource (File "pinknoise.wav") 2 else if x==1 then BufferSource (File "whitenoise.wav") 2 else fileSource) radioVal
-  sound <- combineDyn FilteredSound source filt
-  connectGraphOnEv $ updated sound
-  return sound
 
 buttonVal :: (MonadWidget t m) => String -> a -> m (Event t a)
 buttonVal t r = do

@@ -118,54 +118,18 @@ button {
 }
 
 button.notPossibleButton {
+  width:80px;
+  text-align: center;
+  display: inline-block;
   background-color: black;
   color: gray;
   border: none;
   border-radius: 40px;
   border: 1px solid gray; /* fainted borders */
 }
+
 
 button.possibleButton {
-  background-color: rgb(128,128,128);
-  color: white;
-  border: none;
-  border-radius: 4px;
-}
-
-button.incorrectDisactivatedButton{
-background-color: red;
-color: white;
-border: none;
-border-radius: 4px;
-}
-
-button.incorrectActivatedButton {
-  background-color: gray;
-  border: none;
-  color: white;
-  border-radius: 4px;
-}
-
-button.correctButton{
-  background-color: green;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  border: 7px solid green;
-}
-
-div.notPossibleButton {
-  width:80px;
-  text-align: center;
-  display: inline-block;
-  background-color: black;
-  color: gray;
-  border: none;
-  border-radius: 40px;
-  border: 1px solid gray; /* fainted borders */
-}
-
-div.possibleButton {
   width:80px;
   text-align: center;
   display: inline-block;
@@ -175,7 +139,8 @@ div.possibleButton {
   border-radius: 4px;
 }
 
-div.incorrectDisactivatedButton{
+
+button.incorrectActivatedButton{
   width:80px;
   text-align: center;
   display: inline-block;
@@ -185,7 +150,8 @@ div.incorrectDisactivatedButton{
   border-radius: 4px;
 }
 
-div.incorrectActivatedButton {
+
+button.incorrectDisactivatedButton {
   width:80px;
   text-align: center;
   display: inline-block;
@@ -195,7 +161,8 @@ div.incorrectActivatedButton {
   border-radius: 4px;
 }
 
-div.correctButton{
+
+button.correctButton{
   width:80px;
   text-align: center;
   display: inline-block;
