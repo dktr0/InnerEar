@@ -182,46 +182,37 @@ button.correctButton{
 .svgFaintedLine {
   width: 1px;
   height: 5px;
-  background-color: gray;
+  background-color: #2F4F4F;
   position: relative;
   right: 45%;
  }
 
- .svgFaintedBottomLine {
-   width : 310px;
+ .faintedXaxis {
+   width : 320px;
    height: 1px;
-   transform: rotate(0deg);
-   background-color: gray;
+   background-color: #2F4F4F;
    position: relative;
    right: 310px;
-   top: -29px;
+   top: -31px;
+ }
+
+ .faintedYaxis {
+   width : 1px;
+   height: 215px;
+   background-color: #2F4F4F;
+   position: relative;
+   right: 630px;
+   top: -31px;
  }
 
 .bars {
-  fill: yellow;
+  fill: hsl(120,100%,80%);
   stroke: black;
   stroke-width: 0.5px;
 }
 
-rect {
-  width: 300px;
-  height: 300px;
-  fill: green;
-  stroke-width:5;
-}
-
 .sourceWidget {
   background-color: rgb(100,100,100);
-}
-
-.percentageClass {
-background-color: black;
-    color: hsl(120,100%,80%);
-}
-
-.dynLabelForBarClass {
-    background-color: black;
-    color: hsl(120,100%,80%);
 }
 
 .scoreBarWrapper {
@@ -229,78 +220,65 @@ background-color: black;
 }
 
 .scoreLabel {
- background-color: black;
- color: hsl(120,100%,80%);
- margin: 0px;
-  font-size: 5px;
-  text-align: center;
-}
-
-.dynLabel {
-  background-color: black;
-  color: hsl(120,100%,80%);
-  font-size: 7px;
-  text-align: center;
-}
-
-.hzTitleLabel {
-  display: inline-block;
-  padding-right: 10px;
-}
-
-.countTitleLabel {
-  display: inline-block;
-  padding-right: 10px;
-}
-.countLabel {
   background-color: black;
   color: hsl(120,100%,80%);
   margin: 0px;
+  font-size: 8px;
+  text-align: center;
+}
+
+.hzLabel {
+  background-color: black;
+  color: hsl(120,100%,80%);
+  font-size: 8px;
+  text-align: center;
+}
+
+.countLabel {
+  background-color: black;
+  color: hsl(120,100%,80%);
   padding-top: 10px;
-  font-size: 7px;
+  font-size: 8px;
   text-align: center;
 }
 
 .graphLabel {
   background-color: black;
   color: hsl(120,100%,80%);
-  font-size: 20px;
-  padding-right: 0px;
-  padding-top: 20px;
-  text-align: left;
+  font-size: 15px;
+  position: relative;
+  right: 11px;
+  bottom: 5px;
+  width: 320px;
+  height: 20px;
+  text-align: center;
 
 }
-
-.alignGraphLine {
-background-color: black;
-height: 200px;
-width:1px;
-
-}
-
-
 
 .countMainLabel {
-  color: white;
-  font-size:  10px;
+  background-color: black;
+  width: 15px;
+  font-size:  8px;
   position: relative;
-  bottom:  24px;
-  left: -15px;
+  bottom:  32px;
+  left: -25px;
 
 }
 
 .percentageMainLabel {
-  color: white;
-  font-size:  9px;
+  background-color: black;
+  width: 15px;
+  font-size:  8px;
   position: relative;
-  left: -15px;
-  top: 60px;
+  left: -25px;
+  bottom: 145px;
 }
 
 .hzMainLabel {
-  color: white;
-  font-size:  9px;
+  background-color: black;
+  width: 15px;
+  font-size:  8px;
   position: relative;
-  left: -15px;
-  top: -32px;
+  left: -25px;
+  bottom: 42px;
   }

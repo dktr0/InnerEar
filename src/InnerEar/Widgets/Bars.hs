@@ -150,32 +150,24 @@ dynBarCSS' score barWidth = do
 faintedLineCSS :: MonadWidget t m => m ()
 faintedLineCSS = svgClass "svg" "svgFaintedLine" $ return ()
 
---A fainted line to use at the bottom of performance graphs
-faintedBottomLine :: MonadWidget t m => m ()
-faintedBottomLine =  svgClass "svg" "svgFaintedBottomLine" $ return ()
+--A fainted Y axis
+faintedYaxis :: MonadWidget t m => m ()
+faintedYaxis =  svgClass "svg" "faintedYaxis" $ return ()
 
--- A small fainted line to use in performance graphs
-alignGraphLine :: MonadWidget t m => m ()
-alignGraphLine = do
-        svgClass "svg" "alignGraphLine" $ return ()
+-- A fainted X axis
+faintedXaxis :: MonadWidget t m => m ()
+faintedXaxis = svgClass "svg" "faintedXaxis" $ return ()
 
 -- A dynamic bar for (Maybe Score)
 scoreBar :: MonadWidget t m => Dynamic t (Maybe Score) -> String ->  m ()
 scoreBar score hz = elClass "div" "scoreBarWrapper" $ do
       bool <-  mapDyn (maybe False (const True)) score
+      barHeight <- mapDyn (maybe (Score 0 0 0) id) score -- Dynamic t Int
+      scoreLabel <- mapDyn (maybe (Score 0 0 0) id) score
+      countLabel <- mapDyn (maybe (Score 0 0 0) id) score
       flippableDyn (do
-        barHeight <- mapDyn (maybe (Score 0 0 0) id) score
-        countLabel <- mapDyn (maybe (Score 0 0 0) id) score
         dynBarCSS' barHeight (constDyn 30) -- m ()
         faintedLineCSS
-        alignGraphLine
-        hzLabel (constDyn "dynLabel") hz
+        hzLabel (constDyn "hzLabel") hz
         dynCountLabel (constDyn "countLabel") countLabel) (do
-        barHeight <- mapDyn (maybe (Score 0 0 0) id) score -- Dynamic t Int
-        scoreLabel <- mapDyn (maybe (Score 0 0 0) id) score
-        countLabel <- mapDyn (maybe (Score 0 0 0) id) score
-        dynScoreLabel (constDyn "scoreLabel") scoreLabel -- m()
-        dynBarCSS' barHeight (constDyn 30) -- m ()
-        hzLabel (constDyn "dynLabel") hz
-        dynCountLabel (constDyn "countLabel") countLabel) bool --m ()
       return ()
