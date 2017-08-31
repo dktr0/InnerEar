@@ -19,6 +19,12 @@ displaySpectrumEvaluation graphLabel score = elClass "div" "specEvalWrapper" $ d
   listWithKey maybeScore (flip scoreBar)
   return ()
 
+{-
+displayMultipleChoiceEvaluation :: (MonadWidget t m, Show a, Ord a)
+  => String -> String -> [a] -> Dynamic t (Map a Score) -> m ()
+displayMultipleChoiceEvaluation graphLabel xLabel possibilities scoreMap = ...
+-}
+
 displayCurrentSpectrumEvaluation :: MonadWidget t m => Dynamic t String -> Dynamic t (Map Frequency Score) -> m ()
 displayCurrentSpectrumEvaluation graphLabel score = elClass "div" "specEvalWrapper" $ do
 

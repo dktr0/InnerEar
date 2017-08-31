@@ -1,7 +1,6 @@
 module Reflex.Synth.Synth where
 
 import Reflex.Synth.Types 
---import InnerEar.Types.Sound
 import qualified Reflex.Synth.Foreign as F
 import qualified Data.Map as M
 import Reflex
@@ -9,7 +8,6 @@ import Reflex.Dom
 import Control.Monad (liftM)
 import GHCJS.DOM.JSFFI.Generated.HTMLElement
 
---import GHCJS.DOM.JSFFI.Generated.File (getName)
 import GHCJS.DOM.File (getName)
 import GHCJS.DOM.FileReader (newFileReader,getResult, readAsDataURL,load)
 import GHCJS.DOM.EventM(on)

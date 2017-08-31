@@ -1,10 +1,6 @@
 module Reflex.Synth.Foreign where
 
--- InnerEar.WebAudio.Foreign where
-
 import GHCJS.Types (JSVal,JSString)
---import qualified GHCJS.Prim as Prim (toJSString)
-
 
 foreign import javascript safe "___ac = new AudioContext()" createAudioContext:: IO ()
 foreign import javascript safe "$r=___ac.destination" getDestination :: IO JSVal
@@ -21,12 +17,12 @@ foreign import javascript safe "loadUserSoundFile()" loadUserSoundFile :: IO ()
 foreign import javascript safe "$r= createMediaNode($1)" createMediaNode :: JSString -> IO JSVal
 
 
-foreign import javascript safe "$2.gain.value = $1" setGain :: Double -> JSVal -> IO ()
-foreign import javascript safe "$2.frequency.value = $1" setFrequency :: Double -> JSVal -> IO()
+foreign import javascript safe "$2.gain.value = $1; $r=$2" setGain :: Double -> JSVal -> IO JSVal
+foreign import javascript safe "$2.frequency.value = $1; $r=$2" setFrequency :: Double -> JSVal -> IO JSVal
 
-foreign import javascript safe "$2.Q.value = $1" setFilterQ :: Double -> JSVal -> IO()
-foreign import javascript safe "$2.type = $1" setFilterType :: JSVal -> JSVal -> IO()
-foreign import javascript safe "$2.type = $1" setOscillatorType :: JSVal -> JSVal -> IO()
+foreign import javascript safe "$2.Q.value = $1; $r=$2" setFilterQ :: Double -> JSVal -> IO JSVal
+foreign import javascript safe "$2.type = $1; $r=$2" setFilterType :: JSVal -> JSVal -> IO JSVal
+foreign import javascript safe "$2.type = $1; $r=$2" setOscillatorType :: JSVal -> JSVal -> IO JSVal
 
 foreign import javascript safe "loadBuffer($1)" loadBuffer:: JSString -> IO ()
 
@@ -45,7 +41,7 @@ foreign import javascript safe "$r=___ac.createPinkNoise()" createPinkNoise :: I
 foreign import javascript safe "$r=___ac.createBrownNoise()" createBrownianNoise :: IO JSVal
 
 
-foreign import javascript safe "console.log($1);$1.start()" startNode :: JSVal -> IO ()
+foreign import javascript safe "console.log($1);$1.start();$r=$1" startNode :: JSVal -> IO JSVal
 foreign import javascript safe "playMediaNode($1)" playMediaNode:: JSString -> IO()
 
 

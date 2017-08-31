@@ -27,7 +27,7 @@ import Reflex.Synth.Types
 
 multipleChoiceExercise :: (MonadWidget t m, Show a, Eq a, Ord a)
   => [a]
-  -> (Maybe a -> Sound)
+  -> (a -> Sound)
   -> ExerciseId
   -> c
   -> (c -> m (Event t c))
@@ -49,7 +49,7 @@ multipleChoiceExercise answers sound i c cw de g r = Exercise {
 
 multipleChoiceQuestionWidget :: (MonadWidget t m, Show a, Eq a, Ord a)
   => [a] -- fixed list of potential answers
-  -> (Maybe a -> Sound) -- function to produce a sound from an answer (or nothing if reference button pressed)
+  -> (a -> Sound) -- function to produce a sound from an answer
   -> c
   -> Map a Score
   -> Event t ([a],a)
@@ -105,8 +105,8 @@ multipleChoiceQuestionWidget answers sound config initialEval newQuestion = mdo
   dynText feedbackToDisplay
 
   -- generate sounds to be played
-  let playCorrectSound = sound <$> tagDyn answer playButton
-  let playOtherSounds = sound <$> Just <$> bandPressed
+  let playCorrectSound = sound <$> fromJust <$> tagDyn answer playButton
+  let playOtherSounds = sound <$> bandPressed
   let unfilteredSound = Sound (NodeSource (BufferNode $ File "pinknoise.wav") 2.0) <$ playUnfiltered
   let playSounds = leftmost [playCorrectSound,playOtherSounds,unfilteredSound]
 
