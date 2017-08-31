@@ -14,7 +14,7 @@ cabal-version:       >=1.10
 extra-source-files:
 
 executable InnerEarServer
-  hs-source-dirs:    ../src
+  hs-source-dirs:    src
   main-is:           InnerEarServer.hs
   build-depends:     base, containers, text, json, websockets, time, tuple,
                      wai, warp, wai-websockets, wai-app-static

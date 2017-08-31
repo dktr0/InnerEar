@@ -1,4 +1,4 @@
-module Reflex.Synth.Foreign where 
+module Reflex.Synth.Foreign where
 
 -- InnerEar.WebAudio.Foreign where
 
@@ -9,7 +9,7 @@ import GHCJS.Types (JSVal,JSString)
 foreign import javascript safe "___ac = new AudioContext()" createAudioContext:: IO ()
 foreign import javascript safe "$r=___ac.destination" getDestination :: IO JSVal
 foreign import javascript safe "$1.connect($2)" connect :: JSVal -> JSVal -> IO ()
-foreign import javascript safe "$1.disconnect($2)" disconnect ::JSVal -> JSVal -> IO() 
+foreign import javascript safe "$1.disconnect($2)" disconnect ::JSVal -> JSVal -> IO()
 foreign import javascript safe "$1.disconnect()" disconnectAll::JSVal -> IO()
 
 foreign import javascript safe "$r=___ac.createGain()" createGain :: IO JSVal
