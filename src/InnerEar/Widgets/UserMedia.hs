@@ -6,14 +6,16 @@ import Reflex.Synth.Types
 import Reflex.Synth.Synth
 import Reflex.Dom.Contrib.Widgets.ButtonGroup (radioGroup)
 import Reflex.Dom.Contrib.Widgets.Common
+import qualified GHCJS.DOM.Types as G
 import Control.Monad
 import Control.Monad.IO.Class(liftIO)
+import GHCJS.DOM.EventM(mouseX)
 import Text.Read(readMaybe)
 import qualified Data.Map as M
 
 
 import InnerEar.Types.Score
-
+import InnerEar.Widgets.Utility
 
 
 -- takes the inputId used for a LoadedFile, an event triggering when to
@@ -21,17 +23,18 @@ import InnerEar.Types.Score
 -- for a LoadedFile
 waveformWidget::MonadWidget t m => String -> Event t () -> m (Dynamic t PlaybackParam)
 waveformWidget inputId event= do
-  (element,_) <- elClass' "canvas" "waveformCanvas" (return ())
-  performEvent_ $ fmap liftIO $ fmap (const $ renderAudioWaveform s element) event -- redraw wavefor mon same canvas each event
-  clickEv <- wrapDomEvent (_el_element element) (onEventName Click) (mouseX)
+  (canvasEl,_) <- elClass' "canvas" "waveformCanvas" (return ())
+  let canvasElement = _el_element canvasEl
+  performEvent_ $ fmap liftIO $ fmap (const $ renderAudioWaveform inputId $ G.castToHTMLCanvasElement canvasElement) event -- redraw wavefor mon same canvas each event
+  clickEv <- wrapDomEvent canvasElement (onEventName Click) (mouseX)
   pos <- holdDyn 0 clickEv
-  mapDyn ("clickX:  "++show pos) >>= dynText
-  start <- textInput $ def & (_textInputConfig_attributes (constDyn $ fromList $ zip ["type","step"] ["number","0.1"]))
-  end <- textInput $ def & (_textInputConfig_attributes (constDyn $ fromList $ zip ["type","step"] ["number","0.1"]))  
-  startVal <- mapDyn (maybe 1.0 id . (readMaybe)::String->Maybe Double) (_textInput_value start)
-  endVal <- mapDyn (maybe 1.0 id . (readMaybe)::String->Maybe Double) (_textInput_value end)
+  mapDyn (("clickX:  "++) . show) pos >>= dynText
+  start <- textInput $ def & textInputConfig_attributes .~ (constDyn $ M.fromList $ zip ["type","step"] ["number","0.1"])
+  end <- textInput $ def & textInputConfig_attributes .~ (constDyn $ M.fromList $ zip ["type","step"] ["number","0.1"])
+  startVal <- mapDyn (maybe 1.0 id . ((readMaybe)::String->Maybe Double) ) (_textInput_value start)
+  endVal <- mapDyn (maybe 1.0 id . ((readMaybe)::String->Maybe Double)) (_textInput_value end)
   param <- combineDyn (PlaybackParam) startVal endVal
-  mapDyn (x->x False) param
+  mapDyn (\x->x False) param
 
 
 
@@ -39,7 +42,7 @@ userMediaWidget::MonadWidget t m => String -> m (Dynamic t Source)
 userMediaWidget s = do
   bufferLoadEv <- bufferInput s
   playbackParam <- waveformWidget s bufferLoadEv
-  mapDyn (NodeSource . BufferNode . LoadedFile s) playbackParam
+  mapDyn (((flip NodeSource) 2) . BufferNode . LoadedFile s) playbackParam
   
 
 

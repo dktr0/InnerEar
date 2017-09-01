@@ -1,6 +1,6 @@
 {-# LANGUAGE RecursiveDo #-}
 
-module InnerEar.Exercises.MultipleChoice (multipleChoiceExercise) where
+module InnerEar.Exercises.MultipleChoice (multipleChoiceExercise,randomMultipleChoiceQuestion,radioConfigWidget) where
 
 import Reflex
 import Reflex.Dom
@@ -27,7 +27,7 @@ import Reflex.Synth.Types
 
 multipleChoiceExercise :: (MonadWidget t m, Show a, Eq a, Ord a)
   => [a]
-  -> (a -> Sound)
+  -> (c -> a -> Sound)
   -> ExerciseId
   -> c
   -> (c -> m (Event t c))
@@ -156,3 +156,21 @@ modesForExplore = fmap f
     f IncorrectActivated = IncorrectActivated
     f Correct = Correct
 
+randomMultipleChoiceQuestion :: [a] -> IO ([a],a)
+randomMultipleChoiceQuestion possibilities = do
+  let n = length possibilities
+  x <- getStdRandom ((randomR (0,n-1))::StdGen -> (Int,StdGen))
+  return (possibilities,possibilities!!x)
+
+radioConfigWidget :: (MonadWidget t m, Eq a) => String -> [a] -> a -> m (Event t a)
+radioConfigWidget msg possibilities i = do
+  let radioButtonMap =  zip [0::Int,1..] possibilities
+  let iVal = maybe 0 id $ elemIndex i possibilities
+  elClass "div" "configText" $ text msg
+  radioWidget <- radioGroup (constDyn "radioWidget") (constDyn $ fmap (\(x,y)->(x,show y)) radioButtonMap)
+           (WidgetConfig {_widgetConfig_initialValue= Just iVal
+                         ,_widgetConfig_setValue = never
+                         ,_widgetConfig_attributes = constDyn empty})
+  dynConfig <- holdDyn i $ fmap (\x-> maybe i id $ Data.Map.lookup (maybe 0 id x) (fromList radioButtonMap)) (_hwidget_change radioWidget)
+  b <- button "Begin Exercise"
+  return $ tagDyn dynConfig b

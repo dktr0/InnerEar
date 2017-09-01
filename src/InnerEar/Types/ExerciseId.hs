@@ -7,6 +7,13 @@ import Text.JSON.Generic
 
 data ExerciseId =
   ThresholdOfSilence |
-  PrototypeExercise | 
+  HarmonicDistortion |
+  GainBoost |
+  FiveBandsBoostCut |
+  AddedWhiteNoise |
+  RT60 |
+  CompressedUncompressed |
+  LeftRightCentre |
+  TenBandsBoostCut | 
   HarmonicsOne
   deriving (Show,Eq,Data,Typeable)

@@ -22,6 +22,10 @@ import GHCJS.DOM.EventM
 dynE :: MonadWidget t m => Dynamic t (m (Event t a)) -> m (Event t a)
 dynE x = dyn x >>= switchPromptly never
 
+elClass'::MonadWidget t m => String -> String -> m a -> m (El t, a)
+elClass' e c f = elAttr' e (M.singleton "class" c) f
+
+
 flippableDyn :: MonadWidget t m => m () -> m () -> Dynamic t Bool -> m ()
 flippableDyn b1 b2 x = mapDyn (bool b1 b2) x >>= dyn >> return ()
 

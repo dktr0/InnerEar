@@ -1,6 +1,6 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 
-module InnerEar.Exercises.ThresholdOfSilence (thresholdOfSilenceExercise) where
+module InnerEar.Exercises.GainBoost (gainBoostExercise) where
 
 import Reflex
 import Reflex.Dom
@@ -8,25 +8,25 @@ import Reflex.Dom
 import InnerEar.Exercises.MultipleChoice
 import InnerEar.Types.ExerciseId
 
-type Config = Int -- gain value for attenuated sounds
+type Config = Double -- representing amount of gain that is applied (or not)
 
 configs :: [Config]
-configs = [-20,-30,-40,-50,-60,-70,-80,-90,-100,-110]
+configs = [10,6,3,2,1,0.5,0.25]
 
 data Answer = Answer Bool deriving (Eq,Ord)
 
 instance Show Answer where
-  show (Answer True) = "Attenuated Sound"
-  show (Answer False) = "No sound at all"
+  show (Answer True) = "Boosted"
+  show (Answer False) = "Normal"
 
 sound :: Config -> Answer -> Sound
-sound db (Answer True) = NoSound 2.0 -- should be a sound source attenuated by dB value
-sound db (Answer False) = NoSound 2.0
+sound db (Answer True) = NoSound 2.0 -- should be a source sound, attenuated by a standard amount (-10 dB) then boosted by dB
+sound db (Answer False) = NoSound 2.0 -- should be just a source sound attenuated by standard amount (-10 dB)
 
-configWidget :: MonadWidget t m => Int -> m (Event t Int)
+configWidget :: MonadWidget t m => Config -> m (Event t Config)
 configWidget i = do
-  let radioButtonMap = (fromList $ zip [0,1..] configs) :: Map Int Int
-  elClass "div" "configText" $ text "Please choose the level of attenuation for this exercise:"
+  let radioButtonMap = (fromList $ zip [0,1..] configs) :: Map Int Config
+  elClass "div" "configText" $ text "Please choose the level of gain (boost) for this exercise:"
   radioWidget <- radioGroup (constDyn "radioWidget") (constDyn $ toList $ fmap show radioButtonMap)
            (WidgetConfig {_widgetConfig_initialValue = Just $ maybe 0 id $ elemIndex i configs
                          ,_widgetConfig_setValue = never
@@ -40,12 +40,12 @@ displayEval scoreMap = return ()
 generateQuestion :: Config -> [Datum Config [Answer] Answer (Map Answer Score)] -> IO ([Answer],Answer)
 generateQuestion _ _ = randomMultipleChoiceQuestion [Answer False,Answer True]
 
-thresholdOfSilenceExercise :: MonadWidget t m => Exercise t m Int [Answer] Answer (Map Answer Score)
-thresholdOfSilenceExercise = multipleChoiceExercise
+gainBoostExercise :: MonadWidget t m => Exercise t m Config [Answer] Answer (Map Answer Score)
+gainBoostExercise = multipleChoiceExercise
   [Answer False,Answer True]
   sound
-  ThresholdOfSilence
-  (-20)
+  GainBoost
+  10
   configWidget
   displayEval
   generateQuestion

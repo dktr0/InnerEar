@@ -1,4 +1,4 @@
-{-# LANGUAGE RecursiveDo, DeriveDataTypeable #-}
+{-# LANGUAGE DeriveDataTypeable #-}
 
 module InnerEar.Exercises.Prototype (prototypeExercise) where
 
@@ -41,8 +41,8 @@ frequencies = [
   F 1000 "1k", F 2000 "2k", F 4000 "4k", F 8000 "8k", F 16000 "16k"]
 
 
-playFrequency :: Frequency -> Sound
-playFrequency f = FilteredSound source filter
+playFrequency :: WhatBandsAreAllowed -> Frequency -> Sound
+playFrequency _ f = FilteredSound source filter
   where source = NodeSource (BufferNode $ File "pinknoise.wav") 2.0
         filter = Filter Peaking (freqAsDouble f) 1.4 16.0
 
