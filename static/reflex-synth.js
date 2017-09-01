@@ -40,11 +40,14 @@ function createMediaNode (id){
 
 function loadBuffer(inputId){
 
-  var inputElement = document.getElementById(inputId+"Input")
+  if (userAudioNodes[inputId]==undefined){
+      userAudioNodes[inputId]={}
+  }
+  var inputElement = document.getElementById(inputId)
 
   if (inputElement){
+
     var files = inputElement.files
-    
     if (files[0]){
       var file = files[0]
       var bufferReader = new FileReader ();
@@ -109,6 +112,20 @@ function createBufferSourceNodeFromURL(url) {
   return source;
 }
 
+
+
+function playBufferNode(id, s, e, loop, node){
+  var start= start*node.buffer.duration
+  var end = node.buffer.duration*end
+  console.log('end:' + end)
+  console.log('start' + start)
+  node.loopStart = start;
+  node.loopEnd = end
+  node.loop = loop
+  node.start(___ac.currentTime, start, end)
+
+}
+
 function createBufferSourceNodeFromID(id,start,end,loop){
   var source = ___ac.createBufferSource();
   source.loop = loop;
@@ -119,8 +136,9 @@ function createBufferSourceNodeFromID(id,start,end,loop){
     console.log('attempting to load buffer...')
     loadBuffer(id)
   } 
-  source.buffer = buffers[id]
+  source.buffer = userAudioNodes[id].buffer
   userAudioNodes[id].source = source
+  console.log("source:  "+source)
   return source
 }
 
@@ -208,16 +226,85 @@ function audioOnTimeUpdate(obj){
 
 
 
+// Probably don't need this anymore....
+function renderAudioWaveform(id, canvas, attempt){
 
-function renderAudioWaveform(id, canvas){
-  var obj = userAudioNodes[id]
-  if (obj.buffer){
-    drawBufferOnCanvas(obj.buffer, canvas)
+  if (attempt<5){
+    var obj = userAudioNodes[id]
+    
+
+    if (obj){
+      if (obj.buffer){
+        drawBufferOnCanvas(obj.buffer, canvas)
+      }
+      else{
+        console.log('### WARNING attempted to renderAudioWaveform before buffer of \''+id+'\' was set...\n trying again');
+        setTimeout(renderAudioWaveform(id,canvas,alert+1),2000)
+      }
+    } else {
+      console.log('### WARNING attempted to renderAudioWaveform before buffer of \''+id+'\' was set...\n trying again');
+      setTimeout(renderAudioWaveform(id,canvas,alert+1),2000)
+    }
   }
-  else{
-    console.log('### WARNING attempted to renderAudioWaveform before buffer of \''+id+'\' was set');
+  else {
+    alert('Unable to properly load soundfile, you may need to reload the page.')
   }
 }
+
+
+
+
+
+
+
+function loadAndDrawBuffer(inputId, canvas){
+
+  var inputElement = document.getElementById(inputId)
+
+  if (inputElement){
+
+    var files = inputElement.files
+    if (files[0]){
+      var file = files[0]
+      var bufferReader = new FileReader ();
+
+      // Decode and store the buffer in userAudioNodes
+      bufferReader.readAsArrayBuffer(file)
+      bufferReader.addEventListener('loadend',function(e){
+        console.log('file loaded')
+        ___ac.decodeAudioData(bufferReader.result,
+          function(buffer){
+            // Set object of id's buffer to the decoded buffer
+            if(userAudioNodes[inputId]){
+              userAudioNodes[inputId].buffer = buffer
+            } else {
+              userAudioNodes[inputId] = {buffer:buffer}
+            }
+
+            // If the user hasn't changed the loopend, set loopend to the end of the soundfile
+            if (userAudioNodes[inputId].loopEnd==undefined){
+              userAudioNodes[inputId].loopEnd = buffer.duration
+            }
+            console.log("Buffer "+inputId+" successfully decoded.")
+            drawBufferOnCanvas(buffer,canvas)
+          },function(e){alert("Error decoding audio data, please try to load another file.")})
+      })
+
+    } else {
+      alert('Please select a sound file to load')
+    }
+  } else {  // no element 'inputId'
+    console.log('Could not find dom element with id: '+inputId)
+    alert('An error occurred, you may need to reload the page')
+  }
+
+
+}
+
+
+
+
+
 
 
 function drawBufferOnCanvas (buff, canvas) {
@@ -226,7 +313,11 @@ function drawBufferOnCanvas (buff, canvas) {
     var width = canvas.width
     var height = canvas.height
     var ctx = canvas.getContext('2d')
-  
+    ctx.fillStyle = "rgb(100,100,75)";
+    ctx.fillRect(0,0,width,height)
+    ctx.lineWidth=1;
+    ctx.fillStyle = "rgb(100,170,200)";
+
     var data = buff.getChannelData(0)
 
     var block = Math.ceil(data.length/width)
@@ -252,4 +343,3 @@ function drawBufferOnCanvas (buff, canvas) {
     console.log("WARNING - canvas drawn before buffer loaded")
   }
 }
-

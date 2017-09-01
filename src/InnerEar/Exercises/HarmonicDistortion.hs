@@ -40,6 +40,7 @@ generateQ _ _ = randomMultipleChoiceQuestion [Answer False,Answer True]
 
 harmonicDistortionExercise :: MonadWidget t m => Exercise t m Config [Answer] Answer (Map Answer Score)
 harmonicDistortionExercise = multipleChoiceExercise
+  1
   [Answer False,Answer True]
   trivialBWidget
   renderAnswer
