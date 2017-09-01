@@ -51,7 +51,7 @@ multipleChoiceExercise answers bWidget render i c cw de g r = Exercise {
   reflectiveQuestion = r
 }
 
-  ---> (([a],a) -> m (Dynamic t Sound))
+
 
 multipleChoiceQuestionWidget :: (MonadWidget t m, Show a, Eq a, Ord a)
   => [a] -- fixed list of potential answers
@@ -60,7 +60,6 @@ multipleChoiceQuestionWidget :: (MonadWidget t m, Show a, Eq a, Ord a)
   -> c
   -> Map a Score
   -> Event t ([a],a)
-
   -> m (Event t (Datum c [a] a (Map a Score)),Event t Sound,Event t ExerciseNavigation)
 
 multipleChoiceQuestionWidget answers bWidget render config initialEval newQuestion = mdo

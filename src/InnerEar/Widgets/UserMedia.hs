@@ -25,7 +25,7 @@ waveformWidget::MonadWidget t m => String -> Event t () -> m (Dynamic t Playback
 waveformWidget inputId event= do
   (canvasEl,_) <- elClass' "canvas" "waveformCanvas" (return ())
   let canvasElement = _el_element canvasEl
-  performEvent_ $ fmap liftIO $ fmap (const $ w, inputId $ G.castToHTMLCanvasElement canvasElement) event -- redraw wavefor mon same canvas each event
+  performEvent_ $ fmap liftIO $ fmap (const $ renderAudioWaveform inputId $ G.castToHTMLCanvasElement canvasElement) event -- redraw wavefor mon same canvas each event
   clickEv <- wrapDomEvent canvasElement (onEventName Click) (mouseX)
   pos <- holdDyn 0 clickEv
   mapDyn (("clickX:  "++) . show) pos >>= dynText
@@ -45,13 +45,15 @@ userMediaWidget s = do
   mapDyn (((flip NodeSource) 2) . BufferNode . LoadedFile s) playbackParam
   
 pinkNoiseOrFileSourceWidget :: MonadWidget t m => String -> m (Dynamic t Source)
-pinkNoiseOrFileSourceWidget sourceID= elClass "div" "sourceWidget" $ do
+pinkNoiseOrFileSourceWidget sourceID = elClass "div" "sourceWidget" $ do
   userFileSource <- userMediaWidget sourceID 
-  let conf = WidgetConfig (Just iVal) never (constDyn empty)
+  let conf = (WidgetConfig {_widgetConfig_initialValue= Just (1::Int)
+                         ,_widgetConfig_setValue = never
+                         ,_widgetConfig_attributes = constDyn M.empty})
   text "Select the sound source: "
-  radioWidget <- radioGroup (constDyn "radioWidget") (M.fromList $ zip [1,2] ["Loaded file","pinknoise"]) conf
-  radioWidgetSelection <- _hwidget_value radioWidget >>= mapDyn (maybe 1 id)
-  combineDyn (\i s-> if i ==1 then s else NodeSource $ BufferNode $ File "pinknoise.wav")
+  radioWidget <- radioGroup (constDyn "radioWidget") (constDyn $ zip [1,2] ["Loaded file","pinknoise"]) conf
+  radioWidgetSelection <-  mapDyn (maybe 1 id) (_hwidget_value radioWidget)
+  combineDyn (\i s-> if i ==1 then s else ((flip NodeSource) 2) $ BufferNode $ File "pinknoise.wav") radioWidgetSelection userFileSource
 
 
 
