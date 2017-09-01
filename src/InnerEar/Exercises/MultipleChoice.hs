@@ -47,12 +47,15 @@ multipleChoiceExercise answers sound i c cw de g r = Exercise {
   reflectiveQuestion = r
 }
 
+  ---> (([a],a) -> m (Dynamic t Sound))
+
 multipleChoiceQuestionWidget :: (MonadWidget t m, Show a, Eq a, Ord a)
   => [a] -- fixed list of potential answers
   -> (Maybe a -> Sound) -- function to produce a sound from an answer (or nothing if reference button pressed)
   -> c
   -> Map a Score
   -> Event t ([a],a)
+
   -> m (Event t (Datum c [a] a (Map a Score)),Event t Sound,Event t ExerciseNavigation)
 
 multipleChoiceQuestionWidget answers sound config initialEval newQuestion = mdo

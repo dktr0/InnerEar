@@ -26,6 +26,7 @@ import InnerEar.Exercises.MultipleChoice
 prototypeExercise :: MonadWidget t m => Exercise t m WhatBandsAreAllowed [Frequency] Frequency (Map Frequency Score)
 prototypeExercise = multipleChoiceExercise
   frequencies
+  --(pinkNoiseOrFileSourceWidget "prototypeExercise")
   playFrequency
   PrototypeExercise
   AllBands
