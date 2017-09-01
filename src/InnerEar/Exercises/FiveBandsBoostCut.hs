@@ -33,7 +33,7 @@ frequencies :: [Answer]
 frequencies = [F 155 "Bass (155 Hz)",F 1125 "Low Mids (1125 Hz)",F 3000 "High Mids (3 kHz)",
   F 5000 "Presence (5 kHz)",F 13000 "Brilliance (13 kHz)"]
 
-sound :: Config -> Answer -> Sound
+sound :: Config -> Source -> Answer -> Sound
 sound db f = FilteredSound source filter -- needs to be boost or cut by specified dB
   where source = NodeSource (BufferNode $ File "pinknoise.wav") 2.0
         filter = Filter Peaking (freqAsDouble f) 1.4 16.0 -- and bandwidth should be wider

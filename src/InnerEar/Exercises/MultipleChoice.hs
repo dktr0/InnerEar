@@ -8,6 +8,7 @@ import Data.Map
 import Control.Monad (zipWithM)
 import Data.List (findIndices,partition,elemIndex)
 import Data.Maybe (fromJust)
+import System.Random
 
 import InnerEar.Types.ExerciseId
 import InnerEar.Types.Data
@@ -19,6 +20,9 @@ import InnerEar.Widgets.UserMedia
 import InnerEar.Widgets.AnswerButton
 import Reflex.Synth.Types
 
+pickASoundWidget :: MonadWidget t m => Dynamic t Source
+
+
 -- | This module introduces a function to generate multiple choice exercises.
 -- Most specifically, it abstracts over the requirement to provide a widget
 -- to present questions, requiring instead that a fixed list of possible
@@ -27,7 +31,8 @@ import Reflex.Synth.Types
 
 multipleChoiceExercise :: (MonadWidget t m, Show a, Eq a, Ord a)
   => [a]
-  -> (c -> a -> Sound)
+  -> m (Dynamic t b) -- b represents something which affects sound production independently of configuration
+  -> (c -> b -> a -> Sound)
   -> ExerciseId
   -> c
   -> (c -> m (Event t c))
