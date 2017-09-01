@@ -43,7 +43,7 @@ data PlaybackParam = PlaybackParam{
   startTime::Double,
   endTime::Double,
   loop::Bool
-}
+} deriving (Read, Show, Eq)
 
 data Buffer = File String | LoadedFile String PlaybackParam deriving (Read,Show,Eq)
 
@@ -101,8 +101,11 @@ createBufferNode (File path) = do
   x <- F.createBufferSourceNodeFromURL (Prim.toJSString path)
   return (WebAudioNode (BufferNode $ File path) x)
 createBufferNode (LoadedFile inputId (PlaybackParam s e l)) = do
-  x <- F.createBufferSourceNodeFromID (Prim.toJSString inputId) (toJSVal s) (toJSVal e) (toJSVal l)
-  return (WebAudioNode (BufferNode $ LoadedFile inputId) x)
+  s'<- toJSVal s
+  e'<- toJSVal e
+  l'<- toJSVal l
+  x <- F.createBufferSourceNodeFromID (Prim.toJSString inputId) s' e' l'
+  return (WebAudioNode (BufferNode $ LoadedFile inputId $ PlaybackParam s e l) x)
 
 
 createAsrEnvelope :: Double -> Double -> Double -> IO WebAudioNode

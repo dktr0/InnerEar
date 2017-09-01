@@ -13,8 +13,7 @@ import GHCJS.DOM.JSFFI.Generated.HTMLElement
 import GHCJS.DOM.File (getName)
 import GHCJS.DOM.FileReader (newFileReader,getResult, readAsDataURL,load)
 import GHCJS.DOM.EventM(on)
-import GHCJS.DOM.Types(toJSString)
-import qualified GHCJS.DOM.Types as G
+import GHCJS.DOM.Types(toJSString,HTMLCanvasElement,unHTMLCanvasElement)
 import Control.Monad.IO.Class (liftIO)
 import GHCJS.Marshal(fromJSVal)
 
@@ -200,10 +199,10 @@ createAdditiveNode xs = do
 --  let r' = G.unHTMLCanvasElement  r
 --  F.renderAudioWaveform l' r'
 
-renderAudioWaveform:: String -> G.HTMLCanvasElement -> IO ()
+renderAudioWaveform:: String -> HTMLCanvasElement -> IO ()
 renderAudioWaveform inputId el = do
-  let el' = G.unHTMLCanvasElement el
-  F.renderAudioWaveform s el
+  let el' = unHTMLCanvasElement el
+  F.renderAudioWaveform (toJSString inputId) el'
 
 
 

@@ -50,5 +50,5 @@ foreign import javascript safe "playMediaNode($1)" playMediaNode:: JSString -> I
 
 
 -- takes 'canvas' html elements - us 'toJSVal on the html element'
-foreign import javascript safe "drawBufferWaveform($1, $2)" renderAudioWaveform :: JSVal -> JSVal -> IO()
+foreign import javascript safe "drawBufferWaveform($1, $2)" renderAudioWaveform :: JSString -> JSVal -> IO()
 
