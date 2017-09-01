@@ -41,6 +41,7 @@ generateQ _ _ = randomMultipleChoiceQuestion [Answer False,Answer True]
 
 boostOrCutExercise :: MonadWidget t m => Exercise t m Config [Answer] Answer (Map Answer Score)
 boostOrCutExercise = multipleChoiceExercise
+  1
   [Answer False,Answer True]
   (userMediaWidget "userMedia")
   renderAnswer

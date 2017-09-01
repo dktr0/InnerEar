@@ -14,10 +14,9 @@ data Score = Score {
 } deriving (Show, Eq,Typeable,Data)
 
 -- Times that the answer this score pertains to has been
--- the answer 
+-- the answer
 questionsAsked::Score -> Int
 questionsAsked (Score a _ c) = a+c
-
 
 incFalsePositive:: Score -> Score
 incFalsePositive (Score a b c) = Score a (b+1) c
@@ -29,7 +28,11 @@ incCorrect:: Score -> Score
 incCorrect (Score a b c) = Score (a+1) b c
 
 
--- second param is to be interpreted as: (correctA, Either (correctA) (inCorrectA))
-updateScore::(Ord k)=> Map k Score -> (k,Either k k) -> Map k Score
-updateScore m (a,(Left b)) = insertWith (\x _->incFalseNegative x) a (Score 0 0 0) $ insertWith (\x _->incFalsePositive x) b (Score 0 0 0) m
-updateScore m (_,(Right b)) = insertWith (\x _->incCorrect x) b (Score 0 0 0) m
+-- second param is to be interpreted as: (correctA, Either (inCorrectA) (correctA))
+updateScore::(Ord k)=> (k,Either k k) -> Map k Score -> Map k Score
+
+updateScore (a,(Left b)) = (insertWith falseN a (Score 0 0 1)) . (insertWith falseP b (Score 0 1 0))
+  where falseN new old = incFalseNegative old
+        falseP new old = incFalsePositive old
+
+updateScore (_,(Right b)) = insertWith (\new old -> incCorrect old) b (Score 1 0 0)

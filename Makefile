@@ -40,5 +40,7 @@ release:
 	cd client && cp -Rf $$(stack path --local-install-root)/bin/InnerEarClient.jsexe ../release/
 	cd server && cp -Rf $$(stack path --local-install-root)/bin/InnerEarServer ../release/InnerEarServer
 
+buildReleaseTest: buildClient buildServer release bootServer
+
 ghciServer:
 	cd server && stack ghci
