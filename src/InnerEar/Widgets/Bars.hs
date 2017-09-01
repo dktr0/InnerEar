@@ -159,8 +159,8 @@ faintedXaxis :: MonadWidget t m => m ()
 faintedXaxis = svgClass "svg" "faintedXaxis" $ return ()
 
 -- A dynamic bar for (Maybe Score)
-scoreBar :: MonadWidget t m => Dynamic t (Maybe Score) -> String ->  m ()
-scoreBar score hz = elClass "div" "scoreBarWrapper" $ do
+scoreBar :: MonadWidget t m => String -> Dynamic t (Maybe Score) -> m ()
+scoreBar key score  = elClass "div" "scoreBarWrapper" $ do
   bool <-  mapDyn (maybe False (const True)) score
   barHeight <- mapDyn (maybe (Score 0 0 0) id) score -- Dynamic t Int
   scoreLabel <- mapDyn (maybe (Score 0 0 0) id) score
@@ -168,5 +168,5 @@ scoreBar score hz = elClass "div" "scoreBarWrapper" $ do
   flippableDyn (return ())  (dynScoreLabel (constDyn "scoreLabel") scoreLabel) bool
   dynBarCSS' barHeight (constDyn 30) -- m ()
   flippableDyn faintedLineCSS (return ()) bool
-  hzLabel (constDyn "hzLabel") hz
+  hzLabel (constDyn "hzLabel") key
   dynCountLabel (constDyn "countLabel") countLabel
