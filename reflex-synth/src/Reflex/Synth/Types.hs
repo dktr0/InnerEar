@@ -198,6 +198,11 @@ startNode (WebAudioNode (AdditiveNode _) r) = F.setGain 1 r  -- @this may not be
 startNode (WebAudioNode (GainNode _) _) = error "Gain node cannot bet 'started' "
 startNode (WebAudioNode (MediaNode s) _) = F.playMediaNode (toJSString s) -- if you call 'start' on a MediaBufferNode a js error is thrown by the WAAPI
 startNode (WebAudioNode (OscillatorNode (Oscillator _ _ g)) r) = F.setGain g r
+startNode (WebAudioNode (BufferNode (LoadedFile a (PlaybackParam b c d))) x) = do
+  b' <- toJSVal b
+  c' <- toJSVal c
+  d' <- toJSVal d
+  F.playBufferNode (toJSString a) b' c' d' x
 startNode (WebAudioNode _ ref) = F.startNode ref
 startNode _ = return ()
 
