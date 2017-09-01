@@ -41,14 +41,14 @@ multipleChoiceExercise :: (MonadWidget t m, Show a, Eq a, Ord a)
   -> Maybe Reflection
   -> Exercise t m c [a] a (Map a Score)
 
-multipleChoiceExercise answers sound i c cw de g r = Exercise {
+multipleChoiceExercise answers soundWidget render i c cw de g r = Exercise {
   exerciseId = i,
   defaultConfig = c,
   configWidget = cw,
   defaultEvaluation = empty,
   displayEvaluation = de,
   generateQuestion = g,
-  questionWidget = multipleChoiceQuestionWidget answers sound,
+  questionWidget = multipleChoiceQuestionWidget answers render,
   reflectiveQuestion = r
 }
 
@@ -60,7 +60,7 @@ multipleChoiceQuestionWidget :: (MonadWidget t m, Show a, Eq a, Ord a)
   -> Event t ([a],a)
   -> m (Event t (Datum c [a] a (Map a Score)),Event t Sound,Event t ExerciseNavigation)
 
-multipleChoiceQuestionWidget answers sound config initialEval newQuestion = mdo
+multipleChoiceQuestionWidget answers render config initialEval newQuestion = mdo
   let maxTries = 3::Int
 
   -- Managing number of tries
@@ -110,8 +110,8 @@ multipleChoiceQuestionWidget answers sound config initialEval newQuestion = mdo
   dynText feedbackToDisplay
 
   -- generate sounds to be played
-  let playCorrectSound = sound <$> fromJust <$> tagDyn answer playButton
-  let playOtherSounds = sound <$> bandPressed
+  let playCorrectSound = render <$> fromJust <$> tagDyn answer playButton
+  let playOtherSounds = render <$> bandPressed
   let unfilteredSound = Sound (NodeSource (BufferNode $ File "pinknoise.wav") 2.0) <$ playUnfiltered
   let playSounds = leftmost [playCorrectSound,playOtherSounds,unfilteredSound]
 
