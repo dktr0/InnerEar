@@ -87,7 +87,11 @@ displayMultipleChoiceEvaluationGraphs' graphLabel xLabel possibilities scoreMap 
       elClass "div" "graphLabel" $ text graphLabel
       elClass "div"  "xLabel" $ text xLabel
       let possibilities' = show possibilities
-      score <- mapDyn (mapKeys (\_ -> possibilities') . fmap (\v -> case v of (Score 0 0 0) -> Nothing; otherwise -> Just v)) scoreMap -- Dynamic t (Map k v)
+      --score <- mapDyn (mapKeys (\_ -> possibilities') . fmap (\v -> case v of (Score 0 0 0) -> Nothing; otherwise -> Just v)) scoreMap -- Dynamic t (Map k v)
+    --  score <- mapWithKeys (\k v-> if (elem k possibilities) then (k,Just v) else (k,Nothing)) scoreMap
+      --filter (\x->if x==Nothing then False else True) scoreMap'
+      scoreMap' <- mapDyn (\x -> fmap () possibilities (\y > lookup y x)) scoreMap-- m (Dynamic t (Map a (Maybe Score)))
+
       listWithKey score scoreBar --Dynamic t (Map k v) -> (k -> Dynamic t v -> m a) -> m (Dynamic t (Map k a))
       return ()
 

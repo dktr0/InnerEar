@@ -31,7 +31,6 @@ testWidget responses = el "div" $ do
 --  scoreBar (constDyn . Just $ (Score 1 3 9)) "31 hz"
 --  let m = constDyn (M.fromList [((F 250 "250 Hz"), (Score 1 2 9)), ((F 500 "500 Hz"), (Score 2 3 8)), ((F 1000 "1 KHz"), (Score 3 3 7)), ((F 2000 "2 KHz"), (Score 4 3 6))])
 --  displayCurrentSpectrumEvaluation (constDyn "Current Performance") m
-  displayMultipleChoiceEvaluationGraphs' "Session performance" "xLabel" possibilities scoreMap
   buttonDynCss "notPossible" (constDyn "notPossibleButton")
   buttonDynCss "possible" (constDyn "possible")
   buttonDynCss "incorrectDisactivated" (constDyn "incorrectDisactivatedButton")
@@ -39,5 +38,6 @@ testWidget responses = el "div" $ do
   buttonDynCss "correct" (constDyn "correctButton")
   let possibilities = ["Q1", "Q2"]
   let scoreMap =  constDyn (M.fromList [("Q1", (Score 1 2 9)), ("Q2", (Score 2 2 8))])
+  displayMultipleChoiceEvaluationGraphs' "Session performance" "xLabel" possibilities scoreMap
   home <- button "back to splash page"
   return (never,never,home)
