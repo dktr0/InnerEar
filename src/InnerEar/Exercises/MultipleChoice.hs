@@ -51,6 +51,8 @@ multipleChoiceExercise answers bWidget render i c cw de g r = Exercise {
   reflectiveQuestion = r
 }
 
+
+
 multipleChoiceQuestionWidget :: (MonadWidget t m, Show a, Eq a, Ord a)
   => [a] -- fixed list of potential answers
   -> m (Dynamic t b) -- b represents something which affects sound production independently of configuration

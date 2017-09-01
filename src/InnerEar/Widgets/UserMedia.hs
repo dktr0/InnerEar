@@ -44,6 +44,17 @@ userMediaWidget s = do
   playbackParam <- waveformWidget s bufferLoadEv
   mapDyn (((flip NodeSource) 2) . BufferNode . LoadedFile s) playbackParam
   
+pinkNoiseOrFileSourceWidget :: MonadWidget t m => String -> m (Dynamic t Source)
+pinkNoiseOrFileSourceWidget sourceID = elClass "div" "sourceWidget" $ do
+  userFileSource <- userMediaWidget sourceID 
+  let conf = (WidgetConfig {_widgetConfig_initialValue= Just (1::Int)
+                         ,_widgetConfig_setValue = never
+                         ,_widgetConfig_attributes = constDyn M.empty})
+  text "Select the sound source: "
+  radioWidget <- radioGroup (constDyn "radioWidget") (constDyn $ zip [1,2] ["Loaded file","pinknoise"]) conf
+  radioWidgetSelection <-  mapDyn (maybe 1 id) (_hwidget_value radioWidget)
+  combineDyn (\i s-> if i ==1 then s else ((flip NodeSource) 2) $ BufferNode $ File "pinknoise.wav") radioWidgetSelection userFileSource
+
 
 
 
