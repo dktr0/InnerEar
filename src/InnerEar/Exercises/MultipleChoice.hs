@@ -1,13 +1,16 @@
 {-# LANGUAGE RecursiveDo #-}
 
-module InnerEar.Exercises.MultipleChoice (multipleChoiceExercise) where
+module InnerEar.Exercises.MultipleChoice where
 
 import Reflex
 import Reflex.Dom
+import Reflex.Dom.Contrib.Widgets.ButtonGroup (radioGroup)
+import Reflex.Dom.Contrib.Widgets.Common
 import Data.Map
 import Control.Monad (zipWithM)
 import Data.List (findIndices,partition,elemIndex)
 import Data.Maybe (fromJust)
+import System.Random
 
 import InnerEar.Types.ExerciseId
 import InnerEar.Types.Data
@@ -27,7 +30,8 @@ import Reflex.Synth.Types
 
 multipleChoiceExercise :: (MonadWidget t m, Show a, Eq a, Ord a)
   => [a]
-  -> (Maybe a -> Sound)
+  -> m (Dynamic t b) -- b represents something which affects sound production independently of configuration
+  -> (c -> b -> a -> Sound)
   -> ExerciseId
   -> c
   -> (c -> m (Event t c))
@@ -36,27 +40,32 @@ multipleChoiceExercise :: (MonadWidget t m, Show a, Eq a, Ord a)
   -> Maybe Reflection
   -> Exercise t m c [a] a (Map a Score)
 
-multipleChoiceExercise answers sound i c cw de g r = Exercise {
+multipleChoiceExercise answers bWidget render i c cw de g r = Exercise {
   exerciseId = i,
   defaultConfig = c,
   configWidget = cw,
   defaultEvaluation = empty,
   displayEvaluation = de,
   generateQuestion = g,
-  questionWidget = multipleChoiceQuestionWidget answers sound,
+  questionWidget = multipleChoiceQuestionWidget answers bWidget render,
   reflectiveQuestion = r
 }
 
+
+
 multipleChoiceQuestionWidget :: (MonadWidget t m, Show a, Eq a, Ord a)
   => [a] -- fixed list of potential answers
-  -> (Maybe a -> Sound) -- function to produce a sound from an answer (or nothing if reference button pressed)
+  -> m (Dynamic t b) -- b represents something which affects sound production independently of configuration
+  -> (c -> b -> a -> Sound) -- function to produce a sound from an answer
   -> c
   -> Map a Score
   -> Event t ([a],a)
   -> m (Event t (Datum c [a] a (Map a Score)),Event t Sound,Event t ExerciseNavigation)
 
-multipleChoiceQuestionWidget answers sound config initialEval newQuestion = mdo
+multipleChoiceQuestionWidget answers bWidget render config initialEval newQuestion = mdo
   let maxTries = 3::Int
+
+  b <- bWidget
 
   -- Managing number of tries
   listOfClicked <- foldDyn ($) [] $ leftmost [fmap (:) bandPressed, (const []) <$ newQuestion]
@@ -105,10 +114,12 @@ multipleChoiceQuestionWidget answers sound config initialEval newQuestion = mdo
   dynText feedbackToDisplay
 
   -- generate sounds to be played
-  let playCorrectSound = sound <$> tagDyn answer playButton
-  let playOtherSounds = sound <$> Just <$> bandPressed
+
+  let playCorrectSound = fromJust <$> tagDyn answer playButton
   let unfilteredSound = Sound (NodeSource (BufferNode $ File "pinknoise.wav") 2.0) <$ playUnfiltered
-  let playSounds = leftmost [playCorrectSound,playOtherSounds,unfilteredSound]
+  let answersToRender = leftmost [playCorrectSound,bandPressed]
+  let renderedAnswers = attachDynWith (render config) b answersToRender
+  let playSounds = leftmost [renderedAnswers,unfilteredSound]
 
   -- generate navigation events
   nextQuestion <- (InQuestion <$) <$> button "New Question"
@@ -156,3 +167,24 @@ modesForExplore = fmap f
     f IncorrectActivated = IncorrectActivated
     f Correct = Correct
 
+randomMultipleChoiceQuestion :: [a] -> IO ([a],a)
+randomMultipleChoiceQuestion possibilities = do
+  let n = length possibilities
+  x <- getStdRandom ((randomR (0,n-1))::StdGen -> (Int,StdGen))
+  return (possibilities,possibilities!!x)
+
+radioConfigWidget :: (MonadWidget t m, Eq a, Show a) => String -> [a] -> a -> m (Event t a)
+radioConfigWidget msg possibilities i = do
+  let radioButtonMap =  zip [0::Int,1..] possibilities
+  let iVal = maybe 0 id $ elemIndex i possibilities
+  elClass "div" "configText" $ text msg
+  radioWidget <- radioGroup (constDyn "radioWidget") (constDyn $ fmap (\(x,y)->(x,show y)) radioButtonMap)
+           (WidgetConfig {_widgetConfig_initialValue= Just iVal
+                         ,_widgetConfig_setValue = never
+                         ,_widgetConfig_attributes = constDyn empty})
+  dynConfig <- holdDyn i $ fmap (\x-> maybe i id $ Data.Map.lookup (maybe 0 id x) (fromList radioButtonMap)) (_hwidget_change radioWidget)
+  b <- button "Begin Exercise"
+  return $ tagDyn dynConfig b
+
+trivialBWidget :: MonadWidget t m => m (Dynamic t ())
+trivialBWidget = holdDyn () $ never

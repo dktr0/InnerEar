@@ -6,6 +6,14 @@ import Text.JSON
 import Text.JSON.Generic
 
 data ExerciseId =
-  PrototypeExercise | 
+  ThresholdOfSilence |
+  HarmonicDistortion |
+  BoostOrCut |
+  FiveBandBoostCut |
+  TenBandBoostCut |
+  AddedWhiteNoise |
+  RT60 |
+  Compression |
+  LeftRightCentre |
   HarmonicsOne
   deriving (Show,Eq,Data,Typeable)

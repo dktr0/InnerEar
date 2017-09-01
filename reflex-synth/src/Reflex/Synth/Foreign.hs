@@ -31,7 +31,7 @@ foreign import javascript safe "$2.type = $1" setOscillatorType :: JSVal -> JSVa
 foreign import javascript safe "loadBuffer($1)" loadBuffer:: JSString -> IO ()
 
 foreign import javascript safe "$r = createBufferSourceNodeFromURL($1)" createBufferSourceNodeFromURL :: JSVal -> IO JSVal  -- Js string to IO JSVal...
-foreign import javascript safe "$r = createBufferSourceNodeFromID($1)" createBufferSourceNodeFromID :: JSVal -> IO JSVal  -- Js string to IO JSVal...
+foreign import javascript safe "$r = createBufferSourceNodeFromID($1,$2,$3,$4)" createBufferSourceNodeFromID :: JSVal -> JSVal -> JSVal -> JSVal -> IO JSVal  -- Js string to IO JSVal...
 
 foreign import javascript safe "setAudioSrc($1)" setAudioSrc :: JSString -> IO ()
 
@@ -50,5 +50,5 @@ foreign import javascript safe "playMediaNode($1)" playMediaNode:: JSString -> I
 
 
 -- takes 'canvas' html elements - us 'toJSVal on the html element'
-foreign import javascript safe "drawBufferWaveform($1, $2)" renderAudioWaveform :: JSVal -> JSVal -> IO()
+foreign import javascript safe "drawBufferWaveform($1, $2)" renderAudioWaveform :: JSString -> JSVal -> IO()
 

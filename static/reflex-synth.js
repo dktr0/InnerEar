@@ -109,15 +109,18 @@ function createBufferSourceNodeFromURL(url) {
   return source;
 }
 
-function createBufferSourceNodeFromID(id){
+function createBufferSourceNodeFromID(id,start,end,loop){
   var source = ___ac.createBufferSource();
-
+  source.loop = loop;
+  userAudioNodes[id].start = start
+  userAudioNodes[id].end = end
   if (userAudioNodes[id].buffer==undefined){
     console.log('WARNING: No buffer loaded')
     console.log('attempting to load buffer...')
     loadBuffer(id)
   } 
   source.buffer = buffers[id]
+  userAudioNodes[id].source = source
   return source
 }
 
@@ -206,49 +209,47 @@ function audioOnTimeUpdate(obj){
 
 
 
-
-
-
-
-function drawBufferWaveform (canvasL,canvasR) {
-  if (bufferData){
-    // var canvasL = document.getElementById('canvasL')
-    // var canvasR = document.getElementById('canvasR')
-
-    var ctxL = canvasL.getContext('2d')
-    var dataL = bufferData.getChannelData(0)
-    var ctxR = canvasR.getContext('2d')
-    var dataR = bufferData.getChannelData(1)
-    
-    ctxL.clearRect(0, 0, canvasL.width, canvasL.height);
-    ctxR.clearRect(0, 0, canvasR.width, canvasR.height);
-
-
-    ctxL.moveTo(0,100)
-
-    ctxR.moveTo(0,100)
-
-    var x = Math.round(dataL.length)
-    console.log('made it here canvas')
-
-
-
-    for (var i=0; i<canvasL.width; i++){
-      // var x = Math.round(1000*i/dataL.length)
-      var x = i*Math.round(dataL.length/canvasL.width)
-
-      ctxL.lineTo(i,dataL[x]*100+100)
-      ctxR.lineTo(i,dataR[x]*100+100)
-
-    }
-    ctxL.stroke()
-    ctxR.stroke()
-
-  } else{
-  console.log("WARNING - canvas drawn before buffer loaded")
+function renderAudioWaveform(id, canvas){
+  var obj = userAudioNodes[id]
+  if (obj.buffer){
+    drawBufferOnCanvas(obj.buffer, canvas)
+  }
+  else{
+    console.log('### WARNING attempted to renderAudioWaveform before buffer of \''+id+'\' was set');
   }
 }
 
 
+function drawBufferOnCanvas (buff, canvas) {
+  if (buff){
 
+    var width = canvas.width
+    var height = canvas.height
+    var ctx = canvas.getContext('2d')
+  
+    var data = buff.getChannelData(0)
+
+    var block = Math.ceil(data.length/width)
+    var amp = height/2;
+
+    
+    for(var i=0; i < width; i++){
+      var min = 1.0
+      var max = -1.0
+      for (var j=0; j<block; j++) {
+        var x = data[j+i*block]; 
+        if (x < min){
+          min = x;
+        }
+        if (x > max){
+          max = x;
+        }
+      }
+      ctx.fillRect(i,(1+min)*amp,1,Math.max(1,(max-min)*amp));
+    }
+    console.log('done')
+  } else{
+    console.log("WARNING - canvas drawn before buffer loaded")
+  }
+}
 
