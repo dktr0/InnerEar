@@ -72,6 +72,7 @@ multipleChoiceQuestionWidget maxTries answers bWidget render eWidget config init
   let tryEv = attachWithMaybe (\l e -> if elem e l then Nothing else Just e) (current listOfClicked) bandPressed
   tries <- foldDyn ($) 0 $ leftmost [(+1) <$ tryEv, (const 0) <$ nextQuestion]
   canTry <- mapDyn (<maxTries) tries >>= combineDyn (&&) notCorrectYet -- Dynamic t Bool
+  canNotTry <- mapDyn not canTry
   let cannotTryEv = ffilter not $ updated canTry -- Event t Bool (true when change to not able to try)
 
   -- produce events for correct and incorrect answers
@@ -81,7 +82,7 @@ multipleChoiceQuestionWidget maxTries answers bWidget render eWidget config init
   let answerEvent = gate (current canTry) tryEv -- Event t (Maybe a)
   notCorrectYet <- holdDyn True $ leftmost [True <$ newQuestion, False <$ correctAnswer]
   let correctAnswer = attachDynWithMaybe (\x y -> if (fromJust x)==y then x else Nothing) answer answerEvent  -- Event t a
-  let incorrectAnswer = attachDynWithMaybe (\x y -> if (fromJust x)/=y then x else Nothing) answer answerEvent -- Event t a
+  let incorrectAnswer = attachDynWithMaybe (\x y -> if (fromJust x)/=y then (Just y) else Nothing) answer answerEvent -- Event t a
   let incorrectNotFinal = attachDynWithMaybe (\x y -> if x then Just y else Nothing) canTry incorrectAnswer --Event t a
   let incorrectFinal = attachDynWithMaybe (\x y -> if (not x) then Just y else Nothing) canTry incorrectAnswer -- Event t a
 
@@ -95,7 +96,7 @@ multipleChoiceQuestionWidget maxTries answers bWidget render eWidget config init
   let newModes = fmap (modesForNewQuestion answers) newQuestion
   let questionHeardModes = fmap (modesOnceQuestionHeard answers) questionHeard
   let attemptModes = fmap (modesForIncorrectAnswer answers) incorrectNotFinal
-  let incorrectModes = fmap (modesForExplore .)  $ fmap (modesForIncorrectAnswer answers) incorrectFinal
+  let incorrectModes = fmap (modesForExplore .)  $ fmap (modesForIncorrectAnswer answers) incorrectFinal --needs to mark correct answer still
   let correctModes = fmap (modesForExplore .) $ fmap (modesForCorrectAnswer answers) correctAnswer
   modes <- foldDyn ($) initialModes $ leftmost [newModes,questionHeardModes,attemptModes,incorrectModes,correctModes]
   modes' <- mapM (\x-> mapDyn (!!x) modes) [0,1..9]
@@ -131,7 +132,9 @@ multipleChoiceQuestionWidget maxTries answers bWidget render eWidget config init
   let renderedSounds = attachDynWith (render config) b soundsToRender
   let playSounds = leftmost [renderedSounds,referenceSound]
 
-  debugDisplay "scoreMap debug:" scoreMap
+  let incorrectFinalDebug = show <$> incorrectFinal
+  incorrectFinalDebug' <- holdDyn "not yet" incorrectFinalDebug
+  debugDisplay "incorrectFinalDebug:" incorrectFinalDebug'
 
   -- generate navigation events
   nextQuestion <- (InQuestion <$) <$> button "New Question"
@@ -154,10 +157,13 @@ modesOnceQuestionHeard possibleAnswers question _ = fmap f $ fmap (flip elem $ f
         f False = NotPossible
 
 modesForCorrectAnswer :: (Eq a) => [a] -> a -> [AnswerButtonMode] -> [AnswerButtonMode]
-modesForCorrectAnswer possibleAnswers answer xs = replaceAtSameIndex answer possibleAnswers Correct xs
+modesForCorrectAnswer possibleAnswers correctAnswer xs = replaceAtSameIndex correctAnswer possibleAnswers Correct xs
 
 modesForIncorrectAnswer :: (Eq a) => [a] -> a -> [AnswerButtonMode] -> [AnswerButtonMode]
-modesForIncorrectAnswer possibleAnswers answer xs = replaceAtSameIndex answer possibleAnswers IncorrectDisactivated xs
+modesForIncorrectAnswer possibleAnswers incorrectAnswer xs = replaceAtSameIndex incorrectAnswer possibleAnswers IncorrectDisactivated xs
+
+modesForMissedAnswer :: (Eq a) => [a] -> a -> [AnswerButtonMode] -> [AnswerButtonMode]
+modesForMissedAnswer possibleAnswers missedAnswer xs = replaceAtSameIndex missedAnswer possibleAnswers CorrectMissed xs
 
 modesForExplore :: [AnswerButtonMode] -> [AnswerButtonMode]
 modesForExplore = fmap f
@@ -167,6 +173,7 @@ modesForExplore = fmap f
     f IncorrectDisactivated = IncorrectActivated
     f IncorrectActivated = IncorrectActivated
     f Correct = Correct
+    f CorrectMissed = CorrectMissed
 
 randomMultipleChoiceQuestion :: [a] -> IO ([a],a)
 randomMultipleChoiceQuestion possibilities = do
