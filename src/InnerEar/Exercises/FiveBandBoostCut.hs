@@ -1,11 +1,9 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 
-module InnerEar.Exercises.FiveBandsBoostCut (fiveBandsBoostCutExercise) where
+module InnerEar.Exercises.FiveBandBoostCut (fiveBandBoostCutExercise) where
 
 import Reflex
 import Reflex.Dom
-import Reflex.Dom.Contrib.Widgets.ButtonGroup (radioGroup)
-import Reflex.Dom.Contrib.Widgets.Common
 import Data.Map
 import Data.List (elemIndex,findIndices)
 import System.Random
@@ -29,32 +27,33 @@ configs = [10,6,3,2,1,-1,-2,-3,-6,-10]
 
 type Answer = Frequency
 
-frequencies :: [Answer]
-frequencies = [F 155 "Bass (155 Hz)",F 1125 "Low Mids (1125 Hz)",F 3000 "High Mids (3 kHz)",
+answers :: [Answer]
+answers = [F 155 "Bass (155 Hz)",F 1125 "Low Mids (1125 Hz)",F 3000 "High Mids (3 kHz)",
   F 5000 "Presence (5 kHz)",F 13000 "Brilliance (13 kHz)"]
 
-sound :: Config -> Source -> Answer -> Sound
-sound db f = FilteredSound source filter -- needs to be boost or cut by specified dB
+renderAnswer :: Config -> b -> Answer -> Sound
+renderAnswer db _ f = FilteredSound source filter -- needs to be boost or cut by specified dB
   where source = NodeSource (BufferNode $ File "pinknoise.wav") 2.0
         filter = Filter Peaking (freqAsDouble f) 1.4 16.0 -- and bandwidth should be wider
 
-configWidget :: MonadWidget t m => Config -> m (Event t Config)
-configWidget i = radioConfigWidget msg configs i
+fiveBandConfigWidget :: MonadWidget t m => Config -> m (Event t Config)
+fiveBandConfigWidget i = radioConfigWidget msg configs i
   where msg = "Please choose how many decibels (dB) of boost or cut may (or may not) be applied during the exercise."
 
 displayEval :: MonadWidget t m => Dynamic t (Map Answer Score) -> m ()
 displayEval scoreMap = return ()
 
-generateQuestion :: Config -> [Datum Config [Answer] Answer (Map Answer Score)] -> IO ([Answer],Answer)
-generateQuestion _ _ = randomMultipleChoiceQuestion frequencies
+generateQ :: Config -> [Datum Config [Answer] Answer (Map Answer Score)] -> IO ([Answer],Answer)
+generateQ _ _ = randomMultipleChoiceQuestion answers
 
-fiveBandsBoostCutExercise :: MonadWidget t m => Exercise t m WhatBandsAreAllowed [Frequency] Frequency (Map Frequency Score)
-fiveBandsBoostCutExercise = multipleChoiceExercise
+fiveBandBoostCutExercise :: MonadWidget t m => Exercise t m Config [Answer] Answer (Map Answer Score)
+fiveBandBoostCutExercise = multipleChoiceExercise
   answers
-  sound
-  FiveBandsBoostCut
+  trivialBWidget
+  renderAnswer
+  FiveBandBoostCut
   (configs!!0)
-  configWidget
+  fiveBandConfigWidget
   displayEval
-  generateQuestion
+  generateQ
   (Just "Please write some brief text reflecting on your experience:")
