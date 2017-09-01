@@ -12,6 +12,7 @@ import InnerEar.Types.ExerciseId
 import InnerEar.Types.Exercise
 import InnerEar.Types.Score
 import InnerEar.Types.Data (Datum)
+import InnerEar.Widgets.UserMedia
 
 type Config = Double -- representing amount of gain that is applied (or not)
 
@@ -41,7 +42,7 @@ generateQ _ _ = randomMultipleChoiceQuestion [Answer False,Answer True]
 boostOrCutExercise :: MonadWidget t m => Exercise t m Config [Answer] Answer (Map Answer Score)
 boostOrCutExercise = multipleChoiceExercise
   [Answer False,Answer True]
-  trivialBWidget
+  (userMediaWidget "userMedia")
   renderAnswer
   BoostOrCut
   10
