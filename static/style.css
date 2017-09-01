@@ -92,18 +92,21 @@ text {
 }
 
 button {
-  margin-top: 0.5%;
-  margin-bottom: 0.5%;
-  margin-right: 0.5%;
+  margin-top: 0%;
+  margin-bottom: 0%;
+  margin-right: 0%;
 }
 
 .specEvalWrapper {
   display: inline-block;
   padding: 50px;
+  position: relative;
+  top: 50%;
 }
 
 .answerButtonWrapper {
-
+    display: inline-block;
+    margin: 2%;
 
 }
 
@@ -116,11 +119,15 @@ button.notPossibleButton{
   background-color: black;
   color: darkgray;
   height: 30px;
+  width: 200px;
+
+
+
  }
 
 button.possibleButton {
-  width: 10%;
   height: 30px;
+  width: 200px;
 }
 
 button.incorrectDisactivatedButton {
@@ -129,22 +136,23 @@ button.incorrectDisactivatedButton {
   border-radius: 5px;
   border: 2px solid red;
   height: 30px;
+  width: 200px;
 }
 
-
-button.incorrectActivatedButton{
+button.incorrectActivatedButton {
   color: red;
   border-radius: 5px;
   border: 2px solid red;
   height: 30px;
+  width: 200px;
 }
-
 
 button.correctButton{
   color: green;
   border-radius: 5px;
   border: 4px solid green;
   height: 30px;
+  width: 200px;
 }
 
 .svgBarContainer {
@@ -201,7 +209,7 @@ button.correctButton{
   text-align: center;
 }
 
-.hzLabel {
+.xLabel {
   background-color: black;
   color: hsl(120,100%,80%);
   font-size: 8px;
@@ -257,3 +265,10 @@ button.correctButton{
   bottom: 4
   2px;
   }
+
+.exerciseWrapper {
+  background-color:black;
+  align-content: center;
+  width: 100%;
+  height: 400%
+}

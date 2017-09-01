@@ -18,6 +18,7 @@ import InnerEar.Types.Exercise
 import InnerEar.Types.ExerciseNavigation
 import InnerEar.Types.Score
 import InnerEar.Types.Utility
+import InnerEar.Widgets.Utility
 import InnerEar.Widgets.UserMedia
 import InnerEar.Widgets.AnswerButton
 import Reflex.Synth.Types
@@ -65,7 +66,7 @@ multipleChoiceQuestionWidget :: (MonadWidget t m, Show a, Eq a, Ord a)
   -> Event t ([a],a)
   -> m (Event t (Datum c [a] a (Map a Score)),Event t Sound,Event t ExerciseNavigation)
 
-multipleChoiceQuestionWidget maxTries answers bWidget render eWidget config initialEval newQuestion = mdo
+multipleChoiceQuestionWidget maxTries answers bWidget render eWidget config initialEval newQuestion = elClass "div" "exerciseWrapper" $ mdo
 
   -- Managing number of tries
   listOfClicked <- foldDyn ($) [] $ leftmost [fmap (:) bandPressed, (const []) <$ newQuestion]
@@ -102,10 +103,12 @@ multipleChoiceQuestionWidget maxTries answers bWidget render eWidget config init
   modes' <- mapM (\x-> mapDyn (!!x) modes) [0,1..9]
 
   -- user interface (buttons, etc)
-  (playReference,playQuestion) <- elClass "div" "playReferenceOrQuestion" $ do
-    x <- button "Reference Sound"
-    y <- button "Play question"
-    return (x,y)
+  (playReference,playQuestion,nextQuestion) <- elClass "div" "playReferenceOrQuestion" $ do
+    x <- buttonDynCss "Listen to Reference Sound" (constDyn "buttonWrapper")
+    y <- buttonDynCss "Listen to Question" (constDyn "buttonWrapper")
+    newQuestionVisible <- mapDyn (>0) timesQuestionHeard
+    z <- visibleWhen newQuestionVisible $ (InQuestion <$) <$> buttonDynCss "New Question" (constDyn "buttonWrapper")
+    return (x,y,z)
   bandPressed <- elClass "div" "answerButtonWrapper" $ -- m (Event t a)
     leftmost <$> zipWithM (\f m -> answerButton (show f) m f) answers modes'
   elClass "div" "evaluationInQuestion" $ eWidget scoreMap
@@ -132,13 +135,8 @@ multipleChoiceQuestionWidget maxTries answers bWidget render eWidget config init
   let renderedSounds = attachDynWith (render config) b soundsToRender
   let playSounds = leftmost [renderedSounds,referenceSound]
 
-  let incorrectFinalDebug = show <$> incorrectFinal
-  incorrectFinalDebug' <- holdDyn "not yet" incorrectFinalDebug
-  debugDisplay "incorrectFinalDebug:" incorrectFinalDebug'
-
   -- generate navigation events
-  nextQuestion <- (InQuestion <$) <$> button "New Question"
-  onToReflect <- (InReflect <$) <$> button "Reflect"
+  onToReflect <- (InReflect <$) <$> buttonDynCss "Reflect" (constDyn "buttonWrapper")
   let navEvents = leftmost [nextQuestion,onToReflect]
 
   return (fmap Evaluation (updated scoreMap), playSounds,navEvents)
