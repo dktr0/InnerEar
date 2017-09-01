@@ -29,7 +29,7 @@ import qualified GHCJS.Prim as Prim (toJSString)
 
 data FilterType = Peaking | Lowpass | Highpass | Notch | Bandpass | Lowshelf | Highshelf | Allpass deriving (Show,Read,Eq)
 
-data NoiseType = White | Pink | Brownian 
+data NoiseType = White | Pink | Brownian
 
 data Node = FilterNode Filter | GainNode Double | Destination | AdditiveNode [Node] | OscillatorNode Oscillator | BufferNode Buffer | MediaNode String deriving(Read,Show,Eq)
 
@@ -139,14 +139,14 @@ getLastNode (WebAudioGraph'' _ n) = getLastNode n
 
 getDestination :: IO WebAudioNode
 getDestination = do
-  x <- F.getDestination 
+  x <- F.getDestination
   return $ WebAudioNode Destination x
 
 connect :: WebAudioNode -> WebAudioNode -> IO (WebAudioGraph)
 connect (WebAudioNode Destination _) _ = error "destination can't be source of connection"
 connect NullAudioNode _ = return (WebAudioGraph NullAudioNode)
 connect a NullAudioNode = return (WebAudioGraph a)
-connect (WebAudioNode xt x) (WebAudioNode yt y) = do 
+connect (WebAudioNode xt x) (WebAudioNode yt y) = do
   F.connect x y
   return $ WebAudioGraph' (WebAudioNode xt x) (WebAudioGraph (WebAudioNode yt y))
 
@@ -158,14 +158,14 @@ disconnectAll (WebAudioNode _ a) = F.disconnectAll a
 
 connectGraph :: WebAudioGraph -> IO (WebAudioGraph)
 connectGraph (WebAudioGraph n) = return $ WebAudioGraph n
-connectGraph (WebAudioGraph' n (WebAudioGraph n2)) = do 
+connectGraph (WebAudioGraph' n (WebAudioGraph n2)) = do
   connect n n2
   return $ (WebAudioGraph' n (WebAudioGraph n2))
 connectGraph (WebAudioGraph' n (WebAudioGraph' n2 xs)) = do
   connect n n2
   connectGraph (WebAudioGraph' n2 xs)
   return (WebAudioGraph' n (WebAudioGraph' n2 xs))
-connectGraph (WebAudioGraph'' a b) = do 
+connectGraph (WebAudioGraph'' a b) = do
   let aLast = getLastNode a
   let bFirst = getFirstNode b
   connect aLast bFirst
@@ -210,7 +210,7 @@ connectGraphToDest g = do
 
 
 startFirstNode::WebAudioGraph -> IO()
-startFirstNode g = let f = getFirstNode g in startNode f 
+startFirstNode g = let f = getFirstNode g in startNode f
 
 startGraph :: WebAudioGraph -> IO()
 startGraph a = do
