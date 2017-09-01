@@ -18,13 +18,13 @@ data AnswerButtonMode =
   -- should add: CorrectMissed (i.e. what correct answer becomes when tries run out)
 
 buttonDynCss :: MonadWidget t m => String -> Dynamic t String -> m (Event t ())
-buttonDynCss label cssClass = do
+buttonDynCss label cssClass =  elClass "div" "answerButtonWrapper" $ do
   cssClass' <- mapDyn (singleton "class") cssClass
   (element, _) <- elDynAttr' "button" cssClass' $ text label -- m
   return $ domEvent Click element  -- domEvent :: EventName en -> a -> Event t (EventResultType en)
 
 answerButton:: MonadWidget t m => String -> Dynamic t AnswerButtonMode -> a -> m (Event t a)
-answerButton buttonString buttonMode x = do
+answerButton buttonString buttonMode x = elClass "div" "answerButtonWrapper" $ do
   c <- mapDyn modeToClass buttonMode
   ev <-  liftM (x <$) $ buttonDynCss buttonString c
   return $ attachWithMaybe f (current buttonMode) ev

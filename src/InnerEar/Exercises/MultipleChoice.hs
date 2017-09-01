@@ -62,7 +62,7 @@ multipleChoiceQuestionWidget :: (MonadWidget t m, Show a, Eq a, Ord a)
   -> Event t ([a],a)
   -> m (Event t (Datum c [a] a (Map a Score)),Event t Sound,Event t ExerciseNavigation)
 
-multipleChoiceQuestionWidget answers bWidget render config initialEval newQuestion = mdo
+multipleChoiceQuestionWidget answers bWidget render config initialEval newQuestion =  elClass "div" "excerciseWrapper" $ mdo
   let maxTries = 3::Int
 
   b <- bWidget
@@ -94,8 +94,8 @@ multipleChoiceQuestionWidget answers bWidget render config initialEval newQuesti
   modes' <- mapM (\x-> mapDyn (!!x) modes) [0,1..9]
 
   -- buttons
-  playUnfiltered <- button "Listen to unfiltered"
-  playButton <- button "Play question"
+  playUnfiltered <- buttonDynCss "Listen to unfiltered" (constDyn "buttonWrapper")
+  playButton <- buttonDynCss "Play question" (constDyn "buttonWrapper")
   bandPressed <- elClass "div" "answerButtonWrapper" $ -- m (Event t a)
     leftmost <$> zipWithM (\f m -> answerButton (show f) m f) answers modes'
 
@@ -122,8 +122,8 @@ multipleChoiceQuestionWidget answers bWidget render config initialEval newQuesti
   let playSounds = leftmost [renderedAnswers,unfilteredSound]
 
   -- generate navigation events
-  nextQuestion <- (InQuestion <$) <$> button "New Question"
-  onToReflect <- (InReflect <$) <$> button "Reflect"
+  nextQuestion <- (InQuestion <$) <$> buttonDynCss "New Question" (constDyn "buttonWrapper")
+  onToReflect <- (InReflect <$) <$> buttonDynCss "Reflect" (constDyn "buttonWrapper")
   let navEvents = leftmost [nextQuestion,onToReflect]
 
   el "div" $ do

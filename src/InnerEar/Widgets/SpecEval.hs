@@ -72,8 +72,8 @@ displayCurrentSpectrumEvaluation graphLabel score = elClass "div" "specEvalWrapp
   return ()
 
 
-displayMultipleChoiceEvaluationGraphs :: (MonadWidget t m, Show a, Ord a) => String -> String -> [a] -> Dynamic t (Map a Score) -> m ()
-displayMultipleChoiceEvaluationGraphs graphLabel xLabel possibilities scoreMap = do
+displayMultipleChoiceEvaluationGraph :: (MonadWidget t m, Show a, Ord a) => String -> String -> [a] -> Dynamic t (Map a Score) -> m ()
+displayMultipleChoiceEvaluationGraph graphLabel xLabel possibilities scoreMap = elClass "div" "specEvalWrapper" $ do
   elClass "div" "graphLabel" $ text graphLabel
   elClass "div"  "xLabel" $ text xLabel
 --  questionScore <- mapDyn (mapKeys a) score
@@ -88,13 +88,17 @@ displayMultipleChoiceEvaluationGraphs graphLabel xLabel possibilities scoreMap =
 
   return ()
 
-displayMultipleChoiceEvaluationGraphs' :: (MonadWidget t m, Show a, Ord a) => String -> String -> [a] -> Dynamic t (Map a Score) -> m ()
-displayMultipleChoiceEvaluationGraphs' graphLabel xLabel possibilities scoreMap = do
-      elClass "div" "graphLabel" $ text graphLabel
-      elClass "div"  "xLabel" $ text xLabel
+displayMultipleChoiceEvaluationGraph' :: (MonadWidget t m, Show a, Ord a) => String -> String -> [a] -> Dynamic t (Map a Score) -> m ()
+displayMultipleChoiceEvaluationGraph' graphLabel xLabel possibilities scoreMap = elClass "div" "specEvalWrapper" $ do
       scoreList <- mapDyn (\x -> fmap (\y -> Data.Map.lookup y x) possibilities) scoreMap -- m (Dynamic t [Maybe Score])
       scoreMap' <- mapDyn (\x -> fromList $ zip possibilities x) scoreList -- (Dynamic t (Map a (Maybe Score)))
       listWithKey scoreMap' f
+      faintedXaxis
+      faintedYaxis
+      percentageMainLabel
+      elClass "div"  "xLabel" $ text xLabel
+      countMainLabel
+      elClass "div" "graphLabel" $ text graphLabel
       return ()
       where f k d = scoreBar (show k) d
 
