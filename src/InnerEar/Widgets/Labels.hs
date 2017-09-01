@@ -57,6 +57,12 @@ hzLabel c s = do
    elDynAttr "div" c' $ text s -- m ()
    return ()
 
+-- A dynamic label for x value with css style
+xLabel :: MonadWidget t m => Dynamic t String -> m ()
+xLabel s = elClass "div" "xLabel" $ dynText s
+
+
+
 -- A dynamic label for Score with CSS style
 dynScoreLabel :: forall t m. MonadWidget t m => Dynamic t String -> Dynamic t (Score) -> m ()
 dynScoreLabel cssClass score = do
@@ -77,6 +83,8 @@ dynCountLabel cssClass count = do
   elDynAttr "div" cssClass' $ do
     dynText count'' -- m ()
     return ()
+
+
 
 --A label for "Hz"
 hzMainLabel :: MonadWidget t m => m ()
