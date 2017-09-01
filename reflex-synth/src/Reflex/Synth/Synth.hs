@@ -44,7 +44,7 @@ instance WebAudio Source where
       (Destination) -> error "Destination cannot be a source node"
       (GainNode _) -> error "GainNode cannot be a source node"
       (FilterNode _) -> error "FilterNode cannot be a source node"
-      (BufferNode (LoadedFile _)) -> do 
+      (BufferNode (LoadedFile _ _)) -> do 
         x <- createNode node
         createGraph (WebAudioGraph x)
       otherwise -> do
@@ -194,12 +194,16 @@ createAdditiveNode xs = do
   mapM (((flip F.connect) g) . getJSVal) nodes
   return (WebAudioNode (AdditiveNode xs) g) -- returning the gain node's 
 
-renderAudioWaveform:: G.HTMLCanvasElement -> G.HTMLCanvasElement -> IO()
-renderAudioWaveform l r= do 
-  let l' = G.unHTMLCanvasElement l
-  let r' = G.unHTMLCanvasElement  r
-  F.renderAudioWaveform l' r'
+--renderAudioWaveform:: G.HTMLCanvasElement -> G.HTMLCanvasElement -> IO()
+--renderAudioWaveform l r= do 
+--  let l' = G.unHTMLCanvasElement l
+--  let r' = G.unHTMLCanvasElement  r
+--  F.renderAudioWaveform l' r'
 
+renderAudioWaveform:: String -> G.HTMLCanvasElement -> IO ()
+renderAudioWaveform inputId el = do
+  let el' = G.unHTMLCanvasElement el
+  F.renderAudioWaveform s el
 
 
 

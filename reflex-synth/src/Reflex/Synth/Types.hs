@@ -19,6 +19,7 @@ module Reflex.Synth.Types where
 
 
 import GHCJS.DOM.Types(toJSString)
+import GHCJS.Marshal
 import GHCJS.Types (JSVal)
 import qualified Reflex.Synth.Foreign as F
 import Control.Monad (mapM)
@@ -38,7 +39,13 @@ data OscillatorType = Sawtooth | Sine | Square deriving (Show, Read,Eq)
 
 data Oscillator = Oscillator OscillatorType Double Double deriving (Read,Show,Eq) --double params are freq and gain (respectively)
 
-data Buffer = File String | LoadedFile String deriving (Read,Show,Eq)
+data PlaybackParam = PlaybackParam{
+  startTime::Double,
+  endTime::Double,
+  loop::Bool
+}
+
+data Buffer = File String | LoadedFile String PlaybackParam deriving (Read,Show,Eq)
 
 data Source = NodeSource Node Double deriving (Show,Eq,Read)
 
@@ -93,8 +100,8 @@ createBufferNode :: Buffer -> IO WebAudioNode
 createBufferNode (File path) = do
   x <- F.createBufferSourceNodeFromURL (Prim.toJSString path)
   return (WebAudioNode (BufferNode $ File path) x)
-createBufferNode (LoadedFile inputId) = do
-  x <- F.createBufferSourceNodeFromID (Prim.toJSString inputId)
+createBufferNode (LoadedFile inputId (PlaybackParam s e l)) = do
+  x <- F.createBufferSourceNodeFromID (Prim.toJSString inputId) (toJSVal s) (toJSVal e) (toJSVal l)
   return (WebAudioNode (BufferNode $ LoadedFile inputId) x)
 
 

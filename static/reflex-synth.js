@@ -109,9 +109,11 @@ function createBufferSourceNodeFromURL(url) {
   return source;
 }
 
-function createBufferSourceNodeFromID(id){
+function createBufferSourceNodeFromID(id,start,end,loop){
   var source = ___ac.createBufferSource();
-
+  source.loop = loop;
+  userAudioNodes[id].start = start
+  userAudioNodes[id].end = end
   if (userAudioNodes[id].buffer==undefined){
     console.log('WARNING: No buffer loaded')
     console.log('attempting to load buffer...')
