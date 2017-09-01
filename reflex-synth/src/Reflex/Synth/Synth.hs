@@ -12,7 +12,7 @@ import GHCJS.DOM.JSFFI.Generated.HTMLElement
 --import GHCJS.DOM.JSFFI.Generated.File (getName)
 import GHCJS.DOM.File (getName)
 import GHCJS.DOM.FileReader (newFileReader,getResult, readAsDataURL,load)
-import GHCJS.DOM.EventM(on)
+import GHCJS.DOM.EventM
 import GHCJS.DOM.Types(toJSString,HTMLCanvasElement,unHTMLCanvasElement)
 import Control.Monad.IO.Class (liftIO)
 import GHCJS.Marshal(fromJSVal)
@@ -65,6 +65,20 @@ instance WebAudio Sound where
     filt <- createGraph f
     let graph = WebAudioGraph'' source filt
     connectGraph graph
+  createGraph (NoSound) = do
+    x <- createSilentNode
+    y <- createGain 0
+    let graph = WebAudioGraph' x $ WebAudioGraph y
+    connectGraph graph
+  createGraph (GainSound s db) = do
+    source <- createGraph s
+    gain <- createGain db
+    let graph = WebAudioGraph'' source (WebAudioGraph gain)
+    connectGraph graph
+
+
+createSilentNode::IO WebAudioNode
+createSilentNode = F.createSilentNode >>= return . WebAudioNode (SilentNode)
 
 createAudioContext::IO ()
 createAudioContext = F.createAudioContext
@@ -94,9 +108,11 @@ audioElement = elDynAttr "audio" attrs (return())
   
 
 bufferInput::MonadWidget t m => String -> m (Event t ())
-bufferInput s = do
+bufferInput s = elClass "div" "bufferInput" $ do
   let attrs = FileInputConfig $ constDyn $ M.fromList $ zip ["accept","id"] ["audio/*",s]
   input <- fileInput attrs
+  --let element = _fileInput_element input
+  --ev <- liftM (() <$) $ wrapDomEvent (onEventName Load) element
   let ev = (() <$) $ updated $ _fileInput_value input
   performEvent_ $ fmap (liftIO . const (F.loadBuffer $ toJSString s)) ev
   return ev
@@ -109,6 +125,10 @@ bufferInput' s = do
   performEvent_ $ fmap (liftIO . const (F.setAudioSrc $ toJSString s)) ev
   return ev
 
+loadAndDrawBuffer:: String -> HTMLCanvasElement -> IO()
+loadAndDrawBuffer inputId canvas = do
+  let el' = unHTMLCanvasElement canvas
+  F.loadAndDrawBuffer (toJSString inputId) el'
 
 
 

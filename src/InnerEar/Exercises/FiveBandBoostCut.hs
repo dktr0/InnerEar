@@ -19,6 +19,8 @@ import InnerEar.Types.Exercise
 import InnerEar.Types.ExerciseId
 import InnerEar.Types.Frequency
 import InnerEar.Exercises.MultipleChoice
+import InnerEar.Widgets.UserMedia
+
 
 type Config = Double
 
@@ -31,10 +33,9 @@ answers :: [Answer]
 answers = [F 155 "Bass (155 Hz)",F 1125 "Low Mids (1125 Hz)",F 3000 "High Mids (3 kHz)",
   F 5000 "Presence (5 kHz)",F 13000 "Brilliance (13 kHz)"]
 
-renderAnswer :: Config -> b -> Answer -> Sound
-renderAnswer db _ f = FilteredSound source filter -- needs to be boost or cut by specified dB
-  where source = NodeSource (BufferNode $ File "pinknoise.wav") 2.0
-        filter = Filter Peaking (freqAsDouble f) 1.4 16.0 -- and bandwidth should be wider
+renderAnswer :: Config -> Source -> Answer -> Sound
+renderAnswer db s f = FilteredSound s filter -- needs to be boost or cut by specified dB
+  where filter = Filter Peaking (freqAsDouble f) 1.4 16.0 -- and bandwidth should be wider
 
 fiveBandConfigWidget :: MonadWidget t m => Config -> m (Event t Config)
 fiveBandConfigWidget i = radioConfigWidget msg configs i
@@ -49,7 +50,7 @@ generateQ _ _ = randomMultipleChoiceQuestion answers
 fiveBandBoostCutExercise :: MonadWidget t m => Exercise t m Config [Answer] Answer (Map Answer Score)
 fiveBandBoostCutExercise = multipleChoiceExercise
   answers
-  trivialBWidget
+  (sourceWidget "fiveBandBoostCutExercise")
   renderAnswer
   FiveBandBoostCut
   (configs!!0)

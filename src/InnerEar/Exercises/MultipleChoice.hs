@@ -117,6 +117,7 @@ multipleChoiceQuestionWidget answers bWidget render config initialEval newQuesti
 
   let playCorrectSound = fromJust <$> tagDyn answer playButton
   let unfilteredSound = Sound (NodeSource (BufferNode $ File "pinknoise.wav") 2.0) <$ playUnfiltered
+  --let unfilteredSound = attachDynWith (render config) b playUnfiltered
   let answersToRender = leftmost [playCorrectSound,bandPressed]
   let renderedAnswers = attachDynWith (render config) b answersToRender
   let playSounds = leftmost [renderedAnswers,unfilteredSound]

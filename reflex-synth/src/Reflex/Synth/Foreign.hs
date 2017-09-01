@@ -31,13 +31,18 @@ foreign import javascript safe "$2.type = $1" setOscillatorType :: JSVal -> JSVa
 foreign import javascript safe "loadBuffer($1)" loadBuffer:: JSString -> IO ()
 
 foreign import javascript safe "$r = createBufferSourceNodeFromURL($1)" createBufferSourceNodeFromURL :: JSVal -> IO JSVal  -- Js string to IO JSVal...
-foreign import javascript safe "$r = createBufferSourceNodeFromID($1,$2,$3,$4)" createBufferSourceNodeFromID :: JSVal -> JSVal -> JSVal -> JSVal -> IO JSVal  -- Js string to IO JSVal...
+foreign import javascript safe "$r =  createBufferSourceNodeFromID($1,$2,$3,$4)" createBufferSourceNodeFromID :: JSVal -> JSVal -> JSVal -> JSVal -> IO JSVal  -- Js string to IO JSVal...
 
 foreign import javascript safe "setAudioSrc($1)" setAudioSrc :: JSString -> IO ()
 
 foreign import javascript safe "$r = ___ac.currentTime" getCurrentTime :: IO Double
 
 foreign import javascript safe "$3.gain.setValueAtTime($1,$2)" setGainAtTime :: Double -> Double -> JSVal-> IO ()
+
+foreign import javascript safe "$r = ___ac.createOscillator()" createSilentNode:: IO JSVal
+
+
+foreign import javascript safe "playBufferNode($1, $2, $3, $4, $5)" playBufferNode:: JSString -> JSVal -> JSVal -> JSVal -> JSVal -> IO ()
 
 -- using https://github.com/zacharydenton/noise.js/blob/master/noise.js
 foreign import javascript safe "$r=___ac.createWhiteNoise()" createWhiteNoise :: IO JSVal
@@ -49,6 +54,8 @@ foreign import javascript safe "console.log($1);$1.start()" startNode :: JSVal -
 foreign import javascript safe "playMediaNode($1)" playMediaNode:: JSString -> IO()
 
 
+foreign import javascript safe "loadAndDrawBuffer($1,$2)" loadAndDrawBuffer :: JSString -> JSVal -> IO ()
+
 -- takes 'canvas' html elements - us 'toJSVal on the html element'
-foreign import javascript safe "drawBufferWaveform($1, $2)" renderAudioWaveform :: JSString -> JSVal -> IO()
+foreign import javascript safe "renderAudioWaveform($1, $2,0)" renderAudioWaveform :: JSString -> JSVal -> IO()
 
