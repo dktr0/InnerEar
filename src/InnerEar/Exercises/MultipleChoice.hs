@@ -111,8 +111,9 @@ multipleChoiceQuestionWidget maxTries answers bWidget render eWidget config init
     return (x,y,z)
   bandPressed <- elClass "div" "answerButtonWrapper" $ -- m (Event t a)
     leftmost <$> zipWithM (\f m -> answerButton (show f) m f) answers modes'
-  elClass "div" "evaluationInQuestion" $ eWidget scoreMap
-  b <- elClass "div" "userMediaWidgetInQuestion" $ bWidget
+  b <- elClass "div" "bottomRow" $ do
+    elClass "div" "evaluationInQuestion" $ eWidget scoreMap
+    elClass "div" "userMediaWidgetInQuestion" $ bWidget
 
   -- update scoreMap
   let correctAnswerScoreUpdate = attachDynWith (\x y -> (fromJust x,Right y)) answer correctAnswer
@@ -127,8 +128,7 @@ multipleChoiceQuestionWidget maxTries answers bWidget render eWidget config init
   feedbackToDisplay <- holdDyn "" $ leftmost [correctAnswerFeedback,resetFeedback,resetFeedback2]
   dynText feedbackToDisplay
 
-  -- generate sounds to be played
-
+  -- generate sounds to be playedW
   let questionSound = fromJust <$> tagDyn answer playQuestion
   let referenceSound = Sound (NodeSource (BufferNode $ File "pinknoise.wav") 2.0) <$ playReference
   let soundsToRender = leftmost [questionSound,bandPressed]

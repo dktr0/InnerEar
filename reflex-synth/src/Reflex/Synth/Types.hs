@@ -31,7 +31,7 @@ data FilterType = Peaking | Lowpass | Highpass | Notch | Bandpass | Lowshelf | H
 
 data NoiseType = White | Pink | Brownian
 
-data Node = FilterNode Filter | GainNode Double | Destination | AdditiveNode [Node] | OscillatorNode Oscillator | BufferNode Buffer | MediaNode String deriving(Read,Show,Eq)
+data Node = SilentNode | FilterNode Filter | GainNode Double | Destination | AdditiveNode [Node] | OscillatorNode Oscillator | BufferNode Buffer | MediaNode String deriving(Read,Show,Eq)
 
 data Filter = NoFilter | Filter FilterType Double Double Double deriving (Read,Show,Eq)
 
@@ -50,7 +50,7 @@ data Buffer = File String | LoadedFile String PlaybackParam deriving (Read,Show,
 data Source = NodeSource Node Double deriving (Show,Eq,Read)
 
 
-data Sound = NoSound | Sound Source| FilteredSound Source Filter deriving (Read,Show)
+data Sound = NoSound | Sound Source | GainSound Source Double | FilteredSound Source Filter deriving (Read,Show)
 
 data WebAudioNode = WebAudioNode Node JSVal | NullAudioNode
 

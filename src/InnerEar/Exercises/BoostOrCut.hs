@@ -11,6 +11,7 @@ import InnerEar.Exercises.MultipleChoice
 import InnerEar.Types.ExerciseId
 import InnerEar.Types.Exercise
 import InnerEar.Types.Score
+import InnerEar.Widgets.UserMedia
 import InnerEar.Types.Data (Datum)
 import InnerEar.Widgets.UserMedia
 
@@ -43,7 +44,7 @@ boostOrCutExercise :: MonadWidget t m => Exercise t m Config [Answer] Answer (Ma
 boostOrCutExercise = multipleChoiceExercise
   1
   [Answer False,Answer True]
-  (userMediaWidget "userMedia")
+  (sourceWidget "boostOrCutExercise")
   renderAnswer
   BoostOrCut
   10

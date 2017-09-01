@@ -17,6 +17,7 @@ import InnerEar.Types.Exercise
 import InnerEar.Types.ExerciseId
 import InnerEar.Types.Frequency
 import InnerEar.Exercises.MultipleChoice
+import InnerEar.Widgets.UserMedia
 
 data Config = AllBands | HighBands | MidBands | Mid8Bands | LowBands deriving (Show,Eq,Data,Typeable)
 
@@ -27,10 +28,9 @@ answers = [
   F 31 "31", F 63 "63", F 125 "125", F 250 "250", F 500 "500",
   F 1000 "1k", F 2000 "2k", F 4000 "4k", F 8000 "8k", F 16000 "16k"]
 
-renderAnswer :: Config -> b -> Frequency -> Sound
-renderAnswer _ _ f = FilteredSound source filter
-  where source = NodeSource (BufferNode $ File "pinknoise.wav") 2.0
-        filter = Filter Peaking (freqAsDouble f) 1.4 16.0
+renderAnswer :: Config -> Source -> Frequency -> Sound
+renderAnswer _ s f = FilteredSound s filter
+  where filter = Filter Peaking (freqAsDouble f) 1.4 16.0
 
 tenBandConfigWidget :: MonadWidget t m => Config -> m (Event t Config)
 tenBandConfigWidget i = radioConfigWidget msg possibilities i
@@ -51,7 +51,7 @@ tenBandBoostCutExercise :: MonadWidget t m => Exercise t m Config [Answer] Answe
 tenBandBoostCutExercise = multipleChoiceExercise
   3
   answers
-  trivialBWidget
+  (sourceWidget "tenBandsExercise")
   renderAnswer
   TenBandBoostCut
   AllBands

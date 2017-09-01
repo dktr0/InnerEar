@@ -12,6 +12,8 @@ import InnerEar.Types.ExerciseId
 import InnerEar.Types.Exercise
 import InnerEar.Types.Score
 import InnerEar.Types.Data (Datum)
+import InnerEar.Widgets.UserMedia
+
 
 type Config = Int -- gain value for attenuated sounds
 
@@ -42,7 +44,7 @@ thresholdOfSilenceExercise :: MonadWidget t m => Exercise t m Int [Answer] Answe
 thresholdOfSilenceExercise = multipleChoiceExercise
   1
   [Answer False,Answer True]
-  trivialBWidget
+  (sourceWidget "thresholdOfSilenceExercise")
   renderAnswer
   ThresholdOfSilence
   (-20)
