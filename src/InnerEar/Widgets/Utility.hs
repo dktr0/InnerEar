@@ -34,10 +34,8 @@ flippableDynE b1 b2 x = mapDyn (bool b1 b2) x >>= dynE
 
 visibleWhen :: MonadWidget t m => Dynamic t Bool -> m a -> m a
 visibleWhen visible builder = do
-  attrs <- mapDyn f visible
+  attrs <- mapDyn (bool (M.singleton "style" "display: none;") (M.singleton "style" "display: inline;")) visible
   elDynAttr "div" attrs builder
-  where
-    f = bool (M.singleton "style" "display: none;") M.empty
 
 flippableWidget :: MonadWidget t m => m a -> m a -> Bool -> Event t Bool -> m (Dynamic t a)
 flippableWidget b1 b2 i e = widgetHold (bool b1 b2 i) $ fmap (bool b1 b2) e

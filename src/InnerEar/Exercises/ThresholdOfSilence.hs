@@ -42,6 +42,7 @@ generateQ _ _ = randomMultipleChoiceQuestion [Answer False,Answer True]
 
 thresholdOfSilenceExercise :: MonadWidget t m => Exercise t m Int [Answer] Answer (Map Answer Score)
 thresholdOfSilenceExercise = multipleChoiceExercise
+  1
   [Answer False,Answer True]
   (sourceWidget "thresholdOfSilenceExercise")
   renderAnswer

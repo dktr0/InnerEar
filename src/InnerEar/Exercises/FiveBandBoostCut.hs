@@ -49,6 +49,7 @@ generateQ _ _ = randomMultipleChoiceQuestion answers
 
 fiveBandBoostCutExercise :: MonadWidget t m => Exercise t m Config [Answer] Answer (Map Answer Score)
 fiveBandBoostCutExercise = multipleChoiceExercise
+  3
   answers
   (sourceWidget "fiveBandBoostCutExercise")
   renderAnswer

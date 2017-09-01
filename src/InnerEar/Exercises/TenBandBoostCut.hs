@@ -49,6 +49,7 @@ generateQ config _ = randomMultipleChoiceQuestion (convertBands config)
 
 tenBandBoostCutExercise :: MonadWidget t m => Exercise t m Config [Answer] Answer (Map Answer Score)
 tenBandBoostCutExercise = multipleChoiceExercise
+  3
   answers
   (sourceWidget "tenBandsExercise")
   renderAnswer
