@@ -1,6 +1,6 @@
 module Reflex.Synth.Synth where
 
-import Reflex.Synth.Types 
+import Reflex.Synth.Types
 --import InnerEar.Types.Sound
 import qualified Reflex.Synth.Foreign as F
 import qualified Data.Map as M
@@ -30,12 +30,12 @@ instance WebAudio Buffer where
   createGraph (File path) = createBufferNode (File path) >>= return . WebAudioGraph
 
 instance WebAudio Node where
-  createGraph n = do 
+  createGraph n = do
     node <- createNode n
     return $ WebAudioGraph $ WebAudioNode n (getJSVal node)
 
 instance WebAudio Source where
-  createGraph (NodeSource node dur) = 
+  createGraph (NodeSource node dur) =
     case node of
       (MediaNode a) ->do
         v <- createMediaNode a
@@ -44,7 +44,7 @@ instance WebAudio Source where
       (Destination) -> error "Destination cannot be a source node"
       (GainNode _) -> error "GainNode cannot be a source node"
       (FilterNode _) -> error "FilterNode cannot be a source node"
-      (BufferNode (LoadedFile _)) -> do 
+      (BufferNode (LoadedFile _)) -> do
         x <- createNode node
         createGraph (WebAudioGraph x)
       otherwise -> do
@@ -80,7 +80,7 @@ createSound (FilteredSound s f) = do
 
 performSound:: MonadWidget t m => Event t Sound -> m ()
 performSound event = do
-  let n = fmap (\e-> do 
+  let n = fmap (\e-> do
                       graph <- createGraph e
                       startGraph graph
                       ) event          -- Event t (IO ())
@@ -92,7 +92,7 @@ audioElement::MonadWidget t m => m ()
 audioElement = elDynAttr "audio" attrs (return())
   where attrs = constDyn $ M.fromList $ zip ["id","controls"] ["userAudio","controls"]
 
-  
+
 
 bufferInput::MonadWidget t m => String -> m (Event t ())
 bufferInput s = do
@@ -165,8 +165,8 @@ holdAndConnectSound s ev = do
 
 -- Connects nodes to eachother and last node to destination
 connectGraphOnEv :: MonadWidget t m => Event t Sound -> m ()
-connectGraphOnEv sound = do 
-  performEvent $ fmap liftIO $ fmap (\x->do 
+connectGraphOnEv sound = do
+  performEvent $ fmap liftIO $ fmap (\x->do
     g <- createGraph x
     connectGraphToDest g
     ) sound
@@ -192,10 +192,10 @@ createAdditiveNode xs = do
   F.setGain 0 g
   sequence (fmap startNode nodes)
   mapM (((flip F.connect) g) . getJSVal) nodes
-  return (WebAudioNode (AdditiveNode xs) g) -- returning the gain node's 
+  return (WebAudioNode (AdditiveNode xs) g) -- returning the gain node's
 
 renderAudioWaveform:: G.HTMLCanvasElement -> G.HTMLCanvasElement -> IO()
-renderAudioWaveform l r= do 
+renderAudioWaveform l r= do
   let l' = G.unHTMLCanvasElement l
   let r' = G.unHTMLCanvasElement  r
   F.renderAudioWaveform l' r'
@@ -221,7 +221,5 @@ renderAudioWaveform l r= do
 --  audioSrc <- holdDyn "" fileUrlEv
 --  audioAttrs <- mapDyn (M.fromList . zip ["src","class","id"] . (:["audioElement",audioId])) audioSrc
 --  elDynAttr "audio" audioAttrs (return())
---  --liftIO $ createMediaNode audioId' 
+--  --liftIO $ createMediaNode audioId'
 --  return $ NodeSource (MediaNode audioId) 0  -- @ '0' is temporary, this should be a more meaningful duration derrived perhaps from the soundfile
-
-
