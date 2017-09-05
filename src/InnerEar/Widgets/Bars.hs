@@ -168,5 +168,5 @@ scoreBar key score  = elClass "div" "scoreBarWrapper" $ do
   flippableDyn (return ())  (dynScoreLabel (constDyn "scoreLabel") scoreLabel) bool
   dynBarCSS' barHeight (constDyn 30) -- m ()
   flippableDyn faintedLineCSS (return ()) bool
-  hzLabel (constDyn "hzLabel") key
+  xLabel key
   dynCountLabel (constDyn "countLabel") countLabel

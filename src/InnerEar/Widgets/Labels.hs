@@ -58,8 +58,8 @@ hzLabel c s = do
    return ()
 
 -- A dynamic label for x value with css style
-xLabel :: MonadWidget t m => Dynamic t String -> m ()
-xLabel s = elClass "div" "xLabel" $ dynText s
+xLabel :: MonadWidget t m => String -> m ()
+xLabel s = elClass "div" "xLabel" $ text s
 
 
 
