@@ -44,7 +44,7 @@ runExercise ex = mdo
   questionNav <- liftM switchPromptlyDyn $ mapDyn (\(_,_,a)->a) widgetEvents
 
   -- Display Evaluation
-  displayEvalVisibile <- mapDyn (==InQuestion) nav
+  displayEvalVisibile <- mapDyn (==InReflect) nav
   let evalDataEv = fmapMaybe (\x-> case x of (Evaluation a)->Just a; otherwise->Nothing) newData
   evalData <- holdDyn (defaultEvaluation ex) evalDataEv
   displayEval <- visibleWhen displayEvalVisibile $ elClass "div" "displayEvaluation" $ do

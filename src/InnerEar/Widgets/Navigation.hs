@@ -7,24 +7,28 @@ import Reflex
 import Reflex.Dom
 import Data.Time.Clock (getCurrentTime)
 
-import InnerEar.Exercises.HarmonicsOne
 import InnerEar.Types.Data
 import InnerEar.Types.Response
 import InnerEar.Types.Request
 import InnerEar.Widgets.CreateUser
 import InnerEar.Widgets.Sound
-import InnerEar.Exercises.Prototype
 import InnerEar.Widgets.Test
 import Reflex.Synth.Synth
 import Reflex.Synth.Types
 import InnerEar.Types.Exercise
+import InnerEar.Types.ExerciseId
 import InnerEar.Widgets.Exercise
+
+import InnerEar.Exercises.ThresholdOfSilence
+import InnerEar.Exercises.HarmonicDistortion
+import InnerEar.Exercises.BoostOrCut
+import InnerEar.Exercises.FiveBandBoostCut
+import InnerEar.Exercises.TenBandBoostCut
 
 data Navigation =
   SplashPage |
   CreateUserPage |
-  TenBandsExercisePage |
-  HarmonicsOneExercisePage |
+  ExercisePage ExerciseId |
   TestPage |
   TestSoundPage
 
@@ -42,20 +46,25 @@ navigationPage :: MonadWidget t m => Event t [Response] -> Navigation -> m (Even
 
 navigationPage responses SplashPage = elClass "div" "nav" $ do
   a <- liftM (CreateUserPage <$) $ elClass "div" "navButton" $ button "CreateUser"
-  b <- liftM (TenBandsExercisePage <$)  $ elClass "div" "navButton" $ button "Ten Bands Exercise"
-  c <- liftM (HarmonicsOneExercisePage <$)  $ elClass "div" "navButton" $ button "Harmonics Exercise"
-  d <- liftM (TestPage <$)  $ elClass "div" "navButton" $ button "Test"
-  e <- liftM (TestSoundPage <$) $ elClass "div" "navButton" $ button "Test Sound"
-  let navEvents = leftmost [a,b,c,d,e]
+  b0 <- liftM (ExercisePage ThresholdOfSilence <$)  $ elClass "div" "navButton" $ button "Threshold Of Silence"
+  b1 <- liftM (ExercisePage HarmonicDistortion <$)  $ elClass "div" "navButton" $ button "Harmonic Distortion"
+  b2 <- liftM (ExercisePage BoostOrCut <$)  $ elClass "div" "navButton" $ button "Boost Or Cut (Gain)"
+  b3 <- liftM (ExercisePage FiveBandBoostCut <$)  $ elClass "div" "navButton" $ button "Five Band Boost or Cut (Filters)"
+  b4 <- liftM (ExercisePage TenBandBoostCut <$)  $ elClass "div" "navButton" $ button "Ten Band Boost or Cut (Filters)"
+  c <- liftM (TestPage <$)  $ elClass "div" "navButton" $ button "Test"
+  d <- liftM (TestSoundPage <$) $ elClass "div" "navButton" $ button "Test Sound"
+  let navEvents = leftmost [a,b0,b1,b2,b3,b4,c,d]
   return (never,never,navEvents)
 
 navigationPage responses CreateUserPage = el "div" $ do
   (requests,navUnit) <- createUserWidget responses
   return (requests,never,SplashPage <$ navUnit)
 
-navigationPage responses TenBandsExercisePage = runExerciseForNavigationPage prototypeExercise
-
-navigationPage responses HarmonicsOneExercisePage = runExerciseForNavigationPage harmonicsOneExercise
+navigationPage responses (ExercisePage ThresholdOfSilence) = runExerciseForNavigationPage thresholdOfSilenceExercise
+navigationPage responses (ExercisePage HarmonicDistortion) = runExerciseForNavigationPage harmonicDistortionExercise
+navigationPage responses (ExercisePage BoostOrCut) = runExerciseForNavigationPage boostOrCutExercise
+navigationPage responses (ExercisePage FiveBandBoostCut) = runExerciseForNavigationPage fiveBandBoostCutExercise
+navigationPage responses (ExercisePage TenBandBoostCut) = runExerciseForNavigationPage tenBandBoostCutExercise
 
 navigationPage responses TestPage = do
   (requests,sounds,navUnit) <- testWidget responses

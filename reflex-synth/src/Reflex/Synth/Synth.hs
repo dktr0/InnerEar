@@ -12,9 +12,8 @@ import GHCJS.DOM.JSFFI.Generated.HTMLElement
 --import GHCJS.DOM.JSFFI.Generated.File (getName)
 import GHCJS.DOM.File (getName)
 import GHCJS.DOM.FileReader (newFileReader,getResult, readAsDataURL,load)
-import GHCJS.DOM.EventM(on)
-import GHCJS.DOM.Types(toJSString)
-import qualified GHCJS.DOM.Types as G
+import GHCJS.DOM.EventM
+import GHCJS.DOM.Types(toJSString,HTMLCanvasElement,unHTMLCanvasElement)
 import Control.Monad.IO.Class (liftIO)
 import GHCJS.Marshal(fromJSVal)
 
@@ -44,7 +43,11 @@ instance WebAudio Source where
       (Destination) -> error "Destination cannot be a source node"
       (GainNode _) -> error "GainNode cannot be a source node"
       (FilterNode _) -> error "FilterNode cannot be a source node"
+<<<<<<< HEAD
       (BufferNode (LoadedFile _)) -> do
+=======
+      (BufferNode (LoadedFile _ _)) -> do 
+>>>>>>> 2e070ede22d28f32844a1e5f59a8cde40189ac3a
         x <- createNode node
         createGraph (WebAudioGraph x)
       otherwise -> do
@@ -66,6 +69,20 @@ instance WebAudio Sound where
     filt <- createGraph f
     let graph = WebAudioGraph'' source filt
     connectGraph graph
+  createGraph (NoSound) = do
+    x <- createSilentNode
+    y <- createGain 0
+    let graph = WebAudioGraph' x $ WebAudioGraph y
+    connectGraph graph
+  createGraph (GainSound s db) = do
+    source <- createGraph s
+    gain <- createGain db
+    let graph = WebAudioGraph'' source (WebAudioGraph gain)
+    connectGraph graph
+
+
+createSilentNode::IO WebAudioNode
+createSilentNode = F.createSilentNode >>= return . WebAudioNode (SilentNode)
 
 createAudioContext::IO ()
 createAudioContext = F.createAudioContext
@@ -95,9 +112,11 @@ audioElement = elDynAttr "audio" attrs (return())
 
 
 bufferInput::MonadWidget t m => String -> m (Event t ())
-bufferInput s = do
+bufferInput s = elClass "div" "bufferInput" $ do
   let attrs = FileInputConfig $ constDyn $ M.fromList $ zip ["accept","id"] ["audio/*",s]
   input <- fileInput attrs
+  --let element = _fileInput_element input
+  --ev <- liftM (() <$) $ wrapDomEvent (onEventName Load) element
   let ev = (() <$) $ updated $ _fileInput_value input
   performEvent_ $ fmap (liftIO . const (F.loadBuffer $ toJSString s)) ev
   return ev
@@ -110,6 +129,10 @@ bufferInput' s = do
   performEvent_ $ fmap (liftIO . const (F.setAudioSrc $ toJSString s)) ev
   return ev
 
+loadAndDrawBuffer:: String -> HTMLCanvasElement -> IO()
+loadAndDrawBuffer inputId canvas = do
+  let el' = unHTMLCanvasElement canvas
+  F.loadAndDrawBuffer (toJSString inputId) el'
 
 
 
@@ -194,12 +217,24 @@ createAdditiveNode xs = do
   mapM (((flip F.connect) g) . getJSVal) nodes
   return (WebAudioNode (AdditiveNode xs) g) -- returning the gain node's
 
+<<<<<<< HEAD
 renderAudioWaveform:: G.HTMLCanvasElement -> G.HTMLCanvasElement -> IO()
 renderAudioWaveform l r= do
   let l' = G.unHTMLCanvasElement l
   let r' = G.unHTMLCanvasElement  r
   F.renderAudioWaveform l' r'
+=======
+--renderAudioWaveform:: G.HTMLCanvasElement -> G.HTMLCanvasElement -> IO()
+--renderAudioWaveform l r= do 
+--  let l' = G.unHTMLCanvasElement l
+--  let r' = G.unHTMLCanvasElement  r
+--  F.renderAudioWaveform l' r'
+>>>>>>> 2e070ede22d28f32844a1e5f59a8cde40189ac3a
 
+renderAudioWaveform:: String -> HTMLCanvasElement -> IO ()
+renderAudioWaveform inputId el = do
+  let el' = unHTMLCanvasElement el
+  F.renderAudioWaveform (toJSString inputId) el'
 
 
 
@@ -223,3 +258,7 @@ renderAudioWaveform l r= do
 --  elDynAttr "audio" audioAttrs (return())
 --  --liftIO $ createMediaNode audioId'
 --  return $ NodeSource (MediaNode audioId) 0  -- @ '0' is temporary, this should be a more meaningful duration derrived perhaps from the soundfile
+<<<<<<< HEAD
+=======
+
+>>>>>>> 2e070ede22d28f32844a1e5f59a8cde40189ac3a

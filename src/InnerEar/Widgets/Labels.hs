@@ -50,20 +50,18 @@ dynCount c count = do
      dynText count'
      return ()
 
--- A dynamic label for Score with CSS style
-dynLabel :: MonadWidget t m => Dynamic t String -> Dynamic t String -> m ()
-dynLabel cssClass s = do
-  cssClass' <- mapDyn (singleton "class") cssClass   -- m (Dynamic t String)
-  elDynAttr "div" cssClass' $ do
-    dynText s   -- m ()
-    return ()
-
 -- A dynamic label for Hz with CSS style
 hzLabel :: MonadWidget t m => Dynamic t String -> String ->  m ()
 hzLabel c s = do
    c' <- mapDyn (singleton "class") c -- m (Dynamic t String)
    elDynAttr "div" c' $ text s -- m ()
    return ()
+
+-- A dynamic label for x value with css style
+xLabel :: MonadWidget t m => Dynamic t String -> m ()
+xLabel s = elClass "div" "xLabel" $ dynText s
+
+
 
 -- A dynamic label for Score with CSS style
 dynScoreLabel :: forall t m. MonadWidget t m => Dynamic t String -> Dynamic t (Score) -> m ()
@@ -86,6 +84,8 @@ dynCountLabel cssClass count = do
     dynText count'' -- m ()
     return ()
 
+
+
 --A label for "Hz"
 hzMainLabel :: MonadWidget t m => m ()
 hzMainLabel = elClass "div" "hzMainLabel" $ text "Hz"
@@ -99,7 +99,7 @@ countMainLabel = elClass "div" "countMainLabel" $ text "#"
 
 percentageMainLabel :: MonadWidget t m => m ()
 percentageMainLabel = elClass "div" "percentageMainLabel" $ text "%"
-  
+
 -- A dynamic label with CSS style
 dynGraphLabel :: MonadWidget t m => Dynamic t String -> Dynamic t String -> m ()
 dynGraphLabel c label = do
