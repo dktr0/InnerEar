@@ -26,8 +26,8 @@ instance Show Answer where
   show (Answer True) = "Attenuated Sound"
   show (Answer False) = "No sound at all"
 
-renderAnswer :: Config -> b -> Answer -> Sound
-renderAnswer db _ (Answer True) = NoSound -- 2.0 -- should be a sound source attenuated by dB value
+renderAnswer :: Config -> Source -> Answer -> Sound
+renderAnswer db s (Answer True) = GainSound (Sound s)  ((fromIntegral db)::Double) -- 2.0 -- should be a sound source attenuated by dB value
 renderAnswer db _ (Answer False) = NoSound -- 2.0
 
 thresholdOfSilenceConfigWidget :: MonadWidget t m => Config -> m (Event t Config)

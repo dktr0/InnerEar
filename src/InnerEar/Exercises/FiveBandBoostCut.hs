@@ -21,7 +21,6 @@ import InnerEar.Types.Frequency
 import InnerEar.Exercises.MultipleChoice
 import InnerEar.Widgets.UserMedia
 
-
 type Config = Double
 
 configs :: [Double]
@@ -34,7 +33,7 @@ answers = [F 155 "Bass (155 Hz)",F 1125 "Low Mids (1125 Hz)",F 3000 "High Mids (
   F 5000 "Presence (5 kHz)",F 13000 "Brilliance (13 kHz)"]
 
 renderAnswer :: Config -> Source -> Answer -> Sound
-renderAnswer db s f = FilteredSound s filter -- needs to be boost or cut by specified dB
+renderAnswer db s f = GainSound (FilteredSound s filter) (-10+db) -- needs to be boost or cut by specified dB
   where filter = Filter Peaking (freqAsDouble f) 1.4 16.0 -- and bandwidth should be wider
 
 fiveBandConfigWidget :: MonadWidget t m => Config -> m (Event t Config)

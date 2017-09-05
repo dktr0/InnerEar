@@ -32,5 +32,7 @@ clientWidget = elClass "div" "innerEar" $ mdo
     elClass "div" "login" $ loginWidget wsRcvd
   (y,sounds) <- navigationWidget wsRcvd
   let wsSend = leftmost [x,y]
+  counts <- count sounds
+  mapDyn (show . (*(1.0::Double))) counts >>= dynText 
   performSound sounds
   return ()

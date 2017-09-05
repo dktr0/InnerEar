@@ -21,7 +21,8 @@ foreign import javascript safe "loadUserSoundFile()" loadUserSoundFile :: IO ()
 foreign import javascript safe "$r= createMediaNode($1)" createMediaNode :: JSString -> IO JSVal
 
 
-foreign import javascript safe "$2.gain.value = $1" setGain :: Double -> JSVal -> IO ()
+foreign import javascript safe "setGain($1, $2)" setGain :: Double -> JSVal -> IO ()   -- Setting Gain to a DB value
+foreign import javascript safe "$2.gain.value = $1" setAmp::Double -> JSVal -> IO ()
 foreign import javascript safe "$2.frequency.value = $1" setFrequency :: Double -> JSVal -> IO()
 
 foreign import javascript safe "$2.Q.value = $1" setFilterQ :: Double -> JSVal -> IO()
@@ -37,7 +38,7 @@ foreign import javascript safe "setAudioSrc($1)" setAudioSrc :: JSString -> IO (
 
 foreign import javascript safe "$r = ___ac.currentTime" getCurrentTime :: IO Double
 
-foreign import javascript safe "$3.gain.setValueAtTime($1,$2)" setGainAtTime :: Double -> Double -> JSVal-> IO ()
+foreign import javascript safe "$3.gain.setValueAtTime($1,$2)" setAmpAtTime :: Double -> Double -> JSVal-> IO ()
 
 foreign import javascript safe "$r = ___ac.createOscillator()" createSilentNode:: IO JSVal
 
@@ -59,4 +60,3 @@ foreign import javascript safe "loadAndDrawBuffer($1,$2)" loadAndDrawBuffer :: J
 
 -- takes 'canvas' html elements - us 'toJSVal on the html element'
 foreign import javascript safe "renderAudioWaveform($1, $2,0)" renderAudioWaveform :: JSString -> JSVal -> IO()
-

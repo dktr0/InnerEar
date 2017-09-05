@@ -22,7 +22,7 @@ class WebAudio a where
   createGraph :: a -> IO WebAudioGraph
 
 instance WebAudio Filter where
-  createGraph (NoFilter) = createGain 1.0 >>= return . WebAudioGraph
+  createGraph (NoFilter) = createGain 0 >>= return . WebAudioGraph
   createGraph filt = createBiquadFilter filt >>= return . WebAudioGraph
 
 instance WebAudio Buffer where
@@ -43,11 +43,7 @@ instance WebAudio Source where
       (Destination) -> error "Destination cannot be a source node"
       (GainNode _) -> error "GainNode cannot be a source node"
       (FilterNode _) -> error "FilterNode cannot be a source node"
-<<<<<<< HEAD
-      (BufferNode (LoadedFile _)) -> do
-=======
-      (BufferNode (LoadedFile _ _)) -> do 
->>>>>>> 2e070ede22d28f32844a1e5f59a8cde40189ac3a
+      (BufferNode (LoadedFile _ _)) -> do
         x <- createNode node
         createGraph (WebAudioGraph x)
       otherwise -> do
@@ -72,6 +68,7 @@ instance WebAudio Sound where
   createGraph (NoSound) = do
     x <- createSilentNode
     y <- createGain 0
+    setAmp 0 y
     let graph = WebAudioGraph' x $ WebAudioGraph y
     connectGraph graph
   createGraph (GainSound s db) = do
@@ -165,7 +162,7 @@ holdAndConnectSound s ev = do
 --updatableSound first next = do
 --  x<-combineDyn (,) first next
 --  e <- performEvent $ fmap liftIO $ fmap (\_->do
---    let y = fmap (\(a,b)->(getLastNode a,getFirstNode b)) $ current x
+--    let y = fmap (\(a,b)->(getLastNode a,getFirstNode b)) $ current
 --    return $ fmap (\(a,b)->disconnect a b) y
 --    ) $ tagDyn x $ leftmost [updated first, updated next]
 --  graph <- combineDyn (WebAudioGraph'') first next
@@ -212,24 +209,18 @@ createAdditiveNode:: [Node] -> IO WebAudioNode
 createAdditiveNode xs = do
   nodes <- sequence $ fmap createNode xs -- IO [WebAudioNode]
   g <- F.createGain
-  F.setGain 0 g
+  F.setAmp 0 g
   sequence (fmap startNode nodes)
   mapM (((flip F.connect) g) . getJSVal) nodes
   return (WebAudioNode (AdditiveNode xs) g) -- returning the gain node's
 
-<<<<<<< HEAD
-renderAudioWaveform:: G.HTMLCanvasElement -> G.HTMLCanvasElement -> IO()
-renderAudioWaveform l r= do
-  let l' = G.unHTMLCanvasElement l
-  let r' = G.unHTMLCanvasElement  r
-  F.renderAudioWaveform l' r'
-=======
+
 --renderAudioWaveform:: G.HTMLCanvasElement -> G.HTMLCanvasElement -> IO()
---renderAudioWaveform l r= do 
+--renderAudioWaveform l r= do
 --  let l' = G.unHTMLCanvasElement l
 --  let r' = G.unHTMLCanvasElement  r
 --  F.renderAudioWaveform l' r'
->>>>>>> 2e070ede22d28f32844a1e5f59a8cde40189ac3a
+
 
 renderAudioWaveform:: String -> HTMLCanvasElement -> IO ()
 renderAudioWaveform inputId el = do
@@ -255,10 +246,6 @@ renderAudioWaveform inputId el = do
 --  fileUrlEv <- fileToURL $ fmap (!!0) $ updated $ _fileInput_value input
 --  audioSrc <- holdDyn "" fileUrlEv
 --  audioAttrs <- mapDyn (M.fromList . zip ["src","class","id"] . (:["audioElement",audioId])) audioSrc
+--  return $ NodeSource (MediaNode audioId) 0  -- @ '0' is temporary, this should be a more meaningful duration derrived perhaps from the soundfile
 --  elDynAttr "audio" audioAttrs (return())
 --  --liftIO $ createMediaNode audioId'
---  return $ NodeSource (MediaNode audioId) 0  -- @ '0' is temporary, this should be a more meaningful duration derrived perhaps from the soundfile
-<<<<<<< HEAD
-=======
-
->>>>>>> 2e070ede22d28f32844a1e5f59a8cde40189ac3a
