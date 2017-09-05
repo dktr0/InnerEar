@@ -13,6 +13,8 @@ import InnerEar.Types.Exercise
 import InnerEar.Types.Score
 import InnerEar.Types.Data (Datum)
 import InnerEar.Widgets.UserMedia
+import InnerEar.Widgets.SpecEval
+
 
 
 type Config = Int -- gain value for attenuated sounds
@@ -36,6 +38,7 @@ thresholdOfSilenceConfigWidget i = radioConfigWidget msg configs i
 
 displayEval :: MonadWidget t m => Dynamic t (Map Answer Score) -> m ()
 displayEval scoreMap = return ()
+
 
 generateQ :: Config -> [Datum Config [Answer] Answer (Map Answer Score)] -> IO ([Answer],Answer)
 generateQ _ _ = randomMultipleChoiceQuestion [Answer False,Answer True]
