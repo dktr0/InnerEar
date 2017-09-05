@@ -38,29 +38,38 @@ import InnerEar.Widgets.Utility
 
 userMediaWidget::MonadWidget t m => String -> m (Dynamic t Source)
 userMediaWidget inputId = elClass "div" "waveformWidget" $ do
-  --FileInput
-  let attrs = FileInputConfig $ constDyn $ M.fromList $ zip ["accept","id"] ["audio/*",inputId]
-  input <- fileInput attrs
-  let ev = (() <$) $ updated $ _fileInput_value input
+  
   -- create canvas
   (canvasEl,_) <- elClass' "canvas" "waveformCanvas" (return ())
   let canvasElement = _el_element canvasEl
   --performEvent_ $ fmap liftIO $ fmap (const $ renderAudioWaveform inputId $ G.castToHTMLCanvasElement canvasElement) event -- redraw wavefor mon same canvas each event
  
+  --FileInput
+  let attrs = FileInputConfig $ constDyn $ M.fromList $ zip ["accept","id"] ["audio/*",inputId]
+  input <- fileInput attrs
+  let ev = (() <$) $ updated $ _fileInput_value input
+
   -- Load and draw the buffer when file has changed
   performEvent_ $ fmap (liftIO . const (loadAndDrawBuffer inputId $ G.castToHTMLCanvasElement canvasElement)) ev
 
   --Calculate the playbackParam
   clickEv <- wrapDomEvent canvasElement (onEventName Click) (mouseX)
   pos <- holdDyn 0 clickEv
-  mapDyn (("clickX:  "++) . show) pos >>= dynText
-  start <- textInput $ def & textInputConfig_attributes .~ (constDyn $ M.fromList $ zip ["type","step"] ["number","0.1"])
-  end <- textInput $ def & textInputConfig_attributes .~ (constDyn $ M.fromList $ zip ["type","step"] ["number","0.1"])
+  (start,end) <- el "div" $ do 
+    text "start "
+    start <- textInput $ def & textInputConfig_attributes .~ (constDyn $ M.fromList $ zip ["type","step","class"] ["number","0.01","startEndNumberInput"])
+    text " end "
+    end <- textInput $ def & textInputConfig_attributes .~ (constDyn $ M.fromList $ zip ["type","step","class"] ["number","0.01","startEndNumberInput"])
+    return (start,end)
+  cb <- el "div" $ do
+    text "loop"
+    checkbox False def
+  stopButton <- button "stop"
+  performEvent $ fmap liftIO $ fmap (const $ stopNodeByID inputId) stopButton
   startVal <- mapDyn (maybe 1.0 id . ((readMaybe)::String->Maybe Double) ) (_textInput_value start)
   endVal <- mapDyn (maybe 1.0 id . ((readMaybe)::String->Maybe Double)) (_textInput_value end)
   param <- combineDyn (PlaybackParam) startVal endVal
-  mapDyn (\x->((flip NodeSource) 2) $ BufferNode $ LoadedFile inputId $ x False) param
-
+  combineDyn (\x l-> ((flip NodeSource) 2) $ BufferNode $ LoadedFile inputId $ x l) param (_checkbox_value cb)
 
 
 --userMediaWidget::MonadWidget t m => String -> m (Dynamic t Source)
@@ -82,14 +91,14 @@ pinkNoiseOrFileSourceWidget sourceID = elClass "div" "sourceWidget" $ do
 
 sourceWidget::MonadWidget t m => String -> m (Dynamic t Source)
 sourceWidget sourceID = elClass "div" "sourceWidget" $ do
-  userFileSource <- userMediaWidget sourceID
   let staticSources = M.fromList $ zip [0::Int,1] $ fmap ((flip NodeSource) 2 . BufferNode) [File "pinknoise.wav",File "whitenoise.wav"]
-  ddMapVal <- mapDyn (\x-> M.insert 2 x staticSources) userFileSource
   let ddMap = constDyn $  M.fromList $ zip [(0::Int)..] ["Pink noise", "White noise", "Load a sound file"]
+  text "Sound source: "
   dd <- dropdown 0 ddMap def
+  userFileSource <- userMediaWidget sourceID
+  ddMapVal <- mapDyn (\x-> M.insert 2 x staticSources) userFileSource
   let ddVal = _dropdown_value dd
   dynSource<-combineDyn (\i m-> maybe (NodeSource (BufferNode $ File "pinknoise.wav") 2) id $ M.lookup i m) ddVal ddMapVal
-  mapDyn show dynSource >>= dynText
   return dynSource
 
 
