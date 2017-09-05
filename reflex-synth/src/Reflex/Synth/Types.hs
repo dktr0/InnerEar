@@ -20,6 +20,7 @@ module Reflex.Synth.Types where
 
 import GHCJS.DOM.Types(toJSString)
 import GHCJS.Marshal
+import GHCJS.Marshal.Pure (pToJSVal)
 import GHCJS.Types (JSVal)
 import qualified Reflex.Synth.Foreign as F
 import Control.Monad (mapM)
@@ -101,9 +102,9 @@ createBufferNode (File path) = do
   x <- F.createBufferSourceNodeFromURL (Prim.toJSString path)
   return (WebAudioNode (BufferNode $ File path) x)
 createBufferNode (LoadedFile inputId (PlaybackParam s e l)) = do
-  s'<- toJSVal s
-  e'<- toJSVal e
-  l'<- toJSVal l
+  let s'=  pToJSVal s
+  let e'= pToJSVal e
+  let l'= pToJSVal l
   x <- F.createBufferSourceNodeFromID (Prim.toJSString inputId) s' e' l'
   return (WebAudioNode (BufferNode $ LoadedFile inputId $ PlaybackParam s e l) x)
 
@@ -199,12 +200,17 @@ startNode (WebAudioNode (GainNode _) _) = error "Gain node cannot bet 'started' 
 startNode (WebAudioNode (MediaNode s) _) = F.playMediaNode (toJSString s) -- if you call 'start' on a MediaBufferNode a js error is thrown by the WAAPI
 startNode (WebAudioNode (OscillatorNode (Oscillator _ _ g)) r) = F.setGain g r
 startNode (WebAudioNode (BufferNode (LoadedFile a (PlaybackParam b c d))) x) = do
-  b' <- toJSVal b
-  c' <- toJSVal c
-  d' <- toJSVal d
-  F.playBufferNode (toJSString a) b' c' d' x
+  --b' <- pToJSVal b
+  --c' <- pToJSVal c
+  --d' <- pToJSVal d
+  --F.playBufferNode (toJSString a) b' c' d' x
+  F.playBufferNode (toJSString a) (pToJSVal b) (pToJSVal c) (pToJSVal d) x
+
 startNode (WebAudioNode _ ref) = F.startNode ref
 startNode _ = return ()
+
+stopNodeByID:: String -> IO ()
+stopNodeByID s = F.stopNodeByID (toJSString s)
 
 connectGraphToDest:: WebAudioGraph -> IO ()
 connectGraphToDest g = do
