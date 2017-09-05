@@ -41,6 +41,7 @@ foreign import javascript safe "$3.gain.setValueAtTime($1,$2)" setGainAtTime :: 
 
 foreign import javascript safe "$r = ___ac.createOscillator()" createSilentNode:: IO JSVal
 
+foreign import javascript safe "stopNodeByID($1)" stopNodeByID::JSString -> IO ()
 
 foreign import javascript safe "playBufferNode($1, $2, $3, $4, $5)" playBufferNode:: JSString -> JSVal -> JSVal -> JSVal -> JSVal -> IO ()
 
