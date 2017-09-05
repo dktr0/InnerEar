@@ -13,8 +13,7 @@ data Score = Score {
   falseNegatives::Int  -- times user thinks it is another answer but this is the correct answer
 } deriving (Show, Eq,Typeable,Data)
 
--- Times that the answer this score pertains to has been
--- the answer
+-- Times that the answer this score pertains to has been the answer
 questionsAsked::Score -> Int
 questionsAsked (Score a _ c) = a+c
 
@@ -27,12 +26,14 @@ incFalseNegative (Score a b c) = Score a b (c+1)
 incCorrect:: Score -> Score
 incCorrect (Score a b c) = Score (a+1) b c
 
+markCorrect :: Ord a => a -> Map a Score -> Map a Score
+markCorrect rightAnswer = alter f rightAnswer
+  where f (Just x) = Just $ incCorrect x
+        f Nothing = Just $ Score 1 0 0
 
--- second param is to be interpreted as: (correctA, Either (inCorrectA) (correctA))
-updateScore::(Ord k)=> (k,Either k k) -> Map k Score -> Map k Score
-
-updateScore (a,(Left b)) = (insertWith falseN a (Score 0 0 1)) . (insertWith falseP b (Score 0 1 0))
-  where falseN new old = incFalseNegative old
-        falseP new old = incFalsePositive old
-
-updateScore (_,(Right b)) = insertWith (\new old -> incCorrect old) b (Score 1 0 0)
+markIncorrect :: Ord a => a -> a -> Map a Score -> Map a Score
+markIncorrect theirAnswer rightAnswer = alter falseP theirAnswer . alter falseN rightAnswer
+  where falseP (Just x) = Just $ incFalsePositive x
+        falseP Nothing = Just $ Score 0 1 0
+        falseN (Just x) = Just $ incFalseNegative x
+        falseN Nothing = Just $ Score 0 0 1

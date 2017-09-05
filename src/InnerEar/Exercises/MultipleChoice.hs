@@ -68,70 +68,37 @@ multipleChoiceQuestionWidget :: (MonadWidget t m, Show a, Eq a, Ord a)
 
 multipleChoiceQuestionWidget maxTries answers bWidget render eWidget config initialEval newQuestion = elClass "div" "exerciseWrapper" $ mdo
 
-  -- Managing number of tries
-  listOfClicked <- foldDyn ($) [] $ leftmost [fmap (:) bandPressed, (const []) <$ newQuestion]
-  let tryEv = attachWithMaybe (\l e -> if elem e l then Nothing else Just e) (current listOfClicked) bandPressed
-  tries <- foldDyn ($) 0 $ leftmost [(+1) <$ tryEv, (const 0) <$ nextQuestion]
-  canTry <- mapDyn (<maxTries) tries >>= combineDyn (&&) notCorrectYet -- Dynamic t Bool
-  canNotTry <- mapDyn not canTry
-  let cannotTryEv = ffilter not $ updated canTry -- Event t Bool (true when change to not able to try)
-
-  -- produce events for correct and incorrect answers
-  completeQuestion <- holdDyn Nothing $ fmap Just newQuestion
-  question <- holdDyn Nothing $ fmap (Just . fst) newQuestion -- m (Dynamic t (Maybe [a]))
-  answer <- holdDyn Nothing $ fmap (Just . snd) newQuestion -- m (Dynamic t (Maybe a))
-  let answerEvent = gate (current canTry) tryEv -- Event t (Maybe a)
-  notCorrectYet <- holdDyn True $ leftmost [True <$ newQuestion, False <$ correctAnswer]
-  let correctAnswer = attachDynWithMaybe (\x y -> if (fromJust x)==y then x else Nothing) answer answerEvent  -- Event t a
-  let incorrectAnswer = attachDynWithMaybe (\x y -> if (fromJust x)/=y then (Just y) else Nothing) answer answerEvent -- Event t a
-  let incorrectNotFinal = attachDynWithMaybe (\x y -> if x then Just y else Nothing) canTry incorrectAnswer --Event t a
-  let incorrectFinal = attachDynWithMaybe (\x y -> if (not x) then Just y else Nothing) canTry incorrectAnswer -- Event t a
-
-  -- needs to fire once only the first time a new question is auditioned
-  timesQuestionHeard <- foldDyn ($) (0::Int) $ leftmost [(const 0) <$ newQuestion,(+1) <$ playQuestion]
-  let firstTimeQuestionHeard = ffilter (==1) $ updated timesQuestionHeard
-  let questionHeard = fmap fromJust $ tagDyn completeQuestion firstTimeQuestionHeard
-
-  -- use new questions, correct and incorrect answer events to calculate button modes
-  let initialModes = fmap (const NotPossible) answers -- [AnswerButtonMode]
-  let newModes = fmap (modesForNewQuestion answers) newQuestion
-  let questionHeardModes = fmap (modesOnceQuestionHeard answers) questionHeard
-  let attemptModes = fmap (modesForIncorrectAnswer answers) incorrectNotFinal
-  let incorrectModes = fmap (modesForExplore .)  $ fmap (modesForIncorrectAnswer answers) incorrectFinal --needs to mark correct answer still
-  let correctModes = fmap (modesForExplore .) $ fmap (modesForCorrectAnswer answers) correctAnswer
-  modes <- foldDyn ($) initialModes $ leftmost [newModes,questionHeardModes,attemptModes,incorrectModes,correctModes]
+  let initialState = initialMultipleChoiceState answers maxTries
+  let newQuestion' = fmap newQuestionMultipleChoiceState newQuestion
+  questionHeard0 <- holdDyn False $ leftmost [False <$ newQuestion,True <$ playQuestion]
+  let questionHeard = nubDyn questionHeard0
+  let questionHeard' = fmap (const onceQuestionHeard) $ ffilter (==True) $ updated questionHeard
+  let answerPressed' = fmap answerSelected answerPressed
+  let stateChanges = leftmost [newQuestion',questionHeard', answerPressed']
+  multipleChoiceState <- foldDyn ($) initialState stateChanges
+  modes <- mapDyn answerButtonModes multipleChoiceState
   modes' <- mapM (\x-> mapDyn (!!x) modes) [0,1..9]
+  scores <- mapDyn scoreMap multipleChoiceState
 
   -- user interface (buttons, etc)
   (playReference,playQuestion,nextQuestion) <- elClass "div" "playReferenceOrQuestion" $ do
     x <- buttonDynCss "Listen to Reference Sound" (constDyn "buttonWrapper")
     y <- buttonDynCss "Listen to Question" (constDyn "buttonWrapper")
-    newQuestionVisible <- mapDyn (>0) timesQuestionHeard
+    newQuestionVisible <- holdDyn False $ leftmost [False <$ newQuestion,True <$ y]
     z <- visibleWhen newQuestionVisible $ (InQuestion <$) <$> buttonDynCss "New Question" (constDyn "buttonWrapper")
     return (x,y,z)
-  bandPressed <- elClass "div" "answerButtonWrapper" $ -- m (Event t a)
+  answerPressed <- elClass "div" "answerButtonWrapper" $ -- m (Event t a)
     leftmost <$> zipWithM (\f m -> answerButton (show f) m f) answers modes'
   b <- elClass "div" "bottomRow" $ do
-    elClass "div" "evaluationInQuestion" $ eWidget scoreMap
+    x <- mapDyn scoreMap multipleChoiceState
+    elClass "div" "evaluationInQuestion" $ eWidget x
     elClass "div" "userMediaWidgetInQuestion" $ bWidget
 
-  -- update scoreMap
-  let correctAnswerScoreUpdate = attachDynWith (\x y -> (fromJust x,Right y)) answer correctAnswer
-  let incorrectAnswerScoreUpdate = attachDynWith (\x y -> (fromJust x,Left y)) answer incorrectAnswer
-  let scoreUpdates = leftmost [correctAnswerScoreUpdate,incorrectAnswerScoreUpdate]
-  scoreMap <- foldDyn updateScore initialEval scoreUpdates
-
-  -- display feedback
-  let resetFeedback = fmap (const "") navEvents
-  let resetFeedback2 = fmap (const "") newQuestion
-  let correctAnswerFeedback = "Correct!" <$ correctAnswer
-  feedbackToDisplay <- holdDyn "" $ leftmost [correctAnswerFeedback,resetFeedback,resetFeedback2]
-  dynText feedbackToDisplay
-
   -- generate sounds to be playedW
-  let questionSound = fromJust <$> tagDyn answer playQuestion
+  answer <- holdDyn Nothing $ fmap (Just . snd) newQuestion
+  let questionSound = fmapMaybe id $ tagDyn answer playQuestion
   let referenceSound = Sound (NodeSource (BufferNode $ File "pinknoise.wav") 2.0) <$ playReference
-  let soundsToRender = leftmost [questionSound,bandPressed]
+  let soundsToRender = leftmost [questionSound,answerPressed]
   let renderedSounds = attachDynWith (render config) b soundsToRender
   let playSounds = leftmost [renderedSounds,referenceSound]
 
@@ -139,39 +106,11 @@ multipleChoiceQuestionWidget maxTries answers bWidget render eWidget config init
   onToReflect <- (InReflect <$) <$> buttonDynCss "Reflect" (constDyn "buttonWrapper")
   let navEvents = leftmost [nextQuestion,onToReflect]
 
-  return (fmap Evaluation (updated scoreMap), playSounds,navEvents)
+  return (fmap Evaluation $ updated scores, playSounds,navEvents)
 
 
 debugDisplay :: (MonadWidget t m, Show a ) => String -> Dynamic t a -> m ()
 debugDisplay x d = el "div" $ text x >> display d
-
-
-modesForNewQuestion :: (Eq a) => [a] -> ([a],a) -> [AnswerButtonMode] -> [AnswerButtonMode]
-modesForNewQuestion possibleAnswers _ _ = NotPossible <$ possibleAnswers
-
-modesOnceQuestionHeard :: (Eq a) => [a] -> ([a],a) -> [AnswerButtonMode] -> [AnswerButtonMode]
-modesOnceQuestionHeard possibleAnswers question _ = fmap f $ fmap (flip elem $ fst question) possibleAnswers
-  where f True = Possible
-        f False = NotPossible
-
-modesForCorrectAnswer :: (Eq a) => [a] -> a -> [AnswerButtonMode] -> [AnswerButtonMode]
-modesForCorrectAnswer possibleAnswers correctAnswer xs = replaceAtSameIndex correctAnswer possibleAnswers Correct xs
-
-modesForIncorrectAnswer :: (Eq a) => [a] -> a -> [AnswerButtonMode] -> [AnswerButtonMode]
-modesForIncorrectAnswer possibleAnswers incorrectAnswer xs = replaceAtSameIndex incorrectAnswer possibleAnswers IncorrectDisactivated xs
-
-modesForMissedAnswer :: (Eq a) => [a] -> a -> [AnswerButtonMode] -> [AnswerButtonMode]
-modesForMissedAnswer possibleAnswers missedAnswer xs = replaceAtSameIndex missedAnswer possibleAnswers CorrectMissed xs
-
-modesForExplore :: [AnswerButtonMode] -> [AnswerButtonMode]
-modesForExplore = fmap f
-  where
-    f NotPossible = NotPossible
-    f Possible = Possible
-    f IncorrectDisactivated = IncorrectActivated
-    f IncorrectActivated = IncorrectActivated
-    f Correct = Correct
-    f CorrectMissed = CorrectMissed
 
 randomMultipleChoiceQuestion :: [a] -> IO ([a],a)
 randomMultipleChoiceQuestion possibilities = do
@@ -194,3 +133,92 @@ radioConfigWidget msg possibilities i = do
 
 trivialBWidget :: MonadWidget t m => m (Dynamic t ())
 trivialBWidget = holdDyn () $ never
+
+
+data MultipleChoiceMode = ListenMode | AnswerMode | ExploreMode deriving (Eq)
+
+data MultipleChoiceState a = MultipleChoiceState {
+  mode :: MultipleChoiceMode,
+  correctAnswer :: a,
+  allAnswers :: [a],
+  possibleAnswers :: [a],
+  answerButtonModes :: [AnswerButtonMode],
+  attemptsRemainingDefault :: Int,
+  attemptsRemaining :: Int,
+  scoreMap :: Map a Score
+  }
+
+-- initialMultipleChoiceState provides a useful initial configuration of
+-- the MultipleChoiceState for the time before a new question has been
+-- generated.
+
+initialMultipleChoiceState :: [a] -> Int -> MultipleChoiceState a
+initialMultipleChoiceState xs n = MultipleChoiceState {
+  mode = ListenMode,
+  correctAnswer = xs!!0,
+  allAnswers = xs,
+  possibleAnswers = xs,
+  answerButtonModes = NotPossible <$ xs,
+  attemptsRemainingDefault = n,
+  attemptsRemaining = n,
+  scoreMap = empty
+  }
+
+-- When a multiple choice question is generated, all of the buttons are
+-- not possible, pending the user listening to the correct answer.
+
+newQuestionMultipleChoiceState :: ([a],a) -> MultipleChoiceState a -> MultipleChoiceState a
+newQuestionMultipleChoiceState (xs,x) s = s {
+  mode = ListenMode,
+  correctAnswer = x,
+  possibleAnswers = xs,
+  answerButtonModes = NotPossible <$ allAnswers s,
+  attemptsRemaining = attemptsRemainingDefault s
+  }
+
+-- Once the user has listened to the correct answer at least once, all
+-- of the buttons that represent possible answers become possible and the
+-- mode changes to AnswerMode (the only mode in which answers are processed)
+
+onceQuestionHeard :: Eq a => MultipleChoiceState a -> MultipleChoiceState a
+onceQuestionHeard s = s { mode = AnswerMode, answerButtonModes = m }
+  where m = fmap f $ fmap (flip elem $ possibleAnswers s) $ allAnswers s
+        f True = Possible
+        f False = NotPossible
+
+-- When answers are selected they are ignored if mode is ListenMode or ExploreMode
+-- Otherwise (i.e. AnswerMode) the state is updated in different ways depending
+-- on whether the answer is correct or incorrect, and
+
+answerSelected :: (Eq a,Ord a) => a -> MultipleChoiceState a -> MultipleChoiceState a
+answerSelected _ s | mode s == ListenMode = s
+answerSelected _ s | mode s == ExploreMode = s
+
+answerSelected a s | a == correctAnswer s = toExploreMode $ s {
+  answerButtonModes = replaceAtSameIndex a (allAnswers s) Correct (answerButtonModes s),
+  scoreMap = markCorrect a $ scoreMap s
+  }
+
+answerSelected a s | a /= correctAnswer s && attemptsRemaining s > 0 = s {
+  answerButtonModes = replaceAtSameIndex a (allAnswers s) IncorrectDisactivated (answerButtonModes s),
+  attemptsRemaining = attemptsRemaining s - 1,
+  scoreMap = markIncorrect a (correctAnswer s) $ scoreMap s
+  }
+
+answerSelected a s | a /= correctAnswer s && attemptsRemaining s == 0 = toExploreMode $ s {
+  answerButtonModes = replaceAtSameIndex a (allAnswers s) IncorrectActivated (answerButtonModes s),
+  scoreMap = markIncorrect a (correctAnswer s) $ scoreMap s
+  }
+
+toExploreMode :: MultipleChoiceState a -> MultipleChoiceState a
+toExploreMode s = s {
+  mode = ExploreMode,
+  answerButtonModes = fmap f $ answerButtonModes s
+  }
+  where
+    f NotPossible = NotPossible
+    f Possible = Possible
+    f IncorrectDisactivated = IncorrectActivated
+    f IncorrectActivated = IncorrectActivated
+    f Correct = Correct
+    f CorrectMissed = CorrectMissed
