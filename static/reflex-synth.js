@@ -115,12 +115,17 @@ function createBufferSourceNodeFromURL(url) {
 
 
 function playBufferNode(id, s, e, loop, node){
-  var start= start*node.buffer.duration
-  var end = node.buffer.duration*end
+  // if(userAudioNodes[id].source){
+    // userAudioNodes[id].source.stop();
+  // }
+  e = Math.max(Math.min(1,e),0)
+  s = Math.max(Math.min(e,s),0)
+  var start= s*node.buffer.duration
+  var end = (e-s)*node.buffer.duration
   console.log('end:' + end)
   console.log('start' + start)
   node.loopStart = start;
-  node.loopEnd = end
+  node.loopEnd = e*node.buffer.duration;
   node.loop = loop
   node.start(___ac.currentTime, start, end)
 
@@ -304,7 +309,18 @@ function loadAndDrawBuffer(inputId, canvas){
 
 
 
-
+function stopNodeByID(id){
+  var obj = userAudioNodes[id]
+  if(obj){
+    if (obj.source){
+      obj.source.stop()
+    }else {
+      console.log("WARNING - tried to stop a node that does not exist")
+    }
+  }else{
+    console.log("WARNING - node with id: "+id+" does not exist");
+  }
+}
 
 
 function drawBufferOnCanvas (buff, canvas) {
@@ -313,7 +329,8 @@ function drawBufferOnCanvas (buff, canvas) {
     var width = canvas.width
     var height = canvas.height
     var ctx = canvas.getContext('2d')
-    ctx.fillStyle = "rgb(100,100,75)";
+    ctx.fillStyle = "rgb(50,50,50)"
+
     ctx.fillRect(0,0,width,height)
     ctx.lineWidth=1;
     ctx.fillStyle = "rgb(100,170,200)";
