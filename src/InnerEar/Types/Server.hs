@@ -50,9 +50,9 @@ deauthenticateConnection :: ConnectionIndex -> Server -> Server
 deauthenticateConnection i s = s { connections = newConnections }
   where newConnections = adjust (\(ws,_) -> (ws,Nothing)) i (connections s)
 
-postPoint :: Handle -> Point -> Server -> Server
-postPoint h p s = s { users = newUsers }
- where newUsers = adjust (addPoint p) h (users s)
+-- postPoint :: Handle -> Point -> Server -> Server
+-- postPoint h p s = s { users = newUsers }
+-- where newUsers = adjust (addPoint p) h (users s)
 
 updateServer :: MVar Server -> (Server -> Server) -> IO (MVar Server)
 updateServer s f = do

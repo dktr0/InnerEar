@@ -28,11 +28,13 @@ import InnerEar.Types.Password
 import InnerEar.Types.Data
 import InnerEar.Types.User
 
+import InnerEar.Database.SQLite
+
 main = do
-  putStrLn "Inner Ear server (listening on port 4468)"
-  s <- newMVar newServer
-  let settings = (defaultWebAppSettings "InnerEarClient.jsexe") { ssIndices = [unsafeToPiece "index.html"] }
-  run 4468 $ WS.websocketsOr WS.defaultConnectionOptions (webSocketsApp s) (staticApp settings)
+  -- putStrLn "Inner Ear server (listening on port 4468)"
+  -- s <- newMVar newServer
+  -- let settings = (defaultWebAppSettings "InnerEarClient.jsexe") { ssIndices = [unsafeToPiece "index.html"] }
+  -- run 4468 $ WS.websocketsOr WS.defaultConnectionOptions (webSocketsApp s) (staticApp settings)
 
 webSocketsApp :: MVar Server -> WS.ServerApp -- = PendingConnection -> IO ()
 webSocketsApp s ws = do
