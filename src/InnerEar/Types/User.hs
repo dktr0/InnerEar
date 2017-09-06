@@ -8,7 +8,7 @@ data User = User {
   handle :: Handle,
   password :: Password,
   canModifyUsers :: Bool
-}
+  } deriving (Show)
 
 newUser :: Handle -> Password -> User
 newUser h p = User {

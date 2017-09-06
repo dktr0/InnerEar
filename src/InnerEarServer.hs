@@ -28,9 +28,15 @@ import InnerEar.Types.Password
 import InnerEar.Types.Data
 import InnerEar.Types.User
 
-import InnerEar.Database.SQLite
+import qualified InnerEar.Database.SQLite as DB
+import qualified Database.SQLite.Simple as DB
+
 
 main = do
+  db <- DB.establishDatabase
+  DB.addUser db $ User "d0kt0r3" "test" True
+  DB.findAllUsers db >>= print
+  DB.close db
   -- putStrLn "Inner Ear server (listening on port 4468)"
   -- s <- newMVar newServer
   -- let settings = (defaultWebAppSettings "InnerEarClient.jsexe") { ssIndices = [unsafeToPiece "index.html"] }
@@ -126,8 +132,9 @@ postRecord i r@(Record h p) s = if ok then doIt else dont
     rHandle = Just h
     ok = cHandle == rHandle
     doIt = do
-      putStrLn $ "posting record: " ++ (show r)
-      return $ postPoint h p s
+      putStrLn $ "posting record... actually not because disactivated in this branch...: " ++ (show r)
+      return s
+      -- return $ postPoint h p s
     dont = do
       putStrLn $ "unable to post record (not authenticated or authenticated to different handle)" ++ (show r)
       return s
