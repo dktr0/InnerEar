@@ -16,6 +16,36 @@ function test(s){
   return ___ac.createMediaElementSource(a)
 }
 
+
+function createScriptProcessorNode (onAudioFunc){
+  var sp = ___ac.createScriptProcessor(undefined,2,2)
+  sp.onaudioprocess = onAudioFunc;
+  return sp
+}
+
+function getDistortAtDbFunc(db){
+  if (args.db==undefined){
+    console.log ("WARNING - spDistortAtDb wasn't provided an argument containing a decibel value - value of 0dB used")
+    args.db=0
+  }
+  var db = args.db
+  var clip = Math.pow (10, db/20)
+  var func = function (audioProcessingEvent){
+    var inputBuffer = audioProcessingEvent.inputBuffer;
+        var outputBuffer = audioProcessingEvent.outputBuffer
+
+        for (var channels =0; channels< outputBuffer.numberOfChannels; channels = channels+1){
+          var inputData = inputBuffer.getChannelData(channels)
+          var outputData = outputBuffer.getChannelData(channels)
+          for (var sample = 0; sample<inputBuffer.length; sample = sample+1){
+            // outputData[sample] = Math.min(Math.max(inputData[sample],-1/2),1/2);
+            outputData[sample] = Math.min(Math.max(inputData[sample],clip*(-1)),clip);
+          }
+        }
+  }
+  return func
+}
+
 function setGain(db, node){
   var amp  = Math.pow(10,db/20)
   console.log("db:  "+db)

@@ -38,12 +38,12 @@ import InnerEar.Widgets.Utility
 
 userMediaWidget::MonadWidget t m => String -> m (Dynamic t Source)
 userMediaWidget inputId = elClass "div" "waveformWidget" $ do
-  
+
   -- create canvas
   (canvasEl,_) <- elClass' "canvas" "waveformCanvas" (return ())
   let canvasElement = _el_element canvasEl
   --performEvent_ $ fmap liftIO $ fmap (const $ renderAudioWaveform inputId $ G.castToHTMLCanvasElement canvasElement) event -- redraw wavefor mon same canvas each event
- 
+
   --FileInput
   let attrs = FileInputConfig $ constDyn $ M.fromList $ zip ["accept","id"] ["audio/*",inputId]
   input <- fileInput attrs
@@ -55,7 +55,7 @@ userMediaWidget inputId = elClass "div" "waveformWidget" $ do
   --Calculate the playbackParam
   clickEv <- wrapDomEvent canvasElement (onEventName Click) (mouseX)
   pos <- holdDyn 0 clickEv
-  (start,end) <- el "div" $ do 
+  (start,end) <- el "div" $ do
     text "start "
     start <- textInput $ def & textInputConfig_attributes .~ (constDyn $ M.fromList $ zip ["type","step","class"] ["number","0.01","startEndNumberInput"])
     text " end "
@@ -69,7 +69,7 @@ userMediaWidget inputId = elClass "div" "waveformWidget" $ do
   startVal <- mapDyn (maybe 1.0 id . ((readMaybe)::String->Maybe Double) ) (_textInput_value start)
   endVal <- mapDyn (maybe 1.0 id . ((readMaybe)::String->Maybe Double)) (_textInput_value end)
   param <- combineDyn (PlaybackParam) startVal endVal
-  combineDyn (\x l-> ((flip NodeSource) 2) $ BufferNode $ LoadedFile inputId $ x l) param (_checkbox_value cb)
+  combineDyn (\x l-> ((flip NodeSource) $ Just 2) $ BufferNode $ LoadedFile inputId $ x l) param (_checkbox_value cb)
 
 
 --userMediaWidget::MonadWidget t m => String -> m (Dynamic t Source)
@@ -77,28 +77,28 @@ userMediaWidget inputId = elClass "div" "waveformWidget" $ do
 --  bufferLoadEv <- bufferInput s
 --  playbackParam <- waveformWidget s bufferLoadEv
 --  mapDyn (((flip NodeSource) 2) . BufferNode . LoadedFile s) playbackParam
-  
+
 pinkNoiseOrFileSourceWidget :: MonadWidget t m => String -> m (Dynamic t Source)
 pinkNoiseOrFileSourceWidget sourceID = elClass "div" "sourceWidget" $ do
-  userFileSource <- userMediaWidget sourceID 
+  userFileSource <- userMediaWidget sourceID
   let conf = (WidgetConfig {_widgetConfig_initialValue= Just (1::Int)
                          ,_widgetConfig_setValue = never
                          ,_widgetConfig_attributes = constDyn M.empty})
   text "Select the sound source: "
   radioWidget <- radioGroup (constDyn "radioWidget") (constDyn $ zip [1,2] ["Loaded file","pinknoise"]) conf
   radioWidgetSelection <-  mapDyn (maybe 1 id) (_hwidget_value radioWidget)
-  combineDyn (\i s-> if i == 1 then s else ((flip NodeSource) 2) $ BufferNode $ File "pinknoise.wav") radioWidgetSelection userFileSource
+  combineDyn (\i s-> if i == 1 then s else ((flip NodeSource) $ Just 2) $ BufferNode $ File "pinknoise.wav") radioWidgetSelection userFileSource
 
 sourceWidget::MonadWidget t m => String -> m (Dynamic t Source)
 sourceWidget sourceID = elClass "div" "sourceWidget" $ do
-  let staticSources = M.fromList $ zip [0::Int,1] $ fmap ((flip NodeSource) 2 . BufferNode) [File "pinknoise.wav",File "whitenoise.wav"]
+  let staticSources = M.fromList $ zip [0::Int,1] $ fmap ((flip NodeSource) (Just 2) . BufferNode) [File "pinknoise.wav",File "whitenoise.wav"]
   let ddMap = constDyn $  M.fromList $ zip [(0::Int)..] ["Pink noise", "White noise", "Load a sound file"]
   text "Sound source: "
   dd <- dropdown 0 ddMap def
   userFileSource <- userMediaWidget sourceID
   ddMapVal <- mapDyn (\x-> M.insert 2 x staticSources) userFileSource
   let ddVal = _dropdown_value dd
-  dynSource<-combineDyn (\i m-> maybe (NodeSource (BufferNode $ File "pinknoise.wav") 2) id $ M.lookup i m) ddVal ddMapVal
+  dynSource<-combineDyn (\i m-> maybe (NodeSource (BufferNode $ File "pinknoise.wav") $ Just 2) id $ M.lookup i m) ddVal ddMapVal
   return dynSource
 
 
@@ -130,5 +130,3 @@ sourceWidget sourceID = elClass "div" "sourceWidget" $ do
 --  --gate:: Behavior Bool -> Event a -> Event a
 --  let updateNodeEv = gate (current loadedSound) $ updated dynNode
 --  holdAndConnectSound source updateNodeEv
-
-

@@ -43,12 +43,14 @@ instance WebAudio Source where
       (Destination) -> error "Destination cannot be a source node"
       (GainNode _) -> error "GainNode cannot be a source node"
       (FilterNode _) -> error "FilterNode cannot be a source node"
+      (ScriptProcessorNode _) -> error "ScriptProcessorNode cannot be a source node"
       (BufferNode (LoadedFile _ _)) -> do
         x <- createNode node
         createGraph (WebAudioGraph x)
       otherwise -> do
+        let dur' = maybe 2 id dur
         x <- createNode node
-        y <- createAsrEnvelope 0.005 dur 0.005
+        y <- createAsrEnvelope 0.005 dur' 0.005
         let graph = WebAudioGraph' x (WebAudioGraph y)
         createGraph graph
 
@@ -76,6 +78,12 @@ instance WebAudio Sound where
     gain <- createGain db
     let graph = WebAudioGraph'' source (WebAudioGraph gain)
     connectGraph graph
+  createGraph (ProcessedSound s effect) = do
+    g <- createGraph s
+    sp <- createScriptProcessorNode effect
+    let graph = WebAudioGraph'' g $ WebAudioGraph sp
+    connectGraph graph
+
 
 
 createSilentNode::IO WebAudioNode
@@ -92,13 +100,39 @@ createSound (FilteredSound s f) = do
   let graph = WebAudioGraph'' sourceNode (WebAudioGraph'' filterNode (WebAudioGraph dest))
   connectGraph graph
 
+
+
+getSource:: Sound -> Source
+getSource (Sound s) = s
+getSource (GainSound s _) = getSource s
+getSource (FilteredSound s _) = s
+getSource (ProcessedSound s _) = getSource s
+getSource (NoSound) = NodeSource SilentNode $ Just 2
+
+disconnectGraphAtTimeMaybe:: WebAudioGraph -> Maybe Double -> IO ()
+disconnectGraphAtTimeMaybe a (Just b) = disconnectGraphAtTime a b
+disconnectGraphAtTimeMaybe _ Nothing = return ()
+
+disconnectGraphAtTime :: WebAudioGraph -> Double -> IO ()
+disconnectGraphAtTime (WebAudioGraph w) t = disconnectAllAtTime w t
+disconnectGraphAtTime (WebAudioGraph' n g) t = do
+  disconnectAllAtTime n t
+  disconnectGraphAtTime g t
+disconnectGraphAtTime (WebAudioGraph'' g1 g2) t = do
+  disconnectGraphAtTime g1 t
+  disconnectGraphAtTime g2 t
+
 performSound:: MonadWidget t m => Event t Sound -> m ()
 performSound event = do
   let n = fmap (\e-> do
+                      let source = getSource e
+                      let t = getT source
                       graph <- createGraph e
                       startGraph graph
+                      disconnectGraphAtTimeMaybe graph  t
                       ) event          -- Event t (IO ())
   performEvent_ $ fmap liftIO n
+  where getT (NodeSource _ t) = t
 
 -- need to create to play the user's entered soundfile. needs to use the correct 'id'
 -- (exaclty 'userAudio') to work
