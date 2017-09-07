@@ -37,7 +37,7 @@ addUser :: ConnectionIndex -> Handle -> Password -> Server -> Server
 addUser i h p s = if (userExists h s) then s else s { connections = newConnections, users = newUsers }
   where
     newConnections = adjust (\(ws,_) -> (ws,Just h)) i (connections s)
-    newUsers = insert h (newUser h p) (users s)
+    newUsers = insert h (User h p NormalUser) (users s)
 
 getPassword :: Handle -> Server -> Password
 getPassword h s = password $ (users s) ! h

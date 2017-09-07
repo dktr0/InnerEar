@@ -30,7 +30,8 @@ data Datum c q a e = -- c is configuration type, q is question type, a is answer
   Question q a |
   Answer q a a | -- for convenience, an answer also includes the question and the correct answer
   Evaluation e |
-  End (Maybe Reflection)
+  Reflection Reflection |
+  End
   deriving (Show,Eq,Data,Typeable)
 
 
@@ -44,7 +45,8 @@ data ExerciseDatum =
   ExerciseQuestion String |
   ExerciseAnswer String |
   ExerciseEvaluation String |
-  ExerciseEnd (Maybe Reflection)
+  ExerciseReflection String |
+  ExerciseEnd
   deriving (Show,Eq,Data,Typeable)
 
 toExerciseDatum :: (Show c,Show q,Show a,Show e) => Datum c q a e -> ExerciseDatum
@@ -53,7 +55,8 @@ toExerciseDatum (Configuration c) = ExerciseConfiguration $ show c
 toExerciseDatum (Question q correctAnswer) = ExerciseQuestion $ show (q,correctAnswer)
 toExerciseDatum (Answer q correctAnswer userAnswer) = ExerciseAnswer $ show (q,correctAnswer,userAnswer)
 toExerciseDatum (Evaluation e) = ExerciseEvaluation $ show e
-toExerciseDatum (End r) = (ExerciseEnd r)
+toExerciseDatum (Reflection r) = ExerciseReflection r
+toExerciseDatum End = ExerciseEnd
 
 toDatum :: (Read c,Read q,Read a,Read e) => ExerciseDatum -> Maybe (Datum c q a e)
 toDatum ExerciseStart = Just Start
@@ -61,7 +64,8 @@ toDatum (ExerciseConfiguration j) = Configuration <$> readMaybe j
 toDatum (ExerciseQuestion j) = uncurry Question <$> readMaybe j
 toDatum (ExerciseAnswer j) = uncurryN Answer <$> ((readMaybe j) :: (Read q, Read a) => Maybe (q,a,a))
 toDatum (ExerciseEvaluation j) = Evaluation <$> readMaybe j
-toDatum (ExerciseEnd r) = Just $ End r
+toDatum (ExerciseReflection r) = Just $ Reflection r
+toDatum ExerciseEnd = Just End
 
 
 -- | Some events of interest are not tied to a particular ear-training exercise.

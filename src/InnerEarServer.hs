@@ -16,6 +16,7 @@ import Data.Maybe (fromMaybe)
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
 import qualified Data.Map.Strict as Map
+import Data.Either
 import Control.Monad
 import Control.Concurrent.MVar
 import Control.Exception (try)
@@ -29,14 +30,11 @@ import InnerEar.Types.Data
 import InnerEar.Types.User
 
 import qualified InnerEar.Database.SQLite as DB
-import qualified Database.SQLite.Simple as DB
+import qualified InnerEar.Database.Users as DB
+import qualified InnerEar.Database.Events as DB
 
 
-main = do
-  db <- DB.establishDatabase
-  DB.addUser db $ User "d0kt0r3" "test" True
-  DB.findAllUsers db >>= print
-  DB.close db
+main = DB.databaseTest
   -- putStrLn "Inner Ear server (listening on port 4468)"
   -- s <- newMVar newServer
   -- let settings = (defaultWebAppSettings "InnerEarClient.jsexe") { ssIndices = [unsafeToPiece "index.html"] }
