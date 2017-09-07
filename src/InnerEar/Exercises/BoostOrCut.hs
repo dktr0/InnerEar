@@ -26,9 +26,9 @@ instance Show Answer where
   show (Answer True) = "Boosted"
   show (Answer False) = "Normal"
 
-renderAnswer :: Config -> b -> Answer -> Sound
-renderAnswer db _ (Answer True) = NoSound -- 2.0 -- should be a source sound, attenuated by a standard amount (-10 dB) then boosted by dB
-renderAnswer db _ (Answer False) = NoSound -- 2.0 -- should be just a source sound attenuated by standard amount (-10 dB)
+renderAnswer :: Config -> Source -> Answer -> Sound
+renderAnswer db s (Answer True) = GainSound (Sound s) (-10+db) -- 2.0 -- should be a source sound, attenuated by a standard amount (-10 dB) then boosted by dB
+renderAnswer _ s (Answer False) = GainSound (Sound s) (-10)-- 2.0 -- should be just a source sound attenuated by standard amount (-10 dB)
 
 boostOrCutConfigWidget :: MonadWidget t m => Config -> m (Event t Config)
 boostOrCutConfigWidget i = radioConfigWidget msg configs i
@@ -40,12 +40,12 @@ displayEval scoreMap = return ()
 generateQ :: Config -> [Datum Config [Answer] Answer (Map Answer Score)] -> IO ([Answer],Answer)
 generateQ _ _ = randomMultipleChoiceQuestion [Answer False,Answer True]
 
+
 boostOrCutExercise :: MonadWidget t m => Exercise t m Config [Answer] Answer (Map Answer Score)
 boostOrCutExercise = multipleChoiceExercise
   1
   [Answer False,Answer True]
-  (sourceWidget "boostOrCutExercise")
-  renderAnswer
+  renderAnswer  -- c -> b->a->Sound
   BoostOrCut
   10
   boostOrCutConfigWidget

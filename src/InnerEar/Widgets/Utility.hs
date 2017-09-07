@@ -25,6 +25,8 @@ dynE x = dyn x >>= switchPromptly never
 elClass'::MonadWidget t m => String -> String -> m a -> m (El t, a)
 elClass' e c f = elAttr' e (M.singleton "class" c) f
 
+elDynClass::MonadWidget t m => String -> Dynamic t String -> m a -> m a
+elDynClass s c b = mapDyn (singleton "class") c >>= (flip $ elDynAttr s) b
 
 flippableDyn :: MonadWidget t m => m () -> m () -> Dynamic t Bool -> m ()
 flippableDyn b1 b2 x = mapDyn (bool b1 b2) x >>= dyn >> return ()
@@ -40,12 +42,18 @@ visibleWhen visible builder = do
 flippableWidget :: MonadWidget t m => m a -> m a -> Bool -> Event t Bool -> m (Dynamic t a)
 flippableWidget b1 b2 i e = widgetHold (bool b1 b2 i) $ fmap (bool b1 b2) e
 
+
 -- Button With Dynamic attributes
 buttonDynAttrs :: MonadWidget t m => String -> a -> Dynamic t (M.Map String String)-> m (Event t a)
 buttonDynAttrs s val attrs = do
   (e, _) <- elDynAttr' "button" attrs $ text s
   let event = domEvent Click e
   return $ fmap (const val) event
+
+buttonClass::MonadWidget t m => String -> String -> m( Event t () )
+buttonClass s c = do
+  (e, _) <- elAttr' "button" (singleton "class" c) $ text s
+  return $ domEvent Click e
 
 -- with displayed text that can change
 clickableDivDynClass:: MonadWidget t m => Dynamic t String -> Dynamic t String -> a -> m (Event t a)
@@ -66,6 +74,8 @@ buttonVal t r = do
 --Button with dynamic label. A final version that uses >=> from Control.Monad to compose together two a -> m b functions
 dynButton :: MonadWidget t m => Dynamic t String -> m (Event t ())
 dynButton = (mapDyn button) >=> dynE
+
+
 
 
 -- [Not tested]
