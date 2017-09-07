@@ -2,26 +2,44 @@ body {
   background-color: black;
   color: hsl(120,100%,80%);
   height: 100%;
-  margin: 100px;
   font-family: sans;
 }
 
 body.innerEar {
   display: -webkit-flex;
   display: flex;
-  -webkit-flex-flow: row wrap;
+  -webkit-flex-flbuw: row wrap;
   flex-flow: column;
+
+}
+
+.header {
+  display: flex;
+  width: 100%;
+  margin-bottom: 3%;
+  margin-left:40px;
+}
+
+.login {
+  color:  hsl(120,100%,80%);
+  text-align: center;
+  width: 50%;
+  position: relative;
+
 }
 
 .title {
   color:hsl(120,100%,80%);
   font-size: 40px;
   text-align: left;
+  width: 25%;
 }
 
 .wsStatus {
- color:white;
- text-align: left;
+  color:white;
+  text-align: center;
+  font-size: 10px;
+  width: 25%;
 }
 
 .createUserWidget {
@@ -34,34 +52,28 @@ body.innerEar {
   color: hsl(120,100%,80%);
   text-align: center;
   padding: 20px;
-}
+
+  }
 
 .createUserPassword {
   color: hsl(120,100%,80%);
   text-align: center;
   padding: 20px;
-}
+  }
 
-.login {
-  color:  hsl(120,100%,80%);
-  padding: 30px;
-  text-align: center;
-}
 
 text {
   color: hsl(120,100%,80%);
 }
 
 .barWrapper {
-  display: inline-block;
 }
 
 .nav {
   background: black;
   color:  hsl(120,100%,80%);
-  margin: 10x;
   text-align: left;
-  padding: 40px;
+  margin: 40px;
 }
 
 .navButton {
@@ -95,39 +107,40 @@ button {
   margin-top: 0%;
   margin-bottom: 0%;
   margin-right: 0%;
+
 }
 
 .specEvalWrapper {
-  display: inline-block;
-  padding: 50px;
-  position: relative;
-  top: 50%;
+  display: flex;
 }
 
 .answerButtonWrapper {
-    display: inline-block;
-    margin: 2%;
-
+  margin-right:  0.5%;
+  margin-top: 5%;
+  margin-bottom: 5%;
+  display:  inline-block;
+  text-align: center;
 }
 
 .buttonWrapper {
-    display: inline-block;
+
+  display: inline-block;
+  text-align: center;
+
 }
 
 button.notPossibleButton{
   border: none;
   background-color: black;
   color: darkgray;
-  height: 30px;
-  width: 200px;
-
-
+  height: 100%;
+  width: 100px;
 
  }
 
 button.possibleButton {
-  height: 30px;
-  width: 200px;
+  height: 100%;
+  width: 100px;
 }
 
 button.incorrectDisactivatedButton {
@@ -135,30 +148,52 @@ button.incorrectDisactivatedButton {
   color: red;
   border-radius: 5px;
   border: 2px solid red;
-  height: 30px;
-  width: 200px;
+  height: 100%;
+  width: 100px;
 }
 
 button.incorrectActivatedButton {
   color: red;
   border-radius: 5px;
   border: 2px solid red;
-  height: 30px;
-  width: 200px;
+  height: 100%;
+  width: 100px;
 }
 
 button.correctButton{
   color: green;
   border-radius: 5px;
   border: 4px solid green;
-  height: 30px;
-  width: 200px;
+  height: 100%;
+  width: 100px;
 }
 
 .svgBarContainer {
   width: 30px;
-  background-color: black;
+  background-color: blue;
   margin: 0px;
+  position: relative;
+  left: 50%;
+
+}
+
+.svgBarContainerFiveBand {
+  width: 30px;
+  background-color: blue;
+  margin: 0px;
+  position: relative;
+  left: 90%;
+
+}
+
+.faintedLineToAdjustGraph {
+   width: 1px;
+  height: 220px;
+  background-color: #2F4F4F;
+  background-color: black;
+  position: relative;
+  left: 150%;
+
 }
 
 .svgFaintedLine {
@@ -166,69 +201,152 @@ button.correctButton{
   height: 5px;
   background-color: #2F4F4F;
   position: relative;
-  right: 45%;
+  left: 150%;
+ }
+
+.svgFaintedLineFiveBand {
+  width: 1px;
+  height: 5px;
+  background-color: #2F4F4F;
+  position: relative;
+  left: 100%;
  }
 
  .faintedXaxis {
-   width : 320px;
+   width : 350px;
    height: 1px;
    background-color: #2F4F4F;
-   position: relative;
-   right: 310px;
-   top: -31px;
+   position:relative;
+   top: 74.3%;
+   left: 1%;
+
  }
 
  .faintedYaxis {
    width : 1px;
-   height: 215px;
+   height: 220px;
    background-color: #2F4F4F;
    position: relative;
-   right: 630px;
-   top: -31px;
+   top: 5%;
+   left: 10%;
+ }
+ .faintedXaxisFive {
+   width : 550px;
+   height: 1px;
+   background-color: #2F4F4F;
+   position: relative;
+   right: 0px;
+   bottom: 154px;
+ }
+
+ .faintedYaxisFiveBand {
+   width : 1px;
+   height: 220px;
+   background-color: #2F4F4F;
+   position: relative;
+   right: 0px;
+   top: 173px;
  }
 
 .bars {
   fill: hsl(120,100%,80%);
   stroke: black;
   stroke-width: 0.5px;
-}
-
-
+ }
 
 .scoreBarWrapper {
 	display: inline-block;
+  position: relative;
+  right:58%;
+  bottom:1%;
+}
+
+.scoreBarWrapperFiveBand{
+  display: inline-block;
+  position: relative;
+  bottom: 80px;
 }
 
 .scoreLabel {
   background-color: black;
   color: hsl(120,100%,80%);
-  margin: 0px;
-  font-size: 8px;
+  font-size: 12px;
+  text-align: center;
+  position: relative;
+  left: 60%;
+
+
+}
+
+.scoreLabelFiveBand {
+  background-color: black;
+  color: hsl(120,100%,80%);
+  font-size: 12px;
+  text-align: center;
+  position: relative;
+  left: 92%;
+  width: 25px;
+}
+
+
+.xLabel {
+  color: hsl(120,100%,80%);
+  margin-right: 10%;
+  font-size: 12px;
+  position: relative;
+  left: 150%;
   text-align: center;
 }
 
-.xLabel {
-  background-color: black;
+.xLabelFiveBand {
   color: hsl(120,100%,80%);
-  font-size: 8px;
+  margin-right: 10%;
+  font-size: 10px;
+  position: relative;
+  left: 150%;
   text-align: center;
 }
 
 .countLabel {
-  background-color: black;
   color: hsl(120,100%,80%);
-  padding-top: 10px;
-  font-size: 8px;
+  padding-top: 15px;
+  margin-right: 10%;
+  font-size: 10px;
+  position: relative;
+  left: 150%;
   text-align: center;
+
 }
 
+.countLabelFiveBand {
+
+  color: hsl(120,100%,80%);
+  padding-top: 15px;
+  margin-right: 10%;
+  font-size: 12px;
+  position: relative;
+left: 60%;
+    text-align: center;
+
+}
 .graphLabel {
-  background-color: black;
+  color: hsl(120,100%,80%);
+  width: 100px;
+  font-size: 15px;
+  position: relative;
+  right: 50%;
+  top: 290px;
+  height: 10%;
+  text-align: center;
+
+}
+
+.graphLabelFiveBand {
   color: hsl(120,100%,80%);
   font-size: 15px;
   position: relative;
-  right: 11px;
-  bottom: 5px;
+  left: 90px;
+  bottom: 90px;
   width: 320px;
   height: 20px;
   text-align: center;
@@ -236,42 +354,69 @@ button.correctButton{
 }
 
 .countMainLabel {
+  width: 15px;
+  height: 10%;
+  font-size:  12px;
+  position: relative;
+  top:  260px;
+}
+
+.countMainLabelFiveBand {
   background-color: black;
   width: 15px;
-  font-size:  8px;
+  height: 10%;
+  font-size:  12px;
   position: relative;
-  bottom:  32px;
+  top:  185px;
   left: -25px;
-
 }
 
 .percentageMainLabel {
+  height: 10%;
+  width: 15px;
+  font-size:  12px;
+  position: relative;
+  right: 15px;
+  top:40%;
+}
+
+.percentageMainLabelFiveBand {
   background-color: black;
   width: 15px;
-  font-size:  8px;
+  font-size:  12px;
   position: relative;
-  left: -25px;
-  bottom: 145px;
+  right: 300px;
+  bottom:250px;
 }
 
 .hzMainLabel {
-  background-color: black;
   width: 15px;
-  font-size:  8px;
+  height: 10%;
+  font-size:  12px;
   position: relative;
-  left: -25px;
-  bottom: 4
-  2px;
+  left: 12px;
+  top: 83%;
+
+}
+
+.hzMainLabelFiveBand {
+  width: 15px;
+  font-size:  12px;
+  position: relative;
+
   }
 
 .exerciseWrapper {
-  background-color:black;
-  align-content: center;
-  width: 100%;
-  height: 400%
+   display: inline-block;
+   text-align: center;
+   width: 100%;
 }
 
+.bottomRow{
+  display: flex;
+      text-align: center;
 
+}
 
 .playStopButtons{
   width:15%;
@@ -297,6 +442,21 @@ button.correctButton{
   display: inline-block
 }
 
+.evaluationInQuestion {
+  display: inline-flex;
+  background-color: blue;
+     width: 50%;
+}
+
+.userMediaWidgetInQuestion {
+    display: inline-flex;
+    width: 50%;
+}
+
+.sourceWidget{
+  width: 100%
+}
+
 
 
 
@@ -318,7 +478,7 @@ button.correctButton{
   width:1%;
 }
 .startEndNumberInput{
-  width:10%;
+    width: 20px;
 }
 
 .loopCheckbox{
@@ -333,4 +493,19 @@ canvas .waveform{
 div .waveform{
   display: inline-block;
   width:50%;
+}
+
+
+.faintedLineToAdjustGraphAfterScore {
+   width: 1px;
+  height: 207px;
+  background-color: #2F4F4F;
+  background-color: black;
+  position: relative;
+  left: 100%;
+}
+
+.evalGraphFrameRow {
+  background-color:red;
+  display: inline-flex;
 }

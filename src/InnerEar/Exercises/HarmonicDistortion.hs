@@ -11,6 +11,7 @@ import InnerEar.Exercises.MultipleChoice
 import InnerEar.Types.ExerciseId
 import InnerEar.Types.Exercise
 import InnerEar.Types.Score
+import InnerEar.Widgets.SpecEval
 import InnerEar.Types.Data (Datum)
 
 type Config = Double -- representing threshold of clipping, and inverse of post-clip normalization

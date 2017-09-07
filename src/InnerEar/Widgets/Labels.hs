@@ -58,8 +58,8 @@ hzLabel c s = do
    return ()
 
 -- A dynamic label for x value with css style
-xLabel :: MonadWidget t m => Dynamic t String -> m ()
-xLabel s = elClass "div" "xLabel" $ dynText s
+xLabel :: MonadWidget t m => String -> String ->  m ()
+xLabel c s = elClass "div" c  $ text s
 
 
 
@@ -87,18 +87,18 @@ dynCountLabel cssClass count = do
 
 
 --A label for "Hz"
-hzMainLabel :: MonadWidget t m => m ()
-hzMainLabel = elClass "div" "hzMainLabel" $ text "Hz"
+hzMainLabel :: MonadWidget t m => String -> String -> m ()
+hzMainLabel c s = elClass "div" c $ text s
 
 
 -- A label for "#"
-countMainLabel :: MonadWidget t m => m ()
-countMainLabel = elClass "div" "countMainLabel" $ text "#"
+countMainLabel :: MonadWidget t m => String -> String -> m ()
+countMainLabel c s = elClass "div" c $ text s
 
 --A label for "%"
 
-percentageMainLabel :: MonadWidget t m => m ()
-percentageMainLabel = elClass "div" "percentageMainLabel" $ text "%"
+percentageMainLabel :: MonadWidget t m => String -> String -> m ()
+percentageMainLabel c s = elClass "div" c $ text s
 
 -- A dynamic label with CSS style
 dynGraphLabel :: MonadWidget t m => Dynamic t String -> Dynamic t String -> m ()
