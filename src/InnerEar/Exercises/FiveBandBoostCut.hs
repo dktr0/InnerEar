@@ -50,7 +50,6 @@ fiveBandBoostCutExercise :: MonadWidget t m => Exercise t m Config [Answer] Answ
 fiveBandBoostCutExercise = multipleChoiceExercise
   3
   answers
-  (sourceWidget "fiveBandBoostCutExercise")
   renderAnswer
   FiveBandBoostCut
   (configs!!0)

@@ -51,7 +51,6 @@ tenBandBoostCutExercise :: MonadWidget t m => Exercise t m Config [Answer] Answe
 tenBandBoostCutExercise = multipleChoiceExercise
   3
   answers
-  (sourceWidget "tenBandsExercise")
   renderAnswer
   TenBandBoostCut
   AllBands

@@ -134,8 +134,7 @@ performSound event = do
   performEvent_ $ fmap liftIO n
   where getT (NodeSource _ t) = t
 
--- need to create to play the user's entered soundfile. needs to use the correct 'id'
--- (exaclty 'userAudio') to work
+
 audioElement::MonadWidget t m => m ()
 audioElement = elDynAttr "audio" attrs (return())
   where attrs = constDyn $ M.fromList $ zip ["id","controls"] ["userAudio","controls"]

@@ -45,7 +45,6 @@ boostOrCutExercise :: MonadWidget t m => Exercise t m Config [Answer] Answer (Ma
 boostOrCutExercise = multipleChoiceExercise
   1
   [Answer False,Answer True]
-  (sourceWidget "boostOrCutExercise") -- m Dynamic t b
   renderAnswer  -- c -> b->a->Sound
   BoostOrCut
   10

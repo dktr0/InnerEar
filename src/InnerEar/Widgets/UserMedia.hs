@@ -38,16 +38,14 @@ import InnerEar.Widgets.Utility
 
 userMediaWidget::MonadWidget t m => String -> m (Dynamic t Source)
 userMediaWidget inputId = elClass "div" "waveformWidget" $ do
-
-  -- create canvas
-  (canvasEl,_) <- elClass' "canvas" "waveformCanvas" (return ())
-  let canvasElement = _el_element canvasEl
-  --performEvent_ $ fmap liftIO $ fmap (const $ renderAudioWaveform inputId $ G.castToHTMLCanvasElement canvasElement) event -- redraw wavefor mon same canvas each event
-
   --FileInput
   let attrs = FileInputConfig $ constDyn $ M.fromList $ zip ["accept","id"] ["audio/*",inputId]
   input <- fileInput attrs
   let ev = (() <$) $ updated $ _fileInput_value input
+
+  -- create canvas
+  (canvasEl,_) <- elClass' "canvas" "waveformCanvas" (return ())
+  let canvasElement = _el_element canvasEl
 
   -- Load and draw the buffer when file has changed
   performEvent_ $ fmap (liftIO . const (loadAndDrawBuffer inputId $ G.castToHTMLCanvasElement canvasElement)) ev
@@ -95,12 +93,24 @@ sourceWidget sourceID = elClass "div" "sourceWidget" $ do
   let ddMap = constDyn $  M.fromList $ zip [(0::Int)..] ["Pink noise", "White noise", "Load a sound file"]
   text "Sound source: "
   dd <- dropdown 0 ddMap def
-  userFileSource <- userMediaWidget sourceID
-  ddMapVal <- mapDyn (\x-> M.insert 2 x staticSources) userFileSource
   let ddVal = _dropdown_value dd
+  userFileSource <- mapDyn (==2) ddVal >>= (flip visibleWhen) (userMediaWidget sourceID)
+  ddMapVal <- mapDyn (\x-> M.insert 2 x staticSources) userFileSource
   dynSource<-combineDyn (\i m-> maybe (NodeSource (BufferNode $ File "pinknoise.wav") $ Just 2) id $ M.lookup i m) ddVal ddMapVal
   return dynSource
 
+
+-- Event for reference, event for question, dynamic source
+soundWidget::MonadWidget t m => String -> m ( Event t (), Event t (), Dynamic t Source)
+soundWidget inputId = elClass "div" "soundWidget" $ do
+  (playRef, playQ, stop) <- elClass "div" "playStopButtons" $ do
+    ref <- button "Listen to reference sound"
+    q<- button "Listen to question"
+    s <- button "Stop"
+    return (ref, q, s)
+  source <- sourceWidget inputId
+  performEvent $ fmap liftIO $ fmap (const $ stopNodeByID inputId) stop
+  return (playRef, playQ, source)
 
 --userMediaWidget'::MonadWidget t m => String -> Dynamic t Filter -> m ()
 --userMediaWidget' s filt = do

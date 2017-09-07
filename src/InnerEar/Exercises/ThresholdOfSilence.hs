@@ -44,7 +44,6 @@ thresholdOfSilenceExercise :: MonadWidget t m => Exercise t m Int [Answer] Answe
 thresholdOfSilenceExercise = multipleChoiceExercise
   1
   [Answer False,Answer True]
-  (sourceWidget "thresholdOfSilenceExercise")
   renderAnswer
   ThresholdOfSilence
   (-20)
