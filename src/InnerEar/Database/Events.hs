@@ -2,6 +2,7 @@
 
 module InnerEar.Database.Events where
 
+import Text.Read
 import Data.Either
 import Data.Maybe
 import Data.Text
@@ -22,7 +23,7 @@ createEventsTable c =
   execute_ c "CREATE TABLE IF NOT EXISTS events (handle TEXT, time TEXT, event TEXT, id TEXT, content TEXT)"
 
 instance FromField ExerciseId where
-  fromField = f . read . g . fieldData
+  fromField = f . readMaybe . g . fieldData
     where g (SQLText t) = unpack t
           g _ = ""
           f (Just x) = Ok x
@@ -42,6 +43,7 @@ pointFromPartialRow :: Maybe String -> Maybe ExerciseId -> Maybe String -> Maybe
 pointFromPartialRow (Just "ExerciseStart") (Just i) _ (Just t) = Just (Point (Left (i,ExerciseStart)) t)
 pointFromPartialRow (Just "ExerciseConfiguration") (Just i) (Just c) (Just t) = Just (Point (Left (i,ExerciseConfiguration c)) t)
 pointFromPartialRow (Just "ExerciseQuestion") (Just i) (Just c) (Just t) = Just (Point (Left (i,ExerciseQuestion c)) t)
+pointFromPartialRow (Just "ExerciseAnswer") (Just i) (Just c) (Just t) = Just (Point (Left (i,ExerciseAnswer c)) t)
 pointFromPartialRow (Just "ExerciseEvaluation") (Just i) (Just c) (Just t) = Just (Point (Left (i,ExerciseEvaluation c)) t)
 pointFromPartialRow (Just "ExerciseReflection") (Just i) (Just c) (Just t) = Just (Point (Left (i,ExerciseReflection c)) t)
 pointFromPartialRow (Just "ExerciseEnd") (Just i) _ (Just t) = Just (Point (Left (i,ExerciseEnd)) t)
