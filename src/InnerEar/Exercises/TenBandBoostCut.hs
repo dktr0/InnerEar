@@ -29,7 +29,7 @@ answers = [
   F 1000 "1k", F 2000 "2k", F 4000 "4k", F 8000 "8k", F 16000 "16k"]
 
 renderAnswer :: Config -> Source -> Frequency -> Sound
-renderAnswer _ s f = FilteredSound s filter
+renderAnswer _ s f = GainSound (FilteredSound s filter) (-10)
   where filter = Filter Peaking (freqAsDouble f) 1.4 16.0
 
 tenBandConfigWidget :: MonadWidget t m => Config -> m (Event t Config)

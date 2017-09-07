@@ -32,7 +32,18 @@ data FilterType = Peaking | Lowpass | Highpass | Notch | Bandpass | Lowshelf | H
 
 data NoiseType = White | Pink | Brownian
 
-data Node = SilentNode | FilterNode Filter | GainNode Double | Destination | AdditiveNode [Node] | OscillatorNode Oscillator | BufferNode Buffer | MediaNode String deriving(Read,Show,Eq)
+data Node =
+  SilentNode |
+  FilterNode Filter |
+  GainNode Double |
+  Destination |
+  AdditiveNode [Node] |
+  OscillatorNode Oscillator |
+  BufferNode Buffer |
+  MediaNode String |
+  ScriptProcessorNode DSPEffect deriving(Read,Show,Eq)
+
+data DSPEffect = DistortAtDb Double deriving (Read, Show, Eq)
 
 data Filter = NoFilter | Filter FilterType Double Double Double deriving (Read,Show,Eq)
 
@@ -48,10 +59,10 @@ data PlaybackParam = PlaybackParam{
 
 data Buffer = File String | LoadedFile String PlaybackParam deriving (Read,Show,Eq)
 
-data Source = NodeSource Node Double deriving (Show,Eq,Read)
+data Source = NodeSource Node (Maybe Double) deriving (Show, Eq, Read)
 
+data Sound = NoSound | Sound Source | GainSound Sound Double | FilteredSound Source Filter  | ProcessedSound Sound DSPEffect deriving (Read,Show)
 
-data Sound = NoSound | Sound Source | GainSound Source Double | FilteredSound Source Filter deriving (Read,Show)
 
 data WebAudioNode = WebAudioNode Node JSVal | NullAudioNode
 
@@ -71,7 +82,7 @@ createOscillator (Oscillator t freq gain) = do
   F.setOscillatorType (Prim.toJSString $ fmap toLower $ show t) osc  -- Web Audio won't accept 'Sine' must be 'sine'
   F.setFrequency freq osc
   g <- F.createGain
-  F.setGain 0 g
+  F.setAmp 0 g
   F.connect osc g
   F.startNode osc
   return (WebAudioNode (OscillatorNode $ Oscillator t freq gain) g)
@@ -86,7 +97,7 @@ createGain g = do
 
 
 createBiquadFilter:: Filter -> IO WebAudioNode
-createBiquadFilter (NoFilter) = createGain 1
+createBiquadFilter (NoFilter) = createGain 0
 createBiquadFilter (Filter filtType f q g) = do
   x <- F.createBiquadFilter
   let y = WebAudioNode (FilterNode (Filter filtType f q g)) x
@@ -108,16 +119,18 @@ createBufferNode (LoadedFile inputId (PlaybackParam s e l)) = do
   x <- F.createBufferSourceNodeFromID (Prim.toJSString inputId) s' e' l'
   return (WebAudioNode (BufferNode $ LoadedFile inputId $ PlaybackParam s e l) x)
 
+createScriptProcessorNode:: DSPEffect -> IO (WebAudioNode)
+createScriptProcessorNode (DistortAtDb db) = F.getDistortAtDbFunc (pToJSVal db) >>= F.createScriptProcessorNode >>= return . WebAudioNode (ScriptProcessorNode $ DistortAtDb db)
 
 createAsrEnvelope :: Double -> Double -> Double -> IO WebAudioNode
 createAsrEnvelope a s r = do
   now <- F.getCurrentTime
-  n <- createGain 1
-  setGain 0.0 n
-  setGainAtTime 0.0 now n
-  setGainAtTime 1.0 (now+a) n
-  setGainAtTime 1.0 (now+a+s) n
-  setGainAtTime 0.0 (now+a+s+r) n
+  n <- createGain 0
+  setAmp 0.0 n
+  setAmpAtTime 0.0 now n
+  setAmpAtTime 1.0 (now+a) n
+  setAmpAtTime 1.0 (now+a+s) n
+  setAmpAtTime 0.0 (now+a+s+r) n
   return n
 
 getJSVal::WebAudioNode -> JSVal
@@ -147,6 +160,9 @@ connect :: WebAudioNode -> WebAudioNode -> IO (WebAudioGraph)
 connect (WebAudioNode Destination _) _ = error "destination can't be source of connection"
 connect NullAudioNode _ = return (WebAudioGraph NullAudioNode)
 connect a NullAudioNode = return (WebAudioGraph a)
+connect (WebAudioNode x y) (WebAudioNode (ScriptProcessorNode e) y') = do
+  F.spConnect y y'
+  return $ WebAudioGraph' (WebAudioNode x y) $ WebAudioGraph (WebAudioNode (ScriptProcessorNode e) y')
 connect (WebAudioNode xt x) (WebAudioNode yt y) = do
   F.connect x y
   return $ WebAudioGraph' (WebAudioNode xt x) (WebAudioGraph (WebAudioNode yt y))
@@ -156,6 +172,9 @@ disconnect (WebAudioNode _ a) (WebAudioNode _ b) = F.disconnect a b
 
 disconnectAll::WebAudioNode -> IO ()
 disconnectAll (WebAudioNode _ a) = F.disconnectAll a
+
+disconnectAllAtTime:: WebAudioNode -> Double -> IO ()
+disconnectAllAtTime (WebAudioNode _ x) t = F.disconnectAllAtTime x (pToJSVal t)
 
 connectGraph :: WebAudioGraph -> IO (WebAudioGraph)
 connectGraph (WebAudioGraph n) = return $ WebAudioGraph n
@@ -177,6 +196,11 @@ setGain :: Double -> WebAudioNode -> IO ()
 setGain g (WebAudioNode (FilterNode _) x) = F.setGain g x
 setGain g (WebAudioNode (GainNode _) x) = F.setGain g x
 
+setAmp:: Double -> WebAudioNode -> IO ()
+setAmp a (WebAudioNode (FilterNode _) x) = F.setAmp a x
+setAmp a (WebAudioNode (GainNode _) x) = F.setAmp a x
+setAmp a (WebAudioNode (OscillatorNode _) x) = F.setAmp a x
+
 
 setFrequency:: Double -> WebAudioNode -> IO ()
 setFrequency f (WebAudioNode (FilterNode _) x) = F.setFrequency f x
@@ -190,20 +214,16 @@ setFilterType :: FilterType -> WebAudioNode-> IO ()
 setFilterType filtType (WebAudioNode (FilterNode _) x) = F.setFilterType (Prim.toJSString $ fmap toLower $ show filtType) x
 setFilterType _ _ = error "cannot set filter type of a non-filter"
 
-setGainAtTime:: Double -> Double -> WebAudioNode -> IO ()
-setGainAtTime val t (WebAudioNode _ node) = F.setGainAtTime val t node
-setGainAtTime _ _ NullAudioNode = error "Cannot set gain of a null node"
+setAmpAtTime:: Double -> Double -> WebAudioNode -> IO ()
+setAmpAtTime val t (WebAudioNode _ node) = F.setAmpAtTime val t node
+setAmpAtTime _ _ NullAudioNode = error "Cannot set gain of a null node"
 
 startNode :: WebAudioNode -> IO ()
-startNode (WebAudioNode (AdditiveNode _) r) = F.setGain 1 r  -- @this may not be the best..
+startNode (WebAudioNode (AdditiveNode _) r) = F.setGain 0 r  -- @this may not be the best..
 startNode (WebAudioNode (GainNode _) _) = error "Gain node cannot bet 'started' "
 startNode (WebAudioNode (MediaNode s) _) = F.playMediaNode (toJSString s) -- if you call 'start' on a MediaBufferNode a js error is thrown by the WAAPI
 startNode (WebAudioNode (OscillatorNode (Oscillator _ _ g)) r) = F.setGain g r
 startNode (WebAudioNode (BufferNode (LoadedFile a (PlaybackParam b c d))) x) = do
-  --b' <- pToJSVal b
-  --c' <- pToJSVal c
-  --d' <- pToJSVal d
-  --F.playBufferNode (toJSString a) b' c' d' x
   F.playBufferNode (toJSString a) (pToJSVal b) (pToJSVal c) (pToJSVal d) x
 
 startNode (WebAudioNode _ ref) = F.startNode ref
