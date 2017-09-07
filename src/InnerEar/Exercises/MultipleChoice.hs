@@ -129,7 +129,8 @@ multipleChoiceQuestionWidget maxTries answers render eWidget config initialEval 
 
   -- generate sounds to be playedW
   let questionSound = fromJust <$> tagDyn answer playQuestion
-  let referenceSound = Sound (NodeSource (BufferNode $ File "pinknoise.wav") $ Just 2.0) <$ playReference
+  -- let referenceSound = Sound (NodeSource (BufferNode $ File "pinknoise.wav") $ Just 2.0) <$ playReference
+  let referenceSound = attachDynWith (\a _-> GainSound (Sound a) (-10)) source playReference
   let soundsToRender = leftmost [questionSound,bandPressed]
   let renderedSounds = attachDynWith (render config) source soundsToRender
   let playSounds = leftmost [renderedSounds,referenceSound]
