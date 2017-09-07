@@ -25,13 +25,20 @@ displayMultipleChoiceEvaluation :: (MonadWidget t m, Show a, Ord a)
 displayMultipleChoiceEvaluation graphLabel xLabel possibilities scoreMap = ...
 -}
 
-displayCurrentSpectrumEvaluation :: MonadWidget t m => Dynamic t String -> Dynamic t (Map Frequency Score) -> m ()
-displayCurrentSpectrumEvaluation graphLabel score = elClass "div" "specEvalWrapper" $ do
-
+evalGraphFrame :: MonadWidget t m =>  String -> String -> m ()
+evalGraphFrame xMainLabel graphLabel = elClass "div" "evalGraphFrameRow" $ do
   faintedYaxis "faintedYaxis"
-  hzMainLabel "hzMainLabel" "Hz"
+  faintedXaxis "faintedXaxis"
+  hzMainLabel "hzMainLabel" xMainLabel
   countMainLabel "countMainLabel" "#"
+  percentageMainLabel "percentageMainLabel" "%"
+  elClass "div" "graphLabel" $ text graphLabel
+  return ()
 
+
+displayCurrentSpectrumEvaluation :: MonadWidget t m => String -> Dynamic t (Map Frequency Score) -> m ()
+displayCurrentSpectrumEvaluation graphLabel score = elClass "div" "specEvalWrapper" $ do
+  evalGraphFrame "Hz" graphLabel
   let labels = ["31","63","125","250","500","1","2","4","8","16"]
   let frequencies = zipWith F [31::Double,63,125,250,500,1000,2000,4000,8000,16000] labels -- [Frequency]
   let band0Hz = (!!0) labels -- String
@@ -66,10 +73,6 @@ displayCurrentSpectrumEvaluation graphLabel score = elClass "div" "specEvalWrapp
   band7ScoreBar <- scoreBar band7Hz band7Score
   band8ScoreBar <- scoreBar band8Hz band8Score
   band9ScoreBar <- scoreBar band9Hz band9Score
-  percentageMainLabel "percentageMainLabel" "%"
-  faintedXaxis "faintedXaxis"
-  dynGraphLabel (constDyn "graphLabel") graphLabel
-
   return ()
 
 displaySpectrumEvaluationFiveBand :: MonadWidget t m => Dynamic t String -> Dynamic t (Map Frequency Score) -> m ()

@@ -56,6 +56,6 @@ tenBandBoostCutExercise = multipleChoiceExercise
   TenBandBoostCut
   AllBands
   tenBandConfigWidget
-  (displayCurrentSpectrumEvaluation (constDyn "Session Performance"))
+  (displayCurrentSpectrumEvaluation "Session Performance")
   generateQ
   (Just "Please write some brief text reflecting on your experience:")

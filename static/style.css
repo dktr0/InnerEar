@@ -2,15 +2,29 @@ body {
   background-color: black;
   color: hsl(120,100%,80%);
   height: 100%;
-  margin: 100px;
   font-family: sans;
 }
 
 body.innerEar {
   display: -webkit-flex;
   display: flex;
-  -webkit-flex-flow: row wrap;
-  flex-flow: column;vg
+  -webkit-flex-flbuw: row wrap;
+  flex-flow: column;
+
+}
+
+.header {
+  display: flex;
+  width: 100%;
+  margin-bottom: 3%;
+  margin-left:40px;
+}
+
+.login {
+  color:  hsl(120,100%,80%);
+  text-align: center;
+  width: 50%;
+  position: relative;
 
 }
 
@@ -18,11 +32,14 @@ body.innerEar {
   color:hsl(120,100%,80%);
   font-size: 40px;
   text-align: left;
+  width: 25%;
 }
 
 .wsStatus {
- color:white;
- text-align: left;
+  color:white;
+  text-align: center;
+  font-size: 10px;
+  width: 25%;
 }
 
 .createUserWidget {
@@ -35,34 +52,28 @@ body.innerEar {
   color: hsl(120,100%,80%);
   text-align: center;
   padding: 20px;
-}
+
+  }
 
 .createUserPassword {
   color: hsl(120,100%,80%);
   text-align: center;
   padding: 20px;
-}
+  }
 
-.login {
-  color:  hsl(120,100%,80%);
-  padding: 30px;
-  text-align: center;
-}
 
 text {
   color: hsl(120,100%,80%);
 }
 
 .barWrapper {
-  display: inline-block;
 }
 
 .nav {
   background: black;
   color:  hsl(120,100%,80%);
-  margin: 10x;
   text-align: left;
-  padding: 40px;
+  margin: 40px;
 }
 
 .navButton {
@@ -100,27 +111,22 @@ button {
 }
 
 .specEvalWrapper {
-  display: inline-block;
-  padding-left: 5%;
-  width: 95%;
-  position: relative;
-  top: 100px;
-  }
+  display: flex;
+}
 
 .answerButtonWrapper {
   margin-right:  0.5%;
-  background-color: black;
-  display: inline-block;
+  margin-top: 5%;
+  margin-bottom: 5%;
+  display:  inline-block;
   text-align: center;
-  width: 100%;
-  padding-top: 5%;
-
-
 }
 
 .buttonWrapper {
-    display: inline-block;
+
+  display: inline-block;
   text-align: center;
+
 }
 
 button.notPossibleButton{
@@ -180,12 +186,22 @@ button.correctButton{
 
 }
 
+.faintedLineToAdjustGraph {
+   width: 1px;
+  height: 220px;
+  background-color: #2F4F4F;
+  background-color: black;
+  position: relative;
+  left: 150%;
+
+}
+
 .svgFaintedLine {
   width: 1px;
   height: 5px;
   background-color: #2F4F4F;
   position: relative;
-  left: 5%;
+  left: 150%;
  }
 
 .svgFaintedLineFiveBand {
@@ -196,14 +212,14 @@ button.correctButton{
   left: 100%;
  }
 
-
  .faintedXaxis {
-   width : 400px;
+   width : 350px;
    height: 1px;
    background-color: #2F4F4F;
-   position: relative;
-   right: 0px;
-   bottom: 156px;
+   position:relative;
+   top: 74.3%;
+   left: 1%;
+
  }
 
  .faintedYaxis {
@@ -211,8 +227,8 @@ button.correctButton{
    height: 220px;
    background-color: #2F4F4F;
    position: relative;
-   right: 0px;
-   top: 173px;
+   top: 5%;
+   left: 10%;
  }
  .faintedXaxisFive {
    width : 550px;
@@ -238,11 +254,11 @@ button.correctButton{
   stroke-width: 0.5px;
  }
 
-
 .scoreBarWrapper {
 	display: inline-block;
   position: relative;
-  bottom: 80px;
+  right:58%;
+  bottom:1%;
 }
 
 .scoreBarWrapperFiveBand{
@@ -278,29 +294,27 @@ button.correctButton{
   margin-right: 10%;
   font-size: 12px;
   position: relative;
-  left: 60%;
+  left: 150%;
   text-align: center;
 }
 
 .xLabelFiveBand {
-
   color: hsl(120,100%,80%);
   margin-right: 10%;
   font-size: 10px;
   position: relative;
-  left: 60%;
+  left: 150%;
   text-align: center;
 }
 
 .countLabel {
-
   color: hsl(120,100%,80%);
   padding-top: 15px;
   margin-right: 10%;
   font-size: 10px;
   position: relative;
-left: 60%;
-    text-align: center;
+  left: 150%;
+  text-align: center;
 
 }
 
@@ -316,19 +330,18 @@ left: 60%;
 
 }
 .graphLabel {
-
   color: hsl(120,100%,80%);
+  width: 100px;
   font-size: 15px;
   position: relative;
-  left: 20px;
-  bottom: 95px;
-  width: 320px;
-  height: 20px;
+  right: 50%;
+  top: 290px;
+  height: 10%;
   text-align: center;
+
 }
 
 .graphLabelFiveBand {
-
   color: hsl(120,100%,80%);
   font-size: 15px;
   position: relative;
@@ -341,17 +354,17 @@ left: 60%;
 }
 
 .countMainLabel {
-  background-color: black;
   width: 15px;
+  height: 10%;
   font-size:  12px;
   position: relative;
-  top:  185px;
-  left: -25px;
+  top:  260px;
 }
 
 .countMainLabelFiveBand {
   background-color: black;
   width: 15px;
+  height: 10%;
   font-size:  12px;
   position: relative;
   top:  185px;
@@ -359,12 +372,12 @@ left: 60%;
 }
 
 .percentageMainLabel {
-  background-color: black;
+  height: 10%;
   width: 15px;
   font-size:  12px;
   position: relative;
-  left: -25px;
-  bottom:250px;
+  right: 15px;
+  top:40%;
 }
 
 .percentageMainLabelFiveBand {
@@ -372,59 +385,51 @@ left: 60%;
   width: 15px;
   font-size:  12px;
   position: relative;
-  left: -25px;
+  right: 300px;
   bottom:250px;
 }
 
 .hzMainLabel {
-  background-color: black;
   width: 15px;
+  height: 10%;
   font-size:  12px;
   position: relative;
-  left: -25px;
-  top: 170px;
-  }
+  left: 12px;
+  top: 83%;
+
+}
 
 .hzMainLabelFiveBand {
-  background-color: black;
   width: 15px;
   font-size:  12px;
   position: relative;
-  left: -25px;
-  top: 170px;
+
   }
 
 .exerciseWrapper {
-  display: inline-block;
-  background-color:black;
-  width: 100%;
+   display: inline-block;
+   text-align: center;
+   width: 100%;
 }
 
 .bottomRow{
-   display: inline-block;
-  background-color: black;
-  width: 100%;
-  padding-top: 0%;
-  }
+  display: flex;
+      text-align: center;
 
+}
 
 .evaluationInQuestion {
-    width: 50%;
-    text-align:left;
+  display: inline-flex;
+  background-color: blue;
+     width: 50%;
 }
 
 .userMediaWidgetInQuestion {
+    display: inline-flex;
     width: 50%;
-    position: relative;
-    left: 50%;
-    bottom: 345px;
-  text-align: left;
-
-
 }
 
 .sourceWidget{
-
   width: 70%;
   border-style:solid;
   border-width: 1pt;
@@ -432,8 +437,6 @@ left: 60%;
   background-color: rgb(80,80,80);
   position: relative;
   left: 27%;
-
-
 }
 
 .waveformWidget{
@@ -441,8 +444,6 @@ left: 60%;
   margin: 0 auto;
   padding: 1%;
   border-width: 1pt;
-
-
 }
 
 .startEndNumberInput{
@@ -458,14 +459,6 @@ left: 60%;
   border-color: rgb(0,0,0);
 }
 
-.faintedLineToAdjustGraph {
-   width: 1px;
-  height: 220px;
-  background-color: #2F4F4F;
-  background-color: black;
-  position: relative;
-  left: 100%;
-}
 
 .faintedLineToAdjustGraphAfterScore {
    width: 1px;
@@ -474,4 +467,11 @@ left: 60%;
   background-color: black;
   position: relative;
   left: 100%;
+}
+
+.evalGraphFrameRow {
+  background-color:red;
+  display: inline-flex;
+
+
 }

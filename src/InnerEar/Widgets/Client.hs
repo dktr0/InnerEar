@@ -21,18 +21,18 @@ import Reflex.Synth.Types
 
 clientWidget :: MonadWidget t m => m ()
 clientWidget = elClass "div" "innerEar" $ mdo
-  (wsRcvd,wsStatus) <- WS.reflexWebSocket wsSend
-  wsRcvdShow <- holdDyn "" $ fmap show wsRcvd
-  x <- elClass "div" "header" $ do
-    elClass "div" "title" $ do
-      text "Inner Ear"
-    elClass "div" "wsStatus" $ do
-      text "wsStatus: "
-      dynText wsStatus
-    elClass "div" "login" $ loginWidget wsRcvd
-  (y,sounds) <- navigationWidget wsRcvd
-  let wsSend = leftmost [x,y]
-  counts <- count sounds
-  mapDyn (show . (*(1.0::Double))) counts >>= dynText 
-  performSound sounds
-  return ()
+    (wsRcvd,wsStatus) <- WS.reflexWebSocket wsSend
+    wsRcvdShow <- holdDyn "" $ fmap show wsRcvd
+    x <- elClass "div" "header" $ do
+      elClass "div" "title" $ do
+        text "Inner Ear"
+      elClass "div" "wsStatus" $ do
+        text "wsStatus: "
+        dynText wsStatus
+      elClass "div" "login" $ loginWidget wsRcvd
+    (y,sounds) <- navigationWidget wsRcvd
+    let wsSend = leftmost [x,y]
+    counts <- count sounds
+    mapDyn (show . (*(1.0::Double))) counts >>= dynText
+    performSound sounds
+    return ()
