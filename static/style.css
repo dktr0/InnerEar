@@ -19,6 +19,7 @@ body.innerEar {
   display: flex;
   width: 100%;
   margin-bottom: 3%;
+  background-color: blue;
 }
 
 .login {
@@ -108,6 +109,8 @@ button {
   margin-top: 0%;
   margin-bottom: 0%;
   margin-right: 0%;
+  font-size: 100%;
+
 
 }
 
@@ -116,32 +119,39 @@ button {
 }
 
 .answerButtonWrapper {
-  margin-right:  0.5%;
   margin-top: 5%;
   margin-bottom: 5%;
-  display:  inline-block;
+  display: flex;
   text-align: center;
+  background-color: red;
+  width: 50%;
+  height: 100%;
+  margin-left:25%;
+
 }
 
 .buttonWrapper {
-
   display: inline-block;
   text-align: center;
-
 }
 
 button.notPossibleButton{
   border: none;
   background-color: black;
   color: darkgray;
-  height: 100%;
-  width: 100px;
+  height: 200px;
+  width: 100%;
+  margin:  1%;
+ font-size: 200%;
 
- }
+}
 
 button.possibleButton {
-  height: 100%;
-  width: 100px;
+  height: 200px;
+  width: 100%;
+  margin:  1%;
+    font-size: 200%;
+
 }
 
 button.incorrectDisactivatedButton {
@@ -149,24 +159,32 @@ button.incorrectDisactivatedButton {
   color: red;
   border-radius: 5px;
   border: 2px solid red;
-  height: 100%;
-  width: 100px;
+  height: 200px;
+  width: 100%;
+  font-size: 200%;
+
 }
 
 button.incorrectActivatedButton {
   color: red;
   border-radius: 5px;
   border: 2px solid red;
-  height: 100%;
-  width: 100px;
+  height: 200px;
+  width: 100%;
+  margin:  1%;
+    font-size: 200%;
+
 }
 
 button.correctButton{
   color: green;
   border-radius: 5px;
   border: 4px solid green;
-  height: 100%;
-  width: 100px;
+  height: 200px;
+  width: 100%;
+  margin:  1%;
+    font-size: 200%;
+
 }
 
 .svgBarContainer {
@@ -411,7 +429,10 @@ left: 60%;
 .exerciseWrapper {
    display: inline-block;
    text-align: center;
+
    width: 100%;
+  background-color: yellow;
+  height: 100%;
 }
 
 .bottomRow{
@@ -505,6 +526,6 @@ left: 60%;
 }
 
 .evalGraphFrameRow {
-  background-color:black;
+  background-color:gray;
   display: inline-flex;
 }
