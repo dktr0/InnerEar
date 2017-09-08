@@ -18,7 +18,7 @@ import InnerEar.Types.Utility
 -- needs to only rebuild when status changes!!!
 
 loginWidget :: MonadWidget t m
-  => Event t [Response] -> m (Event t Request)
+  => Event t [Response] -> m (Event t Request, Dynamic t Bool)
 loginWidget responses = elClass "div" "loginWidget" $ mdo
   let initialWidget = notLoggedInWidget responses
   let p x = ( x == NotAuthenticated || isAuthenticated x)
@@ -34,7 +34,8 @@ loginWidget responses = elClass "div" "loginWidget" $ mdo
   x <- widgetHold initialWidget rebuildEvents
   r <- switchPromptlyDyn <$> mapDyn fst x
   goToLogin <- switchPromptlyDyn <$> mapDyn snd x
-  return r
+  areTheyAuthenticated <- holdDyn (NotAuthenticated) newStatus >>= mapDyn (not . (==NotAuthenticated))
+  return (r,areTheyAuthenticated)
 
 tryToLoginWidget :: MonadWidget t m => Event t [Response] -> m (Event t Request,Event t ())
 tryToLoginWidget responses = do
