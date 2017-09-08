@@ -33,7 +33,7 @@ renderAnswer _ s f = GainSound (FilteredSound s filter) (-10)
   where filter = Filter Peaking (freqAsDouble f) 1.4 16.0
 
 tenBandConfigWidget :: MonadWidget t m => Config -> m (Event t Config)
-tenBandConfigWidget i = radioConfigWidget msg possibilities i
+tenBandConfigWidget i = radioConfigWidget "" msg possibilities i
   where msg = "Please choose the spectrum range you would like to practice:"
         possibilities = [AllBands,HighBands,MidBands,Mid8Bands,LowBands]
 

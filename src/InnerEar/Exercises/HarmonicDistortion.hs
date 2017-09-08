@@ -30,7 +30,7 @@ renderAnswer db _ (Answer True) = NoSound -- 2.0 -- should be a sine wave clippe
 renderAnswer db _ (Answer False) = NoSound -- 2.0 -- should be a clean sine wave, just attenuated a standard amount (-10 dB)
 
 harmonicDistortionConfigWidget :: MonadWidget t m => Config -> m (Event t Config)
-harmonicDistortionConfigWidget i = radioConfigWidget msg configs i
+harmonicDistortionConfigWidget i = radioConfigWidget "" msg configs i
   where msg = "Please choose the level of clipping for this exercise:"
 
 displayEval :: MonadWidget t m => Dynamic t (Map Answer Score) -> m ()

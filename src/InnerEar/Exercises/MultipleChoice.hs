@@ -116,10 +116,11 @@ randomMultipleChoiceQuestion possibilities = do
   x <- getStdRandom ((randomR (0,n-1))::StdGen -> (Int,StdGen))
   return (possibilities,possibilities!!x)
 
-radioConfigWidget :: (MonadWidget t m, Eq a, Show a) => String -> [a] -> a -> m (Event t a)
-radioConfigWidget msg possibilities i = do
+radioConfigWidget :: (MonadWidget t m, Eq a, Show a) => String -> String -> [a] -> a -> m (Event t a)
+radioConfigWidget explanation msg possibilities i = do
   let radioButtonMap =  zip [0::Int,1..] possibilities
   let iVal = maybe 0 id $ elemIndex i possibilities
+  elClass "div" "explanation" $ text explanation
   elClass "div" "configText" $ text msg
   radioWidget <- radioGroup (constDyn "radioWidget") (constDyn $ fmap (\(x,y)->(x,show y)) radioButtonMap)
            (WidgetConfig {_widgetConfig_initialValue= Just iVal
