@@ -24,6 +24,9 @@ configs = [-20,-30,-40,-50,-60,-70,-80,-90,-100,-110]
 
 data Answer = Answer Bool deriving (Eq,Ord)
 
+answers :: [Answer]
+answers = [Answer True,Answer False]
+
 instance Show Answer where
   show (Answer True) = "Attenuated Sound"
   show (Answer False) = "No sound at all"
@@ -37,16 +40,15 @@ thresholdOfSilenceConfigWidget i = radioConfigWidget msg configs i
   where msg = "Please choose the level of attenuation for this exercise:"
 
 displayEval :: MonadWidget t m => Dynamic t (Map Answer Score) -> m ()
-displayEval scoreMap = return ()
-
+displayEval = displayMultipleChoiceEvaluationGraph' "Session Performance" "" answers
 
 generateQ :: Config -> [Datum Config [Answer] Answer (Map Answer Score)] -> IO ([Answer],Answer)
-generateQ _ _ = randomMultipleChoiceQuestion [Answer False,Answer True]
+generateQ _ _ = randomMultipleChoiceQuestion answers
 
 thresholdOfSilenceExercise :: MonadWidget t m => Exercise t m Int [Answer] Answer (Map Answer Score)
 thresholdOfSilenceExercise = multipleChoiceExercise
   1
-  [Answer False,Answer True]
+  answers
   renderAnswer
   ThresholdOfSilence
   (-20)

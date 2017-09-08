@@ -16,6 +16,7 @@ import Data.Maybe (fromMaybe)
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
 import qualified Data.Map.Strict as Map
+import Data.Either
 import Control.Monad
 import Control.Concurrent.MVar
 import Control.Exception (try)
@@ -28,7 +29,12 @@ import InnerEar.Types.Password
 import InnerEar.Types.Data
 import InnerEar.Types.User
 
-main = do
+import qualified InnerEar.Database.SQLite as DB
+import qualified InnerEar.Database.Users as DB
+import qualified InnerEar.Database.Events as DB
+
+
+main = do -- DB.databaseTest
   putStrLn "Inner Ear server (listening on port 4468)"
   s <- newMVar newServer
   let settings = (defaultWebAppSettings "InnerEarClient.jsexe") { ssIndices = [unsafeToPiece "index.html"] }
@@ -124,8 +130,9 @@ postRecord i r@(Record h p) s = if ok then doIt else dont
     rHandle = Just h
     ok = cHandle == rHandle
     doIt = do
-      putStrLn $ "posting record: " ++ (show r)
-      return $ postPoint h p s
+      putStrLn $ "posting record... actually not because disactivated in this branch...: " ++ (show r)
+      return s
+      -- return $ postPoint h p s
     dont = do
       putStrLn $ "unable to post record (not authenticated or authenticated to different handle)" ++ (show r)
       return s
