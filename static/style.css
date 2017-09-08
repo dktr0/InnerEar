@@ -3,6 +3,8 @@ body {
   color: hsl(120,100%,80%);
   height: 100%;
   font-family: sans;
+  margin: 2%;
+
 }
 
 body.innerEar {
@@ -17,7 +19,7 @@ body.innerEar {
   display: flex;
   width: 100%;
   margin-bottom: 3%;
-  margin-left:40px;
+  background-color: blue;
 }
 
 .login {
@@ -107,6 +109,8 @@ button {
   margin-top: 0%;
   margin-bottom: 0%;
   margin-right: 0%;
+  font-size: 100%;
+
 
 }
 
@@ -115,32 +119,39 @@ button {
 }
 
 .answerButtonWrapper {
-  margin-right:  0.5%;
   margin-top: 5%;
   margin-bottom: 5%;
-  display:  inline-block;
+  display: flex;
   text-align: center;
+  background-color: red;
+  width: 50%;
+  height: 100%;
+  margin-left:25%;
+
 }
 
 .buttonWrapper {
-
   display: inline-block;
   text-align: center;
-
 }
 
 button.notPossibleButton{
   border: none;
   background-color: black;
   color: darkgray;
-  height: 100%;
-  width: 100px;
+  height: 200px;
+  width: 100%;
+  margin:  1%;
+ font-size: 200%;
 
- }
+}
 
 button.possibleButton {
-  height: 100%;
-  width: 100px;
+  height: 200px;
+  width: 100%;
+  margin:  1%;
+    font-size: 200%;
+
 }
 
 button.incorrectDisactivatedButton {
@@ -148,24 +159,32 @@ button.incorrectDisactivatedButton {
   color: red;
   border-radius: 5px;
   border: 2px solid red;
-  height: 100%;
-  width: 100px;
+  height: 200px;
+  width: 100%;
+  font-size: 200%;
+
 }
 
 button.incorrectActivatedButton {
   color: red;
   border-radius: 5px;
   border: 2px solid red;
-  height: 100%;
-  width: 100px;
+  height: 200px;
+  width: 100%;
+  margin:  1%;
+    font-size: 200%;
+
 }
 
 button.correctButton{
   color: green;
   border-radius: 5px;
   border: 4px solid green;
-  height: 100%;
-  width: 100px;
+  height: 200px;
+  width: 100%;
+  margin:  1%;
+    font-size: 200%;
+
 }
 
 .svgBarContainer {
@@ -217,8 +236,8 @@ button.correctButton{
    height: 1px;
    background-color: #2F4F4F;
    position:relative;
-   top: 83%;
-   left: 10%;
+   top: 74.3%;
+   left: 1%;
 
  }
 
@@ -227,7 +246,7 @@ button.correctButton{
    height: 220px;
    background-color: #2F4F4F;
    position: relative;
-   top: 6%;
+   top: 5%;
    left: 10%;
  }
  .faintedXaxisFive {
@@ -358,8 +377,7 @@ left: 60%;
   height: 10%;
   font-size:  12px;
   position: relative;
-  top:  94%;
-  right: 69%;
+  top:  260px;
 }
 
 .countMainLabelFiveBand {
@@ -377,7 +395,7 @@ left: 60%;
   width: 15px;
   font-size:  12px;
   position: relative;
-  right: 72%;
+  right: 15px;
   top:40%;
 }
 
@@ -395,7 +413,7 @@ left: 60%;
   height: 10%;
   font-size:  12px;
   position: relative;
-  right: 66%;
+  left: 12px;
   top: 83%;
 
 }
@@ -410,7 +428,10 @@ left: 60%;
 .exerciseWrapper {
    display: inline-block;
    text-align: center;
+
    width: 100%;
+  background-color: yellow;
+  height: 100%;
 }
 
 .bottomRow{
@@ -419,42 +440,11 @@ left: 60%;
 
 }
 
-.soundWidget{
-  height:100%;
-  text-align: left;
-}
 
-.playStopButtons{
-  width:15%;
-  display: inline-block;
-}
-.playStopButtons button{
-  width:100%
-}
-
-/* .referenceSoundButton{
-  width:100%
-}
-.questionSoundButton{
-  width:100%
-}
-.stopSoundButton{
-  width:100%
-} */
-
-.soundSourceDropdown{
-  display: inline-block;
-  max-width:30%
-}
-
-.waveformWidgetInputs{
-  width:20%;
-  display: inline-block
-}
 
 .evaluationInQuestion {
   display: inline-flex;
-  background-color: black;
+  background-color: blue;
      width: 50%;
 }
 
@@ -463,36 +453,6 @@ left: 60%;
     width: 50%;
 }
 
-
-.waveformWidget{
-  display: inline-block;
-  width:70%;
-}
-
-.sourceWidget{
-  width:85%;
-  display:inline-block;
-}
-.nothingSourceWidget{
-  width:75%;
-  display:none;
-}
-
-.startEndNumberInput{
-    width: 20px;
-}
-
-.waveformCanvas{
-  width:100%;
-  height: 83px;
-  background-color:rgb(50,50,50);
-}
-
-.waveformWrapper{
-  display: inline-block;
-  width:80%;
-  height: 100%
-}
 
 
 .faintedLineToAdjustGraphAfterScore {
@@ -505,6 +465,102 @@ left: 60%;
 }
 
 .evalGraphFrameRow {
-  background-color:black;
+  background-color:red;
+  display: inline-flex;
+}
+
+
+
+
+
+
+
+
+
+
+.soundWidget{
+  height:100%;
+  text-align: left;
+}
+
+.playReference {
+  width:33%;
+  height: 100%;
+  display: inline-block;
+}
+.playReference button {
+  width: 100%;
+  height: 100%;
+  background-color:rgb (60,60,60);
+}
+.playQuestion {
+  width:33%;
+  height: 100%;
+  display:inline-block
+}
+.playQuestion button {
+  width: 100%;
+  height: 100%;
+  background-color:rgb (60,60,120);
+}
+
+
+
+
+
+
+
+
+
+/* Wrapping everything the user uses to select a sound source and load a buffer/loop it etc...*/
+.sourceWidget{
+  width:33%;
+  height: 100%;
+  display:inline-block;
+}
+/* Just containing the "Sound source:'' label and the dropdown*/
+.soundSourceDropdown{
+  height:20%;
+  width:100%;
+}
+
+.userMediaWidget{
+  height:80%;
+}
+
+.browseButton{
+  height:10%;
+}
+.waveformWrapper{
+  display: inline-block;
+  width:100%;
+  height: 80%
+}
+.waveformCanvas{
+  width:100%;
+  height: 100%;
+  background-color:rgb(50,50,50);
+}
+
+.bufferControls{
+  display:inline-block;
+  height:10%;
+}
+
+.bufferControls input {
+  width:10px;
+}
+
+.faintedLineToAdjustGraphAfterScore {
+   width: 1px;
+  height: 207px;
+  background-color: #2F4F4F;
+  background-color: black;
+  position: relative;
+  left: 100%;
+}
+
+.evalGraphFrameRow {
+  background-color:gray;
   display: inline-flex;
 }
