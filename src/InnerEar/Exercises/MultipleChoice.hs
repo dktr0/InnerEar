@@ -81,8 +81,7 @@ multipleChoiceQuestionWidget maxTries answers render eWidget config initialEval 
   -- user interface (buttons, etc)
   (playReference,playQuestion, source) <- elClass "div" "playReferenceOrQuestion" $ do
     soundWidget "multipleChoiceExercise"
-  nextQuestion <- elClass "div" "nextQuestion" $ do
-    buttonDynCss "New Question" (constDyn "buttonWrapper")
+  nextQuestion <- elClass "div" "nextQuestion" $ buttonDynCss "New Question" (constDyn "buttonWrapper")
     -- newQuestionVisible <- mapDyn (>0) timesQuestionHeard
     -- z <- visibleWhen newQuestionVisible $ (InQuestion <$) <$> buttonDynCss "New Question" (constDyn "buttonWrapper")
     -- return (x,y,z)
@@ -102,7 +101,7 @@ multipleChoiceQuestionWidget maxTries answers render eWidget config initialEval 
 
   -- generate navigation events
   onToReflect <- (InReflect <$) <$> buttonDynCss "Reflect" (constDyn "buttonWrapper")
-  let navEvents = leftmost [InQuestion <$ nextQuestion,onToReflect]
+  let navEvents = leftmost [InQuestion <$ nextQuestion, onToReflect]
 
   return (fmap Evaluation $ updated scores, playSounds,navEvents)
 

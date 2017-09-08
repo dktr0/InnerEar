@@ -35,7 +35,7 @@ data Navigation =
   TestSoundPage
 
 navigationWidget :: MonadWidget t m => Event t [Response] -> Dynamic t Bool -> m (Event t Request,Event t Sound)
-navigationWidget responses areTheyAuthenticated = el "div" $ mdo
+navigationWidget responses areTheyAuthenticated = elClass "div" "mainBody" $ mdo
   let initialPage = navigationPage responses areTheyAuthenticated SplashPage
   let rebuild = fmap (navigationPage responses areTheyAuthenticated) navEvents
   w <- widgetHold initialPage rebuild

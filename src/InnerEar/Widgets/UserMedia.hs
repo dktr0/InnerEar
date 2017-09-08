@@ -47,7 +47,7 @@ userMediaWidget inputId dynClass = elDynClass "div" dynClass $ do
   let loadEv = (() <$) $ updated $ _fileInput_value input
 
   -- create canvas
-  canvasEl <- elClass "div" "waveformWraper" $ liftM fst $ elClass' "canvas" "waveformCanvas" (return ())
+  canvasEl <- elClass "div" "waveformWrapper" $ liftM fst $ elClass' "canvas" "waveformCanvas" (return ())
   let canvasElement = _el_element canvasEl
 
   (stopEv,start,end,loop) <- elClass "div" "bufferControls" $ do
