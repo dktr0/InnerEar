@@ -36,8 +36,8 @@ testWidget responses = elClass "div" "excerciseWrapper" $ do
   buttonDynCss "incorrectDisactivated" (constDyn "incorrectDisactivatedButton")
   buttonDynCss "incorrectActivated" (constDyn "incorrectActivatedButton")
   buttonDynCss "correct" (constDyn "correctButton")
-  let possibilities = ["Q1", "Q2"]
-  let scoreMap =  constDyn (M.fromList [("Q1", (Score 1 2 9)), ("Q2", (Score 2 2 8))])
+  let possibilities = ["Q1", "Q2", "Q3", "Q4","Q5"]
+  let scoreMap =  constDyn (M.fromList [("Q1", (Score 1 2 9)), ("Q2", (Score 2 2 8)), ("Q3", (Score 3 2 7)), ("Q4", (Score 4 2 6)), ("Q5", (Score 10 2 0))])
   displayMultipleChoiceEvaluationGraph' "Session performance" "xLabel" possibilities scoreMap
   home <- button "back to splash page"
   return (never,never,home)
