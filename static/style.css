@@ -3,7 +3,7 @@ body {
   color: hsl(120,100%,80%);
   height: 100%;
   font-family: sans;
-  margin: 2%;
+  margin: 1%;
 
 }
 
@@ -18,7 +18,6 @@ body.innerEar {
 .header {
   display: flex;
   width: 100%;
-  margin-bottom: 3%;
   background-color: blue;
 }
 
@@ -110,20 +109,20 @@ button {
   margin-bottom: 0%;
   margin-right: 0%;
   font-size: 100%;
-
-
 }
 
 .specEvalWrapper {
   display: flex;
+  position: relative;
+  bottom: 10%;
+  left: 10%;
 }
 
 .answerButtonWrapper {
-  margin-top: 5%;
-  margin-bottom: 5%;
+  margin-top: 1%;
+  margin-bottom: 1%;
   display: flex;
   text-align: center;
-  background-color: red;
   width: 50%;
   height: 100%;
   margin-left:25%;
@@ -206,12 +205,11 @@ button.correctButton{
 }
 
 .faintedLineToAdjustGraph {
-   width: 1px;
-  height: 220px;
-  background-color: #2F4F4F;
-  background-color: black;
+  width: 1px;
+  height: 70%;
   position: relative;
-  left: 150%;
+  right: 45%;
+  top: 11%;
 
 }
 
@@ -220,7 +218,8 @@ button.correctButton{
   height: 5px;
   background-color: #2F4F4F;
   position: relative;
-  left: 150%;
+  right: 45%;
+  top: 11%;
  }
 
 .svgFaintedLineFiveBand {
@@ -232,25 +231,25 @@ button.correctButton{
  }
 
  .faintedXaxis {
-   width : 350px;
+   width : 100%;
    height: 1px;
    background-color: #2F4F4F;
    position:relative;
-   top: 83%;
+   top: 80%;
    left: 10%;
 
  }
 
  .faintedYaxis {
-   width : 1px;
-   height: 220px;
+   width : 2px;
+   height:70%;
    background-color: #2F4F4F;
    position: relative;
-   top: 6%;
+   top: 10%;
    left: 10%;
  }
  .faintedXaxisFive {
-   width : 550px;
+   width : 500px;
    height: 1px;
    background-color: #2F4F4F;
    position: relative;
@@ -289,10 +288,10 @@ button.correctButton{
 .scoreLabel {
   background-color: black;
   color: hsl(120,100%,80%);
-  font-size: 12px;
   text-align: center;
+  font-size: 50%;
   position: relative;
-  left: 60%;
+  right: 30%;
 }
 
 .scoreLabelFiveBand {
@@ -308,12 +307,13 @@ button.correctButton{
 
 .xLabel {
   color: hsl(120,100%,80%);
-  font-size: 90%;
+  font-size:50%;
   position: relative;
   text-align: center;
   background-color: black;
   width: 100px;
-  top: 10%;
+  right: 30%;
+  top: 13%;
 }
 
 .xLabelFiveBand {
@@ -329,10 +329,11 @@ button.correctButton{
   color: hsl(120,100%,80%);
   padding-top: 15px;
   margin-right: 10%;
-  font-size: 10px;
+      text-align: center;
+  font-size: 50%;
   position: relative;
-  left: 150%;
-  text-align: center;
+  right: 30%;
+  top: 13%;
 
 }
 
@@ -343,17 +344,17 @@ button.correctButton{
   margin-right: 10%;
   font-size: 12px;
   position: relative;
-left: 60%;
+left: 0%;
     text-align: center;
 
 }
 .graphLabel {
   color: hsl(120,100%,80%);
-  width: 50%;
-  font-size: 15px;
+  width: 600px;
+  font-size: 100%;
   position: relative;
-  right: 40%;
-  top: 290px;
+  right: 41%;
+  top: 100%;
   height: 10%;
   text-align: center;
   background-color: black;
@@ -373,12 +374,12 @@ left: 60%;
 }
 
 .countMainLabel {
-  font-size: 90%;
+  font-size: 60%;
   width: 15px;
   height: 10%;
   position: relative;
-  top:  90%;
-  right: 69%;
+  top: 90%;
+  right: 45%;
 }
 
 .countMainLabelFiveBand {
@@ -392,12 +393,13 @@ left: 60%;
 }
 
 .percentageMainLabel {
-  height: 10%;
+  height: 1%;
   width: 1%;
-  font-size: 90%;
+  font-size: 60%;
   position: relative;
-  right: 72%;
+  right: 47%;
   top:40%;
+  background-color: blue;
 }
 
 .percentageMainLabelFiveBand {
@@ -430,9 +432,7 @@ left: 60%;
 .exerciseWrapper {
    display: inline-block;
    text-align: center;
-
    width: 100%;
-  background-color: yellow;
   height: 100%;
 }
 
@@ -472,13 +472,15 @@ left: 60%;
 
 .waveformWidgetInputs{
   width:20%;
-  display: inline-block
+  display: inline-block;
+
 }
 
 .evaluationInQuestion {
   display: inline-flex;
-  background-color: black;
   width: 50%;
+  height: 300px;
+  margin-left: 0%
 }
 
 .userMediaWidgetInQuestion {
@@ -528,4 +530,5 @@ left: 60%;
 
 .evalGraphFrameRow {
   display: inline-flex;
+  width: 100%
 }
