@@ -494,35 +494,43 @@ left: 60%;
 
 .playReferenceOrQuestion{
   height: 33%;
+  width:100%;
 }
 
 .soundWidget{
   height:100%;
+  width:100%;
 }
 
 .playReference {
   width:33%;
   height: 100%;
-  display: inline-block;
+  float: left;
   /*position: relative;*/
   /*bottom:30%*/
 }
+
 .playReference button {
   width: 90%;
   height: 40%;
-  background-color:rgb (60,60,60);
+  position: relative;
+  bottom:-38%
 }
+
 .playQuestion {
   width:33%;
   height: 100%;
-  display: inline-block;
+/*   display: inline-block; */
+  float:left;
+  text-align: center;
   /*position:relative;*/
   /*bottom:30%;*/
 }
 .playQuestion button {
   width: 90%;
   height: 40%;
-  background-color:rgb (60,60,120);
+  position: relative;
+  bottom:-38%
 }
 
 
@@ -537,7 +545,8 @@ left: 60%;
 .sourceWidget{
   width:33%;
   height: 100%;
-  display:inline-block;
+/*   display:inline-block; */
+  float:left;
   background-color: rgb(30,30,30);
   text-align: left;
 }
