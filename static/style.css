@@ -16,6 +16,7 @@ body.innerEar {
   -webkit-flex-flbuw: row wrap;
   flex-flow: column;
 }
+
 div.innerEar{
   height: 100%
 }
@@ -539,12 +540,11 @@ left: 60%;
 }
 
 .browseButton{
-  height:10%;
+  height:20%;
 }
 .waveformWrapper{
-  display: inline-block;
   width:100%;
-  height: 80%
+  height: 50%
 }
 .waveformCanvas{
   width:100%;
@@ -554,7 +554,7 @@ left: 60%;
 
 .bufferControls{
   display:inline-block;
-  height:10%;
+  height:20%;
 }
 
 .bufferControls input {
