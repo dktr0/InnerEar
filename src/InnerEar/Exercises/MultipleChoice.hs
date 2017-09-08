@@ -32,8 +32,7 @@ import Reflex.Synth.Types
 multipleChoiceExercise :: (MonadWidget t m, Show a, Eq a, Ord a)
   => Int -- maximum number of tries to allow
   -> [a]
-  -> m (Dynamic t b) -- b represents something which affects sound production independently of configuration
-  -> (c -> b -> a -> Sound)
+  -> (c -> Source -> a -> Sound)
   -> ExerciseId
   -> c
   -> (c -> m (Event t c))
@@ -42,14 +41,14 @@ multipleChoiceExercise :: (MonadWidget t m, Show a, Eq a, Ord a)
   -> Maybe Reflection
   -> Exercise t m c [a] a (Map a Score)
 
-multipleChoiceExercise maxTries answers bWidget render i c cw de g r = Exercise {
+multipleChoiceExercise maxTries answers render i c cw de g r = Exercise {
   exerciseId = i,
   defaultConfig = c,
   configWidget = cw,
   defaultEvaluation = empty,
   displayEvaluation = de,
   generateQuestion = g,
-  questionWidget = multipleChoiceQuestionWidget maxTries answers bWidget render de,
+  questionWidget = multipleChoiceQuestionWidget maxTries answers render de,
   reflectiveQuestion = r
 }
 
@@ -58,15 +57,14 @@ multipleChoiceExercise maxTries answers bWidget render i c cw de g r = Exercise 
 multipleChoiceQuestionWidget :: (MonadWidget t m, Show a, Eq a, Ord a)
   => Int -- maximum number of tries
   -> [a] -- fixed list of potential answers
-  -> m (Dynamic t b) -- b represents something which affects sound production independently of configuration
-  -> (c -> b -> a -> Sound) -- function to produce a sound from an answer
+  -> (c -> Source -> a -> Sound) -- function to produce a sound from an answer
   -> (Dynamic t (Map a Score) -> m ())
   -> c
   -> Map a Score
   -> Event t ([a],a)
   -> m (Event t (Datum c [a] a (Map a Score)),Event t Sound,Event t ExerciseNavigation)
 
-multipleChoiceQuestionWidget maxTries answers bWidget render eWidget config initialEval newQuestion = elClass "div" "exerciseWrapper" $ mdo
+multipleChoiceQuestionWidget maxTries answers render eWidget config initialEval newQuestion = elClass "div" "exerciseWrapper" $ mdo
 
   let initialState = initialMultipleChoiceState answers maxTries
   let newQuestion' = fmap newQuestionMultipleChoiceState newQuestion
@@ -81,30 +79,30 @@ multipleChoiceQuestionWidget maxTries answers bWidget render eWidget config init
   scores <- mapDyn scoreMap multipleChoiceState
 
   -- user interface (buttons, etc)
-  (playReference,playQuestion,nextQuestion) <- elClass "div" "playReferenceOrQuestion" $ do
-    x <- buttonDynCss "Listen to Reference Sound" (constDyn "buttonWrapper")
-    y <- buttonDynCss "Listen to Question" (constDyn "buttonWrapper")
-    newQuestionVisible <- holdDyn False $ leftmost [False <$ newQuestion,True <$ y]
-    z <- visibleWhen newQuestionVisible $ (InQuestion <$) <$> buttonDynCss "New Question" (constDyn "buttonWrapper")
-    return (x,y,z)
+  (playReference,playQuestion, source) <- elClass "div" "playReferenceOrQuestion" $ do
+    soundWidget "multipleChoiceExercise"
+  nextQuestion <- elClass "div" "nextQuestion" $ do
+    buttonDynCss "New Question" (constDyn "buttonWrapper")
+    -- newQuestionVisible <- mapDyn (>0) timesQuestionHeard
+    -- z <- visibleWhen newQuestionVisible $ (InQuestion <$) <$> buttonDynCss "New Question" (constDyn "buttonWrapper")
+    -- return (x,y,z)
   answerPressed <- elClass "div" "answerButtonWrapper" $ -- m (Event t a)
     leftmost <$> zipWithM (\f m -> answerButton (show f) m f) answers modes'
-  b <- elClass "div" "bottomRow" $ do
-    x <- mapDyn scoreMap multipleChoiceState
-    elClass "div" "evaluationInQuestion" $ eWidget x
-    elClass "div" "userMediaWidgetInQuestion" $ bWidget
+  elClass "div" "bottomRow" $ do
+    elClass "div" "evaluationInQuestion" $ eWidget scores
+    -- elClass "div" "userMediaWidgetInQuestion" $ bWidget
 
   -- generate sounds to be playedW
   answer <- holdDyn Nothing $ fmap (Just . snd) newQuestion
   let questionSound = fmapMaybe id $ tagDyn answer playQuestion
-  let referenceSound = Sound (NodeSource (BufferNode $ File "pinknoise.wav") 2.0) <$ playReference
   let soundsToRender = leftmost [questionSound,answerPressed]
-  let renderedSounds = attachDynWith (render config) b soundsToRender
+  let referenceSound = attachDynWith (\a _-> GainSound (Sound a) (-10)) source playReference
+  let renderedSounds = attachDynWith (render config) source soundsToRender
   let playSounds = leftmost [renderedSounds,referenceSound]
 
   -- generate navigation events
   onToReflect <- (InReflect <$) <$> buttonDynCss "Reflect" (constDyn "buttonWrapper")
-  let navEvents = leftmost [nextQuestion,onToReflect]
+  let navEvents = leftmost [InQuestion <$ nextQuestion,onToReflect]
 
   return (fmap Evaluation $ updated scores, playSounds,navEvents)
 

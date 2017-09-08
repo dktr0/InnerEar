@@ -16,6 +16,43 @@ function test(s){
   return ___ac.createMediaElementSource(a)
 }
 
+
+function createScriptProcessorNode (onAudioFunc){
+  var sp = ___ac.createScriptProcessor(undefined,2,2)
+  sp.onaudioprocess = onAudioFunc;
+  return sp
+}
+
+function getDistortAtDbFunc(db){
+  if (args.db==undefined){
+    console.log ("WARNING - spDistortAtDb wasn't provided an argument containing a decibel value - value of 0dB used")
+    args.db=0
+  }
+  var db = args.db
+  var clip = Math.pow (10, db/20)
+  var func = function (audioProcessingEvent){
+    var inputBuffer = audioProcessingEvent.inputBuffer;
+        var outputBuffer = audioProcessingEvent.outputBuffer
+
+        for (var channels =0; channels< outputBuffer.numberOfChannels; channels = channels+1){
+          var inputData = inputBuffer.getChannelData(channels)
+          var outputData = outputBuffer.getChannelData(channels)
+          for (var sample = 0; sample<inputBuffer.length; sample = sample+1){
+            // outputData[sample] = Math.min(Math.max(inputData[sample],-1/2),1/2);
+            outputData[sample] = Math.min(Math.max(inputData[sample],clip*(-1)),clip);
+          }
+        }
+  }
+  return func
+}
+
+function setGain(db, node){
+  var amp  = Math.pow(10,db/20)
+  console.log("db:  "+db)
+  console.log("amp: "+amp)
+  node.gain.value = amp;
+}
+
 function createMediaNode (id){
   var node
   console.log(id)
@@ -140,7 +177,7 @@ function createBufferSourceNodeFromID(id,start,end,loop){
     console.log('WARNING: No buffer loaded')
     console.log('attempting to load buffer...')
     loadBuffer(id)
-  } 
+  }
   source.buffer = userAudioNodes[id].buffer
   userAudioNodes[id].source = source
   console.log("source:  "+source)
@@ -182,11 +219,11 @@ function setAudioSrc(id){
     var x = userAudioNodes[id]
     // loads buffer and sets userAduioNodes[id].buffer to result
     loadBuffer(id)
-    
+
 
     if (x.inputElement.files){
       var file = files[0];
-    
+
 
       var urlReader = new FileReader();
       // Get the file's URL
@@ -206,7 +243,7 @@ function setAudioSrc(id){
       userAudioNodes[id].audioElement = audioElement
       userAudioNodes[id].inputElement = inputElement
       userAudioNodes[id].loopStart = 0;
-      userAudioNodes[id].loopEnd = undefined; 
+      userAudioNodes[id].loopEnd = undefined;
       userAudioNodes[id].audioElement.ontimeupdate = audioOnTimeUpdate(userAudioNodes[id])
 
     } else{
@@ -236,7 +273,7 @@ function renderAudioWaveform(id, canvas, attempt){
 
   if (attempt<5){
     var obj = userAudioNodes[id]
-    
+
 
     if (obj){
       if (obj.buffer){
@@ -340,12 +377,12 @@ function drawBufferOnCanvas (buff, canvas) {
     var block = Math.ceil(data.length/width)
     var amp = height/2;
 
-    
+
     for(var i=0; i < width; i++){
       var min = 1.0
       var max = -1.0
       for (var j=0; j<block; j++) {
-        var x = data[j+i*block]; 
+        var x = data[j+i*block];
         if (x < min){
           min = x;
         }

@@ -43,7 +43,6 @@ harmonicDistortionExercise :: MonadWidget t m => Exercise t m Config [Answer] An
 harmonicDistortionExercise = multipleChoiceExercise
   1
   [Answer False,Answer True]
-  trivialBWidget
   renderAnswer
   HarmonicDistortion
   (-12)
