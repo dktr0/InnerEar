@@ -126,8 +126,8 @@ button {
 }
 
 .answerButtonWrapper {
-  margin-top: 5%;
-  margin-bottom: 5%;
+/*   margin-top: 5%; */
+/*   margin-bottom: 5%; */
   display: flex;
   text-align: center;
   background-color: red;
@@ -440,7 +440,6 @@ left: 60%;
   display: inline-block;
   text-align: center;
   width: 100%;
-  background-color: yellow;
   height: 100%;
 }
 
@@ -480,7 +479,9 @@ left: 60%;
 }
 
 
-
+.nextQuestion{
+  height: 5%;
+}
 
 
 
@@ -492,27 +493,30 @@ left: 60%;
 
 .soundWidget{
   height:100%;
-  text-align: left;
 }
 
 .playReference {
   width:33%;
   height: 100%;
   display: inline-block;
+  position: relative;
+  bottom:30%
 }
 .playReference button {
-  width: 100%;
-  height: 100%;
+  width: 90%;
+  height: 40%;
   background-color:rgb (60,60,60);
 }
 .playQuestion {
   width:33%;
   height: 100%;
-  display:inline-block
+  display: inline-block;
+  position:relative;
+  bottom:30%;
 }
 .playQuestion button {
-  width: 100%;
-  height: 100%;
+  width: 90%;
+  height: 40%;
   background-color:rgb (60,60,120);
 }
 
@@ -534,10 +538,15 @@ left: 60%;
 .soundSourceDropdown{
   height:20%;
   width:100%;
+  display: auto
+}
+input.soundSourceDropdown{
+  width: 50%
 }
 
 .userMediaWidget{
   height:80%;
+  display: auto
 }
 
 .browseButton{
@@ -547,6 +556,7 @@ left: 60%;
   width:100%;
   height: 50%
 }
+
 .waveformCanvas{
   width:100%;
   height: 100%;
