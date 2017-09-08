@@ -45,7 +45,7 @@ navigationWidget responses = el "div" $ mdo
 navigationPage :: MonadWidget t m => Event t [Response] -> Navigation -> m (Event t Request,Event t Sound,Event t Navigation)
 
 navigationPage responses SplashPage = elClass "div" "nav" $ do
-  elClass "div" "navigationPageText" $
+  elClass "div" "explanation" $
     text "Welcome to Inner Ear! Select an ear-training exercise from the list below. If you are doing this is part of a requirement for a class, please make sure you are logged in first (at the top right)."
   b0 <- liftM (ExercisePage ThresholdOfSilence <$)  $ elClass "div" "navButton" $ button "Threshold Of Silence"
   b1 <- liftM (ExercisePage HarmonicDistortion <$)  $ elClass "div" "navButton" $ button "Harmonic Distortion"
