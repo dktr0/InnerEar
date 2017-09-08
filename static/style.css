@@ -418,11 +418,20 @@ left: 60%;
 
 }
 
+.soundWidget{
+  height:100%;
+  text-align: left;
+}
+
 .playStopButtons{
   width:15%;
   display: inline-block;
 }
-.referenceSoundButton{
+.playStopButtons button{
+  width:100%
+}
+
+/* .referenceSoundButton{
   width:100%
 }
 .questionSoundButton{
@@ -430,7 +439,7 @@ left: 60%;
 }
 .stopSoundButton{
   width:100%
-}
+} */
 
 .soundSourceDropdown{
   display: inline-block;
@@ -438,7 +447,7 @@ left: 60%;
 }
 
 .waveformWidgetInputs{
-  width:50%;
+  width:20%;
   display: inline-block
 }
 
@@ -453,46 +462,34 @@ left: 60%;
     width: 50%;
 }
 
-.sourceWidget{
-  width: 100%
-}
-
-
-
-
 .waveformWidget{
   display: inline-block;
   width:70%;
 }
 
 .sourceWidget{
-  width:75%;
+  width:85%;
   display:inline-block;
 }
 .nothingSourceWidget{
   width:75%;
   display:none;
 }
-.fileInputButton{
-  display: inline-block;
-  width:1%;
-}
+
 .startEndNumberInput{
     width: 20px;
 }
 
-.loopCheckbox{
-  display:inline-block
-}
-
-canvas .waveform{
+.waveformCanvas{
   width:100%;
-  height: 100%;
+  height: 83px;
   background-color:rgb(50,50,50);
 }
-div .waveform{
+
+.waveformWrapper{
   display: inline-block;
-  width:50%;
+  width:80%;
+  height: 100%
 }
 
 
