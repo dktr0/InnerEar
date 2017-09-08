@@ -5,6 +5,7 @@ import Data.Map
 import Control.Concurrent.MVar
 import Data.List ((\\))
 import Data.Maybe (fromMaybe)
+import Database.SQLite.Simple
 
 import InnerEar.Types.Handle
 import InnerEar.Types.Password
@@ -14,12 +15,13 @@ import InnerEar.Types.Data
 type ConnectionIndex = Int
 
 data Server = Server {
+  database :: Connection,
   connections :: Map ConnectionIndex (WS.Connection, Maybe Handle),
   users :: Map Handle User
 }
 
-newServer :: Server
-newServer = Server { connections = empty, users = empty}
+newServer :: Connection -> Server
+newServer db = Server { database = db, connections = empty, users = empty}
 
 addConnection :: WS.Connection -> Server -> (ConnectionIndex,Server)
 addConnection c s = (i,s { connections = newMap })

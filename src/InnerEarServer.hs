@@ -19,7 +19,7 @@ import qualified Data.Map.Strict as Map
 import Data.Either
 import Control.Monad
 import Control.Concurrent.MVar
-import Control.Exception (try)
+import Control.Exception (try,catch,SomeException)
 
 import InnerEar.Types.Request
 import InnerEar.Types.Response
@@ -34,9 +34,21 @@ import qualified InnerEar.Database.Users as DB
 import qualified InnerEar.Database.Events as DB
 
 
-main = do -- DB.databaseTest
+main = do
+  db <- DB.openDatabase
+  s <- newMVar $ newServer db
+  mainWithDatabase s `catch` (closeDatabaseOnException s)
+
+closeDatabaseOnException :: MVar Server -> SomeException -> IO ()
+closeDatabaseOnException s e = do
+  s' <- takeMVar s
+  putStrLn $ "quitting and closing database due to unhandled exception (" ++ (show e) ++ ")..."
+  DB.closeDatabase $ database s'
+  putStrLn "database connection closed."
+
+mainWithDatabase :: MVar Server -> IO ()
+mainWithDatabase s = do
   putStrLn "Inner Ear server (listening on port 4468)"
-  s <- newMVar newServer
   let settings = (defaultWebAppSettings "InnerEarClient.jsexe") { ssIndices = [unsafeToPiece "index.html"] }
   run 4468 $ WS.websocketsOr WS.defaultConnectionOptions (webSocketsApp s) (staticApp settings)
 
@@ -81,7 +93,7 @@ processResult _ i (Error x) = putStrLn ("Error (processResult): " ++ x)
 processResult s i (Ok x) = processRequest s i x
 
 processRequest :: MVar Server -> ConnectionIndex -> Request -> IO ()
-processRequest s i (CreateUser h p) = withServer s $ createUser i h p
+processRequest s i (CreateUser h p) = putStrLn "warning: ignoring request from client to CreateUser (that functionality is disactivated in this build)"
 processRequest s i (Authenticate h p) = withServer s $ authenticate i h p
 processRequest s i Deauthenticate = withServer s $ deauthenticate i
 processRequest s i (PostRecord r) = withServer s $ postRecord i r
