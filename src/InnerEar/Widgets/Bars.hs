@@ -185,7 +185,7 @@ scoreBar key score  = elClass "div" "scoreBarWrapper" $ do
   barHeight <- mapDyn (maybe (Score 0 0 0) id) score -- Dynamic t Int
   scoreLabel <- mapDyn (maybe (Score 0 0 0) id) score
   countLabel <- mapDyn (maybe (Score 0 0 0) id) score
-  flippableDyn (return ())  (dynScoreLabel (constDyn "scoreLabel") scoreLabel) bool
+  flippableDyn (return ())  (dynScoreLabel (constDyn "scoreLabel") scoreLabel;  faintedLineToAdjustGraph "faintedLineToAdjustGraph") bool
   dynBarCSS' barHeight (constDyn 50) -- m ()
   flippableDyn (do faintedLineToAdjustGraph "faintedLineToAdjustGraph"; faintedLineCSS "svgFaintedLine") (return ()) bool
   xLabel "xLabel" key
