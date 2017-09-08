@@ -22,17 +22,14 @@ div.innerEar{
 }
 
 .header {
-  display: flex;
+  display: inline-block;
   width: 100%;
-  margin-bottom: 3%;
-  background-color: blue;
 }
 
 .login {
   color:  hsl(120,100%,80%);
-  text-align: center;
-  width: 50%;
-  position: relative;
+  text-align: left;
+  width: 100%;
 
 }
 
@@ -407,6 +404,10 @@ left: 60%;
   position: relative;
   right: 15px;
   top:40%;
+<<<<<<< HEAD
+  background-color: black;
+=======
+>>>>>>> c38f71a5d3d8121de97c3edfbebf7788795e9c96
 }
 
 .percentageMainLabelFiveBand {
@@ -562,7 +563,7 @@ left: 60%;
 }
 
 .faintedLineToAdjustGraphAfterScore {
-   width: 1px;
+  width: 1px;
   height: 207px;
   background-color: #2F4F4F;
   background-color: black;
@@ -573,4 +574,8 @@ left: 60%;
 .evalGraphFrameRow {
   background-color:gray;
   display: inline-flex;
+}
+
+.explanation{
+
 }
