@@ -536,6 +536,7 @@ left: 60%;
   width:33%;
   height: 100%;
   display:inline-block;
+  text-align: left
 }
 /* Just containing the "Sound source:'' label and the dropdown*/
 .soundSourceDropdown{
