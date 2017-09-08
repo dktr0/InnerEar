@@ -26,9 +26,7 @@ clientWidget = elClass "div" "innerEar" $ mdo
   x <- elClass "div" "header" $ do
     elClass "div" "title" $ do
       text "Inner Ear"
-    elClass "div" "wsStatus" $ do
-      text "wsStatus: "
-      dynText wsStatus
+    elClass "div" "wsStatus" $ return ()
     elClass "div" "login" $ loginWidget wsRcvd
   (y,sounds) <- navigationWidget wsRcvd
   let wsSend = leftmost [x,y]

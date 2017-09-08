@@ -45,7 +45,8 @@ navigationWidget responses = el "div" $ mdo
 navigationPage :: MonadWidget t m => Event t [Response] -> Navigation -> m (Event t Request,Event t Sound,Event t Navigation)
 
 navigationPage responses SplashPage = elClass "div" "nav" $ do
-  a <- liftM (CreateUserPage <$) $ elClass "div" "navButton" $ button "CreateUser"
+  elClass "div" "explanation" $
+    text "Welcome to Inner Ear! Select an ear-training exercise from the list below. If you are doing this is part of a requirement for a class, please make sure you are logged in first (at the top right)."
   b0 <- liftM (ExercisePage ThresholdOfSilence <$)  $ elClass "div" "navButton" $ button "Threshold Of Silence"
   b1 <- liftM (ExercisePage HarmonicDistortion <$)  $ elClass "div" "navButton" $ button "Harmonic Distortion"
   b2 <- liftM (ExercisePage BoostOrCut <$)  $ elClass "div" "navButton" $ button "Boost Or Cut (Gain)"
@@ -53,7 +54,7 @@ navigationPage responses SplashPage = elClass "div" "nav" $ do
   b4 <- liftM (ExercisePage TenBandBoostCut <$)  $ elClass "div" "navButton" $ button "Ten Band Boost or Cut (Filters)"
   c <- liftM (TestPage <$)  $ elClass "div" "navButton" $ button "Test"
   d <- liftM (TestSoundPage <$) $ elClass "div" "navButton" $ button "Test Sound"
-  let navEvents = leftmost [a,b0,b1,b2,b3,b4,c,d]
+  let navEvents = leftmost [b0,b1,b2,b3,b4,c,d]
   return (never,never,navEvents)
 
 navigationPage responses CreateUserPage = el "div" $ do
