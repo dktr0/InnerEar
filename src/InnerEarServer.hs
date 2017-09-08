@@ -34,11 +34,11 @@ import qualified InnerEar.Database.Users as DB
 import qualified InnerEar.Database.Events as DB
 
 
-main = DB.databaseTest
-  -- putStrLn "Inner Ear server (listening on port 4468)"
-  -- s <- newMVar newServer
-  -- let settings = (defaultWebAppSettings "InnerEarClient.jsexe") { ssIndices = [unsafeToPiece "index.html"] }
-  -- run 4468 $ WS.websocketsOr WS.defaultConnectionOptions (webSocketsApp s) (staticApp settings)
+main = do -- DB.databaseTest
+  putStrLn "Inner Ear server (listening on port 4468)"
+  s <- newMVar newServer
+  let settings = (defaultWebAppSettings "InnerEarClient.jsexe") { ssIndices = [unsafeToPiece "index.html"] }
+  run 4468 $ WS.websocketsOr WS.defaultConnectionOptions (webSocketsApp s) (staticApp settings)
 
 webSocketsApp :: MVar Server -> WS.ServerApp -- = PendingConnection -> IO ()
 webSocketsApp s ws = do
