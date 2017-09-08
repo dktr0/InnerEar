@@ -483,9 +483,11 @@ left: 60%;
  }
 
 .nextQuestion{
-  height: 5%;
+  height: 10%;
 }
-
+.nextQuestion button{
+  height: 100%;
+}
 
 
 
@@ -502,8 +504,8 @@ left: 60%;
   width:33%;
   height: 100%;
   display: inline-block;
-  position: relative;
-  bottom:30%
+  /*position: relative;*/
+  /*bottom:30%*/
 }
 .playReference button {
   width: 90%;
@@ -514,8 +516,8 @@ left: 60%;
   width:33%;
   height: 100%;
   display: inline-block;
-  position:relative;
-  bottom:30%;
+  /*position:relative;*/
+  /*bottom:30%;*/
 }
 .playQuestion button {
   width: 90%;
@@ -536,7 +538,8 @@ left: 60%;
   width:33%;
   height: 100%;
   display:inline-block;
-  text-align: left
+  background-color: rgb(30,30,30);
+  text-align: left;
 }
 /* Just containing the "Sound source:'' label and the dropdown*/
 .soundSourceDropdown{
