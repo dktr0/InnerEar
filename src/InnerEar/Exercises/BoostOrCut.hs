@@ -5,6 +5,8 @@ module InnerEar.Exercises.BoostOrCut (boostOrCutExercise) where
 import Reflex
 import Reflex.Dom
 import Data.Map
+import Text.JSON
+import Text.JSON.Generic
 
 import Reflex.Synth.Types
 import InnerEar.Exercises.MultipleChoice
@@ -20,7 +22,7 @@ type Config = Double -- representing amount of gain that is applied (or not)
 configs :: [Config]
 configs = [10,6,3,2,1,0.5,0.25]
 
-data Answer = Answer Bool deriving (Eq,Ord)
+data Answer = Answer Bool deriving (Eq,Ord,Data,Typeable)
 
 instance Show Answer where
   show (Answer True) = "Boosted"
@@ -31,7 +33,7 @@ renderAnswer db s (Answer True) = GainSound (Sound s) (-10+db) -- 2.0 -- should 
 renderAnswer _ s (Answer False) = GainSound (Sound s) (-10)-- 2.0 -- should be just a source sound attenuated by standard amount (-10 dB)
 
 boostOrCutConfigWidget :: MonadWidget t m => Config -> m (Event t Config)
-boostOrCutConfigWidget i = radioConfigWidget msg configs i
+boostOrCutConfigWidget i = radioConfigWidget "" msg configs i
   where msg = "Please choose the level of gain (boost) for this exercise:"
 
 displayEval :: MonadWidget t m => Dynamic t (Map Answer Score) -> m ()

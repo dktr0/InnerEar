@@ -14,7 +14,7 @@ data Request =
   CreateUser Handle Password |
   Authenticate Handle Password |
   Deauthenticate |
-  PostRecord Record
+  PostPoint Point
   deriving (Eq,Show,Data,Typeable)
 
 

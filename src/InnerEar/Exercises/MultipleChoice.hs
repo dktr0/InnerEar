@@ -81,8 +81,7 @@ multipleChoiceQuestionWidget maxTries answers render eWidget config initialEval 
   -- user interface (buttons, etc)
   (playReference,playQuestion, source) <- elClass "div" "playReferenceOrQuestion" $ do
     soundWidget "multipleChoiceExercise"
-  nextQuestion <- elClass "div" "nextQuestion" $ do
-    buttonDynCss "New Question" (constDyn "buttonWrapper")
+  nextQuestion <- elClass "div" "nextQuestion" $ buttonDynCss "New Question" (constDyn "buttonWrapper")
     -- newQuestionVisible <- mapDyn (>0) timesQuestionHeard
     -- z <- visibleWhen newQuestionVisible $ (InQuestion <$) <$> buttonDynCss "New Question" (constDyn "buttonWrapper")
     -- return (x,y,z)
@@ -102,7 +101,7 @@ multipleChoiceQuestionWidget maxTries answers render eWidget config initialEval 
 
   -- generate navigation events
   onToReflect <- (InReflect <$) <$> buttonDynCss "Reflect" (constDyn "buttonWrapper")
-  let navEvents = leftmost [InQuestion <$ nextQuestion,onToReflect]
+  let navEvents = leftmost [InQuestion <$ nextQuestion, onToReflect]
 
   return (fmap Evaluation $ updated scores, playSounds,navEvents)
 
@@ -116,10 +115,11 @@ randomMultipleChoiceQuestion possibilities = do
   x <- getStdRandom ((randomR (0,n-1))::StdGen -> (Int,StdGen))
   return (possibilities,possibilities!!x)
 
-radioConfigWidget :: (MonadWidget t m, Eq a, Show a) => String -> [a] -> a -> m (Event t a)
-radioConfigWidget msg possibilities i = do
+radioConfigWidget :: (MonadWidget t m, Eq a, Show a) => String -> String -> [a] -> a -> m (Event t a)
+radioConfigWidget explanation msg possibilities i = do
   let radioButtonMap =  zip [0::Int,1..] possibilities
   let iVal = maybe 0 id $ elemIndex i possibilities
+  elClass "div" "explanation" $ text explanation
   elClass "div" "configText" $ text msg
   radioWidget <- radioGroup (constDyn "radioWidget") (constDyn $ fmap (\(x,y)->(x,show y)) radioButtonMap)
            (WidgetConfig {_widgetConfig_initialValue= Just iVal

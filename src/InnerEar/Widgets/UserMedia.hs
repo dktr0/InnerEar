@@ -50,15 +50,15 @@ userMediaWidget inputId dynClass = elDynClass "div" dynClass $ do
   canvasEl <- elClass "div" "waveformWrapper" $ liftM fst $ elClass' "canvas" "waveformCanvas" (return ())
   let canvasElement = _el_element canvasEl
 
-  (stopEv,start,end,loop) <- elClass "div" "bufferControls" $ do
+  (stopEv,loop) <- elClass "div" "bufferControls" $ do
       stopEv<- button "stop"
-      text "start "
-      start <- textInput $ def & textInputConfig_attributes .~ (constDyn $ M.fromList $ zip ["type","step","class"] ["number","0.01","startEndNumberInput"])
-      text " end "
-      end <- textInput $ def & textInputConfig_attributes .~ (constDyn $ M.fromList $ zip ["type","step","class"] ["number","0.01","startEndNumberInput"])
+      -- text "start "
+      -- start <- textInput $ def & textInputConfig_attributes .~ (constDyn $ M.fromList $ zip ["type","step","class"] ["number","0.01","startEndNumberInput"])
+      -- text " end "
+      -- end <- textInput $ def & textInputConfig_attributes .~ (constDyn $ M.fromList $ zip ["type","step","class"] ["number","0.01","startEndNumberInput"])
       text "loop"
       loop <- liftM _checkbox_value $ checkbox False def
-      return (stopEv, start, end, loop)
+      return (stopEv, loop)
 
   -- Load and draw the buffer when file has changed
   performEvent_ $ fmap (liftIO . const (loadAndDrawBuffer inputId $ G.castToHTMLCanvasElement canvasElement)) loadEv
@@ -68,8 +68,10 @@ userMediaWidget inputId dynClass = elDynClass "div" dynClass $ do
   clickEv <- wrapDomEvent canvasElement (onEventName Click) (mouseX)
   pos <- holdDyn 0 clickEv
 
-  startVal <- mapDyn (maybe 1.0 id . ((readMaybe)::String->Maybe Double)) (_textInput_value start)
-  endVal <- mapDyn (maybe 1.0 id . ((readMaybe)::String->Maybe Double)) (_textInput_value end)
+  -- startVal <- mapDyn (maybe 0 id . ((readMaybe)::String->Maybe Double)) (start)
+  -- endVal <- mapDyn (maybe 1.0 id . ((readMaybe)::String->Maybe Double)) (end)
+  let startVal = constDyn (0::Double)
+  let endVal = constDyn (1::Double)
   param <- combineDyn (PlaybackParam) startVal endVal
   combineDyn (\x l-> ((flip NodeSource) $ Nothing) $ BufferNode $ LoadedFile inputId $ x l) param loop
 --userMediaWidget::MonadWidget t m => String -> m (Dynamic t Source)

@@ -57,5 +57,11 @@ findUser conn h = do
     f [] = Nothing
     f (x:_) = Just x
 
+userExists :: Connection -> Handle -> IO Bool
+userExists db h = maybe False (const True) <$> findUser db h
+
+getPassword :: Connection -> Handle -> IO (Maybe String)
+getPassword db h = fmap password <$> findUser db h
+
 findAllUsers :: Connection -> IO [User]
 findAllUsers c = query_ c "SELECT handle,password,role FROM users"

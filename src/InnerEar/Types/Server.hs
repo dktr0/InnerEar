@@ -11,6 +11,9 @@ import InnerEar.Types.Handle
 import InnerEar.Types.Password
 import InnerEar.Types.User
 import InnerEar.Types.Data
+import InnerEar.Database.SQLite
+import InnerEar.Database.Users
+import InnerEar.Database.Events
 
 type ConnectionIndex = Int
 
@@ -31,21 +34,12 @@ addConnection c s = (i,s { connections = newMap })
 deleteConnection :: ConnectionIndex -> Server -> Server
 deleteConnection i s = s { connections = delete i (connections s)}
 
-userExists :: Handle -> Server -> Bool
-userExists h s = member h (users s)
-
--- | adds a user with the specified handle and password to a server, only if that user doesn't exist already
-addUser :: ConnectionIndex -> Handle -> Password -> Server -> Server
-addUser i h p s = if (userExists h s) then s else s { connections = newConnections, users = newUsers }
-  where
-    newConnections = adjust (\(ws,_) -> (ws,Just h)) i (connections s)
-    newUsers = insert h (User h p NormalUser) (users s)
 
 getPassword :: Handle -> Server -> Password
 getPassword h s = password $ (users s) ! h
 
 authenticateConnection :: ConnectionIndex -> Handle -> Server -> Server
-authenticateConnection i h s = if (userExists h s) then s { connections = newConnections } else s
+authenticateConnection i h s = s { connections = newConnections } 
   where newConnections = adjust (\(ws,_) -> (ws,Just h)) i (connections s)
 
 deauthenticateConnection :: ConnectionIndex -> Server -> Server

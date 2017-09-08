@@ -37,7 +37,7 @@ renderAnswer db s f = GainSound (FilteredSound s filter) (-10+db) -- needs to be
   where filter = Filter Peaking (freqAsDouble f) 1.4 16.0 -- and bandwidth should be wider
 
 fiveBandConfigWidget :: MonadWidget t m => Config -> m (Event t Config)
-fiveBandConfigWidget i = radioConfigWidget msg configs i
+fiveBandConfigWidget i = radioConfigWidget "" msg configs i
   where msg = "Please choose how many decibels (dB) of boost or cut may (or may not) be applied during the exercise."
 
 displayEval :: MonadWidget t m => Dynamic t (Map Answer Score) -> m ()
