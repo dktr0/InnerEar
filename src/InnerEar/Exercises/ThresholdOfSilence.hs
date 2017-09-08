@@ -5,6 +5,8 @@ module InnerEar.Exercises.ThresholdOfSilence (thresholdOfSilenceExercise) where
 import Reflex
 import Reflex.Dom
 import Data.Map
+import Text.JSON
+import Text.JSON.Generic
 
 import Reflex.Synth.Types
 import InnerEar.Exercises.MultipleChoice
@@ -22,7 +24,7 @@ type Config = Int -- gain value for attenuated sounds
 configs :: [Config]
 configs = [-20,-30,-40,-50,-60,-70,-80,-90,-100,-110]
 
-data Answer = Answer Bool deriving (Eq,Ord)
+data Answer = Answer Bool deriving (Eq,Ord,Data,Typeable)
 
 answers :: [Answer]
 answers = [Answer True,Answer False]

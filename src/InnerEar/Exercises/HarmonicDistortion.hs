@@ -5,6 +5,8 @@ module InnerEar.Exercises.HarmonicDistortion (harmonicDistortionExercise) where
 import Reflex
 import Reflex.Dom
 import Data.Map
+import Text.JSON
+import Text.JSON.Generic
 
 import Reflex.Synth.Types
 import InnerEar.Exercises.MultipleChoice
@@ -19,7 +21,7 @@ type Config = Double -- representing threshold of clipping, and inverse of post-
 configs :: [Config]
 configs = [-12,-6,-3,-2,-1,-0.75,-0.5,-0.25,-0.125,-0.0625]
 
-data Answer = Answer Bool deriving (Eq,Ord)
+data Answer = Answer Bool deriving (Eq,Ord,Data,Typeable)
 
 instance Show Answer where
   show (Answer True) = "Distorted"

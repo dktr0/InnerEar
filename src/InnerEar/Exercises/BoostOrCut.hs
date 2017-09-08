@@ -5,6 +5,8 @@ module InnerEar.Exercises.BoostOrCut (boostOrCutExercise) where
 import Reflex
 import Reflex.Dom
 import Data.Map
+import Text.JSON
+import Text.JSON.Generic
 
 import Reflex.Synth.Types
 import InnerEar.Exercises.MultipleChoice
@@ -20,7 +22,7 @@ type Config = Double -- representing amount of gain that is applied (or not)
 configs :: [Config]
 configs = [10,6,3,2,1,0.5,0.25]
 
-data Answer = Answer Bool deriving (Eq,Ord)
+data Answer = Answer Bool deriving (Eq,Ord,Data,Typeable)
 
 instance Show Answer where
   show (Answer True) = "Boosted"

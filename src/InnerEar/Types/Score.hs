@@ -11,7 +11,7 @@ data Score = Score {
   correctAnswers :: Int,
   falsePositives::Int, -- times user thinks it is this the answer but correct answer is something else
   falseNegatives::Int  -- times user thinks it is another answer but this is the correct answer
-} deriving (Show, Eq,Typeable,Data)
+} deriving (Show,Eq,Typeable,Data)
 
 -- Times that the answer this score pertains to has been the answer
 questionsAsked::Score -> Int

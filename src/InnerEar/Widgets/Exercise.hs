@@ -6,6 +6,8 @@ import Reflex
 import Reflex.Dom
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad (liftM)
+import Text.JSON
+import Text.JSON.Generic
 
 import InnerEar.Types.ExerciseId
 import InnerEar.Widgets.Utility
@@ -18,7 +20,7 @@ import InnerEar.Types.Exercise
 -- | runExercise takes a completely defined Exercise value and uses it to run an ear-training
 -- exercise in the browser.
 
-runExercise :: forall t m c q a e. (MonadWidget t m, Show c, Show q, Show a, Show e)
+runExercise :: forall t m c q a e. (MonadWidget t m, Data c, Data q, Data a, Data e, Show c, Show q, Show a, Show e)
   => Exercise t m c q a e -> m (Event t (ExerciseId,ExerciseDatum),Event t Sound,Event t ())
 runExercise ex = mdo
 

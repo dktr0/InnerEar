@@ -1,4 +1,4 @@
-{-# LANGUAGE RecursiveDo, OverloadedStrings #-}
+{-# LANGUAGE DeriveDataTypeable, RecursiveDo, OverloadedStrings #-}
 module InnerEar.Widgets.Navigation (navigationWidget) where
 
 import Control.Monad
@@ -6,6 +6,8 @@ import Control.Monad.IO.Class (liftIO)
 import Reflex
 import Reflex.Dom
 import Data.Time.Clock (getCurrentTime)
+import Text.JSON
+import Text.JSON.Generic
 
 import InnerEar.Types.Data
 import InnerEar.Types.Response
@@ -81,7 +83,7 @@ navigationPage responses areTheyAuthenticated TestSoundPage = do
   return (requests,sounds,SplashPage <$ navUnit)
 
 
-runExerciseForNavigationPage :: (MonadWidget t m, Show c, Show q, Show a, Show e)
+runExerciseForNavigationPage :: (MonadWidget t m, Data c, Data q, Data a, Data e, Show c, Show q, Show a, Show e)
   => Exercise t m c q a e
   -> Event t [Response] -> Dynamic t Bool
   -> m (Event t Request,Event t Sound,Event t Navigation)
