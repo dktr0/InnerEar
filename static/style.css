@@ -217,8 +217,8 @@ button.correctButton{
    height: 1px;
    background-color: #2F4F4F;
    position:relative;
-   top: 74.3%;
-   left: 1%;
+   top: 83%;
+   left: 10%;
 
  }
 
@@ -227,7 +227,7 @@ button.correctButton{
    height: 220px;
    background-color: #2F4F4F;
    position: relative;
-   top: 5%;
+   top: 6%;
    left: 10%;
  }
  .faintedXaxisFive {
@@ -358,7 +358,8 @@ left: 60%;
   height: 10%;
   font-size:  12px;
   position: relative;
-  top:  260px;
+  top:  94%;
+  right: 69%;
 }
 
 .countMainLabelFiveBand {
@@ -376,7 +377,7 @@ left: 60%;
   width: 15px;
   font-size:  12px;
   position: relative;
-  right: 15px;
+  right: 72%;
   top:40%;
 }
 
@@ -394,7 +395,7 @@ left: 60%;
   height: 10%;
   font-size:  12px;
   position: relative;
-  left: 12px;
+  right: 66%;
   top: 83%;
 
 }
@@ -453,7 +454,7 @@ left: 60%;
 
 .evaluationInQuestion {
   display: inline-flex;
-  background-color: blue;
+  background-color: black;
      width: 50%;
 }
 
@@ -461,6 +462,7 @@ left: 60%;
     display: inline-flex;
     width: 50%;
 }
+
 
 .waveformWidget{
   display: inline-block;
@@ -503,6 +505,6 @@ left: 60%;
 }
 
 .evalGraphFrameRow {
-  background-color:red;
+  background-color:black;
   display: inline-flex;
 }
