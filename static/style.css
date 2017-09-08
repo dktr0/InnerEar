@@ -482,6 +482,14 @@ left: 60%;
   background-color:rgb (60,60,120);
 }
 
+
+
+
+
+
+
+
+
 /* Wrapping everything the user uses to select a sound source and load a buffer/loop it etc...*/
 .sourceWidget{
   width:33%;
@@ -516,6 +524,7 @@ left: 60%;
   display:inline-block;
   height:10%;
 }
-.bufferControls input{
-  width:20px;
+
+.bufferControls input {
+  width:10px;
 }

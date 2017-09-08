@@ -1,23 +1,23 @@
+{-# LANGUAGE DeriveDataTypeable #-}
+
 module InnerEar.Types.User where
 
-import qualified Network.WebSockets as WS
+import Text.JSON
+import Text.JSON.Generic
+
 
 import InnerEar.Types.Handle
 import InnerEar.Types.Password
 import InnerEar.Types.Data
 
+data Role =
+  NormalUser | -- can only log in, do exercises, inspect their own data/history
+  Manager | -- can also add NormalUsers, inspect any data/history
+  Administrator -- can also add Managers
+  deriving (Show,Eq,Data,Typeable)
+
 data User = User {
   handle :: Handle,
   password :: Password,
-  points :: [Point]
-}
-
-newUser :: Handle -> Password -> User
-newUser h p = User {
-  handle = h,
-  password = p,
-  points = []
-}
-
-addPoint :: Point -> User -> User
-addPoint p u = u { points = p:(points u) }
+  role :: Role
+  } deriving (Show)

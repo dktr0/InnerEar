@@ -16,4 +16,4 @@ data ExerciseId =
   Compression |
   LeftRightCentre |
   HarmonicsOne
-  deriving (Show,Eq,Data,Typeable)
+  deriving (Show,Read,Eq,Data,Typeable)

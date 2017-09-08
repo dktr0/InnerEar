@@ -16,9 +16,10 @@ import Data.Maybe (fromMaybe)
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
 import qualified Data.Map.Strict as Map
+import Data.Either
 import Control.Monad
 import Control.Concurrent.MVar
-import Control.Exception (try)
+import Control.Exception (try,catch,SomeException)
 
 import InnerEar.Types.Request
 import InnerEar.Types.Response
@@ -28,9 +29,26 @@ import InnerEar.Types.Password
 import InnerEar.Types.Data
 import InnerEar.Types.User
 
+import qualified InnerEar.Database.SQLite as DB
+import qualified InnerEar.Database.Users as DB
+import qualified InnerEar.Database.Events as DB
+
+
 main = do
+  db <- DB.openDatabase
+  s <- newMVar $ newServer db
+  mainWithDatabase s `catch` (closeDatabaseOnException s)
+
+closeDatabaseOnException :: MVar Server -> SomeException -> IO ()
+closeDatabaseOnException s e = do
+  s' <- takeMVar s
+  putStrLn $ "quitting and closing database due to unhandled exception (" ++ (show e) ++ ")..."
+  DB.closeDatabase $ database s'
+  putStrLn "database connection closed."
+
+mainWithDatabase :: MVar Server -> IO ()
+mainWithDatabase s = do
   putStrLn "Inner Ear server (listening on port 4468)"
-  s <- newMVar newServer
   let settings = (defaultWebAppSettings "InnerEarClient.jsexe") { ssIndices = [unsafeToPiece "index.html"] }
   run 4468 $ WS.websocketsOr WS.defaultConnectionOptions (webSocketsApp s) (staticApp settings)
 
@@ -75,7 +93,7 @@ processResult _ i (Error x) = putStrLn ("Error (processResult): " ++ x)
 processResult s i (Ok x) = processRequest s i x
 
 processRequest :: MVar Server -> ConnectionIndex -> Request -> IO ()
-processRequest s i (CreateUser h p) = withServer s $ createUser i h p
+processRequest s i (CreateUser h p) = putStrLn "warning: ignoring request from client to CreateUser (that functionality is disactivated in this build)"
 processRequest s i (Authenticate h p) = withServer s $ authenticate i h p
 processRequest s i Deauthenticate = withServer s $ deauthenticate i
 processRequest s i (PostRecord r) = withServer s $ postRecord i r
@@ -124,8 +142,9 @@ postRecord i r@(Record h p) s = if ok then doIt else dont
     rHandle = Just h
     ok = cHandle == rHandle
     doIt = do
-      putStrLn $ "posting record: " ++ (show r)
-      return $ postPoint h p s
+      putStrLn $ "posting record... actually not because disactivated in this branch...: " ++ (show r)
+      return s
+      -- return $ postPoint h p s
     dont = do
       putStrLn $ "unable to post record (not authenticated or authenticated to different handle)" ++ (show r)
       return s

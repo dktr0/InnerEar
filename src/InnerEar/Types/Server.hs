@@ -5,6 +5,7 @@ import Data.Map
 import Control.Concurrent.MVar
 import Data.List ((\\))
 import Data.Maybe (fromMaybe)
+import Database.SQLite.Simple
 
 import InnerEar.Types.Handle
 import InnerEar.Types.Password
@@ -14,12 +15,13 @@ import InnerEar.Types.Data
 type ConnectionIndex = Int
 
 data Server = Server {
+  database :: Connection,
   connections :: Map ConnectionIndex (WS.Connection, Maybe Handle),
   users :: Map Handle User
 }
 
-newServer :: Server
-newServer = Server { connections = empty, users = empty}
+newServer :: Connection -> Server
+newServer db = Server { database = db, connections = empty, users = empty}
 
 addConnection :: WS.Connection -> Server -> (ConnectionIndex,Server)
 addConnection c s = (i,s { connections = newMap })
@@ -37,7 +39,7 @@ addUser :: ConnectionIndex -> Handle -> Password -> Server -> Server
 addUser i h p s = if (userExists h s) then s else s { connections = newConnections, users = newUsers }
   where
     newConnections = adjust (\(ws,_) -> (ws,Just h)) i (connections s)
-    newUsers = insert h (newUser h p) (users s)
+    newUsers = insert h (User h p NormalUser) (users s)
 
 getPassword :: Handle -> Server -> Password
 getPassword h s = password $ (users s) ! h
@@ -50,9 +52,9 @@ deauthenticateConnection :: ConnectionIndex -> Server -> Server
 deauthenticateConnection i s = s { connections = newConnections }
   where newConnections = adjust (\(ws,_) -> (ws,Nothing)) i (connections s)
 
-postPoint :: Handle -> Point -> Server -> Server
-postPoint h p s = s { users = newUsers }
- where newUsers = adjust (addPoint p) h (users s)
+-- postPoint :: Handle -> Point -> Server -> Server
+-- postPoint h p s = s { users = newUsers }
+-- where newUsers = adjust (addPoint p) h (users s)
 
 updateServer :: MVar Server -> (Server -> Server) -> IO (MVar Server)
 updateServer s f = do
