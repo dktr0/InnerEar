@@ -135,7 +135,7 @@ button {
   text-align: center;
   background-color: red;
   width: 50%;
-  height: 100%;
+  height: 20%;
   margin-left:25%;
 
 }
@@ -149,7 +149,7 @@ button.notPossibleButton{
   border: none;
   background-color: black;
   color: darkgray;
-  height: 200px;
+  height: 100%;
   width: 100%;
   margin:  1%;
  font-size: 200%;
@@ -157,7 +157,7 @@ button.notPossibleButton{
 }
 
 button.possibleButton {
-  height: 200px;
+  height: 100%;
   width: 100%;
   margin:  1%;
     font-size: 200%;
@@ -169,7 +169,7 @@ button.incorrectDisactivatedButton {
   color: red;
   border-radius: 5px;
   border: 2px solid red;
-  height: 200px;
+  height: 100%;
   width: 100%;
   font-size: 200%;
 
@@ -179,7 +179,7 @@ button.incorrectActivatedButton {
   color: red;
   border-radius: 5px;
   border: 2px solid red;
-  height: 200px;
+  height: 100%;
   width: 100%;
   margin:  1%;
     font-size: 200%;
@@ -190,7 +190,7 @@ button.correctButton{
   color: green;
   border-radius: 5px;
   border: 4px solid green;
-  height: 200px;
+  height: 100%;
   width: 100%;
   margin:  1%;
     font-size: 200%;
