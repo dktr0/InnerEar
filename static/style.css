@@ -293,8 +293,6 @@ button.correctButton{
   text-align: center;
   position: relative;
   left: 60%;
-
-
 }
 
 .scoreLabelFiveBand {
@@ -310,11 +308,12 @@ button.correctButton{
 
 .xLabel {
   color: hsl(120,100%,80%);
-  margin-right: 10%;
-  font-size: 12px;
+  font-size: 90%;
   position: relative;
-  left: 150%;
   text-align: center;
+  background-color: black;
+  width: 100px;
+  top: 10%;
 }
 
 .xLabelFiveBand {
@@ -350,13 +349,14 @@ left: 60%;
 }
 .graphLabel {
   color: hsl(120,100%,80%);
-  width: 100px;
+  width: 50%;
   font-size: 15px;
   position: relative;
-  right: 50%;
+  right: 40%;
   top: 290px;
   height: 10%;
   text-align: center;
+  background-color: black;
 
 }
 
@@ -373,11 +373,11 @@ left: 60%;
 }
 
 .countMainLabel {
+  font-size: 90%;
   width: 15px;
   height: 10%;
-  font-size:  12px;
   position: relative;
-  top:  94%;
+  top:  90%;
   right: 69%;
 }
 
@@ -393,8 +393,8 @@ left: 60%;
 
 .percentageMainLabel {
   height: 10%;
-  width: 15px;
-  font-size:  12px;
+  width: 1%;
+  font-size: 90%;
   position: relative;
   right: 72%;
   top:40%;
@@ -410,12 +410,13 @@ left: 60%;
 }
 
 .hzMainLabel {
-  width: 15px;
+  width: 0%;
   height: 10%;
-  font-size:  12px;
+  font-size: 20%;
   position: relative;
   right: 66%;
   top: 83%;
+  background-color: white;
 
 }
 
@@ -526,6 +527,5 @@ left: 60%;
 }
 
 .evalGraphFrameRow {
-  background-color:gray;
   display: inline-flex;
 }
