@@ -89,5 +89,5 @@ runExerciseForNavigationPage ex responses areTheyAuthenticated = do
   (newData,sounds,navUnit) <- runExercise ex
   let newData' = gate (current areTheyAuthenticated) newData
   newPoint <- performEvent $ fmap (liftIO . datumToPoint . Left) $ newData'
-  let newRequest = PostRecord <$> Record "placeholderHandle" <$> newPoint
+  let newRequest = PostPoint <$> newPoint
   return (newRequest,sounds,SplashPage <$ navUnit)

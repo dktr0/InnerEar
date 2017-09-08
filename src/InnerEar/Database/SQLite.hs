@@ -22,7 +22,7 @@ openDatabase = do
   c <- open "../InnerEar.db"
   createUsersTable c
   createEventsTable c
-  addUser c "test" "test" NormalUser
+  addUser c $ User "test" "test" NormalUser
   return c
 
 closeDatabase :: Connection -> IO ()
