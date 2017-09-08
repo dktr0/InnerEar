@@ -44,7 +44,8 @@ instance WebAudio Source where
       (GainNode _) -> error "GainNode cannot be a source node"
       (FilterNode _) -> error "FilterNode cannot be a source node"
       (ScriptProcessorNode _) -> error "ScriptProcessorNode cannot be a source node"
-      (BufferNode (LoadedFile _ _)) -> do
+      (BufferNode (LoadedFile soundID _)) -> do
+        stopNodeByID soundID
         x <- createNode node
         createGraph (WebAudioGraph x)
       otherwise -> do

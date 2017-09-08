@@ -56,7 +56,7 @@ userMediaWidget inputId dynClass = elDynClass "div" dynClass $ do
       checkbox False def
     return (cb,start,end, input,ev)
   -- create canvas
-  canvasEl <- elClass "div" "waveform" $ liftM fst $ el' "canvas" (return ())
+  canvasEl <- elClass "div" "waveformWrapper" $ liftM fst $ elClass' "canvas" "waveformCanvas" (return ())
   let canvasElement = _el_element canvasEl
 
   -- Load and draw the buffer when file has changed
