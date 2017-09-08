@@ -216,7 +216,8 @@ button.correctButton{
   background-color: #2F4F4F;
   background-color: black;
   position: relative;
-  left: 150%;
+  right: 45%;
+  top: 11%;
 
 }
 
