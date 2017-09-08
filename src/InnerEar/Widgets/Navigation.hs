@@ -33,7 +33,7 @@ data Navigation =
   TestSoundPage
 
 navigationWidget :: MonadWidget t m => Event t [Response] -> m (Event t Request,Event t Sound)
-navigationWidget responses = el "div" $ mdo
+navigationWidget responses = elClass "div" "mainBody" $ mdo
   let initialPage = navigationPage responses SplashPage
   let rebuild = fmap (navigationPage responses) navEvents
   w <- widgetHold initialPage rebuild
