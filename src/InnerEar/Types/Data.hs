@@ -72,7 +72,7 @@ toDatum ExerciseEnd = Just End
 -- | Some events of interest are not tied to a particular ear-training exercise.
 -- For these, we have the type SessionDatum.
 
-data SessionDatum = SessionStart | SessionEnd deriving (Show,Eq,Data,Typeable)
+data SessionDatum = SessionStart | SessionEnd | AuthenticationFailure deriving (Show,Eq,Data,Typeable)
 
 
 -- A Point of data, then, is either a tuple of (ExerciseId,ExerciseDatum) or SessionDatum

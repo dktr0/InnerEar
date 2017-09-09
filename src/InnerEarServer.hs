@@ -114,12 +114,16 @@ authenticate i h p s = do
           return $ authenticateConnection i h s
         else do
           putStrLn $ "failure to authenticate as user " ++ h
+          now <- getCurrentTime
+          DB.postEvent (database s) $ Record h $ Point (Right AuthenticationFailure) now
           respond s i $ NotAuthenticated
           return $ deauthenticateConnection i s
     else do
       putStrLn $ "failure to authenticate as non-existent user " ++ h
+      now <- getCurrentTime
+      DB.postEvent (database s) $ Record h $ Point (Right AuthenticationFailure) now
       respond s i $ NotAuthenticated
-      return s
+      return $ deauthenticateConnection i s
 
 deauthenticate :: ConnectionIndex -> Server -> IO Server
 deauthenticate i s = do
