@@ -88,7 +88,7 @@ multipleChoiceQuestionWidget maxTries answers render eWidget config initialEval 
   answerPressed <- elClass "div" "answerButtonWrapper" $ -- m (Event t a)
     leftmost <$> zipWithM (\f m -> answerButton (show f) m f) answers modes'
   elClass "div" "bottomRow" $ do
-    elClass "div" "evaluationInQuestion" $ eWidget scores
+    elClass "div" "evaluationInQuestion" $ return () -- eWidget scores
     -- elClass "div" "userMediaWidgetInQuestion" $ bWidget
 
   -- generate sounds to be playedW

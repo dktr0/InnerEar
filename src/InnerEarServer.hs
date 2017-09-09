@@ -20,6 +20,7 @@ import Data.Either
 import Control.Monad
 import Control.Concurrent.MVar
 import Control.Exception (try,catch,SomeException)
+import Data.Time.Clock
 
 import InnerEar.Types.Request
 import InnerEar.Types.Response
@@ -107,6 +108,8 @@ authenticate i h p s = do
       if (Just p) == p'
         then do
           putStrLn $ "authenticated as user " ++ h
+          now <- getCurrentTime
+          DB.postEvent (database s) $ Record h $ Point (Right SessionStart) now
           respond s i $ Authenticated h
           return $ authenticateConnection i h s
         else do
