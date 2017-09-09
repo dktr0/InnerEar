@@ -85,6 +85,9 @@ processLoop ws s i = do
 close :: MVar Server -> ConnectionIndex -> String -> IO ()
 close s i msg = do
   putStrLn $ "closing connection: " ++ msg
+  s' <- takeMVar s
+  sessionEnd i s'
+  putMVar s s'
   updateServer s $ deleteConnection i
   return ()
 
