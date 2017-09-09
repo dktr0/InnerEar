@@ -128,8 +128,16 @@ authenticate i h p s = do
 deauthenticate :: ConnectionIndex -> Server -> IO Server
 deauthenticate i s = do
   putStrLn $ "deauthenticating connection " ++ (show i)
-  respond s i $ NotAuthenticated
-  return $ deauthenticateConnection i s
+  s' <- sessionEnd i s
+  respond s' i $ NotAuthenticated
+  return $ deauthenticateConnection i s'
+
+sessionEnd :: ConnectionIndex -> Server -> IO Server
+sessionEnd i s = do
+  now <- getCurrentTime
+  let h = snd $ (connections s) ! i
+  when (isJust h) $ DB.postEvent (database s) $ Record (fromJust h) $ Point (Right SessionEnd) now
+  return s
 
 postPoint :: ConnectionIndex -> Point -> Server -> IO Server
 postPoint i p s = do
