@@ -1,3 +1,4 @@
+{-# LANGUAGE RecursiveDo #-}
 module InnerEar.Widgets.UserMedia where
 
 import Data.Bool (bool)
@@ -38,8 +39,8 @@ import InnerEar.Widgets.Utility
 --  mapDyn (\x->x False) param
 
 
-
-userMediaWidget::MonadWidget t m => String -> Dynamic t String -> m (Dynamic t Source)
+-- Returning a LoadedFile source and an event that fires when a new sound file is chosen
+userMediaWidget::MonadWidget t m => String -> Dynamic t String -> m (Dynamic t Source, Event t ())
 userMediaWidget inputId dynClass = elDynClass "div" dynClass $ do
 
   let attrs = FileInputConfig $ constDyn $ M.fromList $ zip ["accept","id"] ["audio/*",inputId]
@@ -73,50 +74,51 @@ userMediaWidget inputId dynClass = elDynClass "div" dynClass $ do
   let startVal = constDyn (0::Double)
   let endVal = constDyn (1::Double)
   param <- combineDyn (PlaybackParam) startVal endVal
-  combineDyn (\x l-> ((flip NodeSource) $ Nothing) $ BufferNode $ LoadedFile inputId $ x l) param loop
+  s<-combineDyn (\x l-> ((flip NodeSource) $ Nothing) $ BufferNode $ LoadedFile inputId $ x l) param loop
+  return (s,loadEv)
 --userMediaWidget::MonadWidget t m => String -> m (Dynamic t Source)
 --userMediaWidget s = elClass "div" "userMediaWidget" $ do
 --  bufferLoadEv <- bufferInput s
 --  playbackParam <- waveformWidget s bufferLoadEv
 --  mapDyn (((flip NodeSource) 2) . BufferNode . LoadedFile s) playbackParam
 
-pinkNoiseOrFileSourceWidget :: MonadWidget t m => String -> m (Dynamic t Source)
-pinkNoiseOrFileSourceWidget sourceID = elClass "div" "sourceWidget" $ do
-  userFileSource <- userMediaWidget sourceID (constDyn "waveformWidget")
-  let conf = (WidgetConfig {_widgetConfig_initialValue= Just (1::Int)
-                         ,_widgetConfig_setValue = never
-                         ,_widgetConfig_attributes = constDyn M.empty})
-  text "Select the sound source: "
-  radioWidget <- radioGroup (constDyn "radioWidget") (constDyn $ zip [1,2] ["Loaded file","pinknoise"]) conf
-  radioWidgetSelection <-  mapDyn (maybe 1 id) (_hwidget_value radioWidget)
-  combineDyn (\i s-> if i == 1 then s else ((flip NodeSource) $ Just 2) $ BufferNode $ File "pinknoise.wav") radioWidgetSelection userFileSource
+-- pinkNoiseOrFileSourceWidget :: MonadWidget t m => String -> m (Dynamic t Source)
+-- pinkNoiseOrFileSourceWidget sourceID = elClass "div" "sourceWidget" $ do
+--   userFileSource <- userMediaWidget sourceID (constDyn "waveformWidget")
+--   let conf = (WidgetConfig {_widgetConfig_initialValue= Just (1::Int)
+--                          ,_widgetConfig_setValue = never
+--                          ,_widgetConfig_attributes = constDyn M.empty})
+--   text "Select the sound source: "
+--   radioWidget <- radioGroup (constDyn "radioWidget") (constDyn $ zip [1,2] ["Loaded file","pinknoise"]) conf
+--   radioWidgetSelection <-  mapDyn (maybe 1 id) (_hwidget_value radioWidget)
+--   combineDyn (\i s-> if i == 1 then s else ((flip NodeSource) $ Just 2) $ BufferNode $ File "pinknoise.wav") radioWidgetSelection userFileSource
 
-sourceWidget::MonadWidget t m => String -> m (Dynamic t Source)
-sourceWidget sourceID = elClass "div" "sourceWidget" $ do
-  let staticSources = M.fromList $ zip [0::Int,1] $ fmap ((flip NodeSource) (Just 2) . BufferNode) [File "pinknoise.wav",File "whitenoise.wav"]
-  let ddMap = constDyn $  M.fromList $ zip [(0::Int)..] ["Pink noise", "White noise", "Load a sound file"]
-  dd <- elClass "div" "soundSourceDropdown" $ do
-    text "Sound source: "
-    dropdown 0 ddMap $ def -- & dropdownConfig_attributes .~ (constDyn $ M.singleton "class" "soundSourceDropdown")
-  let ddVal = _dropdown_value dd
-  dynClass <- mapDyn (bool ("nothingSourceWidget") ("waveformWidget") . (==2)) ddVal
-  userFileSource <- userMediaWidget sourceID dynClass
-  ddMapVal <- mapDyn (\x-> M.insert 2 x staticSources) userFileSource
-  dynSource<-combineDyn (\i m-> maybe (NodeSource (BufferNode $ File "pinknoise.wav") $ Just 2) id $ M.lookup i m) ddVal ddMapVal
-  return (dynSource)
-
-
--- Event for reference, event for question, dynamic source
-soundWidget'::MonadWidget t m => String -> m ( Event t (), Event t (), Dynamic t Source)
-soundWidget' inputId = elClass "div" "soundWidget" $ do
-  (playRef, playQ, stop) <- elClass "div" "playStopButtons" $ do
-    ref <-  buttonClass "Listen to reference sound" "referenceSoundButton"
-    q <- buttonClass "Listen to question" "questionSoundButton"
-    s <- buttonClass "Stop" "stopSoundButton"
-    return (ref, q, s)
-  source <- sourceWidget inputId
-  performEvent $ fmap liftIO $ fmap (const $ stopNodeByID inputId) stop
-  return (playRef, playQ, source)
+-- sourceWidget::MonadWidget t m => String -> m (Dynamic t Source)
+-- sourceWidget sourceID = elClass "div" "sourceWidget" $ do
+--   let staticSources = M.fromList $ zip [0::Int,1] $ fmap ((flip NodeSource) (Just 2) . BufferNode) [File "pinknoise.wav",File "whitenoise.wav"]
+--   let ddMap = constDyn $  M.fromList $ zip [(0::Int)..] ["Pink noise", "White noise", "Load a sound file"]
+--   dd <- elClass "div" "soundSourceDropdown" $ do
+--     text "Sound source: "
+--     dropdown 0 ddMap $ def -- & dropdownConfig_attributes .~ (constDyn $ M.singleton "class" "soundSourceDropdown")
+--   let ddVal = _dropdown_value dd
+--   dynClass <- mapDyn (bool ("nothingSourceWidget") ("waveformWidget") . (==2)) ddVal
+--   userFileSource <- userMediaWidget sourceID dynClass
+--   ddMapVal <- mapDyn (\x-> M.insert 2 x staticSources) userFileSource
+--   dynSource<-combineDyn (\i m-> maybe (NodeSource (BufferNode $ File "pinknoise.wav") $ Just 2) id $ M.lookup i m) ddVal ddMapVal
+--   return (dynSource)
+--
+--
+-- -- Event for reference, event for question, dynamic source
+-- soundWidget'::MonadWidget t m => String -> m ( Event t (), Event t (), Dynamic t Source)
+-- soundWidget' inputId = elClass "div" "soundWidget" $ do
+--   (playRef, playQ, stop) <- elClass "div" "playStopButtons" $ do
+--     ref <-  buttonClass "Listen to reference sound" "referenceSoundButton"
+--     q <- buttonClass "Listen to question" "questionSoundButton"
+--     s <- buttonClass "Stop" "stopSoundButton"
+--     return (ref, q, s)
+--   source <- sourceWidget inputId
+--   performEvent $ fmap liftIO $ fmap (const $ stopNodeByID inputId) stop
+--   return (playRef, playQ, source)
 
 
   -- Event for reference, event for question, dynamic source
@@ -125,17 +127,20 @@ soundWidget inputId = elClass "div" "soundWidget" $ do
   playRef <- elClass "div" "playReference" $ button "Listen to Reference Sound"
   playQ <- elClass "div" "playQuestion" $ button "Listen to Question"
 
-  source <- elClass "div" "sourceWidget" $ do
+  source <- elClass "div" "sourceWidget" $ mdo
     let staticSources = M.fromList $ zip [0::Int,1] $ fmap ((flip NodeSource) (Just 2) . BufferNode) [File "pinknoise.wav",File "whitenoise.wav"]
     let ddMap = constDyn $  M.fromList $ zip [(0::Int)..] ["Pink noise", "White noise", "Load a sound file"]
     -- Source selection dropdown
     ddVal  <- elClass "div" "soundSourceDropdown" $ do
       text "Sound source: "
-      dd <- dropdown 0 ddMap $ def -- & dropdownConfig_attributes .~ (constDyn $ M.singleton "class" "soundSourceDropdown")
+      let ddConfig = DropdownConfig (2 <$ loadEv) (constDyn M.empty)
+      dd <- dropdown 0 ddMap  ddConfig -- & dropdownConfig_attributes .~ (constDyn $ M.singleton "class" "soundSourceDropdown")
       return $ _dropdown_value dd
-    userFileSource <- userMediaWidget "inputId" (constDyn "userMediaWidget")
+    sourceClass <- mapDyn (bool ("userMediaWidgetDisabled") ("userMediaWidget") . (==2)) ddVal
+    (userFileSource,loadEv) <- userMediaWidget "inputId" sourceClass
     ddMapVal <- mapDyn (\x-> M.insert 2 x staticSources) userFileSource
     combineDyn (\i m-> maybe (NodeSource (BufferNode $ File "pinknoise.wav") $ Just 2) id $ M.lookup i m) ddVal ddMapVal
+  performEvent $ fmap liftIO $ fmap (const $ stopNodeByID inputId) $ leftmost [playRef,playQ]
   return (playRef, playQ, source)
     -- loadedFileWidget
 

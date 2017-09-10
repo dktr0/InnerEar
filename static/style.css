@@ -564,7 +564,12 @@ input.soundSourceDropdown{
   height:80%;
   display: auto
 }
-
+.userMediaWidgetDisabled{
+  height: 80%
+  display: auto;
+  disabled;
+  background-color:rgba(30,30,30,0.5)
+}
 .browseButton{
   height:20%;
 }
