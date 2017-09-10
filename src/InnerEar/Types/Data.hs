@@ -59,22 +59,22 @@ toExerciseDatum (NewQuestion c q a) = ExerciseNewQuestion (encodeJSON c) (encode
 toExerciseDatum (ListenedQuestion c q a) = ExerciseListenedQuestion (encodeJSON c) (encodeJSON q) (encodeJSON a)
 toExerciseDatum (ListenedReference c q a) = ExerciseListenedReference (encodeJSON c) (encodeJSON q) (encodeJSON a)
 toExerciseDatum (CorrectAnswer e1 e2 c q a) = ExerciseCorrectAnswer (encodeJSON e1) (encodeJSON e2) (encodeJSON c) (encodeJSON q) (encodeJSON a)
-toExerciseDatum (IncorrectAnswer ia e1 e2 c q a) = ExerciseCorrectAnswer (encodeJSON ia) (encodeJSON e1) (encodeJSON e2) (encodeJSON c) (encodeJSON q) (encodeJSON a)
+toExerciseDatum (IncorrectAnswer ia e1 e2 c q a) = ExerciseIncorrectAnswer (encodeJSON ia) (encodeJSON e1) (encodeJSON e2) (encodeJSON c) (encodeJSON q) (encodeJSON a)
 toExerciseDatum (ListenedExplore a1 c q a2) = ExerciseListenedExplore (encodeJSON a1) (encodeJSON c) (encodeJSON q) (encodeJSON a2)
 toExerciseDatum (Reflection r) = ExerciseReflection $ encodeJSON r
 toExerciseDatum Ended = ExerciseEnded
 
 toDatum :: (JSON c, JSON q, JSON a, JSON e) => ExerciseDatum -> Result (Datum c q a e)
 toDatum ExerciseStarted = return Started
-toDatum (ExerciseConfigured j) = Configured <$> fromJSON j
-toDatum (ExerciseNewQuestion c q a) = NewQuestion <$> fromJSON c <*> fromJSON q <*> fromJSON a
-toDatum (ExerciseListenedQuestion c q a) = ListenedQuestion <$> fromJSON c <*> fromJSON q <*> fromJSON a
-toDatum (ExerciseListenedReference c q a) = ListenedReference <$> fromJSON c <*> fromJSON q <*> fromJSON a
-toDatum (ExerciseCorrectAnswer e1 e2 c q a) = CorrectAnswer <$> fromJSON e1 <*> fromJSON e2 <*> fromJSON c <*> fromJSON q <*> fromJSON a
-toDatum (ExerciseIncorrectAnswer ia e1 e2 c q a) = CorrectAnswer <$> fromJSON ia <*> fromJSON e1 <*> fromJSON e2 <*> fromJSON c <*> fromJSON q <*> fromJSON a
-toDatum (ExerciseListenedExplore a1 c q a2) = ListenedReference <$> fromJSON a1 <*> fromJSON c <*> fromJSON q <*> fromJSON a2
+toDatum (ExerciseConfigured j) = Configured <$> decode j
+toDatum (ExerciseNewQuestion c q a) = NewQuestion <$> decode c <*> decode q <*> decode a
+toDatum (ExerciseListenedQuestion c q a) = ListenedQuestion <$> decode c <*> decode q <*> decode a
+toDatum (ExerciseListenedReference c q a) = ListenedReference <$> decode c <*> decode q <*> decode a
+toDatum (ExerciseCorrectAnswer e1 e2 c q a) = CorrectAnswer <$> decode e1 <*> decode e2 <*> decode c <*> decode q <*> decode a
+toDatum (ExerciseIncorrectAnswer ia e1 e2 c q a) = IncorrectAnswer <$> decode ia <*> decode e1 <*> decode e2 <*> decode c <*> decode q <*> decode a
+toDatum (ExerciseListenedExplore a1 c q a2) = ListenedExplore <$> decode a1 <*> decode c <*> decode q <*> decode a2
 toDatum (ExerciseReflection r) = return $ Reflection r
-toDatum ExerciseEnd = return Ended
+toDatum ExerciseEnded = return Ended
 
 
 -- | Some events of interest are not tied to a particular ear-training exercise.

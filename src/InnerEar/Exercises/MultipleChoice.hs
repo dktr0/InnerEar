@@ -38,7 +38,7 @@ multipleChoiceExercise :: (MonadWidget t m, Show a, Eq a, Ord a)
   -> (c -> m (Event t c))
   -> (Dynamic t (Map a Score) -> m ())
   -> (c -> [Datum c [a] a (Map a Score)] -> IO ([a],a))
-  -> Maybe Reflection
+  -> Maybe String
   -> Exercise t m c [a] a (Map a Score)
 
 multipleChoiceExercise maxTries answers render i c cw de g r = Exercise {
@@ -79,19 +79,21 @@ multipleChoiceQuestionWidget maxTries answers render eWidget config initialEval 
   scores <- mapDyn scoreMap multipleChoiceState
 
   -- user interface (buttons, etc)
-  (playReference,playQuestion, source) <- elClass "div" "playReferenceOrQuestion" $ do
+  (playReference,playQuestion, source) <- elClass "div" "playReferenceOrQuestion" $
     soundWidget "multipleChoiceExercise"
-  nextQuestion <- elClass "div" "nextQuestion" $ buttonDynCss "New Question" (constDyn "buttonWrapper")
-    -- newQuestionVisible <- mapDyn (>0) timesQuestionHeard
-    -- z <- visibleWhen newQuestionVisible $ (InQuestion <$) <$> buttonDynCss "New Question" (constDyn "buttonWrapper")
-    -- return (x,y,z)
+  timesQuestionHeard <- foldDyn ($) (0::Int) $ leftmost [const 0 <$ newQuestion,(+1) <$ playQuestion]
   answerPressed <- elClass "div" "answerButtonWrapper" $ -- m (Event t a)
     leftmost <$> zipWithM (\f m -> answerButton (show f) m f) answers modes'
-  elClass "div" "bottomRow" $ do
+  nextQuestionVisible <- mapDyn (>0) timesQuestionHeard
+  (nextQuestionNav,reflectionData) <- elClass "div" "bottomRow" $ do
+    y <- visibleWhen nextQuestionVisible $ do
+     x <- elClass "div" "nextQuestion" $ buttonDynCss "New Question" (constDyn "buttonWrapper")
+     return $ InQuestion <$ x
     elClass "div" "evaluationInQuestion" $ return () -- eWidget scores
-    -- elClass "div" "userMediaWidgetInQuestion" $ bWidget
+    z <- elClass "div" "reflectionInQuestion" $ reflectionWidget
+    return (y,z)
 
-  -- generate sounds to be playedW
+  -- generate sounds to be played
   answer <- holdDyn Nothing $ fmap (Just . snd) newQuestion
   let questionSound = fmapMaybe id $ tagDyn answer playQuestion
   let soundsToRender = leftmost [questionSound,answerPressed]
@@ -99,16 +101,18 @@ multipleChoiceQuestionWidget maxTries answers render eWidget config initialEval 
   let renderedSounds = attachDynWith (render config) source soundsToRender
   let playSounds = leftmost [renderedSounds,referenceSound]
 
-  -- generate navigation events
-  onToReflect <- (InReflect <$) <$> buttonDynCss "Reflect" (constDyn "buttonWrapper")
-  let navEvents = leftmost [InQuestion <$ nextQuestion, onToReflect]
+  let navEvents = leftmost [nextQuestionNav]
 
   -- generate data for adaptive questions and analysis
-  let answerData =
-  let evaluationData = Evaluation <$> updated scores
-  let datums = leftmost [evaluationData]
+  let datums = leftmost [reflectionData]
 
   return (datums, playSounds,navEvents)
+
+reflectionWidget :: MonadWidget t m => m (Event t (Datum c q a e))
+reflectionWidget = do
+  b <- button "Save/Submit Reflection"
+  return $ Reflection "placeholder" <$ b
+
 
 
 debugDisplay :: (MonadWidget t m, Show a ) => String -> Dynamic t a -> m ()
