@@ -103,7 +103,12 @@ multipleChoiceQuestionWidget maxTries answers render eWidget config initialEval 
   onToReflect <- (InReflect <$) <$> buttonDynCss "Reflect" (constDyn "buttonWrapper")
   let navEvents = leftmost [InQuestion <$ nextQuestion, onToReflect]
 
-  return (fmap Evaluation $ updated scores, playSounds,navEvents)
+  -- generate data for adaptive questions and analysis
+  let answerData =
+  let evaluationData = Evaluation <$> updated scores
+  let datums = leftmost [evaluationData]
+
+  return (datums, playSounds,navEvents)
 
 
 debugDisplay :: (MonadWidget t m, Show a ) => String -> Dynamic t a -> m ()
