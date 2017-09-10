@@ -120,8 +120,16 @@ recordFromRow h t (Just "AuthenticationFailure") i c q a s e1 e2 r = do
 
 recordFromRow _ _ _ _ _ _ _ _ _ _ _ = Nothing
 
-nil :: Maybe Text
-nil = Nothing
+nil :: SQLData
+nil = toField (Nothing :: Maybe Text)
+
+instance
+  (ToField a,ToField b,ToField c, ToField d,ToField e,ToField f,
+   ToField g, ToField h, ToField i, ToField j, ToField k) =>
+  ToRow (a,b,c,d,e,f,g,h,i,j,k) where
+  toRow (a,b,c,d,e,f,g,h,i,j,k) =
+    [toField a,toField b,toField c,toField d,toField e,toField f,toField g,toField h,
+     toField i,toField j,toField k]
 
 instance ToRow Record where
   toRow (Record h (Point (Left (i,ExerciseStarted)) t)) =
