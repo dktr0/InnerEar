@@ -22,27 +22,8 @@ openDatabase = do
   c <- open "../InnerEar.db"
   createUsersTable c
   createEventsTable c
+  addUser c $ User "test" "test" NormalUser
   return c
 
 closeDatabase :: Connection -> IO ()
 closeDatabase = close
-
-databaseTest :: IO ()
-databaseTest = do
-  now <- getCurrentTime
-  db <- openDatabase
-  addUser db $ User "d0kt0r0" "test" Administrator
-  postEvent db $ Record "d0kt0r0" (Point (Right SessionStart) now)
-  postEvent db $ Record "d0kt0r0" (Point (Left (ThresholdOfSilence,ExerciseStart)) now)
-  postEvent db $ Record "d0kt0r0" (Point (Left (ThresholdOfSilence,ExerciseConfiguration "test")) now)
-  postEvent db $ Record "d0kt0r0" (Point (Left (ThresholdOfSilence,ExerciseQuestion "test")) now)
-  postEvent db $ Record "d0kt0r0" (Point (Left (ThresholdOfSilence,ExerciseAnswer "test")) now)
-  postEvent db $ Record "d0kt0r0" (Point (Left (ThresholdOfSilence,ExerciseEvaluation "test")) now)
-  postEvent db $ Record "d0kt0r0" (Point (Left (ThresholdOfSilence,ExerciseReflection "test")) now)
-  postEvent db $ Record "d0kt0r0" (Point (Left (ThresholdOfSilence,ExerciseEnd)) now)
-  postEvent db $ Record "d0kt0r0" (Point (Right SessionEnd) now)
-  print "Users:"
-  findAllUsers db >>= print
-  print "Events:"
-  findAllEvents db >>= print
-  closeDatabase db

@@ -88,7 +88,7 @@ multipleChoiceQuestionWidget maxTries answers render eWidget config initialEval 
   answerPressed <- elClass "div" "answerButtonWrapper" $ -- m (Event t a)
     leftmost <$> zipWithM (\f m -> answerButton (show f) m f) answers modes'
   elClass "div" "bottomRow" $ do
-    elClass "div" "evaluationInQuestion" $ eWidget scores
+    elClass "div" "evaluationInQuestion" $ return () -- eWidget scores
     -- elClass "div" "userMediaWidgetInQuestion" $ bWidget
 
   -- generate sounds to be playedW
@@ -115,10 +115,11 @@ randomMultipleChoiceQuestion possibilities = do
   x <- getStdRandom ((randomR (0,n-1))::StdGen -> (Int,StdGen))
   return (possibilities,possibilities!!x)
 
-radioConfigWidget :: (MonadWidget t m, Eq a, Show a) => String -> [a] -> a -> m (Event t a)
-radioConfigWidget msg possibilities i = do
+radioConfigWidget :: (MonadWidget t m, Eq a, Show a) => String -> String -> [a] -> a -> m (Event t a)
+radioConfigWidget explanation msg possibilities i = do
   let radioButtonMap =  zip [0::Int,1..] possibilities
   let iVal = maybe 0 id $ elemIndex i possibilities
+  elClass "div" "explanation" $ text explanation
   elClass "div" "configText" $ text msg
   radioWidget <- radioGroup (constDyn "radioWidget") (constDyn $ fmap (\(x,y)->(x,show y)) radioButtonMap)
            (WidgetConfig {_widgetConfig_initialValue= Just iVal

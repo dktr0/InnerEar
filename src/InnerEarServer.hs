@@ -12,7 +12,7 @@ import Text.JSON.Generic
 import Data.Map
 import Data.Text (Text)
 import Data.List ((\\))
-import Data.Maybe (fromMaybe)
+import Data.Maybe (fromMaybe,isJust,fromJust)
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
 import qualified Data.Map.Strict as Map
@@ -20,6 +20,7 @@ import Data.Either
 import Control.Monad
 import Control.Concurrent.MVar
 import Control.Exception (try,catch,SomeException)
+import Data.Time.Clock
 
 import InnerEar.Types.Request
 import InnerEar.Types.Response
@@ -67,7 +68,6 @@ processLoop ws s i = do
   m <- try $ WS.receiveData ws
   case m of
     Right x -> do
-      putStrLn $ T.unpack x
       let x' = decode (T.unpack x) :: Result JSString
       case x' of
         Ok x'' -> do
@@ -85,6 +85,9 @@ processLoop ws s i = do
 close :: MVar Server -> ConnectionIndex -> String -> IO ()
 close s i msg = do
   putStrLn $ "closing connection: " ++ msg
+  s' <- takeMVar s
+  sessionEnd i s'
+  putMVar s s'
   updateServer s $ deleteConnection i
   return ()
 
@@ -96,57 +99,60 @@ processRequest :: MVar Server -> ConnectionIndex -> Request -> IO ()
 processRequest s i (CreateUser h p) = putStrLn "warning: ignoring request from client to CreateUser (that functionality is disactivated in this build)"
 processRequest s i (Authenticate h p) = withServer s $ authenticate i h p
 processRequest s i Deauthenticate = withServer s $ deauthenticate i
-processRequest s i (PostRecord r) = withServer s $ postRecord i r
+processRequest s i (PostPoint r) = withServer s $ postPoint i r
 
-createUser :: ConnectionIndex -> Handle -> Password -> Server -> IO Server
-createUser i h p s = do
-  if isValidHandle h && not (userExists h s)
-    then do
-      putStrLn $ "Authenticated: created new user with handle " ++ h
-      respond s i $ Authenticated h
-      return $ (authenticateConnection i h . addUser i h p) s
-    else do
-      when (userExists h s) $ putStrLn $ "UserNotCreated: attempt to create user for existing handle " ++ h
-      when (not (isValidHandle h)) $ putStrLn $ "UserNotCreated: attempt to create invalid handle " ++ h
-      respond s i $ UserNotCreated
-      return s
 
 authenticate :: ConnectionIndex -> Handle -> Password -> Server -> IO Server
-authenticate i h p s = if userExists h s
-  then do
-    if p == getPassword h s
-      then do
-        putStrLn $ "authenticated as user " ++ h
-        respond s i $ Authenticated h
-        -- placeholder: ...could also dump all records for now here...
-        return $ authenticateConnection i h s
-      else do
-        putStrLn $ "failure to authenticate as user " ++ h
-        respond s i $ NotAuthenticated
-        return $ deauthenticateConnection i s
-  else do
-    putStrLn $ "failure to authenticate as non-existent user " ++ h
-    respond s i $ NotAuthenticated
-    return s
+authenticate i h p s = do
+  e <- DB.userExists (database s) h 
+  if e
+    then do
+      p' <- DB.getPassword (database s) h
+      if (Just p) == p'
+        then do
+          putStrLn $ "authenticated as user " ++ h
+          now <- getCurrentTime
+          DB.postEvent (database s) $ Record h $ Point (Right SessionStart) now
+          respond s i $ Authenticated h
+          return $ authenticateConnection i h s
+        else do
+          putStrLn $ "failure to authenticate as user " ++ h
+          now <- getCurrentTime
+          DB.postEvent (database s) $ Record h $ Point (Right AuthenticationFailure) now
+          respond s i $ NotAuthenticated
+          return $ deauthenticateConnection i s
+    else do
+      putStrLn $ "failure to authenticate as non-existent user " ++ h
+      now <- getCurrentTime
+      DB.postEvent (database s) $ Record h $ Point (Right AuthenticationFailure) now
+      respond s i $ NotAuthenticated
+      return $ deauthenticateConnection i s
 
 deauthenticate :: ConnectionIndex -> Server -> IO Server
 deauthenticate i s = do
   putStrLn $ "deauthenticating connection " ++ (show i)
-  respond s i $ NotAuthenticated
-  return $ deauthenticateConnection i s
+  s' <- sessionEnd i s
+  respond s' i $ NotAuthenticated
+  return $ deauthenticateConnection i s'
 
-postRecord :: ConnectionIndex -> Record -> Server -> IO Server
-postRecord i r@(Record h p) s = if ok then doIt else dont
-  where
-    cHandle = snd ((connections s) ! i)
-    rHandle = Just h
-    ok = cHandle == rHandle
-    doIt = do
-      putStrLn $ "posting record... actually not because disactivated in this branch...: " ++ (show r)
+sessionEnd :: ConnectionIndex -> Server -> IO Server
+sessionEnd i s = do
+  now <- getCurrentTime
+  let h = snd $ (connections s) ! i
+  when (isJust h) $ DB.postEvent (database s) $ Record (fromJust h) $ Point (Right SessionEnd) now
+  return s
+
+postPoint :: ConnectionIndex -> Point -> Server -> IO Server
+postPoint i p s = do
+  let h = snd ((connections s) ! i)
+  if isJust h
+    then do
+      let r = Record (fromJust h) p
+      putStrLn $ "posting record: " ++ (show r)
+      DB.postEvent (database s) r
       return s
-      -- return $ postPoint h p s
-    dont = do
-      putStrLn $ "unable to post record (not authenticated or authenticated to different handle)" ++ (show r)
+    else do
+      putStrLn $ "warning: received post record attempt from non-or-differently-authenticated connection"
       return s
 
 withServer :: MVar Server -> (Server -> IO Server) -> IO ()

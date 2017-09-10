@@ -49,13 +49,14 @@ data ExerciseDatum =
   ExerciseEnd
   deriving (Show,Eq,Data,Typeable)
 
-toExerciseDatum :: (Show c,Show q,Show a,Show e) => Datum c q a e -> ExerciseDatum
+-- toExerciseDatum :: (Show c,Show q,Show a,Show e) => Datum c q a e -> ExerciseDatum
+toExerciseDatum :: (Data c,Data q,Data a,Data e) => Datum c q a e -> ExerciseDatum
 toExerciseDatum Start = ExerciseStart
-toExerciseDatum (Configuration c) = ExerciseConfiguration $ show c
-toExerciseDatum (Question q correctAnswer) = ExerciseQuestion $ show (q,correctAnswer)
-toExerciseDatum (Answer q correctAnswer userAnswer) = ExerciseAnswer $ show (q,correctAnswer,userAnswer)
-toExerciseDatum (Evaluation e) = ExerciseEvaluation $ show e
-toExerciseDatum (Reflection r) = ExerciseReflection r
+toExerciseDatum (Configuration c) = ExerciseConfiguration $ encodeJSON c
+toExerciseDatum (Question q correctAnswer) = ExerciseQuestion $ encodeJSON (q,correctAnswer)
+toExerciseDatum (Answer q correctAnswer userAnswer) = ExerciseAnswer $ encodeJSON (q,correctAnswer,userAnswer)
+toExerciseDatum (Evaluation e) = ExerciseEvaluation $ encodeJSON e
+toExerciseDatum (Reflection r) = ExerciseReflection $ encodeJSON r
 toExerciseDatum End = ExerciseEnd
 
 toDatum :: (Read c,Read q,Read a,Read e) => ExerciseDatum -> Maybe (Datum c q a e)
@@ -71,7 +72,7 @@ toDatum ExerciseEnd = Just End
 -- | Some events of interest are not tied to a particular ear-training exercise.
 -- For these, we have the type SessionDatum.
 
-data SessionDatum = SessionStart | SessionEnd deriving (Show,Eq,Data,Typeable)
+data SessionDatum = SessionStart | SessionEnd | AuthenticationFailure deriving (Show,Eq,Data,Typeable)
 
 
 -- A Point of data, then, is either a tuple of (ExerciseId,ExerciseDatum) or SessionDatum

@@ -23,12 +23,12 @@ clientWidget :: MonadWidget t m => m ()
 clientWidget = elClass "div" "innerEar" $ mdo
   (wsRcvd,wsStatus) <- WS.reflexWebSocket wsSend
   wsRcvdShow <- holdDyn "" $ fmap show wsRcvd
-  x <- elClass "div" "header" $ do
+  (x,areTheyAuthenticated) <- elClass "div" "header" $ do
     elClass "div" "title" $ do
       text "Inner Ear"
     elClass "div" "wsStatus" $ return ()
     elClass "div" "login" $ loginWidget wsRcvd
-  (y,sounds) <- navigationWidget wsRcvd
+  (y,sounds) <- navigationWidget wsRcvd areTheyAuthenticated
   let wsSend = leftmost [x,y]
   performSound sounds
   return ()

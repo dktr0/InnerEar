@@ -5,6 +5,8 @@ module InnerEar.Exercises.ThresholdOfSilence (thresholdOfSilenceExercise) where
 import Reflex
 import Reflex.Dom
 import Data.Map
+import Text.JSON
+import Text.JSON.Generic
 
 import Reflex.Synth.Types
 import InnerEar.Exercises.MultipleChoice
@@ -22,7 +24,7 @@ type Config = Int -- gain value for attenuated sounds
 configs :: [Config]
 configs = [-20,-30,-40,-50,-60,-70,-80,-90,-100,-110]
 
-data Answer = Answer Bool deriving (Eq,Ord)
+data Answer = Answer Bool deriving (Eq,Ord,Data,Typeable)
 
 answers :: [Answer]
 answers = [Answer True,Answer False]
@@ -36,8 +38,10 @@ renderAnswer db s (Answer True) = GainSound (Sound s)  ((fromIntegral db)::Doubl
 renderAnswer db _ (Answer False) = NoSound -- 2.0
 
 thresholdOfSilenceConfigWidget :: MonadWidget t m => Config -> m (Event t Config)
-thresholdOfSilenceConfigWidget i = radioConfigWidget msg configs i
-  where msg = "Please choose the level of attenuation for this exercise:"
+thresholdOfSilenceConfigWidget i = radioConfigWidget explanation msg configs i
+  where
+    explanation = "In this exercise, the system either makes no sound at all or it plays a sound that has been reduced in level by some specific amount of attenuation. As you make the level lower and lower, it should become more difficult to tell when the system is playing a sound versus when it is playing nothing. You can configure how much attenuation to apply below, then click Begin Exercise to begin. If it is too easy, return to this configuration page and select a more extreme level of attenuation (i.e. an even lower gain value in decibels)."
+    msg = "Please choose the level of attenuation for this exercise:"
 
 displayEval :: MonadWidget t m => Dynamic t (Map Answer Score) -> m ()
 displayEval = displayMultipleChoiceEvaluationGraph' "Session Performance" "" answers
