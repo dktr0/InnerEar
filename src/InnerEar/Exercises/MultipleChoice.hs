@@ -89,9 +89,9 @@ multipleChoiceQuestionWidget maxTries answers render eWidget config initialEval 
   nextQuestionVisible <- mapDyn (>0) timesQuestionHeard
   (nextQuestionNav,reflectionData) <- elClass "div" "bottomRow" $ do
     y <- visibleWhen nextQuestionVisible $ do
-     x <- buttonClass "Go To Next Question" "questionSoundButton"
+     x <- buttonClass "Try Another Question" "questionSoundButton"
      return $ InQuestion <$ x
-    a <- (CloseExercise <$) <$> buttonClass "Main Menu" "questionSoundButton"
+    a <- (CloseExercise <$) <$> buttonClass "Back to Main Menu" "questionSoundButton"
     elClass "div" "evaluationInQuestion" $ return () -- eWidget scores
     z <- elClass "div" "reflectionInQuestion" $ reflectionWidget
     return (leftmost [a,y],z)
@@ -121,10 +121,10 @@ multipleChoiceQuestionWidget maxTries answers render eWidget config initialEval 
   return (datums, playSounds,navEvents)
 
 reflectionWidget :: MonadWidget t m => m (Event t (Datum c q a e))
-reflectionWidget = mdo
+reflectionWidget = el "div" $ mdo
   let resetText = "" <$ b
   let attrs = constDyn $ fromList $ zip ["rows"] ["7"]
-  el "div" $ text "At any moment, you may enter a reflection on your ear training process here, and click Save (if logged in) to record it / share it with your instructor."
+  el "div" $ text "At any moment, you may enter a reflection on your ear training process in the box below, and click Save (if logged in) to record it / share it with your instructor."
   t <- el "div" $ textArea $ def & textAreaConfig_attributes .~ attrs & textAreaConfig_setValue .~ resetText
   b <- el "div" $ buttonClass "Save" "questionSoundButton" -- nb. placeholder class
   let t' = tagDyn (_textArea_value t) b
