@@ -7,6 +7,7 @@ import GHCJS.Types (JSVal,JSString)
 
 
 foreign import javascript safe "___ac = new AudioContext()" createAudioContext:: IO ()
+foreign import javascript safe "startSilentNode()" startSilentNode:: IO ()
 foreign import javascript safe "$r=___ac.destination" getDestination :: IO JSVal
 foreign import javascript safe "$1.connect($2)" connect :: JSVal -> JSVal -> IO ()
 spConnect = connect -- temporary...
@@ -56,7 +57,7 @@ foreign import javascript safe "$r=___ac.createPinkNoise()" createPinkNoise :: I
 foreign import javascript safe "$r=___ac.createBrownNoise()" createBrownianNoise :: IO JSVal
 
 
-foreign import javascript safe "console.log($1);$1.start()" startNode :: JSVal -> IO ()
+foreign import javascript safe "startNode($1)" startNode :: JSVal -> IO ()
 foreign import javascript safe "stopNodeByID($1)" stopNodeByID::JSString -> IO ()
 foreign import javascript safe "playMediaNode($1)" playMediaNode:: JSString -> IO()
 

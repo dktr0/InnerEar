@@ -1,8 +1,31 @@
+
 var bufferData
 var buffers = {}
-
+var lastPlayingBufferNode;
 var userAudioNodes = {}
 
+
+function startSilentNode () {
+  // a permanent buffernode sound  so the sound icon always displays at the
+  // top of their window (so the icon doesn't sway student's responses in exercises such as)
+  // the threshold of silence exercise)
+  // This wasn't working with just a simple oscillator with a gain of 0 applied for some reason.
+  //  (hence the looped buffernode)
+  var emptyArrayBuffer = ___ac.createBuffer(1, ___ac.sampleRate * 10,___ac.sampleRate );
+
+  // Necessary for some reason to insert all 0's (even though it is initialized  as such)
+  for (var channel = 0; channel < emptyArrayBuffer.numberOfChannels; channel++) {
+    var nowBuffering = emptyArrayBuffer.getChannelData(channel);
+    for (var i = 0; i < emptyArrayBuffer.length; i++) {
+      nowBuffering[i] = 0;
+    }
+  }
+  var emptyNode = ___ac.createBufferSource()
+  emptyNode.buffer = emptyArrayBuffer
+  emptyNode.loop = true;
+  emptyNode.connect(___ac.destination)
+  emptyNode.start();
+}
 
 function test(s){
   console.log(s)
@@ -13,14 +36,14 @@ function test(s){
   }
   console.log(a)
 
-  return ___ac.createMediaElementSource(a)
+  return ___ac.createMediaElementSource(a);
 }
 
 
 function createScriptProcessorNode (onAudioFunc){
   var sp = ___ac.createScriptProcessor(undefined,2,2)
   sp.onaudioprocess = onAudioFunc;
-  return sp
+  return sp;
 }
 
 function getDistortAtDbFunc(db){
@@ -43,7 +66,7 @@ function getDistortAtDbFunc(db){
           }
         }
   }
-  return func
+  return func;
 }
 
 function setGain(db, node){
@@ -72,7 +95,7 @@ function createMediaNode (id){
     node = ___ac.createMediaElementSource(audioElement)
     userAudioNodes[id] = {node:node, audioElement:audioElement}
   }
-  return node
+  return node;
 }
 
 function loadBuffer(inputId){
@@ -131,7 +154,6 @@ function playMediaNode(s){
 
 
 
-
 function createBufferSourceNodeFromURL(url) {
   var source = ___ac.createBufferSource()
   var request = new XMLHttpRequest();
@@ -155,6 +177,7 @@ function playBufferNode(id, s, e, loop, node){
   // if(userAudioNodes[id].source){
     // userAudioNodes[id].source.stop();
   // }
+  if (node.buffer){
   e = Math.max(Math.min(1,e),0)
   s = Math.max(Math.min(e,s),0)
   var start= s*node.buffer.duration
@@ -165,23 +188,34 @@ function playBufferNode(id, s, e, loop, node){
   node.loopEnd = e*node.buffer.duration;
   node.loop = loop
   node.start(___ac.currentTime, start, end)
+  lastPlayingBufferNode = node;
+  }
+  else {
+    console.log("WARNING - playBufferNode called on a node with no buffer. [playBufferNode(id, s, e, loop, node)] ")
+  }
 
 }
 
 function createBufferSourceNodeFromID(id,start,end,loop){
   var source = ___ac.createBufferSource();
   source.loop = loop;
-  userAudioNodes[id].start = start
-  userAudioNodes[id].end = end
-  if (userAudioNodes[id].buffer==undefined){
-    console.log('WARNING: No buffer loaded')
-    console.log('attempting to load buffer...')
-    loadBuffer(id)
+  if (userAudioNodes[id]){
+    userAudioNodes[id].start = start
+    userAudioNodes[id].end = end
+    if (userAudioNodes[id].buffer==undefined){
+      console.log('WARNING: No buffer loaded')
+      console.log('attempting to load buffer...')
+      loadBuffer(id)
+    }
+    source.buffer = userAudioNodes[id].buffer
+    userAudioNodes[id].source = source
+    console.log("source:  "+source)
+    return source;
   }
-  source.buffer = userAudioNodes[id].buffer
-  userAudioNodes[id].source = source
-  console.log("source:  "+source)
-  return source
+   else{
+     alert("Please load a sound file to use as a source or select pink noise  or white noise from the dropdown menu on the right.")
+   }
+   return source;
 }
 
 function loadUserSoundFile(){
@@ -271,7 +305,7 @@ function audioOnTimeUpdate(obj){
 // Probably don't need this anymore....
 function renderAudioWaveform(id, canvas, attempt){
 
-  if (attempt<5){
+  if (attempt<5){___ac
     var obj = userAudioNodes[id]
 
 
@@ -343,7 +377,13 @@ function loadAndDrawBuffer(inputId, canvas){
 
 }
 
-
+function startNode(node){
+  if (lastPlayingBufferNode){
+    lastPlayingBufferNode.stop()
+  }
+  console.log(node)
+  node.start()
+}
 
 
 function stopNodeByID(id){
@@ -356,6 +396,7 @@ function stopNodeByID(id){
     }
   }else{
     console.log("WARNING - node with id: "+id+" does not exist");
+    console.log(userAudioNodes[id])
   }
 }
 
