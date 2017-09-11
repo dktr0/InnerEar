@@ -49,9 +49,9 @@ closeDatabaseOnException s e = do
 
 mainWithDatabase :: MVar Server -> IO ()
 mainWithDatabase s = do
-  putStrLn "Inner Ear server (listening on port 4468)"
+  putStrLn "Inner Ear server (listening on port 8000)"
   let settings = (defaultWebAppSettings "InnerEarClient.jsexe") { ssIndices = [unsafeToPiece "index.html"] }
-  run 4468 $ WS.websocketsOr WS.defaultConnectionOptions (webSocketsApp s) (staticApp settings)
+  run 8000 $ WS.websocketsOr WS.defaultConnectionOptions (webSocketsApp s) (staticApp settings)
 
 webSocketsApp :: MVar Server -> WS.ServerApp -- = PendingConnection -> IO ()
 webSocketsApp s ws = do
