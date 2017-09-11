@@ -84,6 +84,8 @@ multipleChoiceQuestionWidget maxTries answers render eWidget config initialEval 
   timesQuestionHeard <- foldDyn ($) (0::Int) $ leftmost [const 0 <$ newQuestion,(+1) <$ playQuestion]
   answerPressed <- elClass "div" "answerButtonWrapper" $ -- m (Event t a)
     leftmost <$> zipWithM (\f m -> answerButton (show f) m f) answers modes'
+  let answerEvent = gate (fmap (==AnswerMode) . fmap mode . current $ multipleChoiceState) answerPressed
+  let exploreEvent = gate (fmap (==ExploreMode) . fmap mode . current $ multipleChoiceState) answerPressed
   nextQuestionVisible <- mapDyn (>0) timesQuestionHeard
   (nextQuestionNav,reflectionData) <- elClass "div" "bottomRow" $ do
     y <- visibleWhen nextQuestionVisible $ do
@@ -96,7 +98,7 @@ multipleChoiceQuestionWidget maxTries answers render eWidget config initialEval 
   -- generate sounds to be played
   answer <- holdDyn Nothing $ fmap (Just . snd) newQuestion
   let questionSound = fmapMaybe id $ tagDyn answer playQuestion
-  let soundsToRender = leftmost [questionSound,answerPressed]
+  let soundsToRender = leftmost [questionSound,exploreEvent]
   let referenceSound = attachDynWith (\a _-> GainSound (Sound a) (-10)) source playReference
   let renderedSounds = attachDynWith (render config) source soundsToRender
   let playSounds = leftmost [renderedSounds,referenceSound]
@@ -104,7 +106,16 @@ multipleChoiceQuestionWidget maxTries answers render eWidget config initialEval 
   let navEvents = leftmost [nextQuestionNav]
 
   -- generate data for adaptive questions and analysis
-  let datums = leftmost [reflectionData]
+  let questionWhileListened = (\x -> (possibleAnswers x,correctAnswer x)) <$> tagDyn multipleChoiceState playQuestion
+  let listenedQuestionData = (\(q,a) -> ListenedQuestion config q a) <$> questionWhileListened
+  let questionWhileReference = (\x -> (possibleAnswers x,correctAnswer x)) <$> tagDyn multipleChoiceState playReference
+  let listenedReferenceData = (\(q,a) -> ListenedReference config q a) <$> questionWhileReference
+  evaluations <- mapDyn scoreMap multipleChoiceState
+  let answerWithContext = attachDynWith (\mcs s -> (s,config,possibleAnswers mcs,correctAnswer mcs)) multipleChoiceState answerEvent
+  let answerData = attachDynWith (\e (s,c,q,a) -> Answered s e e c q a) evaluations answerWithContext
+  let questionWhileExplore = attachDynWith (\x y -> (possibleAnswers x,correctAnswer x,y)) multipleChoiceState answerPressed
+  let listenedExploreData = (\(q,a,s) -> ListenedExplore s config q a) <$> questionWhileExplore
+  let datums = leftmost [listenedQuestionData,listenedReferenceData, answerData,listenedExploreData,reflectionData]
 
   return (datums, playSounds,navEvents)
 
@@ -112,8 +123,6 @@ reflectionWidget :: MonadWidget t m => m (Event t (Datum c q a e))
 reflectionWidget = do
   b <- button "Save/Submit Reflection"
   return $ Reflection "placeholder" <$ b
-
-
 
 debugDisplay :: (MonadWidget t m, Show a ) => String -> Dynamic t a -> m ()
 debugDisplay x d = el "div" $ text x >> display d
@@ -202,20 +211,20 @@ answerSelected _ s | mode s == ListenMode = s
 answerSelected _ s | mode s == ExploreMode = s
 
 answerSelected a s | a == correctAnswer s = toExploreMode $ s {
-  answerButtonModes = replaceAtSameIndex a (allAnswers s) Correct (answerButtonModes s),
-  scoreMap = markCorrect a $ scoreMap s
-  }
+      answerButtonModes = replaceAtSameIndex a (allAnswers s) Correct (answerButtonModes s),
+      scoreMap = markCorrect a $ scoreMap s
+      }
 
 answerSelected a s | a /= correctAnswer s && attemptsRemaining s > 0 = s {
-  answerButtonModes = replaceAtSameIndex a (allAnswers s) IncorrectDisactivated (answerButtonModes s),
-  attemptsRemaining = attemptsRemaining s - 1,
-  scoreMap = markIncorrect a (correctAnswer s) $ scoreMap s
-  }
+      answerButtonModes = replaceAtSameIndex a (allAnswers s) IncorrectDisactivated (answerButtonModes s),
+      attemptsRemaining = attemptsRemaining s - 1,
+      scoreMap = markIncorrect a (correctAnswer s) $ scoreMap s
+      }
 
 answerSelected a s | a /= correctAnswer s && attemptsRemaining s == 0 = toExploreMode $ s {
-  answerButtonModes = replaceAtSameIndex a (allAnswers s) IncorrectActivated (answerButtonModes s),
-  scoreMap = markIncorrect a (correctAnswer s) $ scoreMap s
-  }
+      answerButtonModes = replaceAtSameIndex a (allAnswers s) IncorrectActivated (answerButtonModes s),
+      scoreMap = markIncorrect a (correctAnswer s) $ scoreMap s
+      }
 
 toExploreMode :: MultipleChoiceState a -> MultipleChoiceState a
 toExploreMode s = s {

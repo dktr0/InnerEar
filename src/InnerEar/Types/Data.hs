@@ -27,8 +27,7 @@ data Datum c q a e = -- c is configuration type, q is question type, a is answer
   NewQuestion c q a |
   ListenedQuestion c q a |
   ListenedReference c q a |
-  CorrectAnswer e e c q a | -- new short- and long-term evaluation plus context
-  IncorrectAnswer a e e c q a | -- incorrect answer, new short- and long-term evaluation plus context
+  Answered a e e c q a | -- their choice, new short- and long-term evaluation plus context
   ListenedExplore a c q a | -- for exploratory listening to possible answers
   Reflection String |
   Ended
@@ -45,8 +44,7 @@ data ExerciseDatum =
   ExerciseNewQuestion String String String |
   ExerciseListenedQuestion String String String |
   ExerciseListenedReference String String String |
-  ExerciseCorrectAnswer String String String String String |
-  ExerciseIncorrectAnswer String String String String String String |
+  ExerciseAnswered String String String String String String |
   ExerciseListenedExplore String String String String |
   ExerciseReflection String |
   ExerciseEnded
@@ -58,8 +56,7 @@ toExerciseDatum (Configured c) = ExerciseConfigured $ encodeJSON c
 toExerciseDatum (NewQuestion c q a) = ExerciseNewQuestion (encodeJSON c) (encodeJSON q) (encodeJSON a)
 toExerciseDatum (ListenedQuestion c q a) = ExerciseListenedQuestion (encodeJSON c) (encodeJSON q) (encodeJSON a)
 toExerciseDatum (ListenedReference c q a) = ExerciseListenedReference (encodeJSON c) (encodeJSON q) (encodeJSON a)
-toExerciseDatum (CorrectAnswer e1 e2 c q a) = ExerciseCorrectAnswer (encodeJSON e1) (encodeJSON e2) (encodeJSON c) (encodeJSON q) (encodeJSON a)
-toExerciseDatum (IncorrectAnswer ia e1 e2 c q a) = ExerciseIncorrectAnswer (encodeJSON ia) (encodeJSON e1) (encodeJSON e2) (encodeJSON c) (encodeJSON q) (encodeJSON a)
+toExerciseDatum (Answered ia e1 e2 c q a) = ExerciseAnswered (encodeJSON ia) (encodeJSON e1) (encodeJSON e2) (encodeJSON c) (encodeJSON q) (encodeJSON a)
 toExerciseDatum (ListenedExplore a1 c q a2) = ExerciseListenedExplore (encodeJSON a1) (encodeJSON c) (encodeJSON q) (encodeJSON a2)
 toExerciseDatum (Reflection r) = ExerciseReflection $ encodeJSON r
 toExerciseDatum Ended = ExerciseEnded
@@ -70,8 +67,7 @@ toDatum (ExerciseConfigured j) = Configured <$> decode j
 toDatum (ExerciseNewQuestion c q a) = NewQuestion <$> decode c <*> decode q <*> decode a
 toDatum (ExerciseListenedQuestion c q a) = ListenedQuestion <$> decode c <*> decode q <*> decode a
 toDatum (ExerciseListenedReference c q a) = ListenedReference <$> decode c <*> decode q <*> decode a
-toDatum (ExerciseCorrectAnswer e1 e2 c q a) = CorrectAnswer <$> decode e1 <*> decode e2 <*> decode c <*> decode q <*> decode a
-toDatum (ExerciseIncorrectAnswer ia e1 e2 c q a) = IncorrectAnswer <$> decode ia <*> decode e1 <*> decode e2 <*> decode c <*> decode q <*> decode a
+toDatum (ExerciseAnswered ia e1 e2 c q a) = Answered <$> decode ia <*> decode e1 <*> decode e2 <*> decode c <*> decode q <*> decode a
 toDatum (ExerciseListenedExplore a1 c q a2) = ListenedExplore <$> decode a1 <*> decode c <*> decode q <*> decode a2
 toDatum (ExerciseReflection r) = return $ Reflection r
 toDatum ExerciseEnded = return Ended

@@ -74,14 +74,8 @@ recordFromRow h t (Just "ListenedReference") i c q a s e1 e2 r = do
   z <- Point y <$> t
   (flip Record) z <$> h
 
-recordFromRow h t (Just "CorrectAnswer") i c q a s e1 e2 r = do
-  x <- ExerciseCorrectAnswer <$> e1 <*> e2 <*> c <*> q <*> a
-  y <- (Left . (,x)) <$> i
-  z <- Point y <$> t
-  (flip Record) z <$> h
-
-recordFromRow h t (Just "IncorrectAnswer") i c q a s e1 e2 r = do
-  x <- ExerciseIncorrectAnswer <$> s <*> e1 <*> e2 <*> c <*> q <*> a
+recordFromRow h t (Just "Answered") i c q a s e1 e2 r = do
+  x <- ExerciseAnswered <$> s <*> e1 <*> e2 <*> c <*> q <*> a
   y <- (Left . (,x)) <$> i
   z <- Point y <$> t
   (flip Record) z <$> h
@@ -142,10 +136,8 @@ instance ToRow Record where
     toRow (h,t,"ListenedQuestion"::Text,i,c,q,a,nil,nil,nil,nil)
   toRow (Record h (Point (Left (i,ExerciseListenedReference c q a)) t)) =
     toRow (h,t,"ListenedReference"::Text,i,c,q,a,nil,nil,nil,nil)
-  toRow (Record h (Point (Left (i,ExerciseCorrectAnswer e1 e2 c q a)) t)) =
-    toRow (h,t,"CorrectAnswer"::Text,i,c,q,a,a,e1,e2,nil)
-  toRow (Record h (Point (Left (i,ExerciseIncorrectAnswer ia e1 e2 c q a)) t)) =
-    toRow (h,t,"IncorrectAnswer"::Text,i,c,q,a,ia,e1,e2,nil)
+  toRow (Record h (Point (Left (i,ExerciseAnswered ia e1 e2 c q a)) t)) =
+    toRow (h,t,"Answered"::Text,i,c,q,a,ia,e1,e2,nil)
   toRow (Record h (Point (Left (i,ExerciseListenedExplore s c q a)) t)) =
     toRow (h,t,"ListenedExplore"::Text,i,c,q,a,s,nil,nil,nil)
   toRow (Record h (Point (Left (i,ExerciseReflection r)) t)) =
