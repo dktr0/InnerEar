@@ -58,7 +58,7 @@ toExerciseDatum (ListenedQuestion c q a) = ExerciseListenedQuestion (encodeJSON 
 toExerciseDatum (ListenedReference c q a) = ExerciseListenedReference (encodeJSON c) (encodeJSON q) (encodeJSON a)
 toExerciseDatum (Answered ia e1 e2 c q a) = ExerciseAnswered (encodeJSON ia) (encodeJSON e1) (encodeJSON e2) (encodeJSON c) (encodeJSON q) (encodeJSON a)
 toExerciseDatum (ListenedExplore a1 c q a2) = ExerciseListenedExplore (encodeJSON a1) (encodeJSON c) (encodeJSON q) (encodeJSON a2)
-toExerciseDatum (Reflection r) = ExerciseReflection $ encodeJSON r
+toExerciseDatum (Reflection r) = ExerciseReflection r
 toExerciseDatum Ended = ExerciseEnded
 
 toDatum :: (JSON c, JSON q, JSON a, JSON e) => ExerciseDatum -> Result (Datum c q a e)

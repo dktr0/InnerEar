@@ -122,12 +122,12 @@ multipleChoiceQuestionWidget maxTries answers render eWidget config initialEval 
 
 reflectionWidget :: MonadWidget t m => m (Event t (Datum c q a e))
 reflectionWidget = el "div" $ mdo
-  let resetText = "" <$ b
   let attrs = constDyn $ fromList $ zip ["rows"] ["7"]
+  let resetText = "" <$ b
   el "div" $ text "At any moment, you may enter a reflection on your ear training process in the box below, and click Save (if logged in) to record it / share it with your instructor."
   t <- el "div" $ textArea $ def & textAreaConfig_attributes .~ attrs & textAreaConfig_setValue .~ resetText
   b <- el "div" $ buttonClass "Save" "questionSoundButton" -- nb. placeholder class
-  let t' = tagDyn (_textArea_value t) b
+  let t' = tag (current $ _textArea_value t) b
   return $ Reflection <$> t'
 
 debugDisplay :: (MonadWidget t m, Show a ) => String -> Dynamic t a -> m ()
