@@ -26,7 +26,7 @@ setupServer:
 	cd server && stack setup
 
 buildServer:
-	cd server && stack build
+	cd server && stack build --ghc-options='-threaded'
 
 cleanServer:
 	cd server && stack clean
