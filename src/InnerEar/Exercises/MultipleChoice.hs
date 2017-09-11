@@ -81,19 +81,20 @@ multipleChoiceQuestionWidget maxTries answers render eWidget config initialEval 
   -- user interface (buttons, etc)
   (playReference,playQuestion, source) <- elClass "div" "playReferenceOrQuestion" $
     soundWidget "multipleChoiceExercise"
-  timesQuestionHeard <- foldDyn ($) (0::Int) $ leftmost [const 0 <$ newQuestion,(+1) <$ playQuestion]
   answerPressed <- elClass "div" "answerButtonWrapper" $ -- m (Event t a)
     leftmost <$> zipWithM (\f m -> answerButton (show f) m f) answers modes'
   let answerEvent = gate (fmap (==AnswerMode) . fmap mode . current $ multipleChoiceState) answerPressed
   let exploreEvent = gate (fmap (==ExploreMode) . fmap mode . current $ multipleChoiceState) answerPressed
+  timesQuestionHeard <- foldDyn ($) (0::Int) $ leftmost [const 0 <$ newQuestion,(+1) <$ playQuestion]
   nextQuestionVisible <- mapDyn (>0) timesQuestionHeard
   (nextQuestionNav,reflectionData) <- elClass "div" "bottomRow" $ do
     y <- visibleWhen nextQuestionVisible $ do
-     x <- elClass "div" "nextQuestion" $ buttonDynCss "New Question" (constDyn "buttonWrapper")
+     x <- buttonClass "Go To Next Question" "questionSoundButton"
      return $ InQuestion <$ x
+    a <- (CloseExercise <$) <$> buttonClass "Main Menu" "questionSoundButton"
     elClass "div" "evaluationInQuestion" $ return () -- eWidget scores
     z <- elClass "div" "reflectionInQuestion" $ reflectionWidget
-    return (y,z)
+    return (leftmost [a,y],z)
 
   -- generate sounds to be played
   answer <- holdDyn Nothing $ fmap (Just . snd) newQuestion
@@ -120,9 +121,14 @@ multipleChoiceQuestionWidget maxTries answers render eWidget config initialEval 
   return (datums, playSounds,navEvents)
 
 reflectionWidget :: MonadWidget t m => m (Event t (Datum c q a e))
-reflectionWidget = do
-  b <- button "Save/Submit Reflection"
-  return $ Reflection "placeholder" <$ b
+reflectionWidget = mdo
+  let resetText = "" <$ b
+  let attrs = constDyn $ fromList $ zip ["rows"] ["7"]
+  el "div" $ text "At any moment, you may enter a reflection on your ear training process here, and click Save (if logged in) to record it / share it with your instructor."
+  t <- el "div" $ textArea $ def & textAreaConfig_attributes .~ attrs & textAreaConfig_setValue .~ resetText
+  b <- el "div" $ buttonClass "Save" "questionSoundButton" -- nb. placeholder class
+  let t' = tagDyn (_textArea_value t) b
+  return $ Reflection <$> t'
 
 debugDisplay :: (MonadWidget t m, Show a ) => String -> Dynamic t a -> m ()
 debugDisplay x d = el "div" $ text x >> display d
