@@ -7,13 +7,14 @@ import Reflex.Dom
 import Data.Map
 import Text.JSON
 import Text.JSON.Generic
-
 import Reflex.Synth.Types
+
 import InnerEar.Exercises.MultipleChoice
 import InnerEar.Types.ExerciseId
 import InnerEar.Types.Exercise
 import InnerEar.Types.Score
 import InnerEar.Types.Data (Datum)
+import InnerEar.Widgets.Config
 import InnerEar.Widgets.UserMedia
 import InnerEar.Widgets.SpecEval
 
@@ -24,6 +25,9 @@ type Config = Int -- gain value for attenuated sounds
 configs :: [Config]
 configs = [-20,-30,-40,-50,-60,-70,-80,-90,-100,-110]
 
+configMap::Map String Config
+configMap = fromList $ fmap (\x-> (show x ++ " dB",x)) configs
+
 data Answer = Answer Bool deriving (Eq,Ord,Data,Typeable)
 
 answers :: [Answer]
@@ -33,9 +37,10 @@ instance Show Answer where
   show (Answer True) = "Attenuated Sound"
   show (Answer False) = "No sound at all"
 
-renderAnswer :: Config -> Source -> Answer -> Sound
-renderAnswer db s (Answer True) = GainSound (Sound s)  ((fromIntegral db)::Double) -- 2.0 -- should be a sound source attenuated by dB value
-renderAnswer db _ (Answer False) = NoSound -- 2.0
+renderAnswer :: Config -> Source -> Maybe Answer -> Sound
+renderAnswer db s (Just (Answer True)) = GainSound (Sound s)  ((fromIntegral db)::Double) -- 2.0 -- should be a sound source attenuated by dB value
+renderAnswer db _ (Just (Answer False)) = NoSound -- 2.0
+renderAnswer db s (Nothing) = GainSound (Sound s) ((fromIntegral db)::Double)
 
 thresholdOfSilenceConfigWidget :: MonadWidget t m => Config -> m (Event t Config)
 thresholdOfSilenceConfigWidget i = radioConfigWidget explanation msg configs i
@@ -53,6 +58,7 @@ thresholdOfSilenceExercise :: MonadWidget t m => Exercise t m Int [Answer] Answe
 thresholdOfSilenceExercise = multipleChoiceExercise
   1
   answers
+  (dynRadioConfigWidget "thersholdOfSilence" configMap)
   renderAnswer
   ThresholdOfSilence
   (-20)
