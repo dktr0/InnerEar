@@ -133,7 +133,7 @@ dynBarCSS score barWidth = do
 dynBarCSS' :: MonadWidget t m =>  Dynamic t (Score) -> Dynamic t Float -> m ()
 dynBarCSS' score barWidth = do
     let class' = constDyn (singleton "class" "svgBarContainer")
-    svgHeight <- mapDyn (\x -> case x of (Score 0 0 0) -> (fromIntegral (falseNegatives x) :: Float); otherwise -> (((fromIntegral (questionsAsked x) :: Float)-(fromIntegral (falseNegatives x) :: Float))/(fromIntegral (questionsAsked x) :: Float))) score   --m (Dynamic t Int)
+    svgHeight <- mapDyn (\x -> case x of (Score 0 0 0) -> (0.0 :: Float); otherwise -> ((fromIntegral (correctAnswers x) :: Float)/(fromIntegral (questionsAsked x) :: Float))) score   --m (Dynamic t Int)
     svgHeight' <- mapDyn (* 200) svgHeight
     svgHeight'' <- mapDyn (singleton "height" . show) svgHeight'
     attrs <- mconcatDyn [class', svgHeight'']
@@ -149,7 +149,7 @@ dynBarCSS' score barWidth = do
 dynBarCSSFiveBand :: MonadWidget t m =>  Dynamic t (Score) -> Dynamic t Float -> m ()
 dynBarCSSFiveBand score barWidth = do
         let class' = constDyn (singleton "class" "svgBarContainerFiveBand")
-        svgHeight <- mapDyn (\x -> case x of (Score _ _ 0) -> (fromIntegral (falseNegatives x) :: Float); otherwise -> (((fromIntegral (questionsAsked x) :: Float)-(fromIntegral (falseNegatives x) :: Float))/(fromIntegral (questionsAsked x) :: Float))) score   --m (Dynamic t Int)
+        svgHeight <- mapDyn (\x -> case x of (Score 0 0 0) -> (0.0 :: Float); otherwise -> ((fromIntegral (correctAnswers x) :: Float)/(fromIntegral (questionsAsked x) :: Float))) score   --m (Dynamic t Int)
         svgHeight' <- mapDyn (* 200) svgHeight
         svgHeight'' <- mapDyn (singleton "height" . show) svgHeight'
         attrs <- mconcatDyn [class', svgHeight'']
