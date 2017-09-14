@@ -38,7 +38,7 @@ multipleChoiceExercise :: (MonadWidget t m, Show a, Eq a, Ord a)
   -> (c -> m (Event t c))
   -> (Dynamic t (Map a Score) -> m ())
   -> (c -> [Datum c [a] a (Map a Score)] -> IO ([a],a))
-  -> Maybe Reflection
+  -> Maybe String
   -> Exercise t m c [a] a (Map a Score)
 
 multipleChoiceExercise maxTries answers render i c cw de g r = Exercise {
@@ -79,32 +79,56 @@ multipleChoiceQuestionWidget maxTries answers render eWidget config initialEval 
   scores <- mapDyn scoreMap multipleChoiceState
 
   -- user interface (buttons, etc)
-  (playReference,playQuestion, source) <- elClass "div" "playReferenceOrQuestion" $ do
+  (playReference,playQuestion, source) <- elClass "div" "playReferenceOrQuestion" $
     soundWidget "multipleChoiceExercise"
-  nextQuestion <- elClass "div" "nextQuestion" $ buttonDynCss "New Question" (constDyn "buttonWrapper")
-    -- newQuestionVisible <- mapDyn (>0) timesQuestionHeard
-    -- z <- visibleWhen newQuestionVisible $ (InQuestion <$) <$> buttonDynCss "New Question" (constDyn "buttonWrapper")
-    -- return (x,y,z)
   answerPressed <- elClass "div" "answerButtonWrapper" $ -- m (Event t a)
     leftmost <$> zipWithM (\f m -> answerButton (show f) m f) answers modes'
-  elClass "div" "bottomRow" $ do
+  let answerEvent = gate (fmap (==AnswerMode) . fmap mode . current $ multipleChoiceState) answerPressed
+  let exploreEvent = gate (fmap (==ExploreMode) . fmap mode . current $ multipleChoiceState) answerPressed
+  timesQuestionHeard <- foldDyn ($) (0::Int) $ leftmost [const 0 <$ newQuestion,(+1) <$ playQuestion]
+  nextQuestionVisible <- mapDyn (>0) timesQuestionHeard
+  (nextQuestionNav,reflectionData) <- elClass "div" "bottomRow" $ do
+    y <- visibleWhen nextQuestionVisible $ do
+     x <- buttonClass "Try Another Question" "questionSoundButton"
+     return $ InQuestion <$ x
+    a <- (CloseExercise <$) <$> buttonClass "Back to Main Menu" "questionSoundButton"
     elClass "div" "evaluationInQuestion" $ return () -- eWidget scores
-    -- elClass "div" "userMediaWidgetInQuestion" $ bWidget
+    z <- elClass "div" "reflectionInQuestion" $ reflectionWidget
+    return (leftmost [a,y],z)
 
-  -- generate sounds to be playedW
+  -- generate sounds to be played
   answer <- holdDyn Nothing $ fmap (Just . snd) newQuestion
   let questionSound = fmapMaybe id $ tagDyn answer playQuestion
-  let soundsToRender = leftmost [questionSound,answerPressed]
+  let soundsToRender = leftmost [questionSound,exploreEvent]
   let referenceSound = attachDynWith (\a _-> GainSound (Sound a) (-10)) source playReference
   let renderedSounds = attachDynWith (render config) source soundsToRender
   let playSounds = leftmost [renderedSounds,referenceSound]
 
-  -- generate navigation events
-  onToReflect <- (InReflect <$) <$> buttonDynCss "Reflect" (constDyn "buttonWrapper")
-  let navEvents = leftmost [InQuestion <$ nextQuestion, onToReflect]
+  let navEvents = leftmost [nextQuestionNav]
 
-  return (fmap Evaluation $ updated scores, playSounds,navEvents)
+  -- generate data for adaptive questions and analysis
+  let questionWhileListened = (\x -> (possibleAnswers x,correctAnswer x)) <$> tagDyn multipleChoiceState playQuestion
+  let listenedQuestionData = (\(q,a) -> ListenedQuestion config q a) <$> questionWhileListened
+  let questionWhileReference = (\x -> (possibleAnswers x,correctAnswer x)) <$> tagDyn multipleChoiceState playReference
+  let listenedReferenceData = (\(q,a) -> ListenedReference config q a) <$> questionWhileReference
+  evaluations <- mapDyn scoreMap multipleChoiceState
+  let answerWithContext = attachDynWith (\mcs s -> (s,config,possibleAnswers mcs,correctAnswer mcs)) multipleChoiceState answerEvent
+  let answerData = attachDynWith (\e (s,c,q,a) -> Answered s e e c q a) evaluations answerWithContext
+  let questionWhileExplore = attachDynWith (\x y -> (possibleAnswers x,correctAnswer x,y)) multipleChoiceState answerPressed
+  let listenedExploreData = (\(q,a,s) -> ListenedExplore s config q a) <$> questionWhileExplore
+  let datums = leftmost [listenedQuestionData,listenedReferenceData, answerData,listenedExploreData,reflectionData]
 
+  return (datums, playSounds,navEvents)
+
+reflectionWidget :: MonadWidget t m => m (Event t (Datum c q a e))
+reflectionWidget = el "div" $ mdo
+  let attrs = constDyn $ fromList $ zip ["rows"] ["7"]
+  let resetText = "" <$ b
+  el "div" $ text "At any moment, you may enter a reflection on your ear training process in the box below, and click Save (if logged in) to record it / share it with your instructor."
+  t <- el "div" $ textArea $ def & textAreaConfig_attributes .~ attrs & textAreaConfig_setValue .~ resetText
+  b <- el "div" $ buttonClass "Save" "questionSoundButton" -- nb. placeholder class
+  let t' = tag (current $ _textArea_value t) b
+  return $ Reflection <$> t'
 
 debugDisplay :: (MonadWidget t m, Show a ) => String -> Dynamic t a -> m ()
 debugDisplay x d = el "div" $ text x >> display d
@@ -193,20 +217,20 @@ answerSelected _ s | mode s == ListenMode = s
 answerSelected _ s | mode s == ExploreMode = s
 
 answerSelected a s | a == correctAnswer s = toExploreMode $ s {
-  answerButtonModes = replaceAtSameIndex a (allAnswers s) Correct (answerButtonModes s),
-  scoreMap = markCorrect a $ scoreMap s
-  }
+      answerButtonModes = replaceAtSameIndex a (allAnswers s) Correct (answerButtonModes s),
+      scoreMap = markCorrect a $ scoreMap s
+      }
 
 answerSelected a s | a /= correctAnswer s && attemptsRemaining s > 0 = s {
-  answerButtonModes = replaceAtSameIndex a (allAnswers s) IncorrectDisactivated (answerButtonModes s),
-  attemptsRemaining = attemptsRemaining s - 1,
-  scoreMap = markIncorrect a (correctAnswer s) $ scoreMap s
-  }
+      answerButtonModes = replaceAtSameIndex a (allAnswers s) IncorrectDisactivated (answerButtonModes s),
+      attemptsRemaining = attemptsRemaining s - 1,
+      scoreMap = markIncorrect a (correctAnswer s) $ scoreMap s
+      }
 
 answerSelected a s | a /= correctAnswer s && attemptsRemaining s == 0 = toExploreMode $ s {
-  answerButtonModes = replaceAtSameIndex a (allAnswers s) IncorrectActivated (answerButtonModes s),
-  scoreMap = markIncorrect a (correctAnswer s) $ scoreMap s
-  }
+      answerButtonModes = replaceAtSameIndex a (allAnswers s) IncorrectActivated (answerButtonModes s),
+      scoreMap = markIncorrect a (correctAnswer s) $ scoreMap s
+      }
 
 toExploreMode :: MultipleChoiceState a -> MultipleChoiceState a
 toExploreMode s = s {
