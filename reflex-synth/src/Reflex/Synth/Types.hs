@@ -64,6 +64,7 @@ data Source = NodeSource Node (Maybe Double) deriving (Show, Eq, Read)
 data Sound = NoSound | Sound Source | GainSound Sound Double | FilteredSound Source Filter  | ProcessedSound Sound DSPEffect deriving (Read,Show)
 
 
+
 data WebAudioNode = WebAudioNode Node JSVal | NullAudioNode
 
 -- Might use this eventually...
