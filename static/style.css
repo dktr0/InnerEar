@@ -18,7 +18,9 @@ body.innerEar {
 }
 
 div.innerEar{
-  height: 100%
+  height: 100%;
+  min-width: 300px;
+  max-width: 1500px;
 }
 
 .header {
@@ -121,18 +123,6 @@ button {
 
 .specEvalWrapper {
   display: flex;
-}
-
-.answerButtonWrapper {
-/*   margin-top: 5%; */
-/*   margin-bottom: 5%; */
-  display: flex;
-  text-align: center;
-  background-color: black;
-  width: 50%;
-  height: 20%;
-  margin-left:25%;
-
 }
 
 .buttonWrapper {
@@ -455,12 +445,6 @@ left: 60%;
 }
 
 
-.evaluationInQuestion {
-  display: inline-flex;
-  background-color: black;
-     width: 50%;
-}
-
 .userMediaWidgetInQuestion {
     display: inline-flex;
     width: 50%;
@@ -610,3 +594,111 @@ input.soundSourceDropdown{
   text-align: justify;
   margin:2%;
 }
+
+.topRow {
+  width: 100%;
+  border-radius: 10px;
+  background-color: grey;
+  margin-top: 25px;
+  margin-bottom: 25px;
+}
+
+.middleRow {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 25px;
+}
+
+.bottomRow {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 25px;
+}
+
+.topRowHeader {
+  padding: 10px;
+  text-align: left;
+}
+
+.questionTitle {
+  display: inline;
+  width: auto;
+}
+
+div.closeExerciseButton {
+  margin-left: 20px;
+  display: inline;
+  width: auto;
+}
+
+button.closeExerciseButton {
+}
+
+.buttonInterface {
+  display: flex;
+  justify-content: space-between;
+}
+
+.listenButton {
+  flex-grow: 0;
+  margin: 0 auto 0 10px;
+}
+
+.answerButtonWrapper {
+/*   margin-top: 5%; */
+/*   margin-bottom: 5%; */
+  display: flex;
+  text-align: center;
+  background-color: black;
+  width: 100%;
+  height: 20%;
+  flex-grow: 1;
+}
+
+.nextButton {
+  flex-grow: 0;
+  display: inline-block;
+  margin: 0 0 0 auto;
+}
+
+
+
+.evaluation {
+  margin-right: 25px;
+  padding-left: 10px;
+  padding-right: 10px;
+  border-radius: 10px;
+  background-color: grey;
+  width: 50%;
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-wrap: wrap;
+}
+
+.journal {
+  margin-left: 25px;
+  padding-left: 10px;
+  padding-right: 10px;
+  border-radius: 10px;
+  background-color: grey;
+  width: 50%;
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-wrap: wrap;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+div.journalItem {
+}
+
+.journalitem input[type="text"] {
+  flex-grow: 1;
+}
+
+button.journalitem {
+}
+

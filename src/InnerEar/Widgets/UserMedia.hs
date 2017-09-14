@@ -68,8 +68,10 @@ userMediaWidget inputId isEnabled = do
   -- Event for reference, event for question, dynamic source
 soundWidget::MonadWidget t m => String -> m ( Event t (), Event t (), Dynamic t Source)
 soundWidget inputId = elClass "div" "soundWidget" $ do
-  playRef <- elClass "div" "playReference" $ button "Listen to Reference Sound"
-  playQ <- elClass "div" "playQuestion" $ button "Listen to Question"
+--  playRef <- elClass "div" "playReference" $ button "Listen to Reference Sound"
+--  playQ <- elClass "div" "playQuestion" $ button "Listen to Question"
+  playRef <- return never
+  playQ <- return never
 
   source <- elClass "div" "sourceWidget" $ mdo
     let staticSources = M.fromList $ zip [0::Int,1] $ fmap ((flip NodeSource) (Just 2) . BufferNode) [File "pinknoise.wav",File "whitenoise.wav"]
@@ -86,4 +88,4 @@ soundWidget inputId = elClass "div" "soundWidget" $ do
     combineDyn (\i m-> maybe (NodeSource (BufferNode $ File "pinknoise.wav") $ Just 2) id $ M.lookup i m) ddVal ddMapVal
   performEvent $ fmap liftIO $ fmap (const $ stopNodeByID inputId) $ leftmost [playRef,playQ]
   return (playRef, playQ, source)
-  
+
