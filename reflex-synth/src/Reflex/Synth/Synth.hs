@@ -93,6 +93,9 @@ createSilentNode = F.createSilentNode >>= return . WebAudioNode (SilentNode)
 createAudioContext::IO ()
 createAudioContext = F.createAudioContext
 
+startSilentNode:: IO ()
+startSilentNode = F.startSilentNode
+
 createSound :: Sound -> IO (WebAudioGraph)
 createSound (FilteredSound s f) = do
   sourceNode <- createGraph s

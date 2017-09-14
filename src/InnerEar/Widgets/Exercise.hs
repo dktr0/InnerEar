@@ -31,46 +31,33 @@ runExercise ex = mdo
   configVisible <- mapDyn (==InConfigure) nav
   configEvent <- visibleWhen configVisible $ elClass "div" "exerciseConfig" $ configWidget ex $ defaultConfig ex
   config <- holdDyn (defaultConfig ex) configEvent
-  let configData = (Configuration :: c -> Datum c q a e) <$> configEvent
-  
+
   -- Question (with generateQuestion called again with each transition to Question)
   let triggerNewQuestion = ffilter (==InQuestion) navEvents
   configAndData <- combineDyn (,) config currentData -- Dynamic t (a,[Datum])
   let configAndData' = tagDyn configAndData triggerNewQuestion
   let questionIO = fmap (\(x,y) -> (generateQuestion ex) x y) configAndData'
   question <- performEvent $ fmap liftIO $ questionIO
-  let questionData = (\(x,y) -> Question x y :: Datum c q a e) <$> question
 
   -- Question Widget
   let qWidget = fmap (\x-> (questionWidget ex) x (defaultEvaluation ex) question) (updated config)  -- Event t (m (Event,Event,Event)) 
   widgetEvents <- elClass "div" "exerciseQuestion" (widgetHold (return $ (never,never,never)) qWidget)  -- Dyn t (Ev, Ev, Ev)
-  questionWidgetData <- liftM switchPromptlyDyn $ mapDyn (\(a,_,_)->a) widgetEvents 
   sounds <- liftM switchPromptlyDyn $ mapDyn (\(_,a,_)->a) widgetEvents
   questionNav <- liftM switchPromptlyDyn $ mapDyn (\(_,_,a)->a) widgetEvents
-
-  -- Display Evaluation
-  displayEvalVisibile <- mapDyn (==InReflect) nav
-  let evalDataEv = fmapMaybe (\x-> case x of (Evaluation a)->Just a; otherwise->Nothing) questionWidgetData
-  evalData <- holdDyn (defaultEvaluation ex) evalDataEv
-  displayEval <- visibleWhen displayEvalVisibile $ elClass "div" "displayEvaluation" $ do
-    (displayEvaluation ex) evalData
-
-
-  -- Reflect
-  reflectVisible <- mapDyn (==InReflect) nav
-  reflectNav <- visibleWhen reflectVisible $ elClass "div" "exerciseReflection" $ do
-    text $ maybe "Uhoh - something went wrong" id (reflectiveQuestion ex)
-    button "Submit Response"
 
   -- transitions between navigation modes
   let goToConfigure = ffilter (==InConfigure) questionNav
   let goToQuestion = leftmost [InQuestion <$ configEvent,ffilter (==InQuestion) questionNav]
-  let maybeGoToReflect = ffilter (==InReflect) questionNav
-  let goToReflect = fmapMaybe (\_ -> maybe Nothing (const $ Just InReflect) $ reflectiveQuestion ex) maybeGoToReflect
-  let navEvents = leftmost [goToConfigure,goToQuestion,goToReflect]
-  let closeExercise = fmapMaybe (\_ -> maybe (Just ()) (const Nothing) $ reflectiveQuestion ex ) maybeGoToReflect
+  let closeExercise = fmap (const ()) $ ffilter (==CloseExercise) questionNav
+  let navEvents = leftmost [goToConfigure,goToQuestion]
 
-  -- flattening and identification of exercise data for reporting/collection upwards
-  let exerciseData = toExerciseDatum <$> leftmost [configData,questionData,questionWidgetData]
-  let dataWithId = (\x -> (exerciseId ex,x)) <$> exerciseData
-  return (dataWithId,sounds,closeExercise)
+  -- structuring of exercise data for reporting/collection upwards
+  startedData <- (Started <$) <$> getPostBuild
+  let configData = Configured <$> configEvent
+  let newQuestionData = attachDynWith (\c (q,a) -> NewQuestion c q a) config question
+  questionWidgetData <- liftM switchPromptlyDyn $ mapDyn (\(a,_,_)->a) widgetEvents
+  let endedData = Ended <$ closeExercise
+  let allData = (leftmost [startedData,configData,newQuestionData,questionWidgetData,endedData]) :: Event t (Datum c q a e)
+  let exerciseData = toExerciseDatum <$> allData
+  let dataPairedWithId = (\x -> (exerciseId ex,x)) <$> exerciseData
+  return (dataPairedWithId,sounds,closeExercise)

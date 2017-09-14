@@ -2,7 +2,7 @@ InnerEarWebSocket = function (p) {
   this.status = "initializing...";
   this.wsReady = false;
   this.responses = new Array;
-  this.setUrl("ws://" + location.hostname + ":" + p /* + location.port */);
+  this.setUrl("ws://" + location.hostname + ":" + location.port);
 }
 
 InnerEarWebSocket.prototype.setUrl = function(x) {

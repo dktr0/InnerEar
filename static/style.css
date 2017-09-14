@@ -565,7 +565,12 @@ input.soundSourceDropdown{
   height:80%;
   display: auto
 }
-
+.userMediaWidgetDisabled{
+  height: 80%;
+  display: auto;
+  opacity: 0.15;
+  border-top: 1pt solid black;
+}
 .browseButton{
   height:20%;
 }

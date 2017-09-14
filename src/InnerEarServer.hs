@@ -20,6 +20,7 @@ import Data.Either
 import Control.Monad
 import Control.Concurrent.MVar
 import Control.Exception (try,catch,SomeException)
+import Data.Time.Clock
 
 import InnerEar.Types.Request
 import InnerEar.Types.Response
@@ -48,9 +49,9 @@ closeDatabaseOnException s e = do
 
 mainWithDatabase :: MVar Server -> IO ()
 mainWithDatabase s = do
-  putStrLn "Inner Ear server (listening on port 4468)"
+  putStrLn "Inner Ear server (listening on port 8000)"
   let settings = (defaultWebAppSettings "InnerEarClient.jsexe") { ssIndices = [unsafeToPiece "index.html"] }
-  run 4468 $ WS.websocketsOr WS.defaultConnectionOptions (webSocketsApp s) (staticApp settings)
+  run 8000 $ WS.websocketsOr WS.defaultConnectionOptions (webSocketsApp s) (staticApp settings)
 
 webSocketsApp :: MVar Server -> WS.ServerApp -- = PendingConnection -> IO ()
 webSocketsApp s ws = do
@@ -84,6 +85,9 @@ processLoop ws s i = do
 close :: MVar Server -> ConnectionIndex -> String -> IO ()
 close s i msg = do
   putStrLn $ "closing connection: " ++ msg
+  s' <- takeMVar s
+  sessionEnd i s'
+  putMVar s s'
   updateServer s $ deleteConnection i
   return ()
 
@@ -107,22 +111,36 @@ authenticate i h p s = do
       if (Just p) == p'
         then do
           putStrLn $ "authenticated as user " ++ h
+          now <- getCurrentTime
+          DB.postEvent (database s) $ Record h $ Point (Right SessionStart) now
           respond s i $ Authenticated h
           return $ authenticateConnection i h s
         else do
           putStrLn $ "failure to authenticate as user " ++ h
+          now <- getCurrentTime
+          DB.postEvent (database s) $ Record h $ Point (Right AuthenticationFailure) now
           respond s i $ NotAuthenticated
           return $ deauthenticateConnection i s
     else do
       putStrLn $ "failure to authenticate as non-existent user " ++ h
+      now <- getCurrentTime
+      DB.postEvent (database s) $ Record h $ Point (Right AuthenticationFailure) now
       respond s i $ NotAuthenticated
-      return s
+      return $ deauthenticateConnection i s
 
 deauthenticate :: ConnectionIndex -> Server -> IO Server
 deauthenticate i s = do
   putStrLn $ "deauthenticating connection " ++ (show i)
-  respond s i $ NotAuthenticated
-  return $ deauthenticateConnection i s
+  s' <- sessionEnd i s
+  respond s' i $ NotAuthenticated
+  return $ deauthenticateConnection i s'
+
+sessionEnd :: ConnectionIndex -> Server -> IO Server
+sessionEnd i s = do
+  now <- getCurrentTime
+  let h = snd $ (connections s) ! i
+  when (isJust h) $ DB.postEvent (database s) $ Record (fromJust h) $ Point (Right SessionEnd) now
+  return s
 
 postPoint :: ConnectionIndex -> Point -> Server -> IO Server
 postPoint i p s = do
