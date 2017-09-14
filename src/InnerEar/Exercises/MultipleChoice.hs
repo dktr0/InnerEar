@@ -53,8 +53,6 @@ multipleChoiceExercise maxTries answers cWidget render i c cw de g r = Exercise 
   reflectiveQuestion = r
 }
 
-
-
 multipleChoiceQuestionWidget :: (MonadWidget t m, Show a, Eq a, Ord a)
   => Int -- maximum number of tries
   -> [a] -- fixed list of potential answers
@@ -101,7 +99,7 @@ multipleChoiceQuestionWidget maxTries answers cWidget render eWidget config init
       elClass "div"  "configWidgetWrapper" $ cWidget config
 
   journalData <- elClass "div" "bottomRow" $ do
-    elClass "div" "evaluation" $ return ()
+    elClass "div" "evaluation" $ eWidget scores
     elClass "div" "journal" $ reflectionWidget
 
   let answerEvent = gate (fmap (==AnswerMode) . fmap mode . current $ multipleChoiceState) answerPressed

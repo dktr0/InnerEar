@@ -17,6 +17,8 @@ data AnswerButtonMode =
   CorrectMissed -- (i.e. what correct answer becomes when tries run out)
   deriving (Eq,Show)
 
+
+
 buttonDynCss :: MonadWidget t m => String -> Dynamic t String -> m (Event t ())
 buttonDynCss label cssClass =  do
   cssClass' <- mapDyn (singleton "class") cssClass
