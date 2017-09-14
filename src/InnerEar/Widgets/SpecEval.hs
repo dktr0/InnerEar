@@ -96,6 +96,7 @@ displayMultipleChoiceEvaluationGraph' graphLabel qLabel possibilities scoreMap =
       scoreList <- mapDyn (\x -> fmap (\y -> Data.Map.lookup y x) possibilities) scoreMap -- m (Dynamic t [Maybe Score])
       scoreMap' <- mapDyn (\x -> fromList $ zip possibilities x) scoreList -- (Dynamic t (Map a (Maybe Score)))
       evalGraphFrame qLabel graphLabel
+      showScore
       listWithKey scoreMap' f
       return ()
       where f k d = scoreBar (show k) d
