@@ -119,7 +119,7 @@ performanceBar percentage label count =  do
   --A dynamic bar with css style and in-line attribute
 dynBarCSS :: MonadWidget t m =>  Dynamic t (Score) -> Dynamic t Float -> m ()
 dynBarCSS score barWidth = do
-      svgClass "svg" "svgForBars" $ do
+      svgClass "svg" "svgBarContainer" $ do
         let posX = constDyn $ negate 30 -- Dynamic t Int
         let posY = constDyn $ negate 200  --Dynamic t Int
         barHeight <- mapDyn  (\x ->  ((fromIntegral (questionsAsked x) :: Float) - (fromIntegral (falseNegatives x) :: Float)) / (fromIntegral (questionsAsked x) :: Float)) score   --m (Dynamic t Int)
@@ -129,7 +129,6 @@ dynBarCSS score barWidth = do
         let t = constDyn "rotate (180)" --Dynamic t String
         rectDynCSS posX posY barWidth' barHeight' t c  -- m ()
 
-
 dynBarCSS' :: MonadWidget t m =>  Dynamic t (Score) -> Dynamic t Float -> m ()
 dynBarCSS' score barWidth = do
     let class' = constDyn (singleton "class" "svgBarContainer")
@@ -137,30 +136,7 @@ dynBarCSS' score barWidth = do
     svgHeight' <- mapDyn (* 200) svgHeight
     svgHeight'' <- mapDyn (singleton "height" . show) svgHeight'
     attrs <- mconcatDyn [class', svgHeight'']
-    svgDynAttr "svg" attrs $ do
-          let posX = constDyn $ negate 30 -- Dynamic t Int
-          let posY = constDyn $ negate 200  --Dynamic t Int
-          let barHeight' = constDyn 300.0 -- m (Dynamic t Float) ?? should be m (Dynamic t Int)
-          barWidth' <- mapDyn (*1) barWidth -- m (Dynamic t Float)
-          let cssClass = constDyn "bars" --Dynamic t String
-          let transform = constDyn "rotate (180)" --Dynamic t String
-          rectDynCSS posX posY barWidth' barHeight' transform cssClass  -- m ()
-
-dynBarCSSFiveBand :: MonadWidget t m =>  Dynamic t (Score) -> Dynamic t Float -> m ()
-dynBarCSSFiveBand score barWidth = do
-        let class' = constDyn (singleton "class" "svgBarContainerFiveBand")
-        svgHeight <- mapDyn (\x -> case x of (Score 0 0 0) -> (0.0 :: Float); otherwise -> ((fromIntegral (correctAnswers x) :: Float)/(fromIntegral (questionsAsked x) :: Float))) score   --m (Dynamic t Int)
-        svgHeight' <- mapDyn (* 200) svgHeight
-        svgHeight'' <- mapDyn (singleton "height" . show) svgHeight'
-        attrs <- mconcatDyn [class', svgHeight'']
-        svgDynAttr "svg" attrs $ do
-              let posX = constDyn $ negate 30 -- Dynamic t Int
-              let posY = constDyn $ negate 200  --Dynamic t Int
-              let barHeight' = constDyn 300.0 -- m (Dynamic t Float) ?? should be m (Dynamic t Int)
-              barWidth' <- mapDyn (*1) barWidth -- m (Dynamic t Float)
-              let cssClass = constDyn "bars" --Dynamic t String
-              let transform = constDyn "rotate (180)" --Dynamic t String
-              rectDynCSS posX posY barWidth' barHeight' transform cssClass  -- m ()
+    svgDynAttr "svg" attrs $ return ()
 
 -- A small fainted line to use in performance graphs
 faintedLineCSS :: MonadWidget t m => String -> m ()
@@ -185,19 +161,7 @@ scoreBar key score  = elClass "div" "scoreBarWrapper" $ do
   barHeight <- mapDyn (maybe (Score 0 0 0) id) score -- Dynamic t Int
   scoreLabel <- mapDyn (maybe (Score 0 0 0) id) score
   countLabel <- mapDyn (maybe (Score 0 0 0) id) score
-  flippableDyn (return ())  (do (dynScoreLabel (constDyn "scoreLabel") scoreLabel); faintedLineToAdjustGraph "faintedLineToAdjustGraph") bool
-  dynBarCSS' barHeight (constDyn 50) -- m ()
-  flippableDyn (do faintedLineToAdjustGraph "faintedLineToAdjustGraph"; faintedLineCSS "svgFaintedLine") (return ()) bool
   xLabel "xLabel" key
   dynCountLabel (constDyn "countLabel") countLabel
-
-scoreBar' :: MonadWidget t m => String -> Dynamic t (Maybe Score) -> m ()
-scoreBar' key score  = elClass "div" "scoreBarWrapperFiveBand" $ do
-    bool <-  mapDyn (maybe False (const True)) score
-    barHeight <- mapDyn (maybe (Score 0 0 0) id) score -- Dynamic t Int
-    scoreLabel <- mapDyn (maybe (Score 0 0 0) id) score
-    countLabel <- mapDyn (maybe (Score 0 0 0) id) score
-    flippableDyn (return ())  (do (dynScoreLabel (constDyn "scoreLabelFiveBand") scoreLabel); faintedLineToAdjustGraph "faintedLineToAdjustGraphAfterScore"; dynBarCSSFiveBand barHeight (constDyn 100)) bool
-    flippableDyn (do faintedLineToAdjustGraph "faintedLineToAdjustGraph"; faintedLineCSS "svgFaintedLineFiveBand") (return ()) bool
-    xLabel "xLabelFiveBand" key
-    dynCountLabel (constDyn "countLabelFiveBand") countLabel
+  flippableDyn (return ())  (do (dynBarCSS' barHeight (constDyn 50)); (dynScoreLabel (constDyn "scoreLabel") scoreLabel)) bool
+  flippableDyn (do faintedLineCSS "svgFaintedLine") (return ()) bool

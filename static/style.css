@@ -71,8 +71,6 @@ text {
   color: hsl(120,100%,80%);
 }
 
-.barWrapper {
-}
 
 .mainBody {
   height: 90%
@@ -121,6 +119,10 @@ button {
 
 .specEvalWrapper {
   display: flex;
+  position: relative;
+  top:20%;
+
+
 }
 
 .answerButtonWrapper {
@@ -192,56 +194,38 @@ button.correctButton{
 }
 
 .svgBarContainer {
-  width: 30px;
-  background-color: blue;
-  margin: 0px;
-  position: relative;
-  right: 30%;
-  top: 20%;
-
+   width: 30%;
+  position: absolute;
+  bottom:3%;
+   right: 65%;
+  background-color: hsl(120,100%,80%);
 }
 
-.svgBarContainerFiveBand {
-  width: 30px;
-  background-color: blue;
-  margin: 0px;
-  position: relative;
-  left: 90%;
 
-}
 
 .faintedLineToAdjustGraph {
    width: 1px;
   height: 220px;
   background-color: #2F4F4F;
-  background-color: black;
+  background-color: blue;
   position: relative;
-  right: 45%;
+  right: 20%;
   top: 11%;
 
 }
-
 
 .svgFaintedLine {
    width: 1px;
    height: 5px;
    background-color: #2F4F4F;
-   position: relative;
-   right: 45%;
-   top: 11%;
+   position: absolute;
+   right: 80%;
+   top: 95%;
 }
-
-.svgLineFiveBand {
-  width: 1px;
-  height: 5px;
-  background-color: #2F4F4F;
-  position: relative;
-  left: 100%;
- }
 
  .faintedXaxis {
     width : 100%;
-    height: 1px;
+    height: 1%;
     background-color: #2F4F4F;
     position:relative;
     top: 80%;
@@ -250,73 +234,38 @@ button.correctButton{
   }
 
 .faintedYaxis {
-    width : 1px;
+    width : 1%;
     height:70%;
     background-color: #2F4F4F;
     position: relative;
-    top: 10%;
+    top: 11%;
     left: 10%;
 }
 
-.faintedXaxisFive {
-   width : 550px;
-   height: 1px;
-   background-color: #2F4F4F;
-   position: relative;
-   right: 0px;
-   bottom: 154px;
- }
 
- .faintedYaxisFiveBand {
-   width : 1px;
-   height: 220px;
-   background-color: #2F4F4F;
-   position: relative;
-   right: 0px;
-   top: 173px;
- }
 
 .bars {
   fill: hsl(120,100%,80%);
   stroke: black;
   stroke-width: 0.5px;
+
  }
 
 .scoreBarWrapper {
 	display: inline-block;
   position: relative;
   right:58%;
-  bottom:16%;
+  bottom:15%;
 }
-
-
-
-.scoreBarWrapperFiveBand{
-  display: inline-block;
-  position: relative;
-  bottom: 80px;
-}
-
 
 .scoreLabel {
-   background-color: black;
    color: hsl(120,100%,80%);
    text-align: center;
    font-size: 50%;
-   position: relative;
-   right: 30%;
+   position: absolute;
+   right: 75%;
+    top:12%;
  }
-
-
-.scoreLabelFiveBand {
-  background-color: black;
-  color: hsl(120,100%,80%);
-  font-size: 12px;
-  text-align: center;
-  position: relative;
-  left: 92%;
-  width: 25px;
-}
 
 
 .xLabel {
@@ -324,23 +273,13 @@ button.correctButton{
    font-size:50%;
    position: relative;
    text-align: center;
-   background-color: black;
    width: 100px;
    right: 30%;
-   top: 13%;
+   top: 100%;
 }
 
-.xLabelFiveBand {
-  color: hsl(120,100%,80%);
-  margin-right: 10%;
-  font-size: 10px;
-  position: relative;
-  left: 150%;
-  text-align: center;
-}
-
-
- .countLabel {
+.countLabel {
+  background-color: transparent;
    color: hsl(120,100%,80%);
    padding-top: 15px;
    margin-right: 10%;
@@ -348,31 +287,19 @@ button.correctButton{
    font-size: 50%;
    position: relative;
    right: 30%;
-   top: 13%;
+   top: 100%;
 
 }
 
-.countLabelFiveBand {
-
-  color: hsl(120,100%,80%);
-  padding-top: 15px;
-  margin-right: 10%;
-  font-size: 12px;
-  position: relative;
-left: 60%;
-    text-align: center;
-
-}
 .graphLabel {
    color: hsl(120,100%,80%);
    width: 600px;
    font-size: 100%;
    position: relative;
-   right: 41%;
+   right: 42%;
    top: 100%;
    height: 10%;
    text-align: center;
-   background-color: black;
 }
 
 .graphLabelFiveBand {
@@ -397,7 +324,6 @@ left: 60%;
 }
 
 .countMainLabelFiveBand {
-  background-color: black;
   width: 15px;
   height: 10%;
   font-size:  12px;
@@ -415,14 +341,6 @@ left: 60%;
    top:40%;
 }
 
-.percentageMainLabelFiveBand {
-  background-color: black;
-  width: 15px;
-  font-size:  12px;
-  position: relative;
-  right: 300px;
-  bottom:250px;
-}
 
 .hzMainLabel {
   width: 15px;
@@ -445,20 +363,20 @@ left: 60%;
   display: inline-block;
   text-align: center;
   width: 100%;
-  background-color: black;
   height: 100%;
 }
 
 .bottomRow{
   display: flex;
       text-align: center;
+  margin-left:auto;
+    margin-right:auto;
 
 }
 
 
 .evaluationInQuestion {
   display: inline-flex;
-  background-color: black;
      width: 50%;
 }
 
@@ -469,19 +387,14 @@ left: 60%;
 
 
 
-.faintedLineToAdjustGraphAfterScore {
-   width: 1px;
-  height: 207px;
-  background-color: #2F4F4F;
-  background-color: black;
-  position: relative;
-  left: 100%;
-}
 
 .evalGraphFrameRow {
-   display: inline-flex;
-   width: 100%
- }
+  display: inline-block;
+  position: relative;
+  top:2%;
+
+
+}
 
 .nextQuestion{
   height: 10%;
@@ -489,8 +402,6 @@ left: 60%;
 .nextQuestion button{
   height: 100%;
 }
-
-
 
 
 .playReferenceOrQuestion{
@@ -594,14 +505,6 @@ input.soundSourceDropdown{
   width:10px;
 }
 
-.faintedLineToAdjustGraphAfterScore {
-  width: 1px;
-  height: 207px;
-  background-color: #2F4F4F;
-  background-color: black;
-  position: relative;
-  left: 100%;
-}
 
 .evalGraphFrameRow {
   display: inline-flex;

@@ -54,6 +54,6 @@ fiveBandBoostCutExercise = multipleChoiceExercise
   FiveBandBoostCut
   (configs!!0)
   fiveBandConfigWidget
-  (displaySpectrumEvaluationFiveBand (constDyn "Session Performance"))
+  (displaySpectrumEvaluation (constDyn "Session Performance"))
   generateQ
   (Just "Please write some brief text reflecting on your experience:")

@@ -52,8 +52,6 @@ multipleChoiceExercise maxTries answers render i c cw de g r = Exercise {
   reflectiveQuestion = r
 }
 
-
-
 multipleChoiceQuestionWidget :: (MonadWidget t m, Show a, Eq a, Ord a)
   => Int -- maximum number of tries
   -> [a] -- fixed list of potential answers
@@ -92,7 +90,7 @@ multipleChoiceQuestionWidget maxTries answers render eWidget config initialEval 
      x <- buttonClass "Try Another Question" "questionSoundButton"
      return $ InQuestion <$ x
     a <- (CloseExercise <$) <$> buttonClass "Back to Main Menu" "questionSoundButton"
-    elClass "div" "evaluationInQuestion" $ return () -- eWidget scores
+    elClass "div" "evaluationInQuestion" $ eWidget scores
     z <- elClass "div" "reflectionInQuestion" $ reflectionWidget
     return (leftmost [a,y],z)
 
