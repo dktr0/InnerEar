@@ -17,6 +17,10 @@ data Score = Score {
 questionsAsked::Score -> Int
 questionsAsked (Score a _ c) = a+c
 
+asPercent :: Score -> Double
+asPercent s | questionsAsked s == 0 = 0.0
+asPercent s | otherwise = (((fromIntegral . correctAnswers) s) :: Double) / (((fromIntegral . questionsAsked) s) :: Double )
+
 incFalsePositive:: Score -> Score
 incFalsePositive (Score a b c) = Score a (b+1) c
 

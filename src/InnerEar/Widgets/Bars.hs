@@ -129,13 +129,12 @@ dynBarCSS score barWidth = do
         let t = constDyn "rotate (180)" --Dynamic t String
         rectDynCSS posX posY barWidth' barHeight' t c  -- m ()
 
-dynBarCSS' :: MonadWidget t m =>  Dynamic t (Score) -> Dynamic t Float -> m ()
-dynBarCSS' score barWidth = do
+dynBarCSS' :: MonadWidget t m =>  Dynamic t Double -> Dynamic t Float -> m ()
+dynBarCSS' percent barWidth = do
     let class' = constDyn (singleton "class" "svgBarContainer")
-    svgHeight <- mapDyn (\x -> case x of (Score 0 0 0) -> (0.0 :: Float); otherwise -> ((fromIntegral (correctAnswers x) :: Float)/(fromIntegral (questionsAsked x) :: Float))) score   --m (Dynamic t Int)
-    svgHeight' <- mapDyn (* 200) svgHeight
-    svgHeight'' <- mapDyn (singleton "height" . show) svgHeight'
-    attrs <- mconcatDyn [class', svgHeight'']
+    svgHeight <- mapDyn (* 200) percent
+    svgHeight' <- mapDyn (singleton "height" . show) svgHeight
+    attrs <- mconcatDyn [class', svgHeight']
     svgDynAttr "svg" attrs $ return ()
 
 -- A small fainted line to use in performance graphs
@@ -158,10 +157,10 @@ faintedLineToAdjustGraph c = svgClass "svg" c $ return ()
 scoreBar :: MonadWidget t m => String -> Dynamic t (Maybe Score) -> m ()
 scoreBar key score  = elClass "div" "scoreBarWrapper" $ do
   bool <-  mapDyn (maybe False (const True)) score
-  barHeight <- mapDyn (maybe (Score 0 0 0) id) score -- Dynamic t Int
-  scoreLabel <- mapDyn (maybe (Score 0 0 0) id) score
-  countLabel <- mapDyn (maybe (Score 0 0 0) id) score
+  score' <-  mapDyn (maybe (Score 0 0 0) id) score -- Dynamic t Int
   xLabel "xLabel" key
-  dynCountLabel (constDyn "countLabel") countLabel
-  flippableDyn (return ())  (do (dynBarCSS' barHeight (constDyn 50)); (dynScoreLabel (constDyn "scoreLabel") scoreLabel)) bool
+  mapDyn questionsAsked score' >>= dynCountLabel (constDyn "countLabel")
+  percent <- mapDyn asPercent score'
+  let b = dynBarCSS' percent (constDyn 50) >> dynScoreLabel (constDyn "scoreLabel") percent
+  flippableDyn (return ()) b bool
   flippableDyn (do faintedLineCSS "svgFaintedLine") (return ()) bool

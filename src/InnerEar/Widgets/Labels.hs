@@ -64,9 +64,9 @@ xLabel c s = elClass "div" c  $ text s
 
 
 -- A dynamic label for Score with CSS style
-dynScoreLabel :: forall t m. MonadWidget t m => Dynamic t String -> Dynamic t (Score) -> m ()
-dynScoreLabel cssClass score = do
-  score' <- ((mapDyn ((* 100) . (\x ->  ((fromIntegral (questionsAsked x)) - (fromIntegral (falseNegatives x))) / (fromIntegral (questionsAsked x)))) score) ::  m (Dynamic t Float))   --m (Dynamic t Float)
+dynScoreLabel :: forall t m. MonadWidget t m => Dynamic t String -> Dynamic t Double -> m ()
+dynScoreLabel cssClass percent = do
+  score' <- mapDyn (* 100) percent
   roundScore <- ((mapDyn round score') :: m (Dynamic t Int))
   score''  <- mapDyn show roundScore -- m (Dynamic t String)
   cssClass' <- mapDyn (singleton "class") cssClass  -- m (Dynamic t String)
@@ -81,13 +81,12 @@ showScore cssClass score = do
       return ()
 
 -- A dynamic label for Count with CSS style
-dynCountLabel :: MonadWidget t m => Dynamic t String -> Dynamic t (Score) -> m ()
+dynCountLabel :: MonadWidget t m => Dynamic t String -> Dynamic t Int -> m ()
 dynCountLabel cssClass count = do
-  count' <- mapDyn questionsAsked count  -- m (Dynamic t Int)
-  count''  <- mapDyn show count' -- m (Dynamic t String)
+  count'  <- mapDyn show count -- m (Dynamic t String)
   cssClass' <- mapDyn (singleton "class") cssClass -- m (Dynamic t String)
   elDynAttr "div" cssClass' $ do
-    dynText count'' -- m ()
+    dynText count' -- m ()
     return ()
 
 

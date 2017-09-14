@@ -43,6 +43,7 @@ function test(s){
 function createScriptProcessorNode (onAudioFunc){
   var sp = ___ac.createScriptProcessor(undefined,2,2)
   sp.onaudioprocess = onAudioFunc;
+  constole.log('script processor node created')
   return sp;
 }
 
@@ -288,17 +289,17 @@ function setAudioSrc(id){
 
 }
 
-function audioOnTimeUpdate(obj){
-  if (obj.audioElement.loop){
-    if(obj.loopEnd==undefined){obj.loopEnd = obj.buffer.duration}
-    if(obj.audioElement.currentTime<obj.loopStart){
-      obj.audioElement.currentTime = obj.loopStart
-    }
-    if(obj.audioElement.currentTime>=obj.loopEnd){
-      obj.audioElement.currentTime = obj.loopEnd
-    }
-  }
-}
+// function audioOnTimeUpdate(obj){
+//   if (obj.audioElement.loop){
+//     if(obj.loopEnd==undefined){obj.loopEnd = obj.buffer.duration}
+//     if(obj.audioElement.currentTime<obj.loopStart){
+//       obj.audioElement.currentTime = obj.loopStart
+//     }
+//     if(obj.audioElement.currentTime>=obj.loopEnd){
+//       obj.audioElement.currentTime = obj.loopEnd
+//     }
+//   }
+// }
 
 
 
@@ -395,7 +396,7 @@ function stopNodeByID(id){
       console.log("WARNING - tried to stop a node that does not exist")
     }
   }else{
-    console.log("WARNING - node with id: "+id+" does not exist");
+    console.log("WARNING - stopNodeByID called on node with id: "+id+" which does not exist. Ignore this message if not trying to stop a loaded file source");
     console.log(userAudioNodes[id])
   }
 }

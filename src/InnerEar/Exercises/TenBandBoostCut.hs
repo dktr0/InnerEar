@@ -17,9 +17,13 @@ import InnerEar.Types.Exercise
 import InnerEar.Types.ExerciseId
 import InnerEar.Types.Frequency
 import InnerEar.Exercises.MultipleChoice
+import InnerEar.Widgets.Config
 import InnerEar.Widgets.UserMedia
 
 data Config = AllBands | HighBands | MidBands | Mid8Bands | LowBands deriving (Show,Eq,Data,Typeable)
+
+configMap::Map String Config
+configMap = fromList $ zip ["Entire spectrum", "High bands", "Mid bands", "Mid 8 bands", "Low bands"] [AllBands, HighBands, MidBands, Mid8Bands, LowBands]
 
 type Answer = Frequency
 
@@ -28,9 +32,10 @@ answers = [
   F 31 "31", F 63 "63", F 125 "125", F 250 "250", F 500 "500",
   F 1000 "1k", F 2000 "2k", F 4000 "4k", F 8000 "8k", F 16000 "16k"]
 
-renderAnswer :: Config -> Source -> Frequency -> Sound
-renderAnswer _ s f = GainSound (FilteredSound s filter) (-10)
-  where filter = Filter Peaking (freqAsDouble f) 1.4 16.0
+renderAnswer :: Config -> Source -> Maybe Answer -> Sound
+renderAnswer _ s f = case f of
+  (Just freq) -> GainSound (FilteredSound s $ Filter Peaking (freqAsDouble freq) 1.4 16) (-10)
+  Nothing -> GainSound (Sound s) (-10)
 
 tenBandConfigWidget :: MonadWidget t m => Config -> m (Event t Config)
 tenBandConfigWidget i = radioConfigWidget "" msg possibilities i
@@ -51,6 +56,7 @@ tenBandBoostCutExercise :: MonadWidget t m => Exercise t m Config [Answer] Answe
 tenBandBoostCutExercise = multipleChoiceExercise
   3
   answers
+  (dynRadioConfigWidget "tenBandsExercise" configMap)
   renderAnswer
   TenBandBoostCut
   AllBands
