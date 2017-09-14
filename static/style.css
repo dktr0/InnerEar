@@ -526,14 +526,7 @@ left: 60%;
 
 
 /* Wrapping everything the user uses to select a sound source and load a buffer/loop it etc...*/
-.sourceWidget{
-  width:33%;
-  height: 100%;
-/*   display:inline-block; */
-  float:left;
-  background-color: rgb(30,30,30);
-  text-align: left;
-}
+
 /* Just containing the "Sound source:'' label and the dropdown*/
 .soundSourceDropdown{
   height:20%;
@@ -702,3 +695,15 @@ div.journalItem {
 button.journalitem {
 }
 
+.configWidget {
+  display: flex;
+  justify-content: space-between;
+}
+
+.radioConfigWidget {
+}
+
+.sourceWidget{
+  background-color: rgb(30,30,30);
+  text-align: left;
+}

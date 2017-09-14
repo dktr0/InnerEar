@@ -25,7 +25,7 @@ foreign import javascript safe "loadUserSoundFile()" loadUserSoundFile :: IO ()
 foreign import javascript safe "$r= createMediaNode($1)" createMediaNode :: JSString -> IO JSVal
 
 
-foreign import javascript safe "setGain($1, $2)" setGain :: Double -> JSVal -> IO ()   -- Setting Gain to a DB value
+foreign import javascript safe "setGain($1, $2)" setGain :: Double -> JSVal -> IO ()   -- Setting Gain to a DB value (NOT AMPLITUDE)
 foreign import javascript safe "$2.gain.value = $1" setAmp::Double -> JSVal -> IO ()
 foreign import javascript safe "$2.frequency.value = $1" setFrequency :: Double -> JSVal -> IO()
 

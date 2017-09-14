@@ -45,7 +45,7 @@ data Node =
 
 data DSPEffect = DistortAtDb Double deriving (Read, Show, Eq)
 
-data Filter = NoFilter | Filter FilterType Double Double Double deriving (Read,Show,Eq)
+data Filter = NoFilter | Filter FilterType Double Double Double deriving (Read,Show,Eq) -- Freq, q, db
 
 data OscillatorType = Sawtooth | Sine | Square deriving (Show, Read,Eq)
 
@@ -64,6 +64,7 @@ data Source = NodeSource Node (Maybe Double) deriving (Show, Eq, Read)
 data Sound = NoSound | Sound Source | GainSound Sound Double | FilteredSound Source Filter  | ProcessedSound Sound DSPEffect deriving (Read,Show)
 
 
+
 data WebAudioNode = WebAudioNode Node JSVal | NullAudioNode
 
 -- Might use this eventually...
@@ -77,7 +78,7 @@ data WebAudioNode = WebAudioNode Node JSVal | NullAudioNode
 data WebAudioGraph = WebAudioGraph WebAudioNode | WebAudioGraph' WebAudioNode WebAudioGraph | WebAudioGraph'' WebAudioGraph WebAudioGraph
 
 createOscillator :: Oscillator -> IO WebAudioNode
-createOscillator (Oscillator t freq gain) = do
+createOscillator (Oscillator t freq db) = do
   osc <- F.createOscillator
   F.setOscillatorType (Prim.toJSString $ fmap toLower $ show t) osc  -- Web Audio won't accept 'Sine' must be 'sine'
   F.setFrequency freq osc
@@ -85,7 +86,7 @@ createOscillator (Oscillator t freq gain) = do
   F.setAmp 0 g
   F.connect osc g
   F.startNode osc
-  return (WebAudioNode (OscillatorNode $ Oscillator t freq gain) g)
+  return (WebAudioNode (OscillatorNode $ Oscillator t freq db) g)
 
 
 
@@ -222,7 +223,7 @@ startNode :: WebAudioNode -> IO ()
 startNode (WebAudioNode (AdditiveNode _) r) = F.setGain 0 r  -- @this may not be the best..
 startNode (WebAudioNode (GainNode _) _) = error "Gain node cannot bet 'started' "
 startNode (WebAudioNode (MediaNode s) _) = F.playMediaNode (toJSString s) -- if you call 'start' on a MediaBufferNode a js error is thrown by the WAAPI
-startNode (WebAudioNode (OscillatorNode (Oscillator _ _ g)) r) = F.setGain g r
+startNode (WebAudioNode (OscillatorNode (Oscillator _ _ db)) r) = F.setGain db r
 startNode (WebAudioNode (BufferNode (LoadedFile a (PlaybackParam b c d))) x) = do
   F.playBufferNode (toJSString a) (pToJSVal b) (pToJSVal c) (pToJSVal d) x
 

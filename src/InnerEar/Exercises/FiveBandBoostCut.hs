@@ -10,6 +10,7 @@ import System.Random
 import Text.JSON
 import Text.JSON.Generic
 
+import InnerEar.Widgets.Config
 import InnerEar.Widgets.SpecEval
 import InnerEar.Types.Data
 import InnerEar.Types.Score
@@ -26,15 +27,20 @@ type Config = Double
 configs :: [Double]
 configs = [10,6,3,2,1,-1,-2,-3,-6,-10]
 
+configMap::Map String Config
+configMap = fromList $ fmap (\x-> (show x ++ " dB",x)) configs
+
 type Answer = Frequency
 
 answers :: [Answer]
 answers = [F 155 "Bass (155 Hz)",F 1125 "Low Mids (1125 Hz)",F 3000 "High Mids (3 kHz)",
   F 5000 "Presence (5 kHz)",F 13000 "Brilliance (13 kHz)"]
 
-renderAnswer :: Config -> Source -> Answer -> Sound
-renderAnswer db s f = GainSound (FilteredSound s filter) (-10+db) -- needs to be boost or cut by specified dB
-  where filter = Filter Peaking (freqAsDouble f) 1.4 16.0 -- and bandwidth should be wider
+renderAnswer :: Config -> Source -> Maybe Answer -> Sound
+renderAnswer db s f = case f of
+  (Just freq) -> GainSound (FilteredSound s $ Filter Peaking (freqAsDouble freq) 1.4 db) (-10)
+  Nothing -> GainSound (Sound s) (-10)
+
 
 fiveBandConfigWidget :: MonadWidget t m => Config -> m (Event t Config)
 fiveBandConfigWidget i = radioConfigWidget "" msg configs i
@@ -46,10 +52,14 @@ displayEval scoreMap = return ()
 generateQ :: Config -> [Datum Config [Answer] Answer (Map Answer Score)] -> IO ([Answer],Answer)
 generateQ _ _ = randomMultipleChoiceQuestion answers
 
+
+
+
 fiveBandBoostCutExercise :: MonadWidget t m => Exercise t m Config [Answer] Answer (Map Answer Score)
 fiveBandBoostCutExercise = multipleChoiceExercise
   3
   answers
+  (dynRadioConfigWidget "fiveBandBoostCutExercise" configMap)
   renderAnswer
   FiveBandBoostCut
   (configs!!0)

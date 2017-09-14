@@ -13,6 +13,7 @@ import InnerEar.Exercises.MultipleChoice
 import InnerEar.Types.ExerciseId
 import InnerEar.Types.Exercise
 import InnerEar.Types.Score
+import InnerEar.Widgets.Config
 import InnerEar.Widgets.SpecEval
 import InnerEar.Types.Data (Datum)
 
@@ -21,15 +22,21 @@ type Config = Double -- representing threshold of clipping, and inverse of post-
 configs :: [Config]
 configs = [-12,-6,-3,-2,-1,-0.75,-0.5,-0.25,-0.125,-0.0625]
 
+configMap:: Map String Config
+configMap = fromList $ fmap (\x-> (show x++" dB", x)) configs
+
 data Answer = Answer Bool deriving (Eq,Ord,Data,Typeable)
 
 instance Show Answer where
   show (Answer True) = "Distorted"
   show (Answer False) = "Clean"
 
-renderAnswer :: Config -> b -> Answer -> Sound
-renderAnswer db _ (Answer True) = NoSound -- 2.0 -- should be a sine wave clipped and normalized by db, then attenuated a standard amount (-10 dB)
-renderAnswer db _ (Answer False) = NoSound -- 2.0 -- should be a clean sine wave, just attenuated a standard amount (-10 dB)
+
+
+renderAnswer :: Config -> b -> Maybe Answer -> Sound
+renderAnswer db _ (Just (Answer True)) = GainSound (ProcessedSound (Sound $ NodeSource  (OscillatorNode $ Oscillator Sine 300 0) (Just 2)) (DistortAtDb db)) (-10) -- 2.0 -- should be a sine wave clipped and normalized by db, then attenuated a standard amount (-10 dB)
+renderAnswer db _ (Just (Answer False)) =  GainSound (Sound $ NodeSource  (OscillatorNode $ Oscillator Sine 300 0) (Just 2)) (-10) -- 2.0 -- should be a clean sine wave, just attenuated a standard amount (-10 dB)
+renderAnswer db _ Nothing =  GainSound (Sound $ NodeSource  (OscillatorNode $ Oscillator Sine 300 0) (Just 2)) (-10)
 
 harmonicDistortionConfigWidget :: MonadWidget t m => Config -> m (Event t Config)
 harmonicDistortionConfigWidget i = radioConfigWidget "" msg configs i
@@ -41,10 +48,12 @@ displayEval scoreMap = return ()
 generateQ :: Config -> [Datum Config [Answer] Answer (Map Answer Score)] -> IO ([Answer],Answer)
 generateQ _ _ = randomMultipleChoiceQuestion [Answer False,Answer True]
 
+
 harmonicDistortionExercise :: MonadWidget t m => Exercise t m Config [Answer] Answer (Map Answer Score)
 harmonicDistortionExercise = multipleChoiceExercise
   1
   [Answer False,Answer True]
+  (dynRadioConfigWidget "harmonicDistortionExercise" configMap)
   renderAnswer
   HarmonicDistortion
   (-12)
