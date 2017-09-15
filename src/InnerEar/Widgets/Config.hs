@@ -12,7 +12,7 @@ import Reflex.Synth.Types
 
 
 
-dynRadioConfigWidget::(MonadWidget t m, Eq c, Show c) => String -> Map String c -> c -> m (Dynamic t c, Dynamic t Source, Event t (Maybe a))
+dynRadioConfigWidget::(MonadWidget t m, Eq c, Show c, Ord c) => String -> Map String c -> c -> m (Dynamic t c, Dynamic t Source, Event t (Maybe a))
 dynRadioConfigWidget inputID configMap iConfig = elClass "div" "configWidget" $ do
   config <- elClass "div" "radioConfigWidget" $ do
     text "Exercise Configuration:  "

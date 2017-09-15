@@ -77,28 +77,36 @@ multipleChoiceQuestionWidget maxTries answers cWidget render eWidget config init
   modes <- mapDyn answerButtonModes multipleChoiceState
   modes' <- mapM (\x-> mapDyn (!!x) modes) [0,1..9]
   scores <- mapDyn scoreMap multipleChoiceState
-  -- user interface (buttons, etc)
-  playQuestion <- elClass "div" "playQuestionWrapper" $ button "Play question"
-  -- (playReference,playQuestion, source) <- elClass "div" "playReferenceOrQuestion" $ soundWidget "multipleChoiceExercise"
-  (dynConfig, dynSource, playReference) <- elClass "div"  "configWidgetWrapper" $ cWidget config
 
-  answerPressed <- elClass "div" "answerButtonWrapper" $ -- m (Event t a)
-    leftmost <$> zipWithM (\f m -> answerButton (show f) m f) answers modes'
+  -- user interface
+  (closeExercise,playQuestion,answerPressed,nextQuestionNav) <- elClass "div" "topRow" $ do
+    w <- elClass "div" "topRowHeader" $ do
+      elClass "div" "questionTitle" $ text "Exercise Title Placeholder"
+      elClass "div" "closeExerciseButton" $ buttonClass "Close Exercise" "closeExerciseButton"
+    (x,y,z) <- elClass "div" "buttonInterface" $ do
+      x <- elClass "div" "listenButton" $ buttonClass "Listen" "listenButton"
+      y <- elClass "div" "answerButtonWrapper" $ do
+        leftmost <$> zipWithM (\f m -> answerButton (show f) m f) answers modes'
+      z <- elClass "div" "nextButton" $ visibleWhen questionHeard $ buttonClass "Next Question" "nextButton"
+      return (x,y,z)
+    return (CloseExercise <$ w,x,y,InQuestion <$ z)
+
+  (dynConfig, dynSource, playReference) <- elClass "div" "middleRow" $ do
+    elClass "div" "evaluation" $ text "Instructions Placeholder"
+    elClass "div" "journal" $ do
+      text "Configuration"
+      elClass "div"  "configWidgetWrapper" $ cWidget config
+
+  journalData <- elClass "div" "bottomRow" $ do
+    elClass "div" "evaluation" $ eWidget scores
+    elClass "div" "journal" $ reflectionWidget
+
   let answerEvent = gate (fmap (==AnswerMode) . fmap mode . current $ multipleChoiceState) answerPressed
   let exploreEvent = gate (fmap (==ExploreMode) . fmap mode . current $ multipleChoiceState) answerPressed
-  timesQuestionHeard <- foldDyn ($) (0::Int) $ leftmost [const 0 <$ newQuestion,(+1) <$ playQuestion]
-  nextQuestionVisible <- mapDyn (>0) timesQuestionHeard
-  (nextQuestionNav,reflectionData) <- elClass "div" "bottomRow" $ do
-    y <- visibleWhen nextQuestionVisible $ do
-     x <- buttonClass "Try Another Question" "questionSoundButton"
-     return $ InQuestion <$ x
-    a <- (CloseExercise <$) <$> buttonClass "Back to Main Menu" "questionSoundButton"
-    elClass "div" "evaluationInQuestion" $ return () -- eWidget scores
-    z <- elClass "div" "reflectionInQuestion" $ reflectionWidget
-    return (leftmost [a,y],z)
 
   -- generate sounds to be played
   answer <- holdDyn Nothing $ fmap (Just . snd) newQuestion
+  
   let questionSound = fmapMaybe id $ tagDyn answer playQuestion
   let soundsToRender = leftmost [fmap Just questionSound, fmap Just exploreEvent, playReference]
   -- let referenceSound = attachDynWith (\a _-> GainSound (Sound a) (-10)) source playReference
@@ -106,7 +114,7 @@ multipleChoiceQuestionWidget maxTries answers cWidget render eWidget config init
   let playSounds = attachDynWith (\(c,s) r->render c s r) sourceAndConfig soundsToRender
   -- let playSounds = leftmost [renderedSounds,referenceSound]
 
-  let navEvents = leftmost [nextQuestionNav]
+  let navEvents = leftmost [closeExercise,nextQuestionNav]
 
   -- generate data for adaptive questions and analysis
   let questionWhileListened = (\x -> (possibleAnswers x,correctAnswer x)) <$> tagDyn multipleChoiceState playQuestion
@@ -121,22 +129,19 @@ multipleChoiceQuestionWidget maxTries answers cWidget render eWidget config init
   let answerData = attachDynWith (\e (s,c,q,a) -> Answered s e e c q a) evaluations answerWithContext
   let questionWhileExplore = attachDynWith (\x y -> (possibleAnswers x,correctAnswer x,y)) multipleChoiceState answerPressed
   let listenedExploreData = attachDynWith (\c (q,a,s) -> ListenedExplore s c q a) dynConfig questionWhileExplore
-  let datums = leftmost [listenedQuestionData,listenedReferenceData, answerData,listenedExploreData,reflectionData]
+  let datums = leftmost [listenedQuestionData,listenedReferenceData, answerData,listenedExploreData,journalData]
 
   return (datums, playSounds,updated dynConfig,navEvents)
 
 reflectionWidget :: MonadWidget t m => m (Event t (Datum c q a e))
-reflectionWidget = el "div" $ mdo
-  let attrs = constDyn $ fromList $ zip ["rows"] ["7"]
+reflectionWidget = mdo
+  let attrs = constDyn $ fromList $ zip ["rows","cols","class"] ["7","80","journalItem"]
   let resetText = "" <$ b
-  el "div" $ text "At any moment, you may enter a reflection on your ear training process in the box below, and click Save (if logged in) to record it / share it with your instructor."
-  t <- el "div" $ textArea $ def & textAreaConfig_attributes .~ attrs & textAreaConfig_setValue .~ resetText
-  b <- el "div" $ buttonClass "Save" "questionSoundButton" -- nb. placeholder class
+  elClass "div" "journalItem" $ text "Journal"
+  t <- textArea $ def & textAreaConfig_attributes .~ attrs & textAreaConfig_setValue .~ resetText
+  b <- buttonClass "Save" "journalItem"
   let t' = tag (current $ _textArea_value t) b
   return $ Reflection <$> t'
-
-debugDisplay :: (MonadWidget t m, Show a ) => String -> Dynamic t a -> m ()
-debugDisplay x d = el "div" $ text x >> display d
 
 randomMultipleChoiceQuestion :: [a] -> IO ([a],a)
 randomMultipleChoiceQuestion possibilities = do

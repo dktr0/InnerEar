@@ -79,17 +79,18 @@ dynButton = (mapDyn button) >=> dynE
 
 
 
-radioWidget::( MonadWidget t m, Eq v)=> M.Map String v -> Maybe v -> m (Dynamic t (Maybe v), Event t (Maybe v))
+radioWidget::( MonadWidget t m, Ord v, Eq v)=> M.Map String v -> Maybe v -> m (Dynamic t (Maybe v), Event t (Maybe v))
 radioWidget radioMap iVal = el "table" $ do
   let checked = M.fromList $ zip ["checked","type"] ["checked","radio"]
-  evs <- sequence $ M.mapWithKey (\str val -> el "tr" $ do
+  let invertedRadioMap = M.fromList $ zip (M.elems radioMap) (M.keys radioMap) -- Inverted so things are displayed in their natural ordering rather than string ordering. so -20db comes before -100db for instance
+  evs <- sequence $ M.mapWithKey (\val str-> el "tr" $ do
     ev <-el "td" $ mdo
       attrs <- holdDyn (bool (M.singleton "type" "radio") checked $ (maybe False (==val) iVal)) (checked <$ checkEv)
       (e,_) <-elDynAttr' "input" attrs (return ())
       let checkEv = domEvent Click e
       return (Just val <$ checkEv)
     el "td" $ text str
-    return ev)  radioMap   -- Sorry.....
+    return ev)  invertedRadioMap   -- Sorry.....
   dynVal <- holdDyn iVal $ leftmost $ M.elems evs  --
   return (dynVal, updated dynVal)
 

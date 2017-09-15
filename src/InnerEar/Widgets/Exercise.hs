@@ -35,7 +35,7 @@ runExercise ex = mdo
   -- Question (with generateQuestion called again with each transition to Question)
   let triggerNewQuestion = ffilter (==InQuestion) navEvents
   configAndData <- combineDyn (,) config currentData -- Dynamic t (a,[Datum])
-  let configAndData' = tagDyn configAndData triggerNewQuestion
+  let configAndData' = tagDyn configAndData $ leftmost [triggerNewQuestion, InQuestion <$ configUpdate] -- also gen. new question on config update.
   let questionIO = fmap (\(x,y) -> (generateQuestion ex) x y) configAndData'
   question <- performEvent $ fmap liftIO $ questionIO
 
