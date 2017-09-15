@@ -2,6 +2,7 @@
 
 module InnerEar.Database.Users where
 
+import Data.Char
 import Data.Either
 import Data.Maybe
 import Database.SQLite.Simple
@@ -36,21 +37,22 @@ instance FromRow User where
   fromRow = User <$> field <*> field <*> field
 
 instance ToRow User where
-  toRow (User h pwd cmu) = toRow (h,pwd,cmu)
+  toRow (User h pwd cmu) = toRow (fmap toLower h,pwd,cmu)
 
 addUser :: Connection -> User -> IO (Either String Handle)
 addUser c u = do
-  let h = handle u
+  let h = fmap toLower (handle u)
   u' <- findUser c h
   if isNothing u'
     then do
-      execute c "INSERT INTO users (handle,password,role) VALUES (?,?,?)" u
-      return $ Right $ handle u
+      let u' = u { handle = h }
+      execute c "INSERT INTO users (handle,password,role) VALUES (?,?,?)" u'
+      return $ Right $ handle u'
     else return $ Left "user handle already exists"
 
 findUser :: Connection -> Handle -> IO (Maybe User)
 findUser conn h = do
-  r <- query conn "SELECT handle,password,role FROM users WHERE handle = ?" (Only h)
+  r <- query conn "SELECT handle,password,role FROM users WHERE handle = ?" (Only (fmap toLower h))
   print $ Prelude.length r
   return $ f r
   where

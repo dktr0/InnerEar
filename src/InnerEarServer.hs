@@ -104,7 +104,7 @@ processRequest s i (PostPoint r) = withServer s $ postPoint i r
 
 authenticate :: ConnectionIndex -> Handle -> Password -> Server -> IO Server
 authenticate i h p s = do
-  e <- DB.userExists (database s) h 
+  e <- DB.userExists (database s) h
   if e
     then do
       p' <- DB.getPassword (database s) h
