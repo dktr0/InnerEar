@@ -20,7 +20,7 @@ import InnerEar.Types.Data (Datum)
 type Config = Double -- representing threshold of clipping, and inverse of post-clip normalization
 
 configs :: [Config]
-configs = [-12,-6,-3,-2,-1,-0.75,-0.5,-0.25,-0.125,-0.0625]
+configs = [-12,-6,-3,-2,-1,-0.75,-0.5,-0.25,-0.1,-0.05]
 
 configMap:: Map String Config
 configMap = fromList $ fmap (\x-> (show x++" dB", x)) configs
@@ -28,8 +28,8 @@ configMap = fromList $ fmap (\x-> (show x++" dB", x)) configs
 data Answer = Answer Bool deriving (Eq,Ord,Data,Typeable)
 
 instance Show Answer where
-  show (Answer True) = "Distorted"
-  show (Answer False) = "Clean"
+  show (Answer True) = "Clipped"
+  show (Answer False) = "Not Clipped"
 
 
 
