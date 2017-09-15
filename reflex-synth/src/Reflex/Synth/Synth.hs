@@ -16,6 +16,8 @@ import GHCJS.DOM.EventM
 import GHCJS.DOM.Types(toJSString,HTMLCanvasElement,unHTMLCanvasElement)
 import Control.Monad.IO.Class (liftIO)
 import GHCJS.Marshal(fromJSVal)
+import GHCJS.Marshal.Pure (pToJSVal)
+
 
 
 class WebAudio a where
@@ -44,6 +46,8 @@ instance WebAudio Source where
       (GainNode _) -> error "GainNode cannot be a source node"
       (FilterNode _) -> error "FilterNode cannot be a source node"
       (ScriptProcessorNode _) -> error "ScriptProcessorNode cannot be a source node"
+      (CompressorNode _) -> error "CompressorNode cannot be a source node"
+      (WaveShaperNode _) -> error "WaveShaperNode cannot be a source node"
       (BufferNode (LoadedFile soundID _)) -> do
         stopNodeByID soundID
         x <- createNode node
@@ -84,6 +88,11 @@ instance WebAudio Sound where
     sp <- createScriptProcessorNode effect
     let graph = WebAudioGraph'' g $ WebAudioGraph sp
     connectGraph graph
+  createGraph (WaveShapedSound s w) = do
+    g <- createGraph s
+    wS <- createWaveShaperNode w
+    let graph =  WebAudioGraph'' g $ WebAudioGraph wS
+    connectGraph graph
 
 
 
@@ -112,6 +121,7 @@ getSource (GainSound s _) = getSource s
 getSource (FilteredSound s _) = s
 getSource (ProcessedSound s _) = getSource s
 getSource (NoSound) = NodeSource SilentNode $ Just 2
+getSource (WaveShapedSound s _) = getSource s
 
 disconnectGraphAtTimeMaybe:: WebAudioGraph -> Maybe Double -> IO ()
 disconnectGraphAtTimeMaybe a (Just b) = disconnectGraphAtTime a b
@@ -237,7 +247,8 @@ createNode (AdditiveNode xs) = createAdditiveNode xs
 createNode (OscillatorNode x) = createOscillator x
 createNode (BufferNode x) = createBufferNode x
 createNode (MediaNode s) = createMediaNode s
-
+createNode (CompressorNode x) = createCompressorNode x
+createNode(WaveShaperNode x) = createWaveShaperNode x
 
 createMediaNode:: String -> IO WebAudioNode
 createMediaNode s = F.createMediaNode (toJSString s) >>= return . (WebAudioNode (MediaNode s))
@@ -264,6 +275,8 @@ renderAudioWaveform inputId el = do
   let el' = unHTMLCanvasElement el
   F.renderAudioWaveform (toJSString inputId) el'
 
+drawSineWave:: HTMLCanvasElement  -> IO ()
+drawSineWave el  = F.drawSineWave (unHTMLCanvasElement el) 
 
 
 

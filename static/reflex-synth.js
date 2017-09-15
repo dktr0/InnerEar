@@ -8,28 +8,23 @@ var userAudioNodes = {}
 function startSilentNode () {
   // a permanent buffernode sound  so the sound icon always displays at the
   // top of their window (so the icon doesn't sway student's responses in exercises such as)
-  // the threshold of silence exercise)
+  // the threshold of silence exercise
   // This wasn't working with just a simple oscillator with a gain of 0 applied for some reason.
   //  (hence the looped buffernode)
+  var emptyArrayBuffer = ___ac.createBuffer(1, ___ac.sampleRate * 10,___ac.sampleRate );
 
-
-
-
-  // 
-  // var emptyArrayBuffer = ___ac.createBuffer(1, ___ac.sampleRate * 10,___ac.sampleRate );
-  //
-  // // Necessary for some reason to insert all 0's (even though it is initialized  as such)
-  // for (var channel = 0; channel < emptyArrayBuffer.numberOfChannels; channel++) {
-  //   var nowBuffering = emptyArrayBuffer.getChannelData(channel);
-  //   for (var i = 0; i < emptyArrayBuffer.length; i++) {
-  //     nowBuffering[i] = 0;
-  //   }
-  // }
-  // var emptyNode = ___ac.createBufferSource()
-  // emptyNode.buffer = emptyArrayBuffer
-  // emptyNode.loop = true;
-  // emptyNode.connect(___ac.destination)
-  // emptyNode.start();
+  // Necessary for some reason to insert all 0's (even though it is initialized  as such)
+  for (var channel = 0; channel < emptyArrayBuffer.numberOfChannels; channel++) {
+    var nowBuffering = emptyArrayBuffer.getChannelData(channel);
+    for (var i = 0; i < emptyArrayBuffer.length; i++) {
+      nowBuffering[i] = 0;
+    }
+  }
+  var emptyNode = ___ac.createBufferSource()
+  emptyNode.buffer = emptyArrayBuffer
+  emptyNode.loop = true;
+  emptyNode.connect(___ac.destination)
+  emptyNode.start();
 
 }
 
@@ -53,6 +48,30 @@ function createScriptProcessorNode (onAudioFunc){
   return sp;
 }
 
+function createClipAtWaveShaper (db){
+  var clip = dbToAmp(db)
+  var shapeBuffer = new Float32Array(65536);
+  var portion = (1-clip)/2
+  var left = Math.floor(portion*shapeBuffer.length)
+  var right = shapeBuffer.length-left
+
+  for (var i =0; i<shapeBuffer.length; i=i+1){
+    if (i < left){
+      shapeBuffer[i] = ((-1)*clip)
+
+    } else {
+      if (i <right) {
+        shapeBuffer[i] = 2*i/shapeBuffer.length-1;
+      } else{
+        shapeBuffer[i] = clip;
+      }
+    }
+  }
+  var distortion = ___ac.createWaveShaper()
+  distortion.curve = shapeBuffer;
+  return distortion
+}
+
 function getDistortAtDbFunc(db){
   if (db==undefined){
     console.log ("WARNING - spDistortAtDb wasn't provided an argument containing a decibel value - value of 0dB used")
@@ -67,7 +86,6 @@ function getDistortAtDbFunc(db){
           var inputData = inputBuffer.getChannelData(channels)
           var outputData = outputBuffer.getChannelData(channels)
           for (var sample = 0; sample<inputBuffer.length; sample = sample+1){
-            // outputData[sample] = Math.min(Math.max(inputData[sample],-1/2),1/2);
             outputData[sample] = Math.min(Math.max(inputData[sample],clip*(-1)),clip);
           }
         }
@@ -80,6 +98,17 @@ function setGain(db, node){
   console.log("db:  "+db)
   console.log("amp: "+amp)
   node.gain.value = amp;
+}
+
+function createCompressorNode (threshold, knee, ratio, reduction, attack, release){
+  var comp = ___ac.createDynamicCompressor()
+  comp.threshold.value = threshold;
+  comp.knee.value = knee;
+  comp.ratio.value = ratio;
+  comp.reduction.value = reduction;
+  comp.attack.value = attack;
+  comp.release.value = release;
+  return comp;
 }
 
 function createMediaNode (id){
@@ -113,7 +142,7 @@ function loadBuffer(inputId){
 
   if (inputElement){
 
-    var files = inputElement.files
+    var files = inputElement.files// function drawSineWave (canvas){
     if (files[0]){
       var file = files[0]
       var bufferReader = new FileReader ();
@@ -294,21 +323,8 @@ function setAudioSrc(id){
 
 }
 
-// function audioOnTimeUpdate(obj){
-//   if (obj.audioElement.loop){
-//     if(obj.loopEnd==undefined){obj.loopEnd = obj.buffer.duration}
-//     if(obj.audioElement.currentTime<obj.loopStart){
-//       obj.audioElement.currentTime = obj.loopStart
-//     }
-//     if(obj.audioElement.currentTime>=obj.loopEnd){
-//       obj.audioElement.currentTime = obj.loopEnd
-//     }
-//   }
-// }
 
 
-
-// Probably don't need this anymore....
 function renderAudioWaveform(id, canvas, attempt){
 
   if (attempt<5){___ac
@@ -332,9 +348,6 @@ function renderAudioWaveform(id, canvas, attempt){
     alert('Unable to properly load soundfile, you may need to reload the page.')
   }
 }
-
-
-
 
 
 
@@ -406,6 +419,26 @@ function stopNodeByID(id){
   }
 }
 
+function drawSineWave (canvas){
+  console.log('drawing sine wave')
+  var width = canvas.width;
+  var height = canvas.height;
+  var ctx = canvas.getContext("2d");
+  ctx.fillStyle = "rgb(50,50,50)";
+  ctx.fillRect(0,0,width,height)
+  ctx.lineWidth=1;
+  ctx.fillStyle = "rgb(100,170,200)";
+
+
+  for (var i =0; i < canvas.width; i=i+1){
+    console.log("asdf")
+    var x = i;
+    var y = (Math.sin(i*(Math.PI*2)/width)*(-1)*height/2+(height/2));
+    console.log("x: "+x+" y: "+y)
+    ctx.fillRect(x, y, 1, 1);
+  }
+
+}
 
 function drawBufferOnCanvas (buff, canvas) {
   if (buff){
@@ -443,4 +476,12 @@ function drawBufferOnCanvas (buff, canvas) {
   } else{
     console.log("WARNING - canvas drawn before buffer loaded")
   }
+}
+
+function dbToAmp (db){
+  return Math.pow (10, db/20)
+}
+
+function ampToDb (amp){
+  return 20*Math.log(amp)
 }

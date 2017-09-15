@@ -41,10 +41,14 @@ data Node =
   OscillatorNode Oscillator |
   BufferNode Buffer |
   MediaNode String |
+  CompressorNode  Compressor |
+  WaveShaperNode WaveShaper|
   ScriptProcessorNode DSPEffect deriving(Read,Show,Eq)
 
 data DSPEffect = DistortAtDb Double deriving (Read, Show, Eq)
 
+data WaveShaper = ClipAt Double deriving (Show, Read, Eq)
+data Compressor = Compressor {threshold::Double, knee::Double, ratio::Double, reduction::Double, attack::Double, release::Double} deriving (Show, Read, Eq)
 data Filter = NoFilter | Filter FilterType Double Double Double deriving (Read,Show,Eq) -- Freq, q, db
 
 data OscillatorType = Sawtooth | Sine | Square deriving (Show, Read,Eq)
@@ -61,7 +65,13 @@ data Buffer = File String | LoadedFile String PlaybackParam deriving (Read,Show,
 
 data Source = NodeSource Node (Maybe Double) deriving (Show, Eq, Read)
 
-data Sound = NoSound | Sound Source | GainSound Sound Double | FilteredSound Source Filter  | ProcessedSound Sound DSPEffect deriving (Read,Show)
+data Sound =
+  NoSound |
+  Sound Source |
+  GainSound Sound Double |
+  FilteredSound Source Filter  |
+  ProcessedSound Sound DSPEffect |
+  WaveShapedSound Sound WaveShaper deriving (Read,Show)
 
 
 
@@ -76,6 +86,25 @@ data WebAudioNode = WebAudioNode Node JSVal | NullAudioNode
 --   gain.connect(compressor)
 -- would be represented (roughly) as: WebAudioGraph' oscillator (WebAudioGraph' gain (WebAudioGraph compressor))
 data WebAudioGraph = WebAudioGraph WebAudioNode | WebAudioGraph' WebAudioNode WebAudioGraph | WebAudioGraph'' WebAudioGraph WebAudioGraph
+
+createBiquadFilter:: Filter -> IO WebAudioNode
+createBiquadFilter (NoFilter) = createGain 0
+createBiquadFilter (Filter filtType f q g) = do
+  x <- F.createBiquadFilter
+  let y = WebAudioNode (FilterNode (Filter filtType f q g)) x
+  setFrequency f y
+  setFilterQ q y
+  setGain g y
+  setFilterType filtType y
+  return y
+
+createCompressorNode:: Compressor -> IO (WebAudioNode)
+createCompressorNode (Compressor a b c d e f) = do
+  ref <- F.createCompressorNode (pToJSVal a) (pToJSVal b) (pToJSVal c) (pToJSVal d) (pToJSVal e) (pToJSVal f)
+  return $ WebAudioNode (CompressorNode $ Compressor a b c d e f) ref
+
+createWaveShaperNode:: WaveShaper -> IO WebAudioNode
+createWaveShaperNode (ClipAt db) = F.createClipAtWaveShaper (pToJSVal db) >>= return . WebAudioNode (WaveShaperNode $ ClipAt db)
 
 createOscillator :: Oscillator -> IO WebAudioNode
 createOscillator (Oscillator t freq db) = do
@@ -97,16 +126,6 @@ createGain g = do
   return (WebAudioNode (GainNode g) x)
 
 
-createBiquadFilter:: Filter -> IO WebAudioNode
-createBiquadFilter (NoFilter) = createGain 0
-createBiquadFilter (Filter filtType f q g) = do
-  x <- F.createBiquadFilter
-  let y = WebAudioNode (FilterNode (Filter filtType f q g)) x
-  setFrequency f y
-  setFilterQ q y
-  setGain g y
-  setFilterType filtType y
-  return y
 
 
 createBufferNode :: Buffer -> IO WebAudioNode
@@ -232,6 +251,7 @@ startNode (WebAudioNode (OscillatorNode (Oscillator _ _ db)) r) = F.setGain db r
 startNode (WebAudioNode (BufferNode (LoadedFile a (PlaybackParam b c d))) x) = do
   F.playBufferNode (toJSString a) (pToJSVal b) (pToJSVal c) (pToJSVal d) x
 startNode (WebAudioNode _ ref) = F.startNode ref
+startNode (WebAudioNode (CompressorNode _) _) = error "Compressor node cannot be started"
 
 stopNodeByID:: String -> IO ()
 stopNodeByID s = F.stopNodeByID (toJSString s)
