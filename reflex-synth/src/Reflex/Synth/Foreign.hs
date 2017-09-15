@@ -44,6 +44,7 @@ foreign import javascript safe "setAudioSrc($1)" setAudioSrc :: JSString -> IO (
 foreign import javascript safe "$r = ___ac.currentTime" getCurrentTime :: IO Double
 
 foreign import javascript safe "$3.gain.setValueAtTime($1,$2)" setAmpAtTime :: Double -> Double -> JSVal-> IO ()
+foreign import javascript safe "$3.gain.linearRampToValueAtTime($1, $2)" linearRampToGainAtTime:: Double -> Double -> JSVal -> IO ()
 
 foreign import javascript safe "$r = ___ac.createOscillator()" createSilentNode:: IO JSVal
 
