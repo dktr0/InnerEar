@@ -53,8 +53,6 @@ multipleChoiceExercise maxTries answers cWidget render i c cw de g r = Exercise 
   reflectiveQuestion = r
 }
 
-
-
 multipleChoiceQuestionWidget :: (MonadWidget t m, Show a, Eq a, Ord a)
   => Int -- maximum number of tries
   -> [a] -- fixed list of potential answers
@@ -64,7 +62,7 @@ multipleChoiceQuestionWidget :: (MonadWidget t m, Show a, Eq a, Ord a)
   -> c
   -> Map a Score
   -> Event t ([a],a)
-  -> m (Event t (Datum c [a] a (Map a Score)),Event t Sound,Event t ExerciseNavigation)
+  -> m (Event t (Datum c [a] a (Map a Score)),Event t Sound,Event t c,Event t ExerciseNavigation)
 
 multipleChoiceQuestionWidget maxTries answers cWidget render eWidget config initialEval newQuestion = elClass "div" "exerciseWrapper" $ mdo
 
@@ -125,7 +123,7 @@ multipleChoiceQuestionWidget maxTries answers cWidget render eWidget config init
   let listenedExploreData = attachDynWith (\c (q,a,s) -> ListenedExplore s c q a) dynConfig questionWhileExplore
   let datums = leftmost [listenedQuestionData,listenedReferenceData, answerData,listenedExploreData,reflectionData]
 
-  return (datums, playSounds,navEvents)
+  return (datums, playSounds,updated dynConfig,navEvents)
 
 reflectionWidget :: MonadWidget t m => m (Event t (Datum c q a e))
 reflectionWidget = el "div" $ mdo
