@@ -11,20 +11,26 @@ function startSilentNode () {
   // the threshold of silence exercise)
   // This wasn't working with just a simple oscillator with a gain of 0 applied for some reason.
   //  (hence the looped buffernode)
-  var emptyArrayBuffer = ___ac.createBuffer(1, ___ac.sampleRate * 10,___ac.sampleRate );
 
-  // Necessary for some reason to insert all 0's (even though it is initialized  as such)
-  for (var channel = 0; channel < emptyArrayBuffer.numberOfChannels; channel++) {
-    var nowBuffering = emptyArrayBuffer.getChannelData(channel);
-    for (var i = 0; i < emptyArrayBuffer.length; i++) {
-      nowBuffering[i] = 0;
-    }
-  }
-  var emptyNode = ___ac.createBufferSource()
-  emptyNode.buffer = emptyArrayBuffer
-  emptyNode.loop = true;
-  emptyNode.connect(___ac.destination)
-  emptyNode.start();
+
+
+
+  // 
+  // var emptyArrayBuffer = ___ac.createBuffer(1, ___ac.sampleRate * 10,___ac.sampleRate );
+  //
+  // // Necessary for some reason to insert all 0's (even though it is initialized  as such)
+  // for (var channel = 0; channel < emptyArrayBuffer.numberOfChannels; channel++) {
+  //   var nowBuffering = emptyArrayBuffer.getChannelData(channel);
+  //   for (var i = 0; i < emptyArrayBuffer.length; i++) {
+  //     nowBuffering[i] = 0;
+  //   }
+  // }
+  // var emptyNode = ___ac.createBufferSource()
+  // emptyNode.buffer = emptyArrayBuffer
+  // emptyNode.loop = true;
+  // emptyNode.connect(___ac.destination)
+  // emptyNode.start();
+
 }
 
 function test(s){
@@ -43,16 +49,15 @@ function test(s){
 function createScriptProcessorNode (onAudioFunc){
   var sp = ___ac.createScriptProcessor(undefined,2,2)
   sp.onaudioprocess = onAudioFunc;
-  constole.log('script processor node created')
+  console.log('script processor node created')
   return sp;
 }
 
 function getDistortAtDbFunc(db){
-  if (args.db==undefined){
+  if (db==undefined){
     console.log ("WARNING - spDistortAtDb wasn't provided an argument containing a decibel value - value of 0dB used")
-    args.db=0
+    db=0
   }
-  var db = args.db
   var clip = Math.pow (10, db/20)
   var func = function (audioProcessingEvent){
     var inputBuffer = audioProcessingEvent.inputBuffer;

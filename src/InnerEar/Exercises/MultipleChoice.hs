@@ -62,7 +62,7 @@ multipleChoiceQuestionWidget :: (MonadWidget t m, Show a, Eq a, Ord a)
   -> c
   -> Map a Score
   -> Event t ([a],a)
-  -> m (Event t (Datum c [a] a (Map a Score)),Event t Sound,Event t ExerciseNavigation)
+  -> m (Event t (Datum c [a] a (Map a Score)),Event t Sound,Event t c,Event t ExerciseNavigation)
 
 multipleChoiceQuestionWidget maxTries answers cWidget render eWidget config initialEval newQuestion = elClass "div" "exerciseWrapper" $ mdo
 
@@ -79,7 +79,6 @@ multipleChoiceQuestionWidget maxTries answers cWidget render eWidget config init
   scores <- mapDyn scoreMap multipleChoiceState
 
   -- user interface
-
   (closeExercise,playQuestion,answerPressed,nextQuestionNav) <- elClass "div" "topRow" $ do
     w <- elClass "div" "topRowHeader" $ do
       elClass "div" "questionTitle" $ text "Exercise Title Placeholder"
@@ -107,6 +106,7 @@ multipleChoiceQuestionWidget maxTries answers cWidget render eWidget config init
 
   -- generate sounds to be played
   answer <- holdDyn Nothing $ fmap (Just . snd) newQuestion
+  
   let questionSound = fmapMaybe id $ tagDyn answer playQuestion
   let soundsToRender = leftmost [fmap Just questionSound, fmap Just exploreEvent, playReference]
   -- let referenceSound = attachDynWith (\a _-> GainSound (Sound a) (-10)) source playReference
@@ -131,7 +131,7 @@ multipleChoiceQuestionWidget maxTries answers cWidget render eWidget config init
   let listenedExploreData = attachDynWith (\c (q,a,s) -> ListenedExplore s c q a) dynConfig questionWhileExplore
   let datums = leftmost [listenedQuestionData,listenedReferenceData, answerData,listenedExploreData,journalData]
 
-  return (datums,playSounds,navEvents)
+  return (datums, playSounds,updated dynConfig,navEvents)
 
 reflectionWidget :: MonadWidget t m => m (Event t (Datum c q a e))
 reflectionWidget = mdo

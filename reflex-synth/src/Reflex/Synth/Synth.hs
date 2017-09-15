@@ -51,7 +51,7 @@ instance WebAudio Source where
       otherwise -> do
         let dur' = maybe 2 id dur
         x <- createNode node
-        y <- createAsrEnvelope 0.005 dur' 0.005
+        y <- createAsrEnvelope 0.01 (dur'-0.02) 0.01   --necessary to be percise so disconnectGraphAtTime doesn't clip the sound
         let graph = WebAudioGraph' x (WebAudioGraph y)
         createGraph graph
 

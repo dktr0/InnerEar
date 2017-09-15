@@ -128,10 +128,10 @@ createAsrEnvelope a s r = do
   now <- F.getCurrentTime
   n <- createGain 0
   setAmp 0.0 n
-  setAmpAtTime 0.0 now n
-  setAmpAtTime 1.0 (now+a) n
-  setAmpAtTime 1.0 (now+a+s) n
-  setAmpAtTime 0.0 (now+a+s+r) n
+  linearRampToGainAtTime 0.0 now n
+  linearRampToGainAtTime 1.0 (now+a) n
+  linearRampToGainAtTime 1.0 (now+a+s) n
+  linearRampToGainAtTime 0.0 (now+a+s+r) n
   return n
 
 getJSVal::WebAudioNode -> JSVal
@@ -219,6 +219,11 @@ setAmpAtTime:: Double -> Double -> WebAudioNode -> IO ()
 setAmpAtTime val t (WebAudioNode _ node) = F.setAmpAtTime val t node
 setAmpAtTime _ _ NullAudioNode = error "Cannot set gain of a null node"
 
+linearRampToGainAtTime:: Double -> Double -> WebAudioNode -> IO ()
+linearRampToGainAtTime val t (WebAudioNode _ node) = F.linearRampToGainAtTime val t node
+linearRampToGainAtTime _ _ NullAudioNode = error "Cannot set gain of a null node"
+
+
 startNode :: WebAudioNode -> IO ()
 startNode (WebAudioNode (AdditiveNode _) r) = F.setGain 0 r  -- @this may not be the best..
 startNode (WebAudioNode (GainNode _) _) = error "Gain node cannot bet 'started' "
@@ -226,9 +231,7 @@ startNode (WebAudioNode (MediaNode s) _) = F.playMediaNode (toJSString s) -- if 
 startNode (WebAudioNode (OscillatorNode (Oscillator _ _ db)) r) = F.setGain db r
 startNode (WebAudioNode (BufferNode (LoadedFile a (PlaybackParam b c d))) x) = do
   F.playBufferNode (toJSString a) (pToJSVal b) (pToJSVal c) (pToJSVal d) x
-
 startNode (WebAudioNode _ ref) = F.startNode ref
-startNode _ = return ()
 
 stopNodeByID:: String -> IO ()
 stopNodeByID s = F.stopNodeByID (toJSString s)
