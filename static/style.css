@@ -529,13 +529,24 @@ button.closeExerciseButton {
 }
 
 .buttonInterface {
+  padding: 10px 0 10px 0;
   display: flex;
   justify-content: space-between;
 }
 
 .listenButton {
   flex-grow: 0;
-  margin: 0 auto 0 10px;
+  margin: 0 10px 0 10px;
+}
+
+.nextButton {
+  flex-grow: 0;
+  display: inline-block;
+  margin: 0 10px 0 10px;
+}
+
+.makeButtonInvisible {
+  visibility: hidden;
 }
 
 .answerButtonWrapper {
@@ -549,11 +560,6 @@ button.closeExerciseButton {
   flex-grow: 1;
 }
 
-.nextButton {
-  flex-grow: 0;
-  display: inline-block;
-  margin: 0 0 0 auto;
-}
 
 
 

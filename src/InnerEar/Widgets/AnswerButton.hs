@@ -4,6 +4,7 @@ import Reflex
 import Reflex.Dom
 import Data.Map
 import Control.Monad
+import Data.Bool
 
 import InnerEar.Widgets.Utility
 import InnerEar.Widgets.Bars
@@ -17,7 +18,10 @@ data AnswerButtonMode =
   CorrectMissed -- (i.e. what correct answer becomes when tries run out)
   deriving (Eq,Show)
 
-
+revealableButton :: MonadWidget t m => String -> String -> Dynamic t Bool -> m (Event t ())
+revealableButton label classWhenVisible isVisible = do
+  cssClass <- mapDyn (\x -> bool (classWhenVisible ++ " makeButtonInvisible") classWhenVisible x) isVisible
+  buttonDynCss label cssClass
 
 buttonDynCss :: MonadWidget t m => String -> Dynamic t String -> m (Event t ())
 buttonDynCss label cssClass =  do

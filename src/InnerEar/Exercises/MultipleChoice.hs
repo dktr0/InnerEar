@@ -49,13 +49,14 @@ multipleChoiceExercise maxTries answers cWidget render i c cw de g r = Exercise 
   defaultEvaluation = empty,
   displayEvaluation = de,
   generateQuestion = g,
-  questionWidget = multipleChoiceQuestionWidget maxTries answers cWidget render de,
+  questionWidget = multipleChoiceQuestionWidget maxTries answers i cWidget render de,
   reflectiveQuestion = r
 }
 
 multipleChoiceQuestionWidget :: (MonadWidget t m, Show a, Eq a, Ord a)
   => Int -- maximum number of tries
   -> [a] -- fixed list of potential answers
+  -> ExerciseId
   -> (c->m (Dynamic t c,  Dynamic t Source,  Event t (Maybe a))) -- dyn config, source, and event maybe answer for playing reference sound (config widget)
   -> (c -> Source -> Maybe a -> Sound) -- function to produce a sound from an answer, where a Nothing answer is to be interpreted as a reference sound (or some other sound not a question)
   -> (Dynamic t (Map a Score) -> m ())
@@ -64,7 +65,7 @@ multipleChoiceQuestionWidget :: (MonadWidget t m, Show a, Eq a, Ord a)
   -> Event t ([a],a)
   -> m (Event t (Datum c [a] a (Map a Score)),Event t Sound,Event t c,Event t ExerciseNavigation)
 
-multipleChoiceQuestionWidget maxTries answers cWidget render eWidget config initialEval newQuestion = elClass "div" "exerciseWrapper" $ mdo
+multipleChoiceQuestionWidget maxTries answers exId cWidget render eWidget config initialEval newQuestion = elClass "div" "exerciseWrapper" $ mdo
 
   let initialState = initialMultipleChoiceState answers maxTries
   let newQuestion' = fmap newQuestionMultipleChoiceState newQuestion
@@ -81,13 +82,13 @@ multipleChoiceQuestionWidget maxTries answers cWidget render eWidget config init
   -- user interface
   (closeExercise,playQuestion,answerPressed,nextQuestionNav) <- elClass "div" "topRow" $ do
     w <- elClass "div" "topRowHeader" $ do
-      elClass "div" "questionTitle" $ text "Exercise Title Placeholder"
-      elClass "div" "closeExerciseButton" $ buttonClass "Close Exercise" "closeExerciseButton"
+      elClass "div" "questionTitle" $ text $ ("Exercise: " ++ showExerciseTitle exId)
+      elClass "div" "closeExerciseButton" $ buttonClass "Close" "closeExerciseButton"
     (x,y,z) <- elClass "div" "buttonInterface" $ do
       x <- elClass "div" "listenButton" $ buttonClass "Listen" "listenButton"
       y <- elClass "div" "answerButtonWrapper" $ do
         leftmost <$> zipWithM (\f m -> answerButton (show f) m f) answers modes'
-      z <- elClass "div" "nextButton" $ visibleWhen questionHeard $ buttonClass "Next Question" "nextButton"
+      z <- elClass "div" "nextButton" $ revealableButton "Next" "nextButton" questionHeard
       return (x,y,z)
     return (CloseExercise <$ w,x,y,InQuestion <$ z)
 
@@ -106,7 +107,7 @@ multipleChoiceQuestionWidget maxTries answers cWidget render eWidget config init
 
   -- generate sounds to be played
   answer <- holdDyn Nothing $ fmap (Just . snd) newQuestion
-  
+
   let questionSound = fmapMaybe id $ tagDyn answer playQuestion
   let soundsToRender = leftmost [fmap Just questionSound, fmap Just exploreEvent, playReference]
   -- let referenceSound = attachDynWith (\a _-> GainSound (Sound a) (-10)) source playReference
