@@ -20,7 +20,22 @@ import InnerEar.Exercises.MultipleChoice
 import InnerEar.Widgets.Config
 import InnerEar.Widgets.UserMedia
 
-data Config = AllBands | HighBands | MidBands | Mid8Bands | LowBands deriving (Show,Eq,Data,Typeable)
+data Config = AllBands | HighBands  | Mid8Bands | MidBands | LowBands deriving (Show,Eq,Data,Typeable)
+
+instance Ord Config where
+  (AllBands) >= (_)= True
+  (HighBands) >= (AllBands) = False
+  (HighBands) >= (_) = True
+  (Mid8Bands) >= (HighBands) = False
+  (Mid8Bands) >= (AllBands) = False
+  (Mid8Bands) >= (_) = True
+  (MidBands) >= (LowBands) = True
+  (MidBands) >= (MidBands) = True
+  (MidBands) >= (_) = False
+  (LowBands) >= (LowBands) = True
+  (LowBands) >= (_) = False
+
+
 
 configMap::Map String Config
 configMap = fromList $ zip ["Entire spectrum", "High bands", "Mid bands", "Mid 8 bands", "Low bands"] [AllBands, HighBands, MidBands, Mid8Bands, LowBands]

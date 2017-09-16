@@ -10,7 +10,7 @@ foreign import javascript safe "___ac = new AudioContext()" createAudioContext::
 foreign import javascript safe "startSilentNode()" startSilentNode:: IO ()
 foreign import javascript safe "$r=___ac.destination" getDestination :: IO JSVal
 foreign import javascript safe "$1.connect($2)" connect :: JSVal -> JSVal -> IO ()
-spConnect = connect -- temporary...
+spConnect = connect -- temporary... (?maybe not?)
 foreign import javascript safe "$1.disconnect($2)" disconnect ::JSVal -> JSVal -> IO()
 foreign import javascript safe "$1.disconnect()" disconnectAll::JSVal -> IO()
 
@@ -19,6 +19,7 @@ foreign import javascript safe "setTimeout(function () {$1.disconnect()}, $2*100
 foreign import javascript safe "$r=___ac.createGain()" createGain :: IO JSVal
 foreign import javascript safe "$r=___ac.createBiquadFilter()" createBiquadFilter :: IO JSVal
 foreign import javascript safe "$r=___ac.createOscillator()" createOscillator :: IO JSVal
+foreign import javascript safe " $r=createCompressorNode($1, $2, $3, $4, $5, $6)" createCompressorNode:: JSVal -> JSVal -> JSVal -> JSVal -> JSVal -> JSVal -> IO JSVal
 
 foreign import javascript safe "loadUserSoundFile()" loadUserSoundFile :: IO ()
 
@@ -38,12 +39,14 @@ foreign import javascript safe "loadBuffer($1)" loadBuffer:: JSString -> IO ()
 foreign import javascript safe "$r = createBufferSourceNodeFromURL($1)" createBufferSourceNodeFromURL :: JSVal -> IO JSVal  -- Js string to IO JSVal...
 foreign import javascript safe "$r =  createBufferSourceNodeFromID($1,$2,$3,$4)" createBufferSourceNodeFromID :: JSVal -> JSVal -> JSVal -> JSVal -> IO JSVal  -- Js string to IO JSVal...
 foreign import javascript safe "$r = createScriptProcessorNode($1)" createScriptProcessorNode :: JSVal -> IO (JSVal)
+foreign import javascript safe "$r = createClipAtWaveShaper($1)" createClipAtWaveShaper :: JSVal -> IO JSVal
 
 foreign import javascript safe "setAudioSrc($1)" setAudioSrc :: JSString -> IO ()
 
 foreign import javascript safe "$r = ___ac.currentTime" getCurrentTime :: IO Double
 
 foreign import javascript safe "$3.gain.setValueAtTime($1,$2)" setAmpAtTime :: Double -> Double -> JSVal-> IO ()
+foreign import javascript safe "$3.gain.linearRampToValueAtTime($1, $2)" linearRampToGainAtTime:: Double -> Double -> JSVal -> IO ()
 
 foreign import javascript safe "$r = ___ac.createOscillator()" createSilentNode:: IO JSVal
 
@@ -66,3 +69,4 @@ foreign import javascript safe "loadAndDrawBuffer($1,$2)" loadAndDrawBuffer :: J
 
 -- takes 'canvas' html elements - us 'toJSVal on the html element'
 foreign import javascript safe "renderAudioWaveform($1, $2,0)" renderAudioWaveform :: JSString -> JSVal -> IO()
+foreign import javascript safe "drawSineWave($1)" drawSineWave :: JSVal -> IO ()

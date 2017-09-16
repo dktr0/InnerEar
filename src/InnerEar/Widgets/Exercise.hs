@@ -30,20 +30,21 @@ runExercise ex = mdo
   -- Configure
   configVisible <- mapDyn (==InConfigure) nav
   configEvent <- visibleWhen configVisible $ elClass "div" "exerciseConfig" $ configWidget ex $ defaultConfig ex
-  config <- holdDyn (defaultConfig ex) configEvent
+  config <- holdDyn (defaultConfig ex) $ leftmost [configEvent, configUpdate]
 
   -- Question (with generateQuestion called again with each transition to Question)
   let triggerNewQuestion = ffilter (==InQuestion) navEvents
   configAndData <- combineDyn (,) config currentData -- Dynamic t (a,[Datum])
-  let configAndData' = tagDyn configAndData triggerNewQuestion
+  let configAndData' = tagDyn configAndData $ leftmost [triggerNewQuestion, InQuestion <$ configUpdate] -- also gen. new question on config update.
   let questionIO = fmap (\(x,y) -> (generateQuestion ex) x y) configAndData'
   question <- performEvent $ fmap liftIO $ questionIO
 
   -- Question Widget
-  let qWidget = fmap (\x-> (questionWidget ex) x (defaultEvaluation ex) question) (updated config)  -- Event t (m (Event,Event,Event)) 
-  widgetEvents <- elClass "div" "exerciseQuestion" (widgetHold (return $ (never,never,never)) qWidget)  -- Dyn t (Ev, Ev, Ev)
-  sounds <- liftM switchPromptlyDyn $ mapDyn (\(_,a,_)->a) widgetEvents
-  questionNav <- liftM switchPromptlyDyn $ mapDyn (\(_,_,a)->a) widgetEvents
+  let qWidget = fmap (\x-> (questionWidget ex) x (defaultEvaluation ex) question) (updated config)  -- Event t (m (Event,Event,Event))
+  widgetEvents <- elClass "div" "exerciseQuestion" (widgetHold (return $ (never,never,never,never)) qWidget)  -- Dyn t (Ev, Ev, Ev)
+  sounds <- liftM switchPromptlyDyn $ mapDyn (\(_,a,_,_)->a) widgetEvents
+  questionNav <- liftM switchPromptlyDyn $ mapDyn (\(_,_,_,a)->a) widgetEvents
+  configUpdate <- liftM switchPromptlyDyn $ mapDyn (\(_,_,a,_)->a) widgetEvents
 
   -- transitions between navigation modes
   let goToConfigure = ffilter (==InConfigure) questionNav
@@ -55,7 +56,7 @@ runExercise ex = mdo
   startedData <- (Started <$) <$> getPostBuild
   let configData = Configured <$> configEvent
   let newQuestionData = attachDynWith (\c (q,a) -> NewQuestion c q a) config question
-  questionWidgetData <- liftM switchPromptlyDyn $ mapDyn (\(a,_,_)->a) widgetEvents
+  questionWidgetData <- liftM switchPromptlyDyn $ mapDyn (\(a,_,_,_)->a) widgetEvents
   let endedData = Ended <$ closeExercise
   let allData = (leftmost [startedData,configData,newQuestionData,questionWidgetData,endedData]) :: Event t (Datum c q a e)
   let exerciseData = toExerciseDatum <$> allData

@@ -32,9 +32,14 @@ instance Show Answer where
   show (Answer False) = "Clean"
 
 
+--
+-- renderAnswer :: Config -> b -> Maybe Answer -> Sound
+-- renderAnswer db _ (Just (Answer True)) = GainSound (ProcessedSound (Sound $ NodeSource  (OscillatorNode $ Oscillator Sine 300 0) (Just 2)) (DistortAtDb db)) (-10) -- 2.0 -- should be a sine wave clipped and normalized by db, then attenuated a standard amount (-10 dB)
+-- renderAnswer db _ (Just (Answer False)) =  GainSound (Sound $ NodeSource  (OscillatorNode $ Oscillator Sine 300 0) (Just 2)) (-10) -- 2.0 -- should be a clean sine wave, just attenuated a standard amount (-10 dB)
+-- renderAnswer db _ Nothing =  GainSound (Sound $ NodeSource  (OscillatorNode $ Oscillator Sine 300 0) (Just 2)) (-10)
 
 renderAnswer :: Config -> b -> Maybe Answer -> Sound
-renderAnswer db _ (Just (Answer True)) = GainSound (ProcessedSound (Sound $ NodeSource  (OscillatorNode $ Oscillator Sine 300 0) (Just 2)) (DistortAtDb db)) (-10) -- 2.0 -- should be a sine wave clipped and normalized by db, then attenuated a standard amount (-10 dB)
+renderAnswer db _ (Just (Answer True)) = GainSound (WaveShapedSound (Sound $ NodeSource  (OscillatorNode $ Oscillator Sine 300 0) (Just 2)) (ClipAt db)) (-10) -- 2.0 -- should be a sine wave clipped and normalized by db, then attenuated a standard amount (-10 dB)
 renderAnswer db _ (Just (Answer False)) =  GainSound (Sound $ NodeSource  (OscillatorNode $ Oscillator Sine 300 0) (Just 2)) (-10) -- 2.0 -- should be a clean sine wave, just attenuated a standard amount (-10 dB)
 renderAnswer db _ Nothing =  GainSound (Sound $ NodeSource  (OscillatorNode $ Oscillator Sine 300 0) (Just 2)) (-10)
 
@@ -48,12 +53,11 @@ displayEval scoreMap = return ()
 generateQ :: Config -> [Datum Config [Answer] Answer (Map Answer Score)] -> IO ([Answer],Answer)
 generateQ _ _ = randomMultipleChoiceQuestion [Answer False,Answer True]
 
-
 harmonicDistortionExercise :: MonadWidget t m => Exercise t m Config [Answer] Answer (Map Answer Score)
 harmonicDistortionExercise = multipleChoiceExercise
   1
   [Answer False,Answer True]
-  (dynRadioConfigWidget "harmonicDistortionExercise" configMap)
+  (sineSourceConfig "harmonicDistortionExercise" configMap)
   renderAnswer
   HarmonicDistortion
   (-12)
