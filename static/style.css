@@ -139,15 +139,14 @@ button.notPossibleButton{
   height: 100%;
   width: 100%;
   margin:  1%;
- font-size: 200%;
-
+  font-size: 100%;
 }
 
 button.possibleButton {
   height: 100%;
   width: 100%;
   margin:  1%;
-    font-size: 200%;
+  font-size: 100%;
 }
 
 button.incorrectDisactivatedButton {
@@ -157,8 +156,7 @@ button.incorrectDisactivatedButton {
   border: 2px solid red;
   height: 100%;
   width: 100%;
-  font-size: 200%;
-
+  font-size: 100%;
 }
 
 button.incorrectActivatedButton {
@@ -168,8 +166,7 @@ button.incorrectActivatedButton {
   height: 100%;
   width: 100%;
   margin:  1%;
-    font-size: 200%;
-
+  font-size: 100%;
 }
 
 button.correctButton{
@@ -179,8 +176,7 @@ button.correctButton{
   height: 100%;
   width: 100%;
   margin:  1%;
-    font-size: 200%;
-
+  font-size: 100%;
 }
 
 .svgBarContainer {
