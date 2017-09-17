@@ -213,13 +213,15 @@ connectGraph (WebAudioGraph'' a b) = do
 
 
 setGain :: Double -> WebAudioNode -> IO ()
-setGain g (WebAudioNode (FilterNode _) x) = F.setGain g x
+setGain g (WebAudioNode (FilterNode _) x) = F.setAmp g x -- filter gain values in Web Audio API are already in dB
 setGain g (WebAudioNode (GainNode _) x) = F.setGain g x
+setGain _ _ = putStrLn "warning: unmatched pattern in Reflex.Synth.Types.setGain"
 
 setAmp:: Double -> WebAudioNode -> IO ()
-setAmp a (WebAudioNode (FilterNode _) x) = F.setAmp a x
+-- setAmp a (WebAudioNode (FilterNode _) x) = F.setAmp a x -- this doesn't make sense: filter.gain.value expects db
 setAmp a (WebAudioNode (GainNode _) x) = F.setAmp a x
 setAmp a (WebAudioNode (OscillatorNode _) x) = F.setAmp a x
+setAmp _ _ = putStrLn "warning: unmatched pattern in Reflex.Synth.Types.setAmp"
 
 
 setFrequency:: Double -> WebAudioNode -> IO ()
