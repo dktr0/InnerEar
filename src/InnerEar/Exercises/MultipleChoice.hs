@@ -93,13 +93,13 @@ multipleChoiceQuestionWidget maxTries answers exId cWidget render eWidget config
     return (CloseExercise <$ w,x,y,InQuestion <$ z)
 
   (dynConfig, dynSource, playReference) <- elClass "div" "middleRow" $ do
-    elClass "div" "evaluation" $ text "Instructions Placeholder"
+    -- elClass "div" "evaluation" $ text "Instructions Placeholder"
     elClass "div" "journal" $ do
       text "Configuration"
       elClass "div"  "configWidgetWrapper" $ cWidget config
 
   journalData <- elClass "div" "bottomRow" $ do
-    elClass "div" "evaluation" $ eWidget scores
+    -- elClass "div" "evaluation" $ eWidget scores
     elClass "div" "journal" $ reflectionWidget
 
   let answerEvent = gate (fmap (==AnswerMode) . fmap mode . current $ multipleChoiceState) answerPressed

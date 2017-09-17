@@ -53,10 +53,10 @@ navigationPage responses areTheyAuthenticated SplashPage = elClass "div" "nav" $
   b1 <- liftM (ExercisePage HarmonicDistortion <$)  $ elClass "div" "navButton" $ button "Harmonic Distortion"
   b2 <- liftM (ExercisePage BoostOrCut <$)  $ elClass "div" "navButton" $ button "Boost Or Cut (Gain)"
   b3 <- liftM (ExercisePage FiveBandBoostCut <$)  $ elClass "div" "navButton" $ button "Five Band Boost or Cut (Filters)"
-  b4 <- liftM (ExercisePage TenBandBoostCut <$)  $ elClass "div" "navButton" $ button "Ten Band Boost or Cut (Filters)"
+  -- b4 <- liftM (ExercisePage TenBandBoostCut <$)  $ elClass "div" "navButton" $ button "Ten Band Boost or Cut (Filters)"
   -- c <- liftM (TestPage <$)  $ elClass "div" "navButton" $ button "Test"
   -- d <- liftM (TestSoundPage <$) $ elClass "div" "navButton" $ button "Test Sound"
-  let navEvents = leftmost [b0,b1,b2,b3,b4]
+  let navEvents = leftmost [b0,b1,b2,b3]
   return (never,never,navEvents)
 
 navigationPage responses areTheyAuthenticated CreateUserPage = el "div" $ do

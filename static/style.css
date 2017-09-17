@@ -602,9 +602,11 @@ button.journalitem {
 }
 
 .radioConfigWidget {
+  width: 45%;
 }
 
 .sourceWidget{
+  width: 45%;
   padding:2px;
   background-color: rgb(30,30,30);
   text-align: left;
