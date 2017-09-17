@@ -26,9 +26,9 @@ displayMultipleChoiceEvaluation graphLabel xLabel possibilities scoreMap = ...
 -}
 
 evalGraphFrame :: MonadWidget t m =>  String -> String -> m ()
-evalGraphFrame xMainLabel graphLabel = elClass "div" "evalGraphFrameRow" $ do
-  faintedYaxis "faintedYaxis"
+evalGraphFrame xMainLabel graphLabel = do
   faintedXaxis "faintedXaxis"
+  faintedYaxis "faintedYaxis"
   hzMainLabel "hzMainLabel" xMainLabel
   countMainLabel "countMainLabel" "#"
   percentageMainLabel "percentageMainLabel" "%"
@@ -96,7 +96,6 @@ displayMultipleChoiceEvaluationGraph' graphLabel qLabel possibilities scoreMap =
       scoreList <- mapDyn (\x -> fmap (\y -> Data.Map.lookup y x) possibilities) scoreMap -- m (Dynamic t [Maybe Score])
       scoreMap' <- mapDyn (\x -> fromList $ zip possibilities x) scoreList -- (Dynamic t (Map a (Maybe Score)))
       evalGraphFrame qLabel graphLabel
-      showScore
       listWithKey scoreMap' f
       return ()
       where f k d = scoreBar (show k) d
