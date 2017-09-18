@@ -26,9 +26,9 @@ displayMultipleChoiceEvaluation graphLabel xLabel possibilities scoreMap = ...
 -}
 
 evalGraphFrame :: MonadWidget t m =>  String -> String -> m ()
-evalGraphFrame xMainLabel graphLabel = elClass "div" "evalGraphFrameRow" $ do
-  faintedYaxis "faintedYaxis"
+evalGraphFrame xMainLabel graphLabel = do
   faintedXaxis "faintedXaxis"
+  faintedYaxis "faintedYaxis"
   hzMainLabel "hzMainLabel" xMainLabel
   countMainLabel "countMainLabel" "#"
   percentageMainLabel "percentageMainLabel" "%"

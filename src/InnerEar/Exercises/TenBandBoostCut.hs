@@ -71,6 +71,7 @@ tenBandBoostCutExercise :: MonadWidget t m => Exercise t m Config [Answer] Answe
 tenBandBoostCutExercise = multipleChoiceExercise
   3
   answers
+  (return ())
   (dynRadioConfigWidget "tenBandsExercise" configMap)
   renderAnswer
   TenBandBoostCut

@@ -32,6 +32,7 @@ import Reflex.Synth.Types
 multipleChoiceExercise :: (MonadWidget t m, Show a, Eq a, Ord a)
   => Int -- maximum number of tries to allow
   -> [a]
+  -> m ()
   -> (c->m (Dynamic t c,  Dynamic t Source,  Event t (Maybe a))) -- dyn config, source, and event maybe answer for playing reference sound (config widget)
   -> (c -> Source -> Maybe a -> Sound) -- function to produce a sound from an answer, where a Nothing answer is to be interpreted as a reference sound (or
   -> ExerciseId
@@ -42,21 +43,23 @@ multipleChoiceExercise :: (MonadWidget t m, Show a, Eq a, Ord a)
   -> Maybe String
   -> Exercise t m c [a] a (Map a Score)
 
-multipleChoiceExercise maxTries answers cWidget render i c cw de g r = Exercise {
+multipleChoiceExercise maxTries answers iWidget cWidget render i c cw de g r = Exercise {
   exerciseId = i,
+  instructionsWidget = iWidget,
   defaultConfig = c,
   configWidget = cw,
   defaultEvaluation = empty,
   displayEvaluation = de,
   generateQuestion = g,
-  questionWidget = multipleChoiceQuestionWidget maxTries answers i cWidget render de,
+  questionWidget = multipleChoiceQuestionWidget maxTries answers i iWidget cWidget render de,
   reflectiveQuestion = r
-}
+  }
 
 multipleChoiceQuestionWidget :: (MonadWidget t m, Show a, Eq a, Ord a)
   => Int -- maximum number of tries
   -> [a] -- fixed list of potential answers
   -> ExerciseId
+  -> m ()
   -> (c->m (Dynamic t c,  Dynamic t Source,  Event t (Maybe a))) -- dyn config, source, and event maybe answer for playing reference sound (config widget)
   -> (c -> Source -> Maybe a -> Sound) -- function to produce a sound from an answer, where a Nothing answer is to be interpreted as a reference sound (or some other sound not a question)
   -> (Dynamic t (Map a Score) -> m ())
@@ -65,7 +68,7 @@ multipleChoiceQuestionWidget :: (MonadWidget t m, Show a, Eq a, Ord a)
   -> Event t ([a],a)
   -> m (Event t (Datum c [a] a (Map a Score)),Event t Sound,Event t c,Event t ExerciseNavigation)
 
-multipleChoiceQuestionWidget maxTries answers exId cWidget render eWidget config initialEval newQuestion = elClass "div" "exerciseWrapper" $ mdo
+multipleChoiceQuestionWidget maxTries answers exId exInstructions cWidget render eWidget config initialEval newQuestion = elClass "div" "exerciseWrapper" $ mdo
 
   let initialState = initialMultipleChoiceState answers maxTries
   let newQuestion' = fmap newQuestionMultipleChoiceState newQuestion
@@ -93,7 +96,7 @@ multipleChoiceQuestionWidget maxTries answers exId cWidget render eWidget config
     return (CloseExercise <$ w,x,y,InQuestion <$ z)
 
   (dynConfig, dynSource, playReference) <- elClass "div" "middleRow" $ do
-    elClass "div" "evaluation" $ text "Instructions Placeholder"
+    elClass "div" "evaluation" $ exInstructions
     elClass "div" "journal" $ do
       text "Configuration"
       elClass "div"  "configWidgetWrapper" $ cWidget config
@@ -110,16 +113,13 @@ multipleChoiceQuestionWidget maxTries answers exId cWidget render eWidget config
 
   let questionSound = fmapMaybe id $ tagDyn answer playQuestion
   let soundsToRender = leftmost [fmap Just questionSound, fmap Just exploreEvent, playReference]
-  -- let referenceSound = attachDynWith (\a _-> GainSound (Sound a) (-10)) source playReference
   sourceAndConfig <- combineDyn (,) dynConfig dynSource
   let playSounds = attachDynWith (\(c,s) r->render c s r) sourceAndConfig soundsToRender
-  -- let playSounds = leftmost [renderedSounds,referenceSound]
 
   let navEvents = leftmost [closeExercise,nextQuestionNav]
 
   -- generate data for adaptive questions and analysis
   let questionWhileListened = (\x -> (possibleAnswers x,correctAnswer x)) <$> tagDyn multipleChoiceState playQuestion
-  -- let listenedQuestionData = (\(q,a) -> ListenedQuestion config q a) <$> questionWhileListened
   let listenedQuestionData = attachDynWith (\c (q,a)-> ListenedQuestion c q a) dynConfig questionWhileListened
 
   let questionWhileReference = (\x -> (possibleAnswers x,correctAnswer x)) <$> tagDyn multipleChoiceState playReference

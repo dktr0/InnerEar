@@ -59,6 +59,7 @@ fiveBandBoostCutExercise :: MonadWidget t m => Exercise t m Config [Answer] Answ
 fiveBandBoostCutExercise = multipleChoiceExercise
   3
   answers
+  (return ())
   (dynRadioConfigWidget "fiveBandBoostCutExercise" configMap)
   renderAnswer
   FiveBandBoostCut

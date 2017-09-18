@@ -32,7 +32,7 @@ rect posX posY width height style transform= do
   svgDynAttr "rect" m $ return()
 
 --Dynamic "rect" element with CSS style
-rectDynCSS :: MonadWidget t m => Dynamic t Int -> Dynamic t Int -> Dynamic t Float -> Dynamic t Float -> Dynamic t String -> Dynamic t String -> m ()
+rectDynCSS :: MonadWidget t m => Dynamic t Int -> Dynamic t Int -> Dynamic t Double -> Dynamic t Double -> Dynamic t String -> Dynamic t String -> m ()
 rectDynCSS posX posY width height transform cssClass = do
     cssClass' <- mapDyn (singleton "class") cssClass
     posX' <- mapDyn (singleton "x" . show) posX
@@ -57,19 +57,19 @@ drawBar' x  = do
        rect posX posY w h s t
 
 --A dynamic bar with css style and in-line attributes
-drawBarCSS :: MonadWidget t m =>  Dynamic t Float -> Dynamic t Float -> m ()
+drawBarCSS :: MonadWidget t m =>  Dynamic t Double -> Dynamic t Double -> m ()
 drawBarCSS x y = do
     svgClass "svg" "svgForBars" $ do
       let posX = constDyn $ negate 30
       let posY = constDyn $ negate 200
-      h <- mapDyn (*200) x
+      h <- mapDyn (*100) x
       w <- mapDyn (*1) y
       let c = constDyn "test"
       let t = constDyn "rotate (180)"
       rectDynCSS posX posY w h t c
 
 --A dynamic bar with css style and in-line attributes
-drawBarCSS'' :: MonadWidget t m =>  Dynamic t Float -> Dynamic t Float -> m ()
+drawBarCSS'' :: MonadWidget t m =>  Dynamic t Double -> Dynamic t Double -> m ()
 drawBarCSS'' x y = do
     let class' = constDyn (singleton "class" "svgForBars")
     height' <- mapDyn (* 200) x
@@ -85,7 +85,7 @@ drawBarCSS'' x y = do
        rectDynCSS posX posY w h t c
 
 --A dynamic bar with a label, a button and CSS style
-labelBarButton :: MonadWidget t m => String ->  Dynamic t String -> Dynamic t Float -> m (Event t ())
+labelBarButton :: MonadWidget t m => String ->  Dynamic t String -> Dynamic t Double -> m (Event t ())
 labelBarButton label buttonString barHeight = do
    labelsForBars label
    let barWidth = constDyn 30
@@ -94,7 +94,7 @@ labelBarButton label buttonString barHeight = do
    return (question)
 
 --A dynamic bar with a label, maybe percentage, maybe button label and maybe height
-dynLabelBarButton :: MonadWidget t m => String ->  Dynamic t (Maybe Int) ->  Dynamic t (Maybe String) -> Dynamic t (Maybe Float) -> m (Event t ())
+dynLabelBarButton :: MonadWidget t m => String ->  Dynamic t (Maybe Int) ->  Dynamic t (Maybe String) -> Dynamic t (Maybe Double) -> m (Event t ())
 dynLabelBarButton label p buttonString barHeight = elClass "div" "barWrapper" $ do
     labelsForBars label
     let barWidth = constDyn 30
@@ -117,24 +117,24 @@ performanceBar percentage label count =  do
   dynCount (constDyn "dynCountClass") count
 
   --A dynamic bar with css style and in-line attribute
-dynBarCSS :: MonadWidget t m =>  Dynamic t (Score) -> Dynamic t Float -> m ()
-dynBarCSS score barWidth = do
+dynBarCSS :: MonadWidget t m =>  Dynamic t Double -> Dynamic t Double -> m ()
+dynBarCSS percent barWidth = do
       svgClass "svg" "svgBarContainer" $ do
         let posX = constDyn $ negate 30 -- Dynamic t Int
         let posY = constDyn $ negate 200  --Dynamic t Int
-        barHeight <- mapDyn  (\x ->  ((fromIntegral (questionsAsked x) :: Float) - (fromIntegral (falseNegatives x) :: Float)) / (fromIntegral (questionsAsked x) :: Float)) score   --m (Dynamic t Int)
-        barHeight' <- mapDyn (*200) barHeight -- m (Dynamic t Float)
+        barHeight' <- mapDyn (*200) percent -- m (Dynamic t Float)
         barWidth' <- mapDyn (*1) barWidth -- m (Dynamic t Float)
         let c = constDyn "bars" --Dynamic t String
         let t = constDyn "rotate (180)" --Dynamic t String
         rectDynCSS posX posY barWidth' barHeight' t c  -- m ()
 
 dynBarCSS' :: MonadWidget t m =>  Dynamic t Double -> Dynamic t Float -> m ()
-dynBarCSS' percent barWidth = do
+dynBarCSS' percent barWidth =  do
     let class' = constDyn (singleton "class" "svgBarContainer")
-    svgHeight <- mapDyn (* 200) percent
+    svgHeight <- mapDyn (* 100) percent
     svgHeight' <- mapDyn (singleton "height" . show) svgHeight
-    attrs <- mconcatDyn [class', svgHeight']
+    let rotate' = constDyn (singleton "transform" "rotate (180)")
+    attrs <- mconcatDyn [class', svgHeight', rotate']
     svgDynAttr "svg" attrs $ return ()
 
 -- A small fainted line to use in performance graphs
@@ -158,9 +158,11 @@ scoreBar :: MonadWidget t m => String -> Dynamic t (Maybe Score) -> m ()
 scoreBar key score  = elClass "div" "scoreBarWrapper" $ do
   bool <-  mapDyn (maybe False (const True)) score
   score' <-  mapDyn (maybe (Score 0 0 0) id) score -- Dynamic t Int
+  percent <- mapDyn asPercent score'
+  let b = dynScoreLabel (constDyn "scoreLabel") percent >> dynBarCSS' percent (constDyn 100)
+  flippableDyn (return ()) b bool
+  let b2 = emptyScoreLabel >> faintedLineCSS "svgFaintedLine" >> dynBarCSS' percent (constDyn 100)
+  flippableDyn b2 (return ()) bool
+  faintedLineToAdjustGraph "faintedLineToAdjustGraph"
   xLabel "xLabel" key
   mapDyn questionsAsked score' >>= dynCountLabel (constDyn "countLabel")
-  percent <- mapDyn asPercent score'
-  let b = dynBarCSS' percent (constDyn 50) >> dynScoreLabel (constDyn "scoreLabel") percent
-  flippableDyn (return ()) b bool
-  flippableDyn (do faintedLineCSS "svgFaintedLine") (return ()) bool

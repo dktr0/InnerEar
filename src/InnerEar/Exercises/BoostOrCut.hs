@@ -51,6 +51,7 @@ boostOrCutExercise :: MonadWidget t m => Exercise t m Config [Answer] Answer (Ma
 boostOrCutExercise = multipleChoiceExercise
   1
   [Answer False,Answer True]
+  (return ())
   (dynRadioConfigWidget "boostOrCutExercise" configMap)
   renderAnswer  -- c -> b->a->Sound
   BoostOrCut

@@ -16,9 +16,9 @@ import InnerEar.Types.ExerciseNavigation
 
 data Exercise t m c q a e = Exercise {
   exerciseId :: ExerciseId,
+  instructionsWidget :: m (),
   defaultConfig :: c,
-  configWidget :: c -> m (Event t c), -- Just values go to first question, Nothing values cancel
-  -- note: return type above should be refactored as m (Event t (Maybe c)) very soon
+  configWidget :: c -> m (Event t c),
   defaultEvaluation :: e,
   displayEvaluation :: Dynamic t e -> m (),
   generateQuestion :: c -> [Datum c q a e] -> IO (q,a),

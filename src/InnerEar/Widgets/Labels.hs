@@ -74,6 +74,15 @@ dynScoreLabel cssClass percent = do
     dynText  score'' -- m ()
     return ()
 
+    -- A dynamic label for Score with CSS style
+emptyScoreLabel :: forall t m. MonadWidget t m =>  m ()
+emptyScoreLabel = do
+      elClass "div" "emptyScoreLabel" $ do
+        text  "_" -- m ()
+        return ()
+
+
+
 -- A dynamic label for Count with CSS style
 dynCountLabel :: MonadWidget t m => Dynamic t String -> Dynamic t Int -> m ()
 dynCountLabel cssClass count = do
