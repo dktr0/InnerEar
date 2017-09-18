@@ -30,8 +30,8 @@ runExercise ex = mdo
   -- Configure
   configVisible <- mapDyn (==InConfigure) nav
   configEvent <- visibleWhen configVisible $ elClass "div" "exerciseConfig" $ configWidget ex $ defaultConfig ex
-  config <- holdDyn (defaultConfig ex) $ leftmost [configEvent, configUpdate]
-
+  config <- holdDyn (defaultConfig ex) $ leftmost [configUpdate,configEvent]
+  
   -- Question (with generateQuestion called again with each transition to Question)
   let triggerNewQuestion = ffilter (==InQuestion) navEvents
   configAndData <- combineDyn (,) config currentData -- Dynamic t (a,[Datum])
@@ -54,7 +54,7 @@ runExercise ex = mdo
 
   -- structuring of exercise data for reporting/collection upwards
   startedData <- (Started <$) <$> getPostBuild
-  let configData = Configured <$> configEvent
+  let configData = Configured <$> leftmost [configEvent,configUpdate] -- note: possiblity for data loss here with question event and leftmost
   let newQuestionData = attachDynWith (\c (q,a) -> NewQuestion c q a) config question
   questionWidgetData <- liftM switchPromptlyDyn $ mapDyn (\(a,_,_,_)->a) widgetEvents
   let endedData = Ended <$ closeExercise

@@ -58,6 +58,7 @@ thresholdOfSilenceExercise :: MonadWidget t m => Exercise t m Int [Answer] Answe
 thresholdOfSilenceExercise = multipleChoiceExercise
   1
   answers
+  (return ())
   (dynRadioConfigWidget "thersholdOfSilence" configMap)
   renderAnswer
   ThresholdOfSilence
