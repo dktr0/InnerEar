@@ -48,6 +48,7 @@ instance WebAudio Source where
       (ScriptProcessorNode _) -> error "ScriptProcessorNode cannot be a source node"
       (CompressorNode _) -> error "CompressorNode cannot be a source node"
       (WaveShaperNode _) -> error "WaveShaperNode cannot be a source node"
+      (ConvolverNode _) -> error "ConvolverNode cannot be a source node"
       (BufferNode (LoadedFile soundID _)) -> do
         stopNodeByID soundID
         x <- createNode node
@@ -93,6 +94,13 @@ instance WebAudio Sound where
     wS <- createWaveShaperNode w
     let graph =  WebAudioGraph'' g $ WebAudioGraph wS
     connectGraph graph
+  createGraph (ReverberatedSound s b) = do
+    g <- createGraph s
+    conv <- createConvolverNode b
+    let graph =  WebAudioGraph'' g $ WebAudioGraph conv
+    connectGraph graph
+  -- createGraph (OverlappedSound xs) = do
+    -- listOfGraphs <- sequence $ fmap createGraph xs
 
 
 
@@ -122,6 +130,7 @@ getSource (FilteredSound s _) = s
 getSource (ProcessedSound s _) = getSource s
 getSource (NoSound) = NodeSource SilentNode $ Just 2
 getSource (WaveShapedSound s _) = getSource s
+getSource (ReverberatedSound s _) = getSource s
 
 disconnectGraphAtTimeMaybe:: WebAudioGraph -> Maybe Double -> IO ()
 disconnectGraphAtTimeMaybe a (Just b) = disconnectGraphAtTime a b
@@ -249,6 +258,7 @@ createNode (BufferNode x) = createBufferNode x
 createNode (MediaNode s) = createMediaNode s
 createNode (CompressorNode x) = createCompressorNode x
 createNode(WaveShaperNode x) = createWaveShaperNode x
+createNode (ConvolverNode x) = createConvolverNode x
 
 createMediaNode:: String -> IO WebAudioNode
 createMediaNode s = F.createMediaNode (toJSString s) >>= return . (WebAudioNode (MediaNode s))
@@ -262,6 +272,9 @@ createAdditiveNode xs = do
   mapM (((flip F.connect) g) . getJSVal) nodes
   return (WebAudioNode (AdditiveNode xs) g) -- returning the gain node's
 
+createConvolverNode::Buffer -> IO WebAudioNode
+createConvolverNode (File s) = F.createConvolverNode (toJSString s) >>= return . WebAudioNode (ConvolverNode $ File s)
+createConvolverNode (LoadedFile _ _) = error "does not yet support loaded file for convolver*"
 
 --renderAudioWaveform:: G.HTMLCanvasElement -> G.HTMLCanvasElement -> IO()
 --renderAudioWaveform l r= do
@@ -276,7 +289,7 @@ renderAudioWaveform inputId el = do
   F.renderAudioWaveform (toJSString inputId) el'
 
 drawSineWave:: HTMLCanvasElement  -> IO ()
-drawSineWave el  = F.drawSineWave (unHTMLCanvasElement el) 
+drawSineWave el  = F.drawSineWave (unHTMLCanvasElement el)
 
 
 

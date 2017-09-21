@@ -110,6 +110,23 @@ function createCompressorNode (threshold, knee, ratio, reduction, attack, releas
   comp.release.value = release;
   return comp;
 }
+function createConvolverNode (fileSrc){
+  var conv = ___ac.createConvolver();
+
+  var request = new XMLHttpRequest();
+  request.open('GET', url, true);
+  request.responseType = 'arraybuffer';
+  request.onload = function() {
+    var audioData = request.response;
+
+    ___ac.decodeAudioData(audioData, function(buffer) {
+        conv.buffer = buffer;
+      },
+      function(e){ console.log("Error with decoding audio data " + e); });
+  } //request onload
+  request.send();
+  return conv;
+}
 
 function createMediaNode (id){
   var node

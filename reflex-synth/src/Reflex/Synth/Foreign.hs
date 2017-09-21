@@ -40,6 +40,7 @@ foreign import javascript safe "$r = createBufferSourceNodeFromURL($1)" createBu
 foreign import javascript safe "$r =  createBufferSourceNodeFromID($1,$2,$3,$4)" createBufferSourceNodeFromID :: JSVal -> JSVal -> JSVal -> JSVal -> IO JSVal  -- Js string to IO JSVal...
 foreign import javascript safe "$r = createScriptProcessorNode($1)" createScriptProcessorNode :: JSVal -> IO (JSVal)
 foreign import javascript safe "$r = createClipAtWaveShaper($1)" createClipAtWaveShaper :: JSVal -> IO JSVal
+foreign import javascript safe "$r = createConvolverNode($1)" createConvolverNode:: JSString -> IO JSVal
 
 foreign import javascript safe "setAudioSrc($1)" setAudioSrc :: JSString -> IO ()
 

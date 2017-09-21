@@ -43,7 +43,8 @@ data Node =
   MediaNode String |
   CompressorNode  Compressor |
   WaveShaperNode WaveShaper|
-  ScriptProcessorNode DSPEffect deriving(Read,Show,Eq)
+  ScriptProcessorNode DSPEffect |
+  ConvolverNode Buffer deriving(Read,Show,Eq)
 
 data DSPEffect = DistortAtDb Double deriving (Read, Show, Eq)
 
@@ -71,7 +72,9 @@ data Sound =
   GainSound Sound Double |
   FilteredSound Source Filter  |
   ProcessedSound Sound DSPEffect |
-  WaveShapedSound Sound WaveShaper deriving (Read,Show)
+  WaveShapedSound Sound WaveShaper |
+  ReverberatedSound Sound Buffer deriving (Read,Show)
+  -- OverlappedSound [Sound] deriving (Read,Show)
 
 
 
@@ -85,7 +88,10 @@ data WebAudioNode = WebAudioNode Node JSVal | NullAudioNode
 --   oscillator.connect(gain)
 --   gain.connect(compressor)
 -- would be represented (roughly) as: WebAudioGraph' oscillator (WebAudioGraph' gain (WebAudioGraph compressor))
-data WebAudioGraph = WebAudioGraph WebAudioNode | WebAudioGraph' WebAudioNode WebAudioGraph | WebAudioGraph'' WebAudioGraph WebAudioGraph
+data WebAudioGraph = WebAudioGraph WebAudioNode |
+ WebAudioGraph' WebAudioNode WebAudioGraph |
+ WebAudioGraph'' WebAudioGraph WebAudioGraph 
+ -- WebAudioGraph''' WebAudioNode [WebAudioGraph] WebAudioNode -- list of graphs played in parallel, and the last node should be a Gain node to mix them all
 
 createBiquadFilter:: Filter -> IO WebAudioNode
 createBiquadFilter (NoFilter) = createGain 0
@@ -118,15 +124,11 @@ createOscillator (Oscillator t freq db) = do
   return (WebAudioNode (OscillatorNode $ Oscillator t freq db) g)
 
 
-
 createGain :: Double -> IO WebAudioNode
 createGain g = do
   x <- F.createGain
   F.setGain g x
   return (WebAudioNode (GainNode g) x)
-
-
-
 
 createBufferNode :: Buffer -> IO WebAudioNode
 createBufferNode (File path) = do
