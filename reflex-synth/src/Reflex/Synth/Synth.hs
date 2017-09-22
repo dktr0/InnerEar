@@ -99,8 +99,11 @@ instance WebAudio Sound where
     conv <- createConvolverNode b
     let graph =  WebAudioGraph'' g $ WebAudioGraph conv
     connectGraph graph
-  -- createGraph (OverlappedSound xs) = do
-    -- listOfGraphs <- sequence $ fmap createGraph xs
+  createGraph (OverlappedSound xs) = do
+    listOfGraphs <- mapM createGraph xs
+    gain <- createGain 0 -- 0dB
+    let graph = WebAudioGraph''' listOfGraphs gain
+    connectGraph graph
 
 
 
@@ -144,6 +147,9 @@ disconnectGraphAtTime (WebAudioGraph' n g) t = do
 disconnectGraphAtTime (WebAudioGraph'' g1 g2) t = do
   disconnectGraphAtTime g1 t
   disconnectGraphAtTime g2 t
+disconnectGraphAtTime (WebAudioGraph''' xs g) t = do
+  mapM ((flip disconnectGraphAtTime) t) xs
+  disconnectAllAtTime g t
 
 performSound:: MonadWidget t m => Event t Sound -> m ()
 performSound event = do

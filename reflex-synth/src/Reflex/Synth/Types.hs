@@ -73,8 +73,8 @@ data Sound =
   FilteredSound Source Filter  |
   ProcessedSound Sound DSPEffect |
   WaveShapedSound Sound WaveShaper |
-  ReverberatedSound Sound Buffer deriving (Read,Show)
-  -- OverlappedSound [Sound] deriving (Read,Show)
+  ReverberatedSound Sound Buffer |
+  OverlappedSound [Sound] deriving (Read,Show)
 
 
 
@@ -90,8 +90,8 @@ data WebAudioNode = WebAudioNode Node JSVal | NullAudioNode
 -- would be represented (roughly) as: WebAudioGraph' oscillator (WebAudioGraph' gain (WebAudioGraph compressor))
 data WebAudioGraph = WebAudioGraph WebAudioNode |
  WebAudioGraph' WebAudioNode WebAudioGraph |
- WebAudioGraph'' WebAudioGraph WebAudioGraph 
- -- WebAudioGraph''' WebAudioNode [WebAudioGraph] WebAudioNode -- list of graphs played in parallel, and the last node should be a Gain node to mix them all
+ WebAudioGraph'' WebAudioGraph WebAudioGraph |
+ WebAudioGraph'''  [WebAudioGraph] WebAudioNode -- list of graphs played in parallel, and the last node should be a Gain node to mix them all
 
 createBiquadFilter:: Filter -> IO WebAudioNode
 createBiquadFilter (NoFilter) = createGain 0
@@ -165,6 +165,7 @@ getFirstNode:: WebAudioGraph -> WebAudioNode
 getFirstNode (WebAudioGraph n) = n
 getFirstNode (WebAudioGraph' n _) = n
 getFirstNode (WebAudioGraph'' n _) = getFirstNode n
+getFirstNode (WebAudioGraph''' _ _) = error "getFirstNode:  Cannot get the first node of a mixed signal ( a WebAudioGraph''' )"
 
 -- Gets the lst node in a WebAudioGraph - allows for tacking more ugens/nodes onto the end of a graph
 getLastNode:: WebAudioGraph -> WebAudioNode
@@ -212,6 +213,13 @@ connectGraph (WebAudioGraph'' a b) = do
   let bFirst = getFirstNode b
   connect aLast bFirst
   return (WebAudioGraph'' a b)
+connectGraph (WebAudioGraph''' xs n) = do
+  sequence $ fmap (\x-> do
+    connectGraph x
+    connect (getLastNode x) n
+    ) xs
+  return (WebAudioGraph''' xs n)
+
 
 
 setGain :: Double -> WebAudioNode -> IO ()
@@ -272,6 +280,11 @@ startFirstNode::WebAudioGraph -> IO()
 startFirstNode g = let f = getFirstNode g in startNode f
 
 startGraph :: WebAudioGraph -> IO()
+startGraph (WebAudioGraph''' xs n)= do
+  dest <- getDestination
+  connect n dest
+  sequence $ fmap (startNode . getFirstNode) xs
+  return ()
 startGraph a = do
   let f = getFirstNode a
   let l = getLastNode a
