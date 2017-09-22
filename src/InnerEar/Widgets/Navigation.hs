@@ -52,11 +52,11 @@ includedExercises = [
   ThresholdOfSilence,
   HarmonicDistortion,
   BoostOrCut,
-  FiveBandBoostCut,
-  AddedWhiteNoise,
-  RT60,
-  Compression,
-  LeftRightCentre
+  FiveBandBoostCut
+--  AddedWhiteNoise,
+--  RT60,
+--  Compression,
+--  LeftRightCentre
   ]
 
 buttonForExercise :: MonadWidget t m => ExerciseId -> m (Event t Navigation)
