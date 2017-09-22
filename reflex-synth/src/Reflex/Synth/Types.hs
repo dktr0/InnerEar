@@ -54,7 +54,7 @@ data Filter = NoFilter | Filter FilterType Double Double Double deriving (Read,S
 
 data OscillatorType = Sawtooth | Sine | Square deriving (Show, Read,Eq)
 
-data Oscillator = Oscillator OscillatorType Double Double deriving (Read,Show,Eq) --double params are freq and gain (respectively)
+data Oscillator = Oscillator OscillatorType Double Double deriving (Read,Show,Eq) --double params are freq and gain (in dB) (respectively)
 
 data PlaybackParam = PlaybackParam{
   startTime::Double,
@@ -64,7 +64,7 @@ data PlaybackParam = PlaybackParam{
 
 data Buffer = File String | LoadedFile String PlaybackParam deriving (Read,Show,Eq)
 
-data Source = NodeSource Node (Maybe Double) deriving (Show, Eq, Read)
+data Source = NodeSource Node (Maybe Double)  deriving (Show, Eq, Read)
 
 data Sound =
   NoSound |

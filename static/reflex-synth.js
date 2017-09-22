@@ -110,7 +110,9 @@ function createCompressorNode (threshold, knee, ratio, reduction, attack, releas
   comp.release.value = release;
   return comp;
 }
-function createConvolverNode (fileSrc){
+
+// 'url' is a string to a local (ie.. on the server) impulse response buffer (audio file)
+function createConvolverNode (url){
   var conv = ___ac.createConvolver();
 
   var request = new XMLHttpRequest();
