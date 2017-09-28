@@ -47,7 +47,8 @@ fiveBandConfigWidget i = radioConfigWidget "" msg configs i
   where msg = "Please choose how many decibels (dB) of boost or cut may (or may not) be applied during the exercise."
 
 displayEval :: MonadWidget t m => Dynamic t (Map Answer Score) -> m ()
-displayEval scoreMap = return ()
+displayEval = displayMultipleChoiceEvaluationGraph'' "Session Performance" "Hz" answers
+
 
 generateQ :: Config -> [Datum Config [Answer] Answer (Map Answer Score)] -> IO ([Answer],Answer)
 generateQ _ _ = randomMultipleChoiceQuestion answers
@@ -65,6 +66,6 @@ fiveBandBoostCutExercise = multipleChoiceExercise
   FiveBandBoostCut
   (configs!!0)
   fiveBandConfigWidget
-  (displaySpectrumEvaluation (constDyn "Session Performance"))
+  displayEval
   generateQ
   (Just "Please write some brief text reflecting on your experience:")
