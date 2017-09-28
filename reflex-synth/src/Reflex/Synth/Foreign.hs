@@ -19,8 +19,13 @@ foreign import javascript safe "setTimeout(function () {$1.disconnect()}, $2*100
 foreign import javascript safe "$r=___ac.createGain()" createGain :: IO JSVal
 foreign import javascript safe "$r=___ac.createBiquadFilter()" createBiquadFilter :: IO JSVal
 foreign import javascript safe "$r=___ac.createOscillator()" createOscillator :: IO JSVal
+
+-- foreign import javascript safe "$r = new Oscillator($1, $2, $3)" createOscillator :: JSString -> JSVal -> JSVal -> IO JSVal
+
 foreign import javascript safe " $r=createCompressorNode($1, $2, $3, $4, $5, $6)" createCompressorNode:: JSVal -> JSVal -> JSVal -> JSVal -> JSVal -> JSVal -> IO JSVal
 
+
+foreign import javascript safe "overlappedDictionary[$1]=$2" adddToOverlappedDictionary:: JSString -> JSVal -> IO ()
 foreign import javascript safe "loadUserSoundFile()" loadUserSoundFile :: IO ()
 
 foreign import javascript safe "$r= createMediaNode($1)" createMediaNode :: JSString -> IO JSVal
@@ -63,6 +68,7 @@ foreign import javascript safe "$r=___ac.createBrownNoise()" createBrownianNoise
 
 foreign import javascript safe "startNode($1)" startNode :: JSVal -> IO ()
 foreign import javascript safe "stopNodeByID($1)" stopNodeByID::JSString -> IO ()
+foreign import javascript safe "stopOverlappedSound($1)" stopOverlappedSound:: JSString -> IO ()
 foreign import javascript safe "playMediaNode($1)" playMediaNode:: JSString -> IO()
 
 

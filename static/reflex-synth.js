@@ -1,6 +1,7 @@
 
 var bufferData
 var buffers = {}
+var overlappedDictionary = {}
 var lastPlayingBufferNode;
 var userAudioNodes = {}
 
@@ -12,7 +13,6 @@ function startSilentNode () {
   // This wasn't working with just a simple oscillator with a gain of 0 applied for some reason.
   //  (hence the looped buffernode)
   var emptyArrayBuffer = ___ac.createBuffer(1, ___ac.sampleRate * 10,___ac.sampleRate );
-
   // Necessary for some reason to insert all 0's (even though it is initialized  as such)
   for (var channel = 0; channel < emptyArrayBuffer.numberOfChannels; channel++) {
     var nowBuffering = emptyArrayBuffer.getChannelData(channel);
@@ -25,19 +25,29 @@ function startSilentNode () {
   emptyNode.loop = true;
   emptyNode.connect(___ac.destination)
   emptyNode.start();
-
 }
 
-function test(s){
-  console.log(s)
-  console.log(typeof(s))
-  var a = document.getElementById(s);
-  while (a==null){
-    a = document.getElementById(s);
-  }
-  console.log(a)
 
-  return ___ac.createMediaElementSource(a);
+function test(){
+  var osc = ___ac.createOscillator()
+  osc.type = 'sine'
+
+  osc.frequency.value = 440;
+  var gain = ___ac.createGain();
+  gain.gain.value =0.2;
+  osc.connect(gain).connect(___ac.destination)
+  osc.start();
+  gain.gain.value =0;
+}
+function test2(){
+  var osc = ___ac.createOscillator()
+  osc.type = 'sine'
+
+  osc.frequency.value = 440;
+  var gain = ___ac.createGain();
+  gain.gain.value =0.2;
+  osc.connect(gain).connect(___ac.destination)
+  osc.start();
 }
 
 
@@ -70,6 +80,20 @@ function createClipAtWaveShaper (db){
   var distortion = ___ac.createWaveShaper()
   distortion.curve = shapeBuffer;
   return distortion
+}
+
+//Need to stop and disconnect all sources
+function stopOverlappedSound(id){
+  if (overlappedDictionary[id] != undefined){
+    var nodes = overlappedDictionary[id]
+
+    for (var i=0; i<nodes.length; i=i+1){
+      console.log(typeof(nodes[i]))
+      nodes[i].stop()
+      nodes[i].disconnect();
+    }
+    overlappedDictionary[id] = undefined
+  }
 }
 
 function getDistortAtDbFunc(db){

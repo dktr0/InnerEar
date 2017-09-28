@@ -74,9 +74,11 @@ data Sound =
   ProcessedSound Sound DSPEffect |
   WaveShapedSound Sound WaveShaper |
   ReverberatedSound Sound Buffer |
-  OverlappedSound [Sound] deriving (Read,Show)
+  OverlappedSound String [Sound] deriving (Read,Show)  -- String is sort of an unfortunately necessary identifier - so that if playing a sound of an indefinite length (such as a looped buffer) overlapped with other sounds, when you call 'stop' (Read,Show)
 
+soundTwo = OverlappedSound "Test" [Sound (NodeSource (OscillatorNode ( Oscillator Sine 440 (-10))) (Just 2)), Sound ( NodeSource (BufferNode ( File "pinknoise.wav")) (Just 2))]
 
+-- soundOne = OverlappedSound "Test" [Sound $ NodeSource (OscillatorNode $ Oscillator Sine 440 (-10)) (Just 2)]
 
 data WebAudioNode = WebAudioNode Node JSVal | NullAudioNode
 
@@ -92,6 +94,9 @@ data WebAudioGraph = WebAudioGraph WebAudioNode |
  WebAudioGraph' WebAudioNode WebAudioGraph |
  WebAudioGraph'' WebAudioGraph WebAudioGraph |
  WebAudioGraph'''  [WebAudioGraph] WebAudioNode -- list of graphs played in parallel, and the last node should be a Gain node to mix them all
+
+
+
 
 createBiquadFilter:: Filter -> IO WebAudioNode
 createBiquadFilter (NoFilter) = createGain 0
