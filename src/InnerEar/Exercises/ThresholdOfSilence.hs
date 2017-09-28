@@ -42,11 +42,18 @@ renderAnswer db s (Just (Answer True)) = GainSound (Sound s)  ((fromIntegral db)
 renderAnswer db _ (Just (Answer False)) = NoSound -- 2.0
 renderAnswer db s (Nothing) = GainSound (Sound s) ((fromIntegral db)::Double)
 
+instructionsText = "In this exercise, the system either makes no sound at all \
+    \or it plays a sound that has been reduced in level by some specific amount \
+    \of attenuation. As you make the level lower and lower, it should become more \
+    \difficult to tell when the system is playing a sound versus when it is playing \
+    \nothing."
+
+instructions :: MonadWidget t m => m ()
+instructions = elClass "div" "instructionsText" $ text instructionsText
+
 thresholdOfSilenceConfigWidget :: MonadWidget t m => Config -> m (Event t Config)
-thresholdOfSilenceConfigWidget i = radioConfigWidget explanation msg configs i
-  where
-    explanation = "In this exercise, the system either makes no sound at all or it plays a sound that has been reduced in level by some specific amount of attenuation. As you make the level lower and lower, it should become more difficult to tell when the system is playing a sound versus when it is playing nothing. You can configure how much attenuation to apply below, then click Begin Exercise to begin. If it is too easy, return to this configuration page and select a more extreme level of attenuation (i.e. an even lower gain value in decibels)."
-    msg = "Please choose the level of attenuation for this exercise:"
+thresholdOfSilenceConfigWidget i = radioConfigWidget instructionsText msg configs i
+  where msg = "Please choose the level of attenuation for this exercise:"
 
 displayEval :: MonadWidget t m => Dynamic t (Map Answer Score) -> m ()
 displayEval = displayMultipleChoiceEvaluationGraph' "Session Performance" "" answers
@@ -58,7 +65,7 @@ thresholdOfSilenceExercise :: MonadWidget t m => Exercise t m Int [Answer] Answe
 thresholdOfSilenceExercise = multipleChoiceExercise
   1
   answers
-  (return ())
+  instructions
   (dynRadioConfigWidget "thersholdOfSilence" configMap)
   renderAnswer
   ThresholdOfSilence
