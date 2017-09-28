@@ -40,10 +40,9 @@ multipleChoiceExercise :: (MonadWidget t m, Show a, Eq a, Ord a)
   -> (c -> m (Event t c))
   -> (Dynamic t (Map a Score) -> m ())
   -> (c -> [Datum c [a] a (Map a Score)] -> IO ([a],a))
-  -> Maybe String
   -> Exercise t m c [a] a (Map a Score)
 
-multipleChoiceExercise maxTries answers iWidget cWidget render i c cw de g r = Exercise {
+multipleChoiceExercise maxTries answers iWidget cWidget render i c cw de g = Exercise {
   exerciseId = i,
   instructionsWidget = iWidget,
   defaultConfig = c,
@@ -51,8 +50,7 @@ multipleChoiceExercise maxTries answers iWidget cWidget render i c cw de g r = E
   defaultEvaluation = empty,
   displayEvaluation = de,
   generateQuestion = g,
-  questionWidget = multipleChoiceQuestionWidget maxTries answers i iWidget cWidget render de,
-  reflectiveQuestion = r
+  questionWidget = multipleChoiceQuestionWidget maxTries answers i iWidget cWidget render de
   }
 
 multipleChoiceQuestionWidget :: (MonadWidget t m, Show a, Eq a, Ord a)
@@ -103,7 +101,7 @@ multipleChoiceQuestionWidget maxTries answers exId exInstructions cWidget render
 
   journalData <- elClass "div" "bottomRow" $ do
     elClass "div" "evaluation" $ eWidget scores
-    elClass "div" "journal" $ reflectionWidget
+    elClass "div" "journal" $ journalWidget
 
   let answerEvent = gate (fmap (==AnswerMode) . fmap mode . current $ multipleChoiceState) answerPressed
   let exploreEvent = gate (fmap (==ExploreMode) . fmap mode . current $ multipleChoiceState) answerPressed
@@ -134,15 +132,14 @@ multipleChoiceQuestionWidget maxTries answers exId exInstructions cWidget render
 
   return (datums, playSounds,updated dynConfig,navEvents)
 
-reflectionWidget :: MonadWidget t m => m (Event t (Datum c q a e))
-reflectionWidget = mdo
-  let attrs = constDyn $ fromList $ zip ["rows","cols","class"] ["7","80","journalItem"]
+journalWidget :: MonadWidget t m => m (Event t (Datum c q a e))
+journalWidget = elClass "div" "journalItem" $ mdo
+  let attrs = constDyn $ fromList $ zip ["class"] ["journalItem"]
   let resetText = "" <$ b
-  elClass "div" "journalItem" $ text "Journal"
+  text "Journal"
   t <- textArea $ def & textAreaConfig_attributes .~ attrs & textAreaConfig_setValue .~ resetText
-  b <- buttonClass "Save" "journalItem"
-  let t' = tag (current $ _textArea_value t) b
-  return $ Reflection <$> t'
+  b <- button "Save"
+  return $ Reflection <$> tag (current $ _textArea_value t) b
 
 randomMultipleChoiceQuestion :: [a] -> IO ([a],a)
 randomMultipleChoiceQuestion possibilities = do
