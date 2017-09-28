@@ -96,8 +96,6 @@ data WebAudioGraph = WebAudioGraph WebAudioNode |
  WebAudioGraph'''  [WebAudioGraph] WebAudioNode -- list of graphs played in parallel, and the last node should be a Gain node to mix them all
 
 
-
-
 createBiquadFilter:: Filter -> IO WebAudioNode
 createBiquadFilter (NoFilter) = createGain 0
 createBiquadFilter (Filter filtType f q g) = do
@@ -119,14 +117,14 @@ createWaveShaperNode (ClipAt db) = F.createClipAtWaveShaper (pToJSVal db) >>= re
 
 createOscillator :: Oscillator -> IO WebAudioNode
 createOscillator (Oscillator t freq db) = do
-  osc <- F.createOscillator
-  F.setOscillatorType (Prim.toJSString $ fmap toLower $ show t) osc  -- Web Audio won't accept 'Sine' must be 'sine'
-  F.setFrequency freq osc
-  g <- F.createGain
-  F.setAmp 0 g
-  F.connect osc g
-  F.startNode osc
-  return (WebAudioNode (OscillatorNode $ Oscillator t freq db) g)
+  osc <- F.createOscillator (Prim.toJSString $ fmap toLower $ show t) (pToJSVal freq) (pToJSVal db)
+  -- F.setOscillatorType (Prim.toJSString $ fmap toLower $ show t) osc  -- Web Audio won't accept 'Sine' must be 'sine'
+  -- F.setFrequency freq osc
+  -- g <- F.createGain
+  -- F.setAmp 0 g
+  -- F.connect osc g
+  -- F.startNode osc
+  return (WebAudioNode (OscillatorNode $ Oscillator t freq db) osc)
 
 
 createGain :: Double -> IO WebAudioNode
@@ -188,6 +186,9 @@ connect :: WebAudioNode -> WebAudioNode -> IO (WebAudioGraph)
 connect (WebAudioNode Destination _) _ = error "destination can't be source of connection"
 connect NullAudioNode _ = return (WebAudioGraph NullAudioNode)
 connect a NullAudioNode = return (WebAudioGraph a)
+connect (WebAudioNode (AdditiveNode xs) r) (WebAudioNode a y) = do
+  F.connectAdditiveNode r y
+  return $ WebAudioGraph' (WebAudioNode (AdditiveNode xs) r) $ WebAudioGraph (WebAudioNode a y)
 connect (WebAudioNode x y) (WebAudioNode (ScriptProcessorNode e) y') = do
   F.spConnect y y'
   return $ WebAudioGraph' (WebAudioNode x y) $ WebAudioGraph (WebAudioNode (ScriptProcessorNode e) y')
@@ -235,7 +236,7 @@ setGain _ _ = putStrLn "warning: unmatched pattern in Reflex.Synth.Types.setGain
 setAmp:: Double -> WebAudioNode -> IO ()
 -- setAmp a (WebAudioNode (FilterNode _) x) = F.setAmp a x -- this doesn't make sense: filter.gain.value expects db
 setAmp a (WebAudioNode (GainNode _) x) = F.setAmp a x
-setAmp a (WebAudioNode (OscillatorNode _) x) = F.setAmp a x
+setAmp a (WebAudioNode (OscillatorNode _) x) = F.setOscillatorAmp x a
 setAmp _ _ = putStrLn "warning: unmatched pattern in Reflex.Synth.Types.setAmp"
 
 
@@ -261,10 +262,10 @@ linearRampToGainAtTime _ _ NullAudioNode = error "Cannot set gain of a null node
 
 
 startNode :: WebAudioNode -> IO ()
-startNode (WebAudioNode (AdditiveNode _) r) = F.setGain 0 r  -- @this may not be the best..
+startNode (WebAudioNode (AdditiveNode _) r) = F.startNodes r  -- @this may not be the best..
 startNode (WebAudioNode (GainNode _) _) = error "Gain node cannot bet 'started' "
 startNode (WebAudioNode (MediaNode s) _) = F.playMediaNode (toJSString s) -- if you call 'start' on a MediaBufferNode a js error is thrown by the WAAPI
-startNode (WebAudioNode (OscillatorNode (Oscillator _ _ db)) r) = F.setGain db r
+startNode (WebAudioNode (OscillatorNode (Oscillator _ _ _)) r) = F.startNode r
 startNode (WebAudioNode (BufferNode (LoadedFile a (PlaybackParam b c d))) x) = do
   F.playBufferNode (toJSString a) (pToJSVal b) (pToJSVal c) (pToJSVal d) x
 startNode (WebAudioNode _ ref) = F.startNode ref

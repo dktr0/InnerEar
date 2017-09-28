@@ -9,8 +9,9 @@ import GHCJS.Types (JSVal,JSString)
 foreign import javascript safe "___ac = new AudioContext()" createAudioContext:: IO ()
 foreign import javascript safe "startSilentNode()" startSilentNode:: IO ()
 foreign import javascript safe "$r=___ac.destination" getDestination :: IO JSVal
-foreign import javascript safe "$1.connect($2)" connect :: JSVal -> JSVal -> IO ()
+foreign import javascript safe "console.log('connecting here...');$1.connect($2)" connect :: JSVal -> JSVal -> IO ()
 spConnect = connect -- temporary... (?maybe not?)
+foreign import javascript safe "connectAdditiveNode($1,$2)" connectAdditiveNode:: JSVal -> JSVal -> IO ()
 foreign import javascript safe "$1.disconnect($2)" disconnect ::JSVal -> JSVal -> IO()
 foreign import javascript safe "$1.disconnect()" disconnectAll::JSVal -> IO()
 
@@ -18,9 +19,8 @@ foreign import javascript safe "setTimeout(function () {$1.disconnect()}, $2*100
 
 foreign import javascript safe "$r=___ac.createGain()" createGain :: IO JSVal
 foreign import javascript safe "$r=___ac.createBiquadFilter()" createBiquadFilter :: IO JSVal
-foreign import javascript safe "$r=___ac.createOscillator()" createOscillator :: IO JSVal
-
--- foreign import javascript safe "$r = new Oscillator($1, $2, $3)" createOscillator :: JSString -> JSVal -> JSVal -> IO JSVal
+-- foreign import javascript safe "$r=___ac.createOscillator()" createOscillator :: IO JSVal
+foreign import javascript safe "$r = new Oscillator($1, $2, $3)" createOscillator :: JSVal -> JSVal -> JSVal -> IO JSVal
 
 foreign import javascript safe " $r=createCompressorNode($1, $2, $3, $4, $5, $6)" createCompressorNode:: JSVal -> JSVal -> JSVal -> JSVal -> JSVal -> JSVal -> IO JSVal
 
@@ -33,6 +33,7 @@ foreign import javascript safe "$r= createMediaNode($1)" createMediaNode :: JSSt
 
 foreign import javascript safe "setGain($1, $2)" setGain :: Double -> JSVal -> IO ()   -- Setting Gain to a DB value (NOT AMPLITUDE)
 foreign import javascript safe "$2.gain.value = $1" setAmp::Double -> JSVal -> IO ()
+foreign import javascript safe "$1.setAmp($2)" setOscillatorAmp:: JSVal -> Double -> IO ()
 foreign import javascript safe "$2.frequency.value = $1" setFrequency :: Double -> JSVal -> IO()
 
 foreign import javascript safe "$2.Q.value = $1" setFilterQ :: Double -> JSVal -> IO()
@@ -67,6 +68,7 @@ foreign import javascript safe "$r=___ac.createBrownNoise()" createBrownianNoise
 
 
 foreign import javascript safe "startNode($1)" startNode :: JSVal -> IO ()
+foreign import javascript safe "startNodes($1)" startNodes:: JSVal -> IO ()  -- JSarray of nodes (in an additive node) loop through and run 'start'
 foreign import javascript safe "stopNodeByID($1)" stopNodeByID::JSString -> IO ()
 foreign import javascript safe "stopOverlappedSound($1)" stopOverlappedSound:: JSString -> IO ()
 foreign import javascript safe "playMediaNode($1)" playMediaNode:: JSString -> IO()

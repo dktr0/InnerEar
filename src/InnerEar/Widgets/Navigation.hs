@@ -71,8 +71,8 @@ navigationPage responses areTheyAuthenticated SplashPage = elClass "div" "nav" $
     text "Welcome to Inner Ear! Select an ear-training exercise from the list below. If you are doing this is part of a requirement for a class, please make sure you are logged in first (at the top right)."
   b <- mapM buttonForExercise includedExercises
   -- c <- liftM (TestPage <$)  $ elClass "div" "navButton" $ button "Test"
-  -- d <- liftM (TestSoundPage <$) $ elClass "div" "navButton" $ button "Test Sound"
-  let navEvents = leftmost b
+  d <- liftM (TestSoundPage <$) $ elClass "div" "navButton" $ button "Test Sound"
+  let navEvents = leftmost $ [d]++b
   return (never,never,navEvents)
 
 navigationPage responses areTheyAuthenticated CreateUserPage = el "div" $ do

@@ -286,11 +286,12 @@ createMediaNode s = F.createMediaNode (toJSString s) >>= return . (WebAudioNode 
 createAdditiveNode:: [Node] -> IO WebAudioNode
 createAdditiveNode xs = do
   nodes <- sequence $ fmap createNode xs -- IO [WebAudioNode]
-  g <- F.createGain
-  F.setAmp 0 g
-  sequence (fmap startNode nodes)
-  mapM (((flip F.connect) g) . getJSVal) nodes
-  return (WebAudioNode (AdditiveNode xs) g) -- returning the gain node's
+  ref <- toJSArray $ fmap getJSVal nodes
+  -- g <- F.createGain
+  -- F.setAmp 0 g
+  -- sequence (fmap startNode nodes)
+  -- mapM (((flip F.connect) g) . getJSVal) nodes
+  return (WebAudioNode (AdditiveNode xs) ref) -- returning the gain node's
 
 createConvolverNode::Buffer -> IO WebAudioNode
 createConvolverNode (File s) = F.createConvolverNode (toJSString s) >>= return . WebAudioNode (ConvolverNode $ File s)

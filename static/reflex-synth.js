@@ -1,10 +1,8 @@
-
 var bufferData
 var buffers = {}
 var overlappedDictionary = {}
 var lastPlayingBufferNode;
 var userAudioNodes = {}
-
 
 function startSilentNode () {
   // a permanent buffernode sound  so the sound icon always displays at the
@@ -25,29 +23,6 @@ function startSilentNode () {
   emptyNode.loop = true;
   emptyNode.connect(___ac.destination)
   emptyNode.start();
-}
-
-
-function test(){
-  var osc = ___ac.createOscillator()
-  osc.type = 'sine'
-
-  osc.frequency.value = 440;
-  var gain = ___ac.createGain();
-  gain.gain.value =0.2;
-  osc.connect(gain).connect(___ac.destination)
-  osc.start();
-  gain.gain.value =0;
-}
-function test2(){
-  var osc = ___ac.createOscillator()
-  osc.type = 'sine'
-
-  osc.frequency.value = 440;
-  var gain = ___ac.createGain();
-  gain.gain.value =0.2;
-  osc.connect(gain).connect(___ac.destination)
-  osc.start();
 }
 
 
@@ -80,6 +55,13 @@ function createClipAtWaveShaper (db){
   var distortion = ___ac.createWaveShaper()
   distortion.curve = shapeBuffer;
   return distortion
+}
+
+function connectAdditiveNode(listOfNodes, toNode){
+  console.log("connecting...")
+  for(var i=0; i< listOfNodes.length; i=i+1){
+    listOfNodes[i].connect(toNode)
+  }
 }
 
 //Need to stop and disconnect all sources
@@ -447,6 +429,12 @@ function startNode(node){
   node.start()
 }
 
+// for starting an additive node - calls start on a list of nodes
+function startNodes(l){
+  for (var i=0; i<l.length; i=i+1){
+    l[i].start();
+  }
+}
 
 function stopNodeByID(id){
   var obj = userAudioNodes[id]
@@ -474,10 +462,8 @@ function drawSineWave (canvas){
 
 
   for (var i =0; i < canvas.width; i=i+1){
-    console.log("asdf")
     var x = i;
     var y = (Math.sin(i*(Math.PI*2)/width)*(-1)*height/2+(height/2));
-    console.log("x: "+x+" y: "+y)
     ctx.fillRect(x, y, 1, 1);
   }
 
