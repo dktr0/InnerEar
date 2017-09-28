@@ -78,4 +78,3 @@ leftRightCentreExercise = multipleChoiceExercise
   configurationWidget
   displayEval
   generateQ
-  (Just "Please write a reflection here...")

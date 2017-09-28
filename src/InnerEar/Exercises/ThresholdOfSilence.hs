@@ -66,4 +66,3 @@ thresholdOfSilenceExercise = multipleChoiceExercise
   thresholdOfSilenceConfigWidget
   displayEval
   generateQ
-  (Just "Please write a reflection here...")

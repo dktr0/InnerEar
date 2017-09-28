@@ -70,4 +70,3 @@ harmonicDistortionExercise = multipleChoiceExercise
   harmonicDistortionConfigWidget
   displayEval
   generateQ
-  (Just "Please write a reflection here...")

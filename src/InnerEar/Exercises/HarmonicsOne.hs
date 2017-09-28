@@ -36,8 +36,7 @@ harmonicsOneExercise = Exercise {
   displayEvaluation = harmoncsOneDisplayEvaluation,
   configWidget = harmonicsOneConfigWidget,
   generateQuestion = harmonicsOneGenerateQuestion,
-  questionWidget = harmonicsOneQuestionWidget,
-  reflectiveQuestion = Just "Please write some brief text reflecting on your experience:"
+  questionWidget = harmonicsOneQuestionWidget
 }
 
 harmoncsOneDisplayEvaluation _ = return ()
@@ -57,7 +56,7 @@ harmonicsOneGenerateQuestion _ _ = do
 harmonicsOneQuestionWidget :: MonadWidget t m => () -> Int -> Event t ((),Int) -> m (Event t (Datum () () Int Int),Event t Sound,Event t ExerciseNavigation)
 harmonicsOneQuestionWidget _ _ q = mdo
   soundButtons <-el "table" $ do
-    soundButtons <- sequence $ mapWithKey (\k v-> el "tr" $ el "td" $ do 
+    soundButtons <- sequence $ mapWithKey (\k v-> el "tr" $ el "td" $ do
       chooseButton <- buttonVal (show k) k
       playButton <- flippableWidget (buttonVal ("play") v) (return never) True (updated isAnswering)
       performSound $ switchPromptlyDyn playButton
@@ -66,7 +65,7 @@ harmonicsOneQuestionWidget _ _ q = mdo
     return soundButtons
   soundNum <- holdDyn 0 (fmap snd q)
   sound <- mapDyn (maybe NoSound id . (flip Data.Map.lookup) soundsMap) soundNum
-  playButton <- button "play" 
+  playButton <- button "play"
   performSound $ tagDyn sound playButton
   userSelection <- holdDyn Nothing $ leftmost $ [fmap (const Nothing) nextButton]++ (fmap (fmap Just) $ elems soundButtons) -- m Map Int (Event t Int
   submitButton <- button "submit"
@@ -84,7 +83,7 @@ harmonicsOneQuestionWidget _ _ q = mdo
 
 soundsMap:: Map Int Sound
 soundsMap = fromList $ zip [0::Int,1..] sounds
-  where 
+  where
     ex0 = zip (fmap (220*) [1::Double,2..10]) (repeat 1)
     ex1 = zip (fmap (220*) $ take 5 [x*2 | x<-[1..10]]) [1..10]
     ex2 = zip (fmap (220*) [1::Double,2..10]) [1/x | x<-[1..10]]

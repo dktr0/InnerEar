@@ -40,10 +40,9 @@ multipleChoiceExercise :: (MonadWidget t m, Show a, Eq a, Ord a)
   -> (c -> m (Event t c))
   -> (Dynamic t (Map a Score) -> m ())
   -> (c -> [Datum c [a] a (Map a Score)] -> IO ([a],a))
-  -> Maybe String
   -> Exercise t m c [a] a (Map a Score)
 
-multipleChoiceExercise maxTries answers iWidget cWidget render i c cw de g r = Exercise {
+multipleChoiceExercise maxTries answers iWidget cWidget render i c cw de g = Exercise {
   exerciseId = i,
   instructionsWidget = iWidget,
   defaultConfig = c,
@@ -51,8 +50,7 @@ multipleChoiceExercise maxTries answers iWidget cWidget render i c cw de g r = E
   defaultEvaluation = empty,
   displayEvaluation = de,
   generateQuestion = g,
-  questionWidget = multipleChoiceQuestionWidget maxTries answers i iWidget cWidget render de,
-  reflectiveQuestion = r
+  questionWidget = multipleChoiceQuestionWidget maxTries answers i iWidget cWidget render de
   }
 
 multipleChoiceQuestionWidget :: (MonadWidget t m, Show a, Eq a, Ord a)
