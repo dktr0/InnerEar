@@ -26,6 +26,10 @@ import InnerEar.Exercises.HarmonicDistortion
 import InnerEar.Exercises.BoostOrCut
 import InnerEar.Exercises.FiveBandBoostCut
 import InnerEar.Exercises.TenBandBoostCut
+import InnerEar.Exercises.AddedWhiteNoise
+import InnerEar.Exercises.RT60
+import InnerEar.Exercises.Compression
+import InnerEar.Exercises.LeftRightCentre
 
 data Navigation =
   SplashPage |
@@ -44,19 +48,31 @@ navigationWidget responses areTheyAuthenticated = elClass "div" "mainBody" $ mdo
   navEvents <- liftM switchPromptlyDyn $ mapDyn (\(_,_,x) -> x) w
   return (requests,sounds)
 
+includedExercises = [
+  ThresholdOfSilence,
+  HarmonicDistortion,
+  BoostOrCut,
+  FiveBandBoostCut
+--  AddedWhiteNoise,
+--  RT60,
+--  Compression,
+--  LeftRightCentre
+  ]
+
+buttonForExercise :: MonadWidget t m => ExerciseId -> m (Event t Navigation)
+buttonForExercise x = elClass "div" "navButton" $ do
+  y <- button (showExerciseTitle x)
+  return $ fmap (\_ -> ExercisePage x) y
+
 navigationPage :: MonadWidget t m => Event t [Response] -> Dynamic t Bool -> Navigation -> m (Event t Request,Event t Sound,Event t Navigation)
 
 navigationPage responses areTheyAuthenticated SplashPage = elClass "div" "nav" $ do
   elClass "div" "explanation" $
     text "Welcome to Inner Ear! Select an ear-training exercise from the list below. If you are doing this is part of a requirement for a class, please make sure you are logged in first (at the top right)."
-  b0 <- liftM (ExercisePage ThresholdOfSilence <$)  $ elClass "div" "navButton" $ button "Threshold Of Silence"
-  b1 <- liftM (ExercisePage HarmonicDistortion <$)  $ elClass "div" "navButton" $ button "Harmonic Distortion"
-  b2 <- liftM (ExercisePage BoostOrCut <$)  $ elClass "div" "navButton" $ button "Boost Or Cut (Gain)"
-  b3 <- liftM (ExercisePage FiveBandBoostCut <$)  $ elClass "div" "navButton" $ button "Five Band Boost or Cut (Filters)"
-  -- b4 <- liftM (ExercisePage TenBandBoostCut <$)  $ elClass "div" "navButton" $ button "Ten Band Boost or Cut (Filters)"
+  b <- mapM buttonForExercise includedExercises
   -- c <- liftM (TestPage <$)  $ elClass "div" "navButton" $ button "Test"
   -- d <- liftM (TestSoundPage <$) $ elClass "div" "navButton" $ button "Test Sound"
-  let navEvents = leftmost [b0,b1,b2,b3]
+  let navEvents = leftmost b
   return (never,never,navEvents)
 
 navigationPage responses areTheyAuthenticated CreateUserPage = el "div" $ do
@@ -73,6 +89,14 @@ navigationPage responses areTheyAuthenticated (ExercisePage FiveBandBoostCut) =
   runExerciseForNavigationPage fiveBandBoostCutExercise responses areTheyAuthenticated
 navigationPage responses areTheyAuthenticated (ExercisePage TenBandBoostCut) =
   runExerciseForNavigationPage tenBandBoostCutExercise responses areTheyAuthenticated
+navigationPage responses areTheyAuthenticated (ExercisePage AddedWhiteNoise) =
+  runExerciseForNavigationPage addedWhiteNoiseExercise responses areTheyAuthenticated
+navigationPage responses areTheyAuthenticated (ExercisePage RT60) =
+  runExerciseForNavigationPage rt60Exercise responses areTheyAuthenticated
+navigationPage responses areTheyAuthenticated (ExercisePage Compression) =
+  runExerciseForNavigationPage compressionExercise responses areTheyAuthenticated
+navigationPage responses areTheyAuthenticated (ExercisePage LeftRightCentre) =
+  runExerciseForNavigationPage leftRightCentreExercise responses areTheyAuthenticated
 
 navigationPage responses areTheyAuthenticated TestPage = do
   (requests,sounds,navUnit) <- testWidget responses

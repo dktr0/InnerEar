@@ -232,13 +232,13 @@ answerSelected a s | a == correctAnswer s = toExploreMode $ s {
       scoreMap = markCorrect a $ scoreMap s
       }
 
-answerSelected a s | a /= correctAnswer s && attemptsRemaining s > 0 = s {
+answerSelected a s | a /= correctAnswer s && attemptsRemaining s > 1 = s {
       answerButtonModes = replaceAtSameIndex a (allAnswers s) IncorrectDisactivated (answerButtonModes s),
       attemptsRemaining = attemptsRemaining s - 1,
       scoreMap = markIncorrect a (correctAnswer s) $ scoreMap s
       }
 
-answerSelected a s | a /= correctAnswer s && attemptsRemaining s == 0 = toExploreMode $ s {
+answerSelected a s | a /= correctAnswer s && attemptsRemaining s <= 1 = toExploreMode $ s {
       answerButtonModes = replaceAtSameIndex a (allAnswers s) IncorrectActivated (answerButtonModes s),
       scoreMap = markIncorrect a (correctAnswer s) $ scoreMap s
       }
