@@ -25,7 +25,6 @@ runExercise :: forall t m c q a e. (MonadWidget t m, Data c, Data q, Data a, Dat
 runExercise ex = mdo
 
   currentData <- foldDyn (:) [] questionWidgetData -- ultimately this will include selected data from database as well
-  -- nav <- holdDyn InConfigure navEvents
 
   -- Configure
   hackyBypass <- ((defaultConfig ex) <$) <$> getPostBuild
