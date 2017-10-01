@@ -53,9 +53,6 @@ displayEval = displayMultipleChoiceEvaluationGraph'' "Session Performance" "Hz" 
 generateQ :: Config -> [Datum Config [Answer] Answer (Map Answer Score)] -> IO ([Answer],Answer)
 generateQ _ _ = randomMultipleChoiceQuestion answers
 
-
-
-
 fiveBandBoostCutExercise :: MonadWidget t m => Exercise t m Config [Answer] Answer (Map Answer Score)
 fiveBandBoostCutExercise = multipleChoiceExercise
   3
