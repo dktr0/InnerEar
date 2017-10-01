@@ -101,13 +101,13 @@ displayMultipleChoiceEvaluationGraph' graphLabel qLabel possibilities scoreMap =
       where f k d = scoreBar (show k) d
 
 displayMultipleChoiceEvaluationGraph'' :: (MonadWidget t m, Show a, Ord a) => String -> String -> [a] -> Dynamic t (Map a Score) -> m ()
-displayMultipleChoiceEvaluationGraph'' graphLabel qLabel possibilities scoreMap = elClass "div" "scoreBarWrapperFiveBand" $ do
+displayMultipleChoiceEvaluationGraph'' graphLabel qLabel possibilities scoreMap = elClass "div" "specEvalWrapper" $ do
             scoreList <- mapDyn (\x -> fmap (\y -> Data.Map.lookup y x) possibilities) scoreMap -- m (Dynamic t [Maybe Score])
             scoreMap' <- mapDyn (\x -> fromList $ zip possibilities x) scoreList -- (Dynamic t (Map a (Maybe Score)))
             evalGraphFrame qLabel graphLabel
             listWithKey scoreMap' f
             return ()
-            where f k d = scoreBar (show k) d
+            where f k d = scoreBar' (show k) d
 
 
 --Dynamic t (Map k v) -> (k -> Dynamic t v -> m a) -> m (Dynamic t (Map k a))

@@ -166,3 +166,16 @@ scoreBar key score  = elClass "div" "scoreBarWrapper" $ do
   faintedLineToAdjustGraph "faintedLineToAdjustGraph"
   xLabel "xLabel" key
   mapDyn questionsAsked score' >>= dynCountLabel (constDyn "countLabel")
+
+scoreBar' :: MonadWidget t m => String -> Dynamic t (Maybe Score) -> m ()
+scoreBar' key score  = elClass "div" "scoreBarWrapperFiveBand" $ do
+    bool <-  mapDyn (maybe False (const True)) score
+    score' <-  mapDyn (maybe (Score 0 0 0) id) score -- Dynamic t Int
+    percent <- mapDyn asPercent score'
+    let b = dynScoreLabel (constDyn "scoreLabel") percent >> dynBarCSS' percent (constDyn 100)
+    flippableDyn (return ()) b bool
+    let b2 = emptyScoreLabel >> faintedLineCSS "svgFaintedLine" >> dynBarCSS' percent (constDyn 100)
+    flippableDyn b2 (return ()) bool
+    faintedLineToAdjustGraph "faintedLineToAdjustGraph"
+    xLabel "xLabel" key
+    mapDyn questionsAsked score' >>= dynCountLabel (constDyn "countLabel")

@@ -273,7 +273,7 @@ position: relative;
    width: 15px;
    height: 10%;
    position: relative;
-   top: 8%;
+   top: 9%;
   left: 4%;
 }
 
@@ -282,7 +282,7 @@ position: relative;
    width: 15px;
    height: 10%;
    position: relative;
-   top: 9%;
+   top: 11%;
   left: 4%;
 }
 
@@ -300,10 +300,10 @@ position: relative;
 .hzMainLabel {
   width: 15px;
   height: 10%;
-  font-size:  12px;
+  font-size:  50%;
   position: relative;
-  left: 12px;
-  top: 83%;
+  left: 4%;
+  top: 15%;
 
 }
 
@@ -450,7 +450,7 @@ input.soundSourceDropdown{
 .scoreBarWrapperFiveBand {
   display: inline-block;
   position: relative;
-  bottom:50%;
+  bottom:49%;
   max-width: 50%;
 }
 
