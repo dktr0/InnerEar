@@ -100,9 +100,6 @@ displayMultipleChoiceEvaluationGraph' graphLabel qLabel possibilities scoreMap =
       return ()
       where f k d = scoreBar (show k) d
 
---Dynamic t (Map k v) -> (k -> Dynamic t v -> m a) -> m (Dynamic t (Map k a))
---  scoreBar :: MonadWidget t m => String -> Dynamic t (Maybe Score) ->  m ()
-
 {-
 displaySpectrumEvaluationGraphs :: MonadWidget t m => m ()
 displaySpectrumEvaluationGraphs = do
