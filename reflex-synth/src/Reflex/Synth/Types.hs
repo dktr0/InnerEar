@@ -69,7 +69,7 @@ data Source = NodeSource Node (Maybe Double)  deriving (Show, Eq, Read)
 data Sound =
   NoSound |
   Sound Source |
-  GainSound Sound Double |
+  GainSound Sound Double |  -- gain in dB
   FilteredSound Source Filter  |
   ProcessedSound Sound DSPEffect |
   WaveShapedSound Sound WaveShaper |
@@ -239,6 +239,9 @@ setAmp a (WebAudioNode (GainNode _) x) = F.setAmp a x
 setAmp a (WebAudioNode (OscillatorNode _) x) = F.setOscillatorAmp x a
 setAmp _ _ = putStrLn "warning: unmatched pattern in Reflex.Synth.Types.setAmp"
 
+setBufferNodeLoop:: WebAudioNode -> Bool -> IO ()
+setBufferNodeLoop (WebAudioNode _ r) b = F.setBufferNodeLoop r (pToJSVal b)
+
 
 setFrequency:: Double -> WebAudioNode -> IO ()
 setFrequency f (WebAudioNode (FilterNode _) x) = F.setFrequency f x
@@ -273,6 +276,10 @@ startNode (WebAudioNode (CompressorNode _) _) = error "Compressor node cannot be
 
 stopNodeByID:: String -> IO ()
 stopNodeByID s = F.stopNodeByID (toJSString s)
+
+stopOverlappedSound:: String -> IO()
+stopOverlappedSound = F.stopOverlappedSound .  toJSString
+
 
 connectGraphToDest:: WebAudioGraph -> IO ()
 connectGraphToDest g = do

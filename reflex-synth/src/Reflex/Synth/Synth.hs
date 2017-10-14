@@ -54,6 +54,16 @@ instance WebAudio Source where
         stopNodeByID soundID
         x <- createNode node
         createGraph (WebAudioGraph x)
+      (BufferNode (File s)) ->  case dur of
+        (Just dur') -> do
+          x <- createBufferNode (File s)
+          y <- createAsrEnvelope 0.01 (dur'-0.02) 0.01
+          let graph = WebAudioGraph' x (WebAudioGraph y)
+          createGraph graph
+        (Nothing) -> do
+          x <- createBufferNode (File s)
+          setBufferNodeLoop x True
+          createGraph (WebAudioGraph x)
       otherwise -> case dur of
         (Just dur') -> do
             x <- createNode node
@@ -104,15 +114,13 @@ instance WebAudio Sound where
     let graph =  WebAudioGraph'' g $ WebAudioGraph conv
     connectGraph graph
   createGraph (OverlappedSound identifier xs) = do
-    F.stopOverlappedSound (toJSString identifier)
-
+    stopOverlappedSound identifier
     listOfGraphs <- mapM createGraph xs
     arrayOfSources <- toJSArray $ fmap (getJSVal . getFirstNode) listOfGraphs  -- getting all sources in JS array
     F.adddToOverlappedDictionary (toJSString identifier) arrayOfSources -- add 'identifier' mapped to arrayOfSources to a dictionary. So that all the nodes can be stopped when user hit's 'stop' on an overlapped sound.
     gain <- createGain 0 -- 0dB
     let graph = WebAudioGraph''' listOfGraphs gain
     connectGraph graph
-
 
 
 createSilentNode::IO WebAudioNode

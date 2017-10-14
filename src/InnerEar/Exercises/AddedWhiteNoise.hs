@@ -33,10 +33,10 @@ instance Show Answer where
 
 answers = [Answer False,Answer True]
 
-renderAnswer :: Config -> b -> Maybe Answer -> Sound
-renderAnswer db b (Just (Answer True)) = NoSound -- should be soundSource (b) at -10 plus whiteNoise at dB
-renderAnswer db b (Just (Answer False)) = NoSound -- should just be soundSource (b) at -10
-renderAnswer db _ Nothing = NoSound -- should also just be soundSource (b) at -10
+renderAnswer :: Config -> Source -> Maybe Answer -> Sound
+renderAnswer db (NodeSource node dur) (Just (Answer True)) = OverlappedSound "addedWhiteNoiseExercise"  [GainSound (Sound $ NodeSource node dur) (-10) , GainSound (Sound $ NodeSource (BufferNode $ File "whitenoise.wav") dur ) db] -- should be soundSource (b) at -10 plus whiteNoise at dB
+renderAnswer db b (Just (Answer False)) = OverlappedSound "addedWhiteNoiseExercise" [GainSound (Sound b) (-10)] -- note: this must be an overlapped sound so that it cuts off the previous playing sound...
+renderAnswer db b Nothing = OverlappedSound "addedWhiteNoiseExercise" [GainSound (Sound b) (-10)] -- should also just be soundSource (b) at -10
 -- note also: default sound source for this is a 300 Hz sine wave, but user sound files are possible
 -- pink or white noise should NOT be possible as selectable sound source types
 
@@ -60,7 +60,7 @@ addedWhiteNoiseExercise = multipleChoiceExercise
   1
   [Answer False,Answer True]
   instructions
-  (sineSourceConfig "addedWhiteNoiseExercise" configMap)
+  (dynRadioConfigWidget' "addedWhiteNoiseExercise" configMap)
   renderAnswer
   AddedWhiteNoise
   (-10)

@@ -70,6 +70,7 @@ function stopOverlappedSound(id){
     var nodes = overlappedDictionary[id]
 
     for (var i=0; i<nodes.length; i=i+1){
+      console.log("STOPING AN OVERLAPPED NODE NOW")
       console.log(typeof(nodes[i]))
       nodes[i].stop()
       nodes[i].disconnect();
@@ -422,9 +423,9 @@ function loadAndDrawBuffer(inputId, canvas){
 }
 
 function startNode(node){
-  if (lastPlayingBufferNode){
-    lastPlayingBufferNode.stop()
-  }
+  // if (lastPlayingBufferNode){
+  //   lastPlayingBufferNode.stop()
+  // }
   console.log(node)
   node.start()
 }

@@ -33,6 +33,7 @@ foreign import javascript safe "$r= createMediaNode($1)" createMediaNode :: JSSt
 
 foreign import javascript safe "setGain($1, $2)" setGain :: Double -> JSVal -> IO ()   -- Setting Gain to a DB value (NOT AMPLITUDE)
 foreign import javascript safe "$2.gain.value = $1" setAmp::Double -> JSVal -> IO ()
+foreign import javascript safe "$1.loop=$2" setBufferNodeLoop :: JSVal -> JSVal -> IO ()
 foreign import javascript safe "$1.setAmp($2)" setOscillatorAmp:: JSVal -> Double -> IO ()
 foreign import javascript safe "$2.frequency.value = $1" setFrequency :: Double -> JSVal -> IO()
 
