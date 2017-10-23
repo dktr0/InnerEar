@@ -79,6 +79,7 @@ multipleChoiceQuestionWidget maxTries answers exId exInstructions cWidget render
   modes <- mapDyn answerButtonModes multipleChoiceState
   modes' <- mapM (\x-> mapDyn (!!x) modes) [0,1..9]
   scores <- mapDyn scoreMap multipleChoiceState
+  display scores -- temporary
 
   -- user interface
   (closeExercise,playQuestion,answerPressed,nextQuestionNav) <- elClass "div" "topRow" $ do

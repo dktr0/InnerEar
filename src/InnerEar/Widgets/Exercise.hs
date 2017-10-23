@@ -26,21 +26,21 @@ runExercise ex = mdo
 
   currentData <- foldDyn (:) [] questionWidgetData -- ultimately this will include selected data from database as well
 
-  -- Configure
-  hackyBypass <- ((defaultConfig ex) <$) <$> getPostBuild
-  config <- holdDyn (defaultConfig ex) $ leftmost [configUpdate,hackyBypass]
-
   -- Question Widget
-  let qWidget = fmap (\x-> (questionWidget ex) x (defaultEvaluation ex) question) (updated config)  -- Event t (m (Event,Event,Event))
-  widgetEvents <- elClass "div" "exerciseQuestion" (widgetHold (return $ (never,never,never,never)) qWidget)  -- Dyn t (Ev, Ev, Ev)
+  let initialQWidget = (questionWidget ex) (defaultConfig ex) (defaultEvaluation ex) question
+  widgetEvents <- elClass "div" "exerciseQuestion" $ widgetHold initialQWidget rebuildQWidget  -- Dyn t (Ev, Ev, Ev)
   sounds <- liftM switchPromptlyDyn $ mapDyn (\(_,a,_,_)->a) widgetEvents
   questionNav <- liftM switchPromptlyDyn $ mapDyn (\(_,_,_,a)->a) widgetEvents
   configUpdate <- liftM switchPromptlyDyn $ mapDyn (\(_,_,a,_)->a) widgetEvents
 
+  let rebuildQWidget = fmap (\x-> (questionWidget ex) x (defaultEvaluation ex) question) configUpdate  -- Event t (m (Event,Event,Event))
+  config <- holdDyn (defaultConfig ex) configUpdate
+
   -- Question (with generateQuestion called again with each transition to Question)
-  let triggerNewQuestion = leftmost [ffilter (==InQuestion) questionNav,InQuestion <$ hackyBypass]
-  configAndData <- combineDyn (,) config currentData -- Dynamic t (a,[Datum])
-  let configAndData' = tagDyn configAndData $ leftmost [triggerNewQuestion, InQuestion <$ configUpdate] -- also gen. new question on config update.
+  hackyBypass <- getPostBuild
+  let triggerNewQuestion = leftmost [ffilter (==InQuestion) questionNav,InQuestion <$ hackyBypass,InQuestion <$ configUpdate]
+  configAndData <- combineDyn (,) config currentData -- Dynamic t (c,[Datum])
+  let configAndData' = tagDyn configAndData triggerNewQuestion
   let questionIO = fmap (\(x,y) -> (generateQuestion ex) x y) configAndData'
   question <- performEvent $ fmap liftIO $ questionIO
 
