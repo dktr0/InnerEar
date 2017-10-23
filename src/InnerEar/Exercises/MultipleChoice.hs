@@ -102,7 +102,7 @@ multipleChoiceQuestionWidget maxTries answers exId exInstructions cWidget render
   journalData <- elClass "div" "bottomRow" $ do
     elClass "div" "evaluation" $ do
       eWidget scores
-      display scores
+      -- display scores
     elClass "div" "journal" $ journalWidget
 
   let answerEvent = gate (fmap (==AnswerMode) . fmap mode . current $ multipleChoiceState) answerPressed
