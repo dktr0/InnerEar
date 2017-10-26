@@ -82,3 +82,23 @@ sourceWidget inputId = elClass "div" "sourceWidget" $ mdo
   source <- combineDyn (\i m-> maybe (NodeSource (BufferNode $ File "pinknoise.wav") $ Just 2) id $ M.lookup i m) ddVal ddMapVal
   performEvent $ fmap liftIO $ fmap (const $ stopNodeByID inputId) $ playReference
   return (source, playReference)
+
+
+-- Just with a 300Hz  Sine wave and a loaded file (should adapt the above to take parameter of sounds to include in dropdown)
+sourceWidget':: MonadWidget t m => String -> m (Dynamic t Source, Event t ())
+sourceWidget' inputId = elClass "div" "sourceWidget" $ mdo
+  let staticSources = M.singleton 0 $ NodeSource (OscillatorNode $ Oscillator Sine 440 0) (Just 2) -- 0 db b.c. gain gets applied elsewhere
+  let ddMap = constDyn $  M.fromList $ zip [(0::Int)..] ["300Hz sine wave", "Load a sound file"]
+  -- Source selection dropdown
+  ddVal  <- elClass "div" "soundSourceDropdown" $ do
+    text "Sound source: "
+    let ddConfig = DropdownConfig (1 <$ loadEv) (constDyn M.empty)
+    dd <- dropdown 0 ddMap  ddConfig -- & dropdownConfig_attributes .~ (constDyn $ M.singleton "class" "soundSourceDropdown")
+    return $ _dropdown_value dd
+  isUserSource <- mapDyn (==1) ddVal
+  playReference <- elClass "div" "playReference" $ button "Listen to reference sound"
+  (userFileSource, loadEv) <- userMediaWidget "inputId" isUserSource
+  ddMapVal <- mapDyn (\x-> M.insert 1 x staticSources) userFileSource
+  source <- combineDyn (\i m-> maybe (NodeSource (OscillatorNode $ Oscillator Sine 440 0) $ Just 2) id $ M.lookup i m) ddVal ddMapVal
+  performEvent $ fmap liftIO $ fmap (const $ stopNodeByID inputId) $ playReference
+  return (source, playReference)

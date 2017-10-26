@@ -17,6 +17,7 @@ import GHCJS.DOM.Types(toJSString,HTMLCanvasElement,unHTMLCanvasElement)
 import Control.Monad.IO.Class (liftIO)
 import GHCJS.Marshal(fromJSVal)
 import GHCJS.Marshal.Pure (pToJSVal)
+import GHCJS.Prim (toJSArray)
 
 
 
@@ -48,16 +49,30 @@ instance WebAudio Source where
       (ScriptProcessorNode _) -> error "ScriptProcessorNode cannot be a source node"
       (CompressorNode _) -> error "CompressorNode cannot be a source node"
       (WaveShaperNode _) -> error "WaveShaperNode cannot be a source node"
+      (ConvolverNode _) -> error "ConvolverNode cannot be a source node"
       (BufferNode (LoadedFile soundID _)) -> do
         stopNodeByID soundID
         x <- createNode node
         createGraph (WebAudioGraph x)
-      otherwise -> do
-        let dur' = maybe 2 id dur
-        x <- createNode node
-        y <- createAsrEnvelope 0.01 (dur'-0.02) 0.01   --necessary to be percise so disconnectGraphAtTime doesn't clip the sound
-        let graph = WebAudioGraph' x (WebAudioGraph y)
-        createGraph graph
+      (BufferNode (File s)) ->  case dur of
+        (Just dur') -> do
+          x <- createBufferNode (File s)
+          y <- createAsrEnvelope 0.01 (dur'-0.02) 0.01
+          let graph = WebAudioGraph' x (WebAudioGraph y)
+          createGraph graph
+        (Nothing) -> do
+          x <- createBufferNode (File s)
+          setBufferNodeLoop x True
+          createGraph (WebAudioGraph x)
+      otherwise -> case dur of
+        (Just dur') -> do
+            x <- createNode node
+            y <- createAsrEnvelope 0.01 (dur'-0.02) 0.01   --necessary to be percise so disconnectGraphAtTime doesn't clip the sound
+            let graph = WebAudioGraph' x (WebAudioGraph y)
+            createGraph graph
+        (Nothing) -> do
+            x <- createNode node
+            createGraph (WebAudioGraph x)
 
 instance WebAudio WebAudioGraph where
   createGraph = connectGraph
@@ -93,7 +108,19 @@ instance WebAudio Sound where
     wS <- createWaveShaperNode w
     let graph =  WebAudioGraph'' g $ WebAudioGraph wS
     connectGraph graph
-
+  createGraph (ReverberatedSound s b) = do
+    g <- createGraph s
+    conv <- createConvolverNode b
+    let graph =  WebAudioGraph'' g $ WebAudioGraph conv
+    connectGraph graph
+  createGraph (OverlappedSound identifier xs) = do
+    stopOverlappedSound identifier
+    listOfGraphs <- mapM createGraph xs
+    arrayOfSources <- toJSArray $ fmap (getJSVal . getFirstNode) listOfGraphs  -- getting all sources in JS array
+    F.adddToOverlappedDictionary (toJSString identifier) arrayOfSources -- add 'identifier' mapped to arrayOfSources to a dictionary. So that all the nodes can be stopped when user hit's 'stop' on an overlapped sound.
+    gain <- createGain 0 -- 0dB
+    let graph = WebAudioGraph''' listOfGraphs gain
+    connectGraph graph
 
 
 createSilentNode::IO WebAudioNode
@@ -114,6 +141,12 @@ createSound (FilteredSound s f) = do
   connectGraph graph
 
 
+-- get duration of a sound. Nothing denotes that the sound will play indefinitely until the user hits stop.
+getT :: Sound -> Maybe Double
+getT (OverlappedSound identifier xs) = minimum $ fmap getT xs
+getT a = case (getSource a ) of
+  (NodeSource _ t) ->  t
+  otherwise -> Nothing
 
 getSource:: Sound -> Source
 getSource (Sound s) = s
@@ -122,6 +155,8 @@ getSource (FilteredSound s _) = s
 getSource (ProcessedSound s _) = getSource s
 getSource (NoSound) = NodeSource SilentNode $ Just 2
 getSource (WaveShapedSound s _) = getSource s
+getSource (ReverberatedSound s _) = getSource s
+getSource (OverlappedSound _ _) = error "cannot get 'source' of an OverlappedSound"
 
 disconnectGraphAtTimeMaybe:: WebAudioGraph -> Maybe Double -> IO ()
 disconnectGraphAtTimeMaybe a (Just b) = disconnectGraphAtTime a b
@@ -135,18 +170,20 @@ disconnectGraphAtTime (WebAudioGraph' n g) t = do
 disconnectGraphAtTime (WebAudioGraph'' g1 g2) t = do
   disconnectGraphAtTime g1 t
   disconnectGraphAtTime g2 t
+disconnectGraphAtTime (WebAudioGraph''' xs g) t = do
+  mapM ((flip disconnectGraphAtTime) t) xs
+  disconnectAllAtTime g t
 
 performSound:: MonadWidget t m => Event t Sound -> m ()
 performSound event = do
   let n = fmap (\e-> do
-                      let source = getSource e
-                      let t = getT source
+                      let t = getT e
                       graph <- createGraph e
                       startGraph graph
                       disconnectGraphAtTimeMaybe graph  t
                       ) event          -- Event t (IO ())
   performEvent_ $ fmap liftIO n
-  where getT (NodeSource _ t) = t
+
 
 
 audioElement::MonadWidget t m => m ()
@@ -249,6 +286,7 @@ createNode (BufferNode x) = createBufferNode x
 createNode (MediaNode s) = createMediaNode s
 createNode (CompressorNode x) = createCompressorNode x
 createNode(WaveShaperNode x) = createWaveShaperNode x
+createNode (ConvolverNode x) = createConvolverNode x
 
 createMediaNode:: String -> IO WebAudioNode
 createMediaNode s = F.createMediaNode (toJSString s) >>= return . (WebAudioNode (MediaNode s))
@@ -256,12 +294,16 @@ createMediaNode s = F.createMediaNode (toJSString s) >>= return . (WebAudioNode 
 createAdditiveNode:: [Node] -> IO WebAudioNode
 createAdditiveNode xs = do
   nodes <- sequence $ fmap createNode xs -- IO [WebAudioNode]
-  g <- F.createGain
-  F.setAmp 0 g
-  sequence (fmap startNode nodes)
-  mapM (((flip F.connect) g) . getJSVal) nodes
-  return (WebAudioNode (AdditiveNode xs) g) -- returning the gain node's
+  ref <- toJSArray $ fmap getJSVal nodes
+  -- g <- F.createGain
+  -- F.setAmp 0 g
+  -- sequence (fmap startNode nodes)
+  -- mapM (((flip F.connect) g) . getJSVal) nodes
+  return (WebAudioNode (AdditiveNode xs) ref) -- returning the gain node's
 
+createConvolverNode::Buffer -> IO WebAudioNode
+createConvolverNode (File s) = F.createConvolverNode (toJSString s) >>= return . WebAudioNode (ConvolverNode $ File s)
+createConvolverNode (LoadedFile _ _) = error "does not yet support loaded file for convolver*"
 
 --renderAudioWaveform:: G.HTMLCanvasElement -> G.HTMLCanvasElement -> IO()
 --renderAudioWaveform l r= do
@@ -276,7 +318,7 @@ renderAudioWaveform inputId el = do
   F.renderAudioWaveform (toJSString inputId) el'
 
 drawSineWave:: HTMLCanvasElement  -> IO ()
-drawSineWave el  = F.drawSineWave (unHTMLCanvasElement el) 
+drawSineWave el  = F.drawSineWave (unHTMLCanvasElement el)
 
 
 

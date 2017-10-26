@@ -25,36 +25,30 @@ runExercise :: forall t m c q a e. (MonadWidget t m, Data c, Data q, Data a, Dat
 runExercise ex = mdo
 
   currentData <- foldDyn (:) [] questionWidgetData -- ultimately this will include selected data from database as well
-  nav <- holdDyn InConfigure navEvents
-
-  -- Configure
-  configVisible <- mapDyn (==InConfigure) nav
-  configEvent <- visibleWhen configVisible $ elClass "div" "exerciseConfig" $ configWidget ex $ defaultConfig ex
-  config <- holdDyn (defaultConfig ex) $ leftmost [configUpdate,configEvent]
-  
-  -- Question (with generateQuestion called again with each transition to Question)
-  let triggerNewQuestion = ffilter (==InQuestion) navEvents
-  configAndData <- combineDyn (,) config currentData -- Dynamic t (a,[Datum])
-  let configAndData' = tagDyn configAndData $ leftmost [triggerNewQuestion, InQuestion <$ configUpdate] -- also gen. new question on config update.
-  let questionIO = fmap (\(x,y) -> (generateQuestion ex) x y) configAndData'
-  question <- performEvent $ fmap liftIO $ questionIO
 
   -- Question Widget
-  let qWidget = fmap (\x-> (questionWidget ex) x (defaultEvaluation ex) question) (updated config)  -- Event t (m (Event,Event,Event))
-  widgetEvents <- elClass "div" "exerciseQuestion" (widgetHold (return $ (never,never,never,never)) qWidget)  -- Dyn t (Ev, Ev, Ev)
+  let initialQWidget = (questionWidget ex) (defaultConfig ex) (defaultEvaluation ex) question
+  widgetEvents <- elClass "div" "exerciseQuestion" $ widgetHold initialQWidget rebuildQWidget  -- Dyn t (Ev, Ev, Ev)
   sounds <- liftM switchPromptlyDyn $ mapDyn (\(_,a,_,_)->a) widgetEvents
   questionNav <- liftM switchPromptlyDyn $ mapDyn (\(_,_,_,a)->a) widgetEvents
   configUpdate <- liftM switchPromptlyDyn $ mapDyn (\(_,_,a,_)->a) widgetEvents
 
-  -- transitions between navigation modes
-  let goToConfigure = ffilter (==InConfigure) questionNav
-  let goToQuestion = leftmost [InQuestion <$ configEvent,ffilter (==InQuestion) questionNav]
+  let rebuildQWidget = fmap (\x-> (questionWidget ex) x (defaultEvaluation ex) question) configUpdate  -- Event t (m (Event,Event,Event))
+  config <- holdDyn (defaultConfig ex) configUpdate
+
+  -- Question (with generateQuestion called again with each transition to Question)
+  hackyBypass <- getPostBuild
+  let triggerNewQuestion = leftmost [ffilter (==InQuestion) questionNav,InQuestion <$ hackyBypass,InQuestion <$ configUpdate]
+  configAndData <- combineDyn (,) config currentData -- Dynamic t (c,[Datum])
+  let configAndData' = tagDyn configAndData triggerNewQuestion
+  let questionIO = fmap (\(x,y) -> (generateQuestion ex) x y) configAndData'
+  question <- performEvent $ fmap liftIO $ questionIO
+
   let closeExercise = fmap (const ()) $ ffilter (==CloseExercise) questionNav
-  let navEvents = leftmost [goToConfigure,goToQuestion]
 
   -- structuring of exercise data for reporting/collection upwards
   startedData <- (Started <$) <$> getPostBuild
-  let configData = Configured <$> leftmost [configEvent,configUpdate] -- note: possiblity for data loss here with question event and leftmost
+  let configData = Configured <$> configUpdate -- note: possiblity for data loss here with question event and leftmost
   let newQuestionData = attachDynWith (\c (q,a) -> NewQuestion c q a) config question
   questionWidgetData <- liftM switchPromptlyDyn $ mapDyn (\(a,_,_,_)->a) widgetEvents
   let endedData = Ended <$ closeExercise

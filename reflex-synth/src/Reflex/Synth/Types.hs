@@ -43,7 +43,8 @@ data Node =
   MediaNode String |
   CompressorNode  Compressor |
   WaveShaperNode WaveShaper|
-  ScriptProcessorNode DSPEffect deriving(Read,Show,Eq)
+  ScriptProcessorNode DSPEffect |
+  ConvolverNode Buffer deriving(Read,Show,Eq)
 
 data DSPEffect = DistortAtDb Double deriving (Read, Show, Eq)
 
@@ -53,7 +54,7 @@ data Filter = NoFilter | Filter FilterType Double Double Double deriving (Read,S
 
 data OscillatorType = Sawtooth | Sine | Square deriving (Show, Read,Eq)
 
-data Oscillator = Oscillator OscillatorType Double Double deriving (Read,Show,Eq) --double params are freq and gain (respectively)
+data Oscillator = Oscillator OscillatorType Double Double deriving (Read,Show,Eq) --double params are freq and gain (in dB) (respectively)
 
 data PlaybackParam = PlaybackParam{
   startTime::Double,
@@ -63,17 +64,21 @@ data PlaybackParam = PlaybackParam{
 
 data Buffer = File String | LoadedFile String PlaybackParam deriving (Read,Show,Eq)
 
-data Source = NodeSource Node (Maybe Double) deriving (Show, Eq, Read)
+data Source = NodeSource Node (Maybe Double)  deriving (Show, Eq, Read)
 
 data Sound =
   NoSound |
   Sound Source |
-  GainSound Sound Double |
+  GainSound Sound Double |  -- gain in dB
   FilteredSound Source Filter  |
   ProcessedSound Sound DSPEffect |
-  WaveShapedSound Sound WaveShaper deriving (Read,Show)
+  WaveShapedSound Sound WaveShaper |
+  ReverberatedSound Sound Buffer |
+  OverlappedSound String [Sound] deriving (Read,Show)  -- String is sort of an unfortunately necessary identifier - so that if playing a sound of an indefinite length (such as a looped buffer) overlapped with other sounds, when you call 'stop' (Read,Show)
 
+soundTwo = OverlappedSound "Test" [Sound (NodeSource (OscillatorNode ( Oscillator Sine 440 (-10))) (Just 2)), Sound ( NodeSource (BufferNode ( File "pinknoise.wav")) (Just 2))]
 
+-- soundOne = OverlappedSound "Test" [Sound $ NodeSource (OscillatorNode $ Oscillator Sine 440 (-10)) (Just 2)]
 
 data WebAudioNode = WebAudioNode Node JSVal | NullAudioNode
 
@@ -85,7 +90,11 @@ data WebAudioNode = WebAudioNode Node JSVal | NullAudioNode
 --   oscillator.connect(gain)
 --   gain.connect(compressor)
 -- would be represented (roughly) as: WebAudioGraph' oscillator (WebAudioGraph' gain (WebAudioGraph compressor))
-data WebAudioGraph = WebAudioGraph WebAudioNode | WebAudioGraph' WebAudioNode WebAudioGraph | WebAudioGraph'' WebAudioGraph WebAudioGraph
+data WebAudioGraph = WebAudioGraph WebAudioNode |
+ WebAudioGraph' WebAudioNode WebAudioGraph |
+ WebAudioGraph'' WebAudioGraph WebAudioGraph |
+ WebAudioGraph'''  [WebAudioGraph] WebAudioNode -- list of graphs played in parallel, and the last node should be a Gain node to mix them all
+
 
 createBiquadFilter:: Filter -> IO WebAudioNode
 createBiquadFilter (NoFilter) = createGain 0
@@ -108,15 +117,14 @@ createWaveShaperNode (ClipAt db) = F.createClipAtWaveShaper (pToJSVal db) >>= re
 
 createOscillator :: Oscillator -> IO WebAudioNode
 createOscillator (Oscillator t freq db) = do
-  osc <- F.createOscillator
-  F.setOscillatorType (Prim.toJSString $ fmap toLower $ show t) osc  -- Web Audio won't accept 'Sine' must be 'sine'
-  F.setFrequency freq osc
-  g <- F.createGain
-  F.setAmp 0 g
-  F.connect osc g
-  F.startNode osc
-  return (WebAudioNode (OscillatorNode $ Oscillator t freq db) g)
-
+  osc <- F.createOscillator (Prim.toJSString $ fmap toLower $ show t) (pToJSVal freq) (pToJSVal db)
+  -- F.setOscillatorType (Prim.toJSString $ fmap toLower $ show t) osc  -- Web Audio won't accept 'Sine' must be 'sine'
+  -- F.setFrequency freq osc
+  -- g <- F.createGain
+  -- F.setAmp 0 g
+  -- F.connect osc g
+  -- F.startNode osc
+  return (WebAudioNode (OscillatorNode $ Oscillator t freq db) osc)
 
 
 createGain :: Double -> IO WebAudioNode
@@ -124,9 +132,6 @@ createGain g = do
   x <- F.createGain
   F.setGain g x
   return (WebAudioNode (GainNode g) x)
-
-
-
 
 createBufferNode :: Buffer -> IO WebAudioNode
 createBufferNode (File path) = do
@@ -163,6 +168,7 @@ getFirstNode:: WebAudioGraph -> WebAudioNode
 getFirstNode (WebAudioGraph n) = n
 getFirstNode (WebAudioGraph' n _) = n
 getFirstNode (WebAudioGraph'' n _) = getFirstNode n
+getFirstNode (WebAudioGraph''' _ _) = error "getFirstNode:  Cannot get the first node of a mixed signal ( a WebAudioGraph''' )"
 
 -- Gets the lst node in a WebAudioGraph - allows for tacking more ugens/nodes onto the end of a graph
 getLastNode:: WebAudioGraph -> WebAudioNode
@@ -180,6 +186,9 @@ connect :: WebAudioNode -> WebAudioNode -> IO (WebAudioGraph)
 connect (WebAudioNode Destination _) _ = error "destination can't be source of connection"
 connect NullAudioNode _ = return (WebAudioGraph NullAudioNode)
 connect a NullAudioNode = return (WebAudioGraph a)
+connect (WebAudioNode (AdditiveNode xs) r) (WebAudioNode a y) = do
+  F.connectAdditiveNode r y
+  return $ WebAudioGraph' (WebAudioNode (AdditiveNode xs) r) $ WebAudioGraph (WebAudioNode a y)
 connect (WebAudioNode x y) (WebAudioNode (ScriptProcessorNode e) y') = do
   F.spConnect y y'
   return $ WebAudioGraph' (WebAudioNode x y) $ WebAudioGraph (WebAudioNode (ScriptProcessorNode e) y')
@@ -210,6 +219,13 @@ connectGraph (WebAudioGraph'' a b) = do
   let bFirst = getFirstNode b
   connect aLast bFirst
   return (WebAudioGraph'' a b)
+connectGraph (WebAudioGraph''' xs n) = do
+  sequence $ fmap (\x-> do
+    connectGraph x
+    connect (getLastNode x) n
+    ) xs
+  return (WebAudioGraph''' xs n)
+
 
 
 setGain :: Double -> WebAudioNode -> IO ()
@@ -220,8 +236,11 @@ setGain _ _ = putStrLn "warning: unmatched pattern in Reflex.Synth.Types.setGain
 setAmp:: Double -> WebAudioNode -> IO ()
 -- setAmp a (WebAudioNode (FilterNode _) x) = F.setAmp a x -- this doesn't make sense: filter.gain.value expects db
 setAmp a (WebAudioNode (GainNode _) x) = F.setAmp a x
-setAmp a (WebAudioNode (OscillatorNode _) x) = F.setAmp a x
+setAmp a (WebAudioNode (OscillatorNode _) x) = F.setOscillatorAmp x a
 setAmp _ _ = putStrLn "warning: unmatched pattern in Reflex.Synth.Types.setAmp"
+
+setBufferNodeLoop:: WebAudioNode -> Bool -> IO ()
+setBufferNodeLoop (WebAudioNode _ r) b = F.setBufferNodeLoop r (pToJSVal b)
 
 
 setFrequency:: Double -> WebAudioNode -> IO ()
@@ -246,10 +265,10 @@ linearRampToGainAtTime _ _ NullAudioNode = error "Cannot set gain of a null node
 
 
 startNode :: WebAudioNode -> IO ()
-startNode (WebAudioNode (AdditiveNode _) r) = F.setGain 0 r  -- @this may not be the best..
+startNode (WebAudioNode (AdditiveNode _) r) = F.startNodes r  -- @this may not be the best..
 startNode (WebAudioNode (GainNode _) _) = error "Gain node cannot bet 'started' "
 startNode (WebAudioNode (MediaNode s) _) = F.playMediaNode (toJSString s) -- if you call 'start' on a MediaBufferNode a js error is thrown by the WAAPI
-startNode (WebAudioNode (OscillatorNode (Oscillator _ _ db)) r) = F.setGain db r
+startNode (WebAudioNode (OscillatorNode (Oscillator _ _ _)) r) = F.startNode r
 startNode (WebAudioNode (BufferNode (LoadedFile a (PlaybackParam b c d))) x) = do
   F.playBufferNode (toJSString a) (pToJSVal b) (pToJSVal c) (pToJSVal d) x
 startNode (WebAudioNode _ ref) = F.startNode ref
@@ -257,6 +276,10 @@ startNode (WebAudioNode (CompressorNode _) _) = error "Compressor node cannot be
 
 stopNodeByID:: String -> IO ()
 stopNodeByID s = F.stopNodeByID (toJSString s)
+
+stopOverlappedSound:: String -> IO()
+stopOverlappedSound = F.stopOverlappedSound .  toJSString
+
 
 connectGraphToDest:: WebAudioGraph -> IO ()
 connectGraphToDest g = do
@@ -270,6 +293,11 @@ startFirstNode::WebAudioGraph -> IO()
 startFirstNode g = let f = getFirstNode g in startNode f
 
 startGraph :: WebAudioGraph -> IO()
+startGraph (WebAudioGraph''' xs n)= do
+  dest <- getDestination
+  connect n dest
+  sequence $ fmap (startNode . getFirstNode) xs
+  return ()
 startGraph a = do
   let f = getFirstNode a
   let l = getLastNode a
