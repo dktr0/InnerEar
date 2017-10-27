@@ -87,7 +87,7 @@ sourceWidget inputId = elClass "div" "sourceWidget" $ mdo
 sourceWidget'':: MonadWidget t m => String -> M.Map Int (String,Source) -> Int -> m (Dynamic t Source, Event t ())
 sourceWidget'' inputId sourceMap iSource = elClass "div" "sourceWidget" $ mdo
   let staticSources = M.map snd sourceMap
-  let loadFileMapKey = (+1) $ maximum $ M.keys sourceMap
+  let loadFileMapKey = case M.keys sourceMap of ([]) -> 0; otherwise -> (+1) $ maximum $ M.keys sourceMap
 
   let ddMap = constDyn $ M.insert loadFileMapKey ("Load a sound file") $ M.map fst sourceMap
   -- Source selection dropdown

@@ -60,7 +60,7 @@ compressionExercise = multipleChoiceExercise
   1
   answers
   instructions
-  (dynRadioConfigWidget'' "compressionExercise" (singleton 0 ("test",NodeSource (BufferNode$File"whitenoise.wav") $ Just 2)) 0 configMap)
+  (dynRadioConfigWidget'' "compressionExercise" empty 0 configMap)
   renderAnswer
   Compression
   (20)

@@ -247,7 +247,9 @@ function playBufferNode(id, s, e, loop, node){
   node.loopStart = start;
   node.loopEnd = e*node.buffer.duration;
   node.loop = loop
-  node.start(___ac.currentTime, start, end)
+  // node.start(___ac.currentTime, start, end)
+  node.start(___ac.currentTime, start)
+
   lastPlayingBufferNode = node;
   }
   else {
@@ -273,7 +275,7 @@ function createBufferSourceNodeFromID(id,start,end,loop){
     return source;
   }
    else{
-     alert("Please load a sound file to use as a source or select pink noise  or white noise from the dropdown menu on the right.")
+     alert("Please load a sound file to use as a source.")
    }
    return source;
 }
