@@ -107,12 +107,11 @@ function setGain(db, node){
   node.gain.value = amp;
 }
 
-function createCompressorNode (threshold, knee, ratio, reduction, attack, release){
-  var comp = ___ac.createDynamicCompressor()
+function createCompressorNode (threshold, knee, ratio, attack, release){
+  var comp = ___ac.createDynamicsCompressor()
   comp.threshold.value = threshold;
   comp.knee.value = knee;
   comp.ratio.value = ratio;
-  comp.reduction.value = reduction;
   comp.attack.value = attack;
   comp.release.value = release;
   return comp;
@@ -248,7 +247,9 @@ function playBufferNode(id, s, e, loop, node){
   node.loopStart = start;
   node.loopEnd = e*node.buffer.duration;
   node.loop = loop
-  node.start(___ac.currentTime, start, end)
+  // node.start(___ac.currentTime, start, end)
+  node.start(___ac.currentTime, start)
+
   lastPlayingBufferNode = node;
   }
   else {
@@ -274,7 +275,7 @@ function createBufferSourceNodeFromID(id,start,end,loop){
     return source;
   }
    else{
-     alert("Please load a sound file to use as a source or select pink noise  or white noise from the dropdown menu on the right.")
+     alert("Please load a sound file to use as a source.")
    }
    return source;
 }
