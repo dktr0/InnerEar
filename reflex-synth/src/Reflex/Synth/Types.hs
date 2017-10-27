@@ -49,7 +49,7 @@ data Node =
 data DSPEffect = DistortAtDb Double deriving (Read, Show, Eq)
 
 data WaveShaper = ClipAt Double deriving (Show, Read, Eq)
-data Compressor = Compressor {threshold::Double, knee::Double, ratio::Double, reduction::Double, attack::Double, release::Double} deriving (Show, Read, Eq)
+data Compressor = Compressor {threshold::Double, knee::Double, ratio::Double, attack::Double, release::Double} deriving (Show, Read, Eq)
 data Filter = NoFilter | Filter FilterType Double Double Double deriving (Read,Show,Eq) -- Freq, q, db
 
 data OscillatorType = Sawtooth | Sine | Square deriving (Show, Read,Eq)
@@ -71,6 +71,7 @@ data Sound =
   Sound Source |
   GainSound Sound Double |  -- gain in dB
   FilteredSound Source Filter  |
+  CompressedSound Sound Compressor |
   ProcessedSound Sound DSPEffect |
   WaveShapedSound Sound WaveShaper |
   ReverberatedSound Sound Buffer |
@@ -107,10 +108,12 @@ createBiquadFilter (Filter filtType f q g) = do
   setFilterType filtType y
   return y
 
+
+
 createCompressorNode:: Compressor -> IO (WebAudioNode)
-createCompressorNode (Compressor a b c d e f) = do
-  ref <- F.createCompressorNode (pToJSVal a) (pToJSVal b) (pToJSVal c) (pToJSVal d) (pToJSVal e) (pToJSVal f)
-  return $ WebAudioNode (CompressorNode $ Compressor a b c d e f) ref
+createCompressorNode (Compressor a b c d e) = do
+  ref <- F.createCompressorNode (pToJSVal a) (pToJSVal b) (pToJSVal c) (pToJSVal d) (pToJSVal e)
+  return $ WebAudioNode (CompressorNode $ Compressor a b c d e) ref
 
 createWaveShaperNode:: WaveShaper -> IO WebAudioNode
 createWaveShaperNode (ClipAt db) = F.createClipAtWaveShaper (pToJSVal db) >>= return . WebAudioNode (WaveShaperNode $ ClipAt db)

@@ -107,12 +107,11 @@ function setGain(db, node){
   node.gain.value = amp;
 }
 
-function createCompressorNode (threshold, knee, ratio, reduction, attack, release){
-  var comp = ___ac.createDynamicCompressor()
+function createCompressorNode (threshold, knee, ratio, attack, release){
+  var comp = ___ac.createDynamicsCompressor()
   comp.threshold.value = threshold;
   comp.knee.value = knee;
   comp.ratio.value = ratio;
-  comp.reduction.value = reduction;
   comp.attack.value = attack;
   comp.release.value = release;
   return comp;

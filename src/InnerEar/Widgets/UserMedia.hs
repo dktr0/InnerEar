@@ -84,6 +84,27 @@ sourceWidget inputId = elClass "div" "sourceWidget" $ mdo
   return (source, playReference)
 
 
+sourceWidget'':: MonadWidget t m => String -> M.Map Int (String,Source) -> Int -> m (Dynamic t Source, Event t ())
+sourceWidget'' inputId sourceMap iSource = elClass "div" "sourceWidget" $ mdo
+  let staticSources = M.map snd sourceMap
+  let loadFileMapKey = (+1) $ maximum $ M.keys sourceMap
+
+  let ddMap = constDyn $ M.insert loadFileMapKey ("Load a sound file") $ M.map fst sourceMap
+  -- Source selection dropdown
+  ddVal  <- elClass "div" "soundSourceDropdown" $ do
+    text "Sound source: "
+    let ddConfig = DropdownConfig (loadFileMapKey <$ loadEv) (constDyn M.empty)
+    dd <- dropdown iSource ddMap  ddConfig -- & dropdownConfig_attributes .~ (constDyn $ M.singleton "class" "soundSourceDropdown")
+    return $ _dropdown_value dd
+  isUserSource <- mapDyn (==loadFileMapKey) ddVal
+  playReference <- elClass "div" "playReference" $ button "Listen to reference sound"
+  (userFileSource, loadEv) <- userMediaWidget "inputId" isUserSource
+  ddMapVal <- mapDyn (\x-> M.insert loadFileMapKey x staticSources) userFileSource
+  source <- combineDyn (\i m-> maybe (NodeSource (BufferNode $ File "pinknoise.wav") $ Just 2) id $ M.lookup i m) ddVal ddMapVal
+  performEvent $ fmap liftIO $ fmap (const $ stopNodeByID inputId) $ playReference
+  return (source, playReference)
+
+
 -- Just with a 300Hz  Sine wave and a loaded file (should adapt the above to take parameter of sounds to include in dropdown)
 sourceWidget':: MonadWidget t m => String -> m (Dynamic t Source, Event t ())
 sourceWidget' inputId = elClass "div" "sourceWidget" $ mdo
