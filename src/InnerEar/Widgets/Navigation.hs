@@ -53,9 +53,9 @@ includedExercises = [
   HarmonicDistortion,
   BoostOrCut,
   FiveBandBoostCut,
- AddedWhiteNoise
+ AddedWhiteNoise,
 --  RT60,
---  Compression,
+ Compression
 --  LeftRightCentre
   ]
 

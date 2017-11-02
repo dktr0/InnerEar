@@ -33,10 +33,11 @@ instance Show Answer where
 
 answers = [Answer False,Answer True]
 
-renderAnswer :: Config -> b -> Maybe Answer -> Sound
-renderAnswer r b (Just (Answer True)) = NoSound -- should be source (b) compressed at threshold -20 dB with ratio r, then down -10 dB post-compression
-renderAnswer _ b (Just (Answer False)) = NoSound -- should just be source (b) down -10 dB
-renderAnswer _ b Nothing = NoSound -- should be the same as false answer above
+
+renderAnswer :: Config -> Source -> Maybe Answer -> Sound
+renderAnswer r b (Just (Answer True)) = GainSound (CompressedSound (Sound b) (Compressor {threshold=(-20),ratio=r,knee=0,attack=0.003,release=0.1})) (-10)
+-- should be source (b) compressed at threshold -20 dB with ratio r, then down -10 dB post-compression<
+renderAnswer _ b _ = GainSound (Sound b) (-10) -- should just be source (b) down -10 dB
 -- note also: the user MUST provide a sound file (or we might provide some standard ones) - synthetic sources won't work for this
 
 configurationWidget :: MonadWidget t m => Config -> m (Event t Config)
@@ -51,15 +52,14 @@ generateQ _ _ = randomMultipleChoiceQuestion [Answer False,Answer True]
 
 instructions :: MonadWidget t m => m ()
 instructions = el "div" $ do
-  elClass "div" "instructionsText" $ text ""
-  elClass "div" "instructionsText" $ text ""
+  elClass "div" "instructionsText" $ text "In this exercise, a reference sound is either compressed or not and your task is to tell whether or not it has been compressed. The threshold of the compressor is set at -20 dBFS, and you can configure the exercise to work with smaller and smaller ratios for increased difficulty. Note that you must provide a source sound to use for the exercise (click on Browse to the right). Short musical excerpts that consistently have strong levels are recommended."
 
 compressionExercise :: MonadWidget t m => Exercise t m Config [Answer] Answer (Map Answer Score)
 compressionExercise = multipleChoiceExercise
   1
   answers
   instructions
-  (sineSourceConfig "compressionExercise" configMap)
+  (dynRadioConfigWidget'' "compressionExercise" empty 0 configMap)
   renderAnswer
   Compression
   (20)

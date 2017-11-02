@@ -22,7 +22,7 @@ foreign import javascript safe "$r=___ac.createBiquadFilter()" createBiquadFilte
 -- foreign import javascript safe "$r=___ac.createOscillator()" createOscillator :: IO JSVal
 foreign import javascript safe "$r = new Oscillator($1, $2, $3)" createOscillator :: JSVal -> JSVal -> JSVal -> IO JSVal
 
-foreign import javascript safe " $r=createCompressorNode($1, $2, $3, $4, $5, $6)" createCompressorNode:: JSVal -> JSVal -> JSVal -> JSVal -> JSVal -> JSVal -> IO JSVal
+foreign import javascript safe " $r=createCompressorNode($1, $2, $3, $4, $5)" createCompressorNode:: JSVal -> JSVal -> JSVal -> JSVal -> JSVal -> IO JSVal
 
 
 foreign import javascript safe "overlappedDictionary[$1]=$2" adddToOverlappedDictionary:: JSString -> JSVal -> IO ()

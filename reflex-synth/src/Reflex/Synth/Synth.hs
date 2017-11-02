@@ -121,7 +121,10 @@ instance WebAudio Sound where
     gain <- createGain 0 -- 0dB
     let graph = WebAudioGraph''' listOfGraphs gain
     connectGraph graph
-
+  createGraph (CompressedSound s c) = do
+    g <- createGraph s
+    comp <- createCompressorNode c
+    connectGraph ( WebAudioGraph'' g $ WebAudioGraph comp)
 
 createSilentNode::IO WebAudioNode
 createSilentNode = F.createSilentNode >>= return . WebAudioNode (SilentNode)
@@ -156,6 +159,7 @@ getSource (ProcessedSound s _) = getSource s
 getSource (NoSound) = NodeSource SilentNode $ Just 2
 getSource (WaveShapedSound s _) = getSource s
 getSource (ReverberatedSound s _) = getSource s
+getSource (CompressedSound s _) = getSource s
 getSource (OverlappedSound _ _) = error "cannot get 'source' of an OverlappedSound"
 
 disconnectGraphAtTimeMaybe:: WebAudioGraph -> Maybe Double -> IO ()
