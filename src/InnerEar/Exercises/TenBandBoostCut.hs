@@ -52,11 +52,6 @@ renderAnswer _ s f = case f of
   (Just freq) -> GainSound (FilteredSound s $ Filter Peaking (freqAsDouble freq) 1.4 16) (-10)
   Nothing -> GainSound (Sound s) (-10)
 
-tenBandConfigWidget :: MonadWidget t m => Config -> m (Event t Config)
-tenBandConfigWidget i = radioConfigWidget "" msg possibilities i
-  where msg = "Please choose the spectrum range you would like to practice:"
-        possibilities = [AllBands,HighBands,MidBands,Mid8Bands,LowBands]
-
 convertBands :: Config -> [Answer]
 convertBands AllBands = answers
 convertBands HighBands = drop 5 answers
@@ -76,6 +71,5 @@ tenBandBoostCutExercise = multipleChoiceExercise
   renderAnswer
   TenBandBoostCut
   AllBands
-  tenBandConfigWidget
   (displayCurrentSpectrumEvaluation "Session Performance")
   generateQ

@@ -51,10 +51,6 @@ instructionsText = "In this exercise, the system either makes no sound at all \
 instructions :: MonadWidget t m => m ()
 instructions = elClass "div" "instructionsText" $ text instructionsText
 
-thresholdOfSilenceConfigWidget :: MonadWidget t m => Config -> m (Event t Config)
-thresholdOfSilenceConfigWidget i = radioConfigWidget instructionsText msg configs i
-  where msg = "Please choose the level of attenuation for this exercise:"
-
 displayEval :: MonadWidget t m => Dynamic t (Map Answer Score) -> m ()
 displayEval = displayMultipleChoiceEvaluationGraph' "Session Performance" "" answers
 
@@ -70,6 +66,5 @@ thresholdOfSilenceExercise = multipleChoiceExercise
   renderAnswer
   ThresholdOfSilence
   (-20)
-  thresholdOfSilenceConfigWidget
   displayEval
   generateQ

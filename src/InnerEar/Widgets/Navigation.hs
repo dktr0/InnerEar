@@ -27,9 +27,7 @@ import InnerEar.Exercises.BoostOrCut
 import InnerEar.Exercises.FiveBandBoostCut
 import InnerEar.Exercises.TenBandBoostCut
 import InnerEar.Exercises.AddedWhiteNoise
-import InnerEar.Exercises.RT60
 import InnerEar.Exercises.Compression
-import InnerEar.Exercises.LeftRightCentre
 
 data Navigation =
   SplashPage |
@@ -54,9 +52,7 @@ includedExercises = [
   BoostOrCut,
   FiveBandBoostCut,
  AddedWhiteNoise,
---  RT60,
  Compression
---  LeftRightCentre
   ]
 
 buttonForExercise :: MonadWidget t m => ExerciseId -> m (Event t Navigation)
@@ -91,12 +87,12 @@ navigationPage responses areTheyAuthenticated (ExercisePage TenBandBoostCut) =
   runExerciseForNavigationPage tenBandBoostCutExercise responses areTheyAuthenticated
 navigationPage responses areTheyAuthenticated (ExercisePage AddedWhiteNoise) =
   runExerciseForNavigationPage addedWhiteNoiseExercise responses areTheyAuthenticated
-navigationPage responses areTheyAuthenticated (ExercisePage RT60) =
-  runExerciseForNavigationPage rt60Exercise responses areTheyAuthenticated
+{- navigationPage responses areTheyAuthenticated (ExercisePage RT60) =
+  runExerciseForNavigationPage rt60Exercise responses areTheyAuthenticated -}
 navigationPage responses areTheyAuthenticated (ExercisePage Compression) =
   runExerciseForNavigationPage compressionExercise responses areTheyAuthenticated
-navigationPage responses areTheyAuthenticated (ExercisePage LeftRightCentre) =
-  runExerciseForNavigationPage leftRightCentreExercise responses areTheyAuthenticated
+{- navigationPage responses areTheyAuthenticated (ExercisePage LeftRightCentre) =
+  runExerciseForNavigationPage leftRightCentreExercise responses areTheyAuthenticated -}
 
 navigationPage responses areTheyAuthenticated TestPage = do
   (requests,sounds,navUnit) <- testWidget responses
