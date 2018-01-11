@@ -41,10 +41,6 @@ renderAnswer db s f = case f of
   (Just freq) -> GainSound (FilteredSound s $ Filter Peaking (freqAsDouble freq) 1.4 db) (-10)
   Nothing -> GainSound (Sound s) (-10)
 
-fiveBandConfigWidget :: MonadWidget t m => Config -> m (Event t Config)
-fiveBandConfigWidget i = radioConfigWidget "" msg configs i
-  where msg = "Please choose how many decibels (dB) of boost or cut may (or may not) be applied during the exercise."
-
 displayEval :: MonadWidget t m => Dynamic t (Map Answer Score) -> m ()
 displayEval = displaySpectrumEvaluation (constDyn "Session Performance")
 
@@ -60,6 +56,5 @@ fiveBandBoostCutExercise = multipleChoiceExercise
   renderAnswer
   FiveBandBoostCut
   (configs!!0)
-  fiveBandConfigWidget
-  displayEval
+  (displayMultipleChoiceEvaluationGraph' "Session Performance" "" answers)
   generateQ

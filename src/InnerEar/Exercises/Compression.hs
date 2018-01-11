@@ -40,10 +40,6 @@ renderAnswer r b (Just (Answer True)) = GainSound (CompressedSound (Sound b) (Co
 renderAnswer _ b _ = GainSound (Sound b) (-10) -- should just be source (b) down -10 dB
 -- note also: the user MUST provide a sound file (or we might provide some standard ones) - synthetic sources won't work for this
 
-configurationWidget :: MonadWidget t m => Config -> m (Event t Config)
-configurationWidget i = radioConfigWidget "" msg configs i
-  where msg = "Please choose the compression ratio to be used for this exercise:"
-
 displayEval :: MonadWidget t m => Dynamic t (Map Answer Score) -> m ()
 displayEval = displayMultipleChoiceEvaluationGraph' "Session Performance" "" answers
 
@@ -63,6 +59,5 @@ compressionExercise = multipleChoiceExercise
   renderAnswer
   Compression
   (20)
-  configurationWidget
   displayEval
   generateQ

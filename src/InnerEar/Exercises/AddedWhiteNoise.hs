@@ -40,10 +40,6 @@ renderAnswer db b Nothing = OverlappedSound "addedWhiteNoiseExercise" [GainSound
 -- note also: default sound source for this is a 300 Hz sine wave, but user sound files are possible
 -- pink or white noise should NOT be possible as selectable sound source types
 
-configurationWidget :: MonadWidget t m => Config -> m (Event t Config)
-configurationWidget i = radioConfigWidget "" msg configs i
-  where msg = "Please choose the level of (potential) added white noise for this exercise:"
-
 displayEval :: MonadWidget t m => Dynamic t (Map Answer Score) -> m ()
 displayEval = displayMultipleChoiceEvaluationGraph' "Session Performance" "" answers
 
@@ -64,6 +60,5 @@ addedWhiteNoiseExercise = multipleChoiceExercise
   renderAnswer
   AddedWhiteNoise
   (-10)
-  configurationWidget
   displayEval
   generateQ

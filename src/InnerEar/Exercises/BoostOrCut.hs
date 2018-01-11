@@ -46,10 +46,6 @@ renderAnswer db s (Just (Answer True)) = GainSound (Sound s) (-10+db) -- 2.0 -- 
 renderAnswer _ s (Just (Answer False)) = GainSound (Sound s) (-10)-- 2.0 -- should be just a source sound attenuated by standard amount (-10 dB)
 renderAnswer db s Nothing = GainSound (Sound s) (-10)
 
-boostOrCutConfigWidget :: MonadWidget t m => Config -> m (Event t Config)
-boostOrCutConfigWidget i = radioConfigWidget "" msg configs i
-  where msg = "Please choose the level of gain (boost) for this exercise:"
-
 displayEval :: MonadWidget t m => Dynamic t (Map Answer Score) -> m ()
 displayEval = displayMultipleChoiceEvaluationGraph' "Session Performance" "" answers
 
@@ -65,6 +61,5 @@ boostOrCutExercise = multipleChoiceExercise
   renderAnswer  -- c -> b->a->Sound
   BoostOrCut
   10
-  boostOrCutConfigWidget
   displayEval
   generateQ

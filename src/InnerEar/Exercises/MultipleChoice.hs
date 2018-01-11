@@ -37,16 +37,14 @@ multipleChoiceExercise :: (MonadWidget t m, Show a, Eq a, Ord a)
   -> (c -> Source -> Maybe a -> Sound) -- function to produce a sound from an answer, where a Nothing answer is to be interpreted as a reference sound (or
   -> ExerciseId
   -> c
-  -> (c -> m (Event t c))
   -> (Dynamic t (Map a Score) -> m ())
   -> (c -> [Datum c [a] a (Map a Score)] -> IO ([a],a))
   -> Exercise t m c [a] a (Map a Score)
 
-multipleChoiceExercise maxTries answers iWidget cWidget render i c cw de g = Exercise {
+multipleChoiceExercise maxTries answers iWidget cWidget render i c de g = Exercise {
   exerciseId = i,
   instructionsWidget = iWidget,
   defaultConfig = c,
-  configWidget = cw,
   defaultEvaluation = empty,
   displayEvaluation = de,
   generateQuestion = g,
@@ -79,7 +77,7 @@ multipleChoiceQuestionWidget maxTries answers exId exInstructions cWidget render
   modes <- mapDyn answerButtonModes multipleChoiceState
   modes' <- mapM (\x-> mapDyn (!!x) modes) [0,1..9]
   scores <- mapDyn scoreMap multipleChoiceState
-  
+
   -- user interface
   (closeExercise,playQuestion,answerPressed,nextQuestionNav) <- elClass "div" "topRow" $ do
     w <- elClass "div" "topRowHeader" $ do
