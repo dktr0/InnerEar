@@ -51,8 +51,9 @@ includedExercises = [
   HarmonicDistortion,
   BoostOrCut,
   FiveBandBoostCut,
- AddedWhiteNoise,
- Compression
+  TenBandBoostCut,
+  AddedWhiteNoise,
+  Compression
   ]
 
 buttonForExercise :: MonadWidget t m => ExerciseId -> m (Event t Navigation)

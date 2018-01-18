@@ -20,9 +20,17 @@ import InnerEar.Exercises.MultipleChoice
 import InnerEar.Widgets.Config
 import InnerEar.Widgets.UserMedia
 
-data Config = AllBands | HighBands  | Mid8Bands | MidBands | LowBands deriving (Show,Eq,Data,Typeable)
+type Config = Double
 
-instance Ord Config where
+configs :: [Double]
+configs = [10,6,3,2,1,-1,-2,-3,-6,-10]
+
+configMap::Map String Config
+configMap = fromList $ fmap (\x-> (show x ++ " dB",x)) configs
+
+data Config' = AllBands | HighBands  | Mid8Bands | MidBands | LowBands deriving (Show,Eq,Data,Typeable)
+
+instance Ord Config' where
   (AllBands) >= (_)= True
   (HighBands) >= (AllBands) = False
   (HighBands) >= (_) = True
@@ -35,10 +43,8 @@ instance Ord Config where
   (LowBands) >= (LowBands) = True
   (LowBands) >= (_) = False
 
-
-
-configMap::Map String Config
-configMap = fromList $ zip ["Entire spectrum", "High bands", "Mid bands", "Mid 8 bands", "Low bands"] [AllBands, HighBands, MidBands, Mid8Bands, LowBands]
+configMap' :: Map String Config'
+configMap' = fromList $ zip ["Entire spectrum", "High bands", "Mid bands", "Mid 8 bands", "Low bands"] [AllBands, HighBands, MidBands, Mid8Bands, LowBands]
 
 type Answer = Frequency
 
@@ -48,11 +54,11 @@ answers = [
   F 1000 "1k", F 2000 "2k", F 4000 "4k", F 8000 "8k", F 16000 "16k"]
 
 renderAnswer :: Config -> Source -> Maybe Answer -> Sound
-renderAnswer _ s f = case f of
-  (Just freq) -> GainSound (FilteredSound s $ Filter Peaking (freqAsDouble freq) 1.4 16) (-10)
+renderAnswer c s f = case f of
+  (Just freq) -> GainSound (FilteredSound s $ Filter Peaking (freqAsDouble freq) 1.4 c) (-10)
   Nothing -> GainSound (Sound s) (-10)
 
-convertBands :: Config -> [Answer]
+convertBands :: Config' -> [Answer]
 convertBands AllBands = answers
 convertBands HighBands = drop 5 answers
 convertBands MidBands = take 5 $ drop 3 $ answers
@@ -60,7 +66,7 @@ convertBands Mid8Bands = take 8 $ drop 1 $ answers
 convertBands LowBands = take 5 answers
 
 generateQ :: Config -> [Datum Config [Answer] Answer (Map Answer Score)] -> IO ([Answer],Answer)
-generateQ config _ = randomMultipleChoiceQuestion (convertBands config)
+generateQ config _ = randomMultipleChoiceQuestion (convertBands AllBands)
 
 tenBandBoostCutExercise :: MonadWidget t m => Exercise t m Config [Answer] Answer (Map Answer Score)
 tenBandBoostCutExercise = multipleChoiceExercise
@@ -70,6 +76,6 @@ tenBandBoostCutExercise = multipleChoiceExercise
   (dynRadioConfigWidget "tenBandsExercise" configMap)
   renderAnswer
   TenBandBoostCut
-  AllBands
-  (displayCurrentSpectrumEvaluation "Session Performance")
+  (configs!!0)
+  (displayMultipleChoiceEvaluationGraph' "Session Performance" "" answers)
   generateQ
