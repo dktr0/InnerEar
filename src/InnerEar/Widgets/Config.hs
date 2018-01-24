@@ -9,12 +9,14 @@ import Control.Monad (liftM)
 -- import Reflex.Dom.Contrib.Widgets.ButtonGroup (radioGroup)
 -- import Reflex.Dom.Contrib.Widgets.Common
 
-
 import InnerEar.Widgets.UserMedia
 import InnerEar.Widgets.Utility(radioWidget,elClass')
 import Reflex.Synth.Types
 import Reflex.Synth.Synth
 
+-- Verify this but for css styling, what goes in the config panel is 1 div with class "configWidget" and 2 internal divs:
+--    one div with the class "radioConfigWidget" -> wrapping the radio configuration widget
+--    one div with the class "sourceWidget" -> wrapping the sound source selection widget
 
 
 dynRadioConfigWidget::(MonadWidget t m, Eq c, Show c, Ord c) => String -> Map String c -> c  -> m (Dynamic t c, Dynamic t Source, Event t (Maybe a))

@@ -6,6 +6,7 @@ module InnerEar.Widgets.Utility where
 import qualified Data.Map as M
 import Data.Maybe
 import Data.Bool (bool)
+import Data.List (elemIndex)
 import Data.Map
 import Reflex
 import Reflex.Dom
@@ -93,6 +94,20 @@ radioWidget radioMap iVal = el "table" $ do
     return ev)  invertedRadioMap   -- Sorry.....
   dynVal <- holdDyn iVal $ leftmost $ M.elems evs  --
   return (dynVal, updated dynVal)
+
+
+-- Alternative to just using dropdown that circumvents a glitch where choosing new dropdown items just resorts the default
+safeDropdown::(MonadWidget t m, Ord k)=> k -> Map k String -> Dynamic t (Map String String) -> Event t k -> m (Dynamic t k, Event t k)
+safeDropdown iVal ddMap attrs setEv = do
+  let ddMapInt = fromList $ zip [0::Int,1..] (elems ddMap)
+  let valuesMap = fromList $ zip [0::Int,1..] (keys ddMap)
+  let initialIndex = maybe 0 id $ elemIndex iVal (keys ddMap)
+  let ddConfig = DropdownConfig (fmap (maybe 0 id . (flip Data.Map.lookupIndex) ddMap) setEv) attrs
+  dd <- dropdown (maybe 0 id $ Data.Map.lookupIndex iVal ddMap) (constDyn ddMapInt) ddConfig
+  -- dd <- dropdown initialIndex (constDyn $ fromList $ zip [0,1,2] ["a","b","c"]) ddConfig
+  val <- mapDyn (maybe iVal id . (flip Data.Map.lookup) valuesMap) (_dropdown_value dd)
+  let updateEv = fmap (maybe iVal id . (flip Data.Map.lookup) valuesMap) (_dropdown_change dd)
+  return (val, updateEv)
 
 -- [Not tested]
 listOfDynToDynList :: MonadWidget t m => [Dynamic t a] -> m (Dynamic t [a])
