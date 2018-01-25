@@ -56,5 +56,5 @@ fiveBandBoostCutExercise = multipleChoiceExercise
   renderAnswer
   FiveBandBoostCut
   (configs!!0)
-  (displayMultipleChoiceEvaluationGraph' "Session Performance" "" answers)
+  (displayMultipleChoiceEvaluationGraph'' "Session Performance" "" answers)
   generateQ

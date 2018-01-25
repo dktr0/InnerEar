@@ -104,5 +104,5 @@ tenBandBoostCutExercise = multipleChoiceExercise
   renderAnswer
   TenBandBoostCut
   (AllBands, -10)
-  (displayMultipleChoiceEvaluationGraph' "Session Performance" "" answers)
+  (displayMultipleChoiceEvaluationGraph''' "Session Performance" "Hz" answers)
   generateQ
