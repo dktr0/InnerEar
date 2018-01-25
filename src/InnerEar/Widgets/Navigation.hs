@@ -20,6 +20,7 @@ import Reflex.Synth.Types
 import InnerEar.Types.Exercise
 import InnerEar.Types.ExerciseId
 import InnerEar.Widgets.Exercise
+import InnerEar.Widgets.DynSvg
 
 import InnerEar.Exercises.ThresholdOfSilence
 import InnerEar.Exercises.HarmonicDistortion
@@ -67,9 +68,9 @@ navigationPage responses areTheyAuthenticated SplashPage = elClass "div" "nav" $
   elClass "div" "explanation" $
     text "Welcome to Inner Ear! Select an ear-training exercise from the list below. If you are doing this is part of a requirement for a class, please make sure you are logged in first (at the top right)."
   b <- mapM buttonForExercise includedExercises
-  -- c <- liftM (TestPage <$)  $ elClass "div" "navButton" $ button "Test"
+  c <- liftM (TestPage <$)  $ elClass "div" "navButton" $ button "Test"
   -- d <- liftM (TestSoundPage <$) $ elClass "div" "navButton" $ button "Test Sound"
-  let navEvents = leftmost b
+  let navEvents = leftmost (c:b)
   return (never,never,navEvents)
 
 navigationPage responses areTheyAuthenticated CreateUserPage = el "div" $ do
@@ -96,6 +97,7 @@ navigationPage responses areTheyAuthenticated (ExercisePage Compression) =
   runExerciseForNavigationPage leftRightCentreExercise responses areTheyAuthenticated -}
 
 navigationPage responses areTheyAuthenticated TestPage = do
+  testOurDynSvg
   (requests,sounds,navUnit) <- testWidget responses
   return (requests,sounds,SplashPage <$ navUnit)
 
