@@ -36,6 +36,8 @@ data Navigation =
   SplashPage |
   CreateUserPage |
   ExercisePage ExerciseId |
+  AdminPage |
+  UserListPage |
   TestPage |
   TestSoundPage
 
@@ -107,6 +109,18 @@ navigationPage responses currentRole TestSoundPage = do
   (requests,sounds,navUnit) <- testSoundWidget responses
   return (requests,sounds,SplashPage <$ navUnit)
 
+navigationPage responses currentRole AdminPage = do
+  goToUserList <- (UserListPage <$) <$> button "Users"
+  goToSplashPage <- (SplashPage <$) <$> button "Back to homepage"
+  let navEvents = leftmost [goToUserList,goToSplashPage]
+  let requests = never
+  return (requests,never,navEvents)
+
+navigationPage responses currentRole UserListPage = do
+  text "UserListPage placeholder"
+  navEvents <- (SplashPage <$) <$> button "Back to homepage"
+  let requests = never
+  return (requests,never,navEvents)
 
 runExerciseForNavigationPage :: (MonadWidget t m, Data c, Data q, Data a, Data e, Show c, Show q, Show a, Show e)
   => Exercise t m c q a e
