@@ -22,6 +22,7 @@ import InnerEar.Types.Exercise
 import InnerEar.Types.ExerciseId
 import InnerEar.Widgets.Exercise
 import InnerEar.Widgets.DynSvg
+import InnerEar.Widgets.Utility
 import InnerEar.Types.User
 
 import InnerEar.Exercises.ThresholdOfSilence
@@ -72,9 +73,11 @@ navigationPage responses currentRole SplashPage = elClass "div" "nav" $ do
   elClass "div" "explanation" $
     text "Welcome to Inner Ear! Select an ear-training exercise from the list below. If you are doing this is part of a requirement for a class, please make sure you are logged in first (at the top right)."
   b <- mapM buttonForExercise includedExercises
-  c <- liftM (TestPage <$)  $ elClass "div" "navButton" $ button "Test"
-  -- d <- liftM (TestSoundPage <$) $ elClass "div" "navButton" $ button "Test Sound"
-  let navEvents = leftmost (c:b)
+  isAdmin <- mapDyn (==Just Administrator) currentRole
+  a <- (AdminPage <$) <$> (visibleWhen isAdmin $ elClass "div" "navButton" $ button "Administration")
+  c <- (TestPage <$) <$> (visibleWhen isAdmin $ elClass "div" "navButton" $ button "Test")
+  d <- (TestSoundPage <$) <$> (visibleWhen isAdmin $ elClass "div" "navButton" $ button "Test Sound")
+  let navEvents = leftmost (a:c:d:b)
   return (never,never,navEvents)
 
 navigationPage responses currentRole CreateUserPage = el "div" $ do
@@ -118,7 +121,7 @@ navigationPage responses currentRole AdminPage = do
 
 navigationPage responses currentRole UserListPage = do
   text "UserListPage placeholder"
-  navEvents <- (SplashPage <$) <$> button "Back to homepage"
+  navEvents <- (AdminPage <$) <$> button "Back to administration"
   let requests = never
   return (requests,never,navEvents)
 
