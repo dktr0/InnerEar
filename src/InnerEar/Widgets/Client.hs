@@ -22,11 +22,11 @@ import Reflex.Synth.Types
 clientWidget :: MonadWidget t m => m ()
 clientWidget = elClass "div" "innerEar" $ mdo
   (wsRcvd,wsStatus) <- WS.reflexWebSocket wsSend
-  (x,areTheyAuthenticated) <- elClass "div" "header" $ do
+  (x,currentRole) <- elClass "div" "header" $ do
     elClass "div" "title" $ do
       text "Inner Ear"
     elClass "div" "login" $ loginWidget wsRcvd
-  (y,sounds) <- navigationWidget wsRcvd areTheyAuthenticated
+  (y,sounds) <- navigationWidget wsRcvd currentRole
   let wsSend = leftmost [x,y]
   performSound sounds
   return ()

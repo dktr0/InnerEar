@@ -104,24 +104,24 @@ processRequest s i (PostPoint r) = withServer s $ postPoint i r
 
 authenticate :: ConnectionIndex -> Handle -> Password -> Server -> IO Server
 authenticate i h p s = do
-  e <- DB.userExists (database s) h
-  if e
-    then do
-      p' <- DB.getPassword (database s) h
-      if (Just p) == p'
-        then do
-          putStrLn $ "authenticated as user " ++ h
-          now <- getCurrentTime
-          DB.postEvent (database s) $ Record h $ Point (Right SessionStart) now
-          respond s i $ Authenticated h
-          return $ authenticateConnection i h s
-        else do
-          putStrLn $ "failure to authenticate as user " ++ h
-          now <- getCurrentTime
-          DB.postEvent (database s) $ Record h $ Point (Right AuthenticationFailure) now
-          respond s i $ NotAuthenticated
-          return $ deauthenticateConnection i s
-    else do
+  u <- DB.findUser (database s) h
+  case u of
+    (Just u') -> do
+      let p' = password u'
+      let r = role u'
+      if p == p' then do
+        putStrLn $ "authenticated as user " ++ h
+        now <- getCurrentTime
+        DB.postEvent (database s) $ Record h $ Point (Right SessionStart) now
+        respond s i $ Authenticated h r
+        return $ authenticateConnection i h s
+      else do
+        putStrLn $ "failure to authenticate as user " ++ h
+        now <- getCurrentTime
+        DB.postEvent (database s) $ Record h $ Point (Right AuthenticationFailure) now
+        respond s i $ NotAuthenticated
+        return $ deauthenticateConnection i s
+    Nothing -> do
       putStrLn $ "failure to authenticate as non-existent user " ++ h
       now <- getCurrentTime
       DB.postEvent (database s) $ Record h $ Point (Right AuthenticationFailure) now

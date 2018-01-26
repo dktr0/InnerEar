@@ -10,6 +10,7 @@ import InnerEar.Types.Request
 import InnerEar.Types.Response
 import InnerEar.Types.Handle
 import InnerEar.Types.Utility
+import InnerEar.Types.User
 
 -- | A loginWidget appears as a single line in the interface. It displays a
 -- set of text fields and button if the user is not logged in. If the user
@@ -18,12 +19,12 @@ import InnerEar.Types.Utility
 -- needs to only rebuild when status changes!!!
 
 loginWidget :: MonadWidget t m
-  => Event t [Response] -> m (Event t Request, Dynamic t Bool)
+  => Event t [Response] -> m (Event t Request, Dynamic t (Maybe Role))
 loginWidget responses = elClass "div" "loginWidget" $ mdo
   let initialWidget = notLoggedInWidget responses
   let p x = ( x == NotAuthenticated || isAuthenticated x)
-  let newStatus = fmapMaybe (lastWithPredicate p) responses
-  status <- updated <$> nubDyn <$> holdDyn (NotAuthenticated) newStatus
+  let newStatus = fmapMaybe (lastWithPredicate p) responses --
+  status <- updated <$> nubDyn <$> holdDyn NotAuthenticated newStatus
   let authEvents = fmapMaybe getHandleFromAuthenticated $ ffilter (isAuthenticated) status
   let buildLoggedIn = fmap (loggedInWidget responses) authEvents
   -- let notAuthEvents = ffilter (==NotAuthenticated) status
@@ -34,8 +35,15 @@ loginWidget responses = elClass "div" "loginWidget" $ mdo
   x <- widgetHold initialWidget rebuildEvents
   r <- switchPromptlyDyn <$> mapDyn fst x
   goToLogin <- switchPromptlyDyn <$> mapDyn snd x
-  areTheyAuthenticated <- holdDyn (NotAuthenticated) newStatus >>= mapDyn (not . (==NotAuthenticated))
-  return (r,areTheyAuthenticated)
+  let newRole = fmap getRoleFromResponse newStatus
+  currentRole <- holdDyn Nothing newRole
+  -- areTheyAuthenticated <- holdDyn NotAuthenticated newStatus >>= mapDyn (not . (==NotAuthenticated))
+  return (r,currentRole)
+
+getRoleFromResponse :: Response -> Maybe Role
+getRoleFromResponse (Authenticated _ r) = Just r
+getRoleFromResponse (NotAuthenticated) = Nothing
+getRoleFromResponse _ = error "getRoleFromResponse shouldn't be called with anything other than Authenticated or NotAuthenticated"
 
 tryToLoginWidget :: MonadWidget t m => Event t [Response] -> m (Event t Request,Event t ())
 tryToLoginWidget responses = do

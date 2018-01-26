@@ -14,7 +14,8 @@ data Request =
   CreateUser Handle Password |
   Authenticate Handle Password |
   Deauthenticate |
-  PostPoint Point
+  PostPoint Point |
+  GetUserList 
   deriving (Eq,Show,Data,Typeable)
 
 

@@ -20,4 +20,4 @@ data User = User {
   handle :: Handle,
   password :: Password,
   role :: Role
-  } deriving (Show)
+  } deriving (Show,Eq,Data,Typeable)
