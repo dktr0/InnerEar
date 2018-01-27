@@ -19,12 +19,11 @@ type ConnectionIndex = Int
 
 data Server = Server {
   database :: Connection,
-  connections :: Map ConnectionIndex (WS.Connection, Maybe Handle),
-  users :: Map Handle User
-  }  
+  connections :: Map ConnectionIndex (WS.Connection, Maybe Handle)
+  }
 
 newServer :: Connection -> Server
-newServer db = Server { database = db, connections = empty, users = empty}
+newServer db = Server { database = db, connections = empty }
 
 addConnection :: WS.Connection -> Server -> (ConnectionIndex,Server)
 addConnection c s = (i,s { connections = newMap })
@@ -37,15 +36,6 @@ deleteConnection i s = s { connections = delete i (connections s)}
 getHandle :: ConnectionIndex -> Server -> Maybe Handle
 getHandle i s = (Data.Map.lookup i $ connections s) >>= snd
 
-getPassword :: Handle -> Server -> Password
-getPassword h s = password $ (users s) ! h
-
-getRole :: Maybe Handle -> Server -> Maybe Role
-getRole x s = do
-  y <- x
-  z <- Data.Map.lookup y $ users s
-  return $ role z
-
 authenticateConnection :: ConnectionIndex -> Handle -> Server -> Server
 authenticateConnection i h s = s { connections = newConnections }
   where newConnections = adjust (\(ws,_) -> (ws,Just h)) i (connections s)
@@ -53,10 +43,6 @@ authenticateConnection i h s = s { connections = newConnections }
 deauthenticateConnection :: ConnectionIndex -> Server -> Server
 deauthenticateConnection i s = s { connections = newConnections }
   where newConnections = adjust (\(ws,_) -> (ws,Nothing)) i (connections s)
-
--- postPoint :: Handle -> Point -> Server -> Server
--- postPoint h p s = s { users = newUsers }
--- where newUsers = adjust (addPoint p) h (users s)
 
 updateServer :: MVar Server -> (Server -> Server) -> IO (MVar Server)
 updateServer s f = do

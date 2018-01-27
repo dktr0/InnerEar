@@ -161,12 +161,16 @@ getUserList i s = do
   let h = getHandle i s
   u <- maybe (return Nothing) (DB.findUser (database s)) h
   let r = maybe Nothing (Just . role) u
-  putStrLn $ show r
   if canSeeUserList r then do
     putStrLn $ "getUserList "
+    -- sendUserList i s
   else do
     putStrLn "warning: getUserList from non-authenticated connection"
   return s
+
+{- sendUserList :: ConnectionIndex -> Server -> IO Server
+sendUserList i s = do -}
+
 
 withServer :: MVar Server -> (Server -> IO Server) -> IO ()
 withServer s f = takeMVar s >>= f >>= putMVar s
