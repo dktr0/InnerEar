@@ -25,6 +25,7 @@ import InnerEar.Widgets.DynSvg
 import InnerEar.Widgets.Utility
 import InnerEar.Types.User
 import InnerEar.Widgets.UserList
+import InnerEar.Types.Handle
 
 import InnerEar.Exercises.ThresholdOfSilence
 import InnerEar.Exercises.HarmonicDistortion
@@ -40,6 +41,7 @@ data Navigation =
   ExercisePage ExerciseId |
   AdminPage |
   UserListPage |
+  UserPage Handle |
   TestPage |
   TestSoundPage
 
@@ -121,8 +123,14 @@ navigationPage responses currentRole AdminPage = do
   return (requests,never,navEvents)
 
 navigationPage responses currentRole UserListPage = do
-  (requests,_,navUnit) <- userListWidget responses currentRole
-  return (requests,never,AdminPage <$ navUnit)
+  (requests,nav) <- userListWidget responses currentRole
+  let nav' = fmap (maybe AdminPage UserPage) nav
+  return (requests,never,nav')
+
+navigationPage responses currentRole (UserPage h) = do
+  text $ "UserPage for " ++ h
+  back <- (SplashPage <$) <$> button "Back to SplashPage"
+  return (never,never,back)
 
 runExerciseForNavigationPage :: (MonadWidget t m, Data c, Data q, Data a, Data e, Show c, Show q, Show a, Show e)
   => Exercise t m c q a e

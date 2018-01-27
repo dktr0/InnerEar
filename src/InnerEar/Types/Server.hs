@@ -21,7 +21,7 @@ data Server = Server {
   database :: Connection,
   connections :: Map ConnectionIndex (WS.Connection, Maybe Handle),
   users :: Map Handle User
-}
+  }  
 
 newServer :: Connection -> Server
 newServer db = Server { database = db, connections = empty, users = empty}
@@ -34,12 +34,20 @@ addConnection c s = (i,s { connections = newMap })
 deleteConnection :: ConnectionIndex -> Server -> Server
 deleteConnection i s = s { connections = delete i (connections s)}
 
+getHandle :: ConnectionIndex -> Server -> Maybe Handle
+getHandle i s = (Data.Map.lookup i $ connections s) >>= snd
 
 getPassword :: Handle -> Server -> Password
 getPassword h s = password $ (users s) ! h
 
+getRole :: Maybe Handle -> Server -> Maybe Role
+getRole x s = do
+  y <- x
+  z <- Data.Map.lookup y $ users s
+  return $ role z
+
 authenticateConnection :: ConnectionIndex -> Handle -> Server -> Server
-authenticateConnection i h s = s { connections = newConnections } 
+authenticateConnection i h s = s { connections = newConnections }
   where newConnections = adjust (\(ws,_) -> (ws,Just h)) i (connections s)
 
 deauthenticateConnection :: ConnectionIndex -> Server -> Server

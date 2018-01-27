@@ -100,6 +100,7 @@ processRequest s i (CreateUser h p) = putStrLn "warning: ignoring request from c
 processRequest s i (Authenticate h p) = withServer s $ authenticate i h p
 processRequest s i Deauthenticate = withServer s $ deauthenticate i
 processRequest s i (PostPoint r) = withServer s $ postPoint i r
+processRequest s i GetUserList = withServer s $ getUserList i
 
 
 authenticate :: ConnectionIndex -> Handle -> Password -> Server -> IO Server
@@ -138,13 +139,13 @@ deauthenticate i s = do
 sessionEnd :: ConnectionIndex -> Server -> IO Server
 sessionEnd i s = do
   now <- getCurrentTime
-  let h = snd $ (connections s) ! i
+  let h = snd $ (connections s) ! i -- should this be guarded against lookup failure, using getHandle like in getUserList below?
   when (isJust h) $ DB.postEvent (database s) $ Record (fromJust h) $ Point (Right SessionEnd) now
   return s
 
 postPoint :: ConnectionIndex -> Point -> Server -> IO Server
 postPoint i p s = do
-  let h = snd ((connections s) ! i)
+  let h = snd ((connections s) ! i) -- should this be guarded against lookup failure, using getHandle like in getUserList below?
   if isJust h
     then do
       let r = Record (fromJust h) p
@@ -154,6 +155,18 @@ postPoint i p s = do
     else do
       putStrLn $ "warning: received post record attempt from non-or-differently-authenticated connection"
       return s
+
+getUserList :: ConnectionIndex -> Server -> IO Server
+getUserList i s = do
+  let h = getHandle i s
+  u <- maybe (return Nothing) (DB.findUser (database s)) h
+  let r = maybe Nothing (Just . role) u
+  putStrLn $ show r
+  if canSeeUserList r then do
+    putStrLn $ "getUserList "
+  else do
+    putStrLn "warning: getUserList from non-authenticated connection"
+  return s
 
 withServer :: MVar Server -> (Server -> IO Server) -> IO ()
 withServer s f = takeMVar s >>= f >>= putMVar s
