@@ -3,11 +3,13 @@ module InnerEar.Widgets.UserList where
 import Reflex
 import Reflex.Dom
 import Data.Maybe
+import Data.Map
 
 import InnerEar.Types.Request
 import InnerEar.Types.Response
 import InnerEar.Types.User
 import InnerEar.Types.Handle
+import InnerEar.Widgets.Utility
 import Reflex.Synth.Types
 import Reflex.Synth.Synth
 
@@ -23,16 +25,9 @@ userListWidget responses role = elClass "div" "excerciseWrapper" $ do
 
   -- select any and all server responses that are UserData to display a clickable map of all users
   let userEvents = fmap (catMaybes . fmap responseToUser) responses
-
-{-
-  let deltasDown' = fmap justEnsembleResponses deltasDown
-    let spaceAndDeltasDown = attachDyn currentSpace deltasDown'
-    let justInSpace = fmap (\(x,y) -> justSited x $ y) spaceAndDeltasDown
-    let responseMsgs = fmap (mapMaybe messageForEnsembleResponse) justInSpace
-    let messages = mergeWith (++) [responseMsgs,errorMsgs]
-    mostRecent <- foldDyn (\a b -> take 12 $ (reverse a) ++ b) [] messages
-  simpleList mostRecent $ \v -> divClass "chatMessage" $ dynText v
--}
+  userMap <- foldDyn (\xs m -> Prelude.foldl (\m' (h,u) -> insert h u m') m xs) Data.Map.empty userEvents
+  userList <- mapDyn keys userMap
+  simpleList userList $ \v -> divClass "navButton" $ dynButton v
 
   -- widget asks to be closed when back button is pressed, or anytime role is not Administrator
   backButton <- (Nothing <$) <$> button "Back"
