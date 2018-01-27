@@ -163,14 +163,11 @@ getUserList i s = do
   let r = maybe Nothing (Just . role) u
   if canSeeUserList r then do
     putStrLn $ "getUserList "
-    -- sendUserList i s
+    allUsers <- DB.findAllUsers (database s)
+    forM_ allUsers $ \(User uh _ ur) -> respond s i (UserData (User uh "" ur)) -- ie. blanking passwords before transmission
   else do
     putStrLn "warning: getUserList from non-authenticated connection"
   return s
-
-{- sendUserList :: ConnectionIndex -> Server -> IO Server
-sendUserList i s = do -}
-
 
 withServer :: MVar Server -> (Server -> IO Server) -> IO ()
 withServer s f = takeMVar s >>= f >>= putMVar s

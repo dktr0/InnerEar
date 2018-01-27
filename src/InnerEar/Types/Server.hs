@@ -36,6 +36,9 @@ deleteConnection i s = s { connections = delete i (connections s)}
 getHandle :: ConnectionIndex -> Server -> Maybe Handle
 getHandle i s = (Data.Map.lookup i $ connections s) >>= snd
 
+getConnection :: ConnectionIndex -> Server -> Maybe WS.Connection
+getConnection i s = (Data.Map.lookup i $ connections s) >>= return . fst
+
 authenticateConnection :: ConnectionIndex -> Handle -> Server -> Server
 authenticateConnection i h s = s { connections = newConnections }
   where newConnections = adjust (\(ws,_) -> (ws,Just h)) i (connections s)
