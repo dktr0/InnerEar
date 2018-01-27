@@ -24,6 +24,7 @@ import InnerEar.Widgets.Exercise
 import InnerEar.Widgets.DynSvg
 import InnerEar.Widgets.Utility
 import InnerEar.Types.User
+import InnerEar.Widgets.UserList
 
 import InnerEar.Exercises.ThresholdOfSilence
 import InnerEar.Exercises.HarmonicDistortion
@@ -120,10 +121,8 @@ navigationPage responses currentRole AdminPage = do
   return (requests,never,navEvents)
 
 navigationPage responses currentRole UserListPage = do
-  text "UserListPage placeholder"
-  navEvents <- (AdminPage <$) <$> button "Back to administration"
-  let requests = never
-  return (requests,never,navEvents)
+  (requests,_,navUnit) <- userListWidget responses currentRole
+  return (requests,never,AdminPage <$ navUnit)
 
 runExerciseForNavigationPage :: (MonadWidget t m, Data c, Data q, Data a, Data e, Show c, Show q, Show a, Show e)
   => Exercise t m c q a e
