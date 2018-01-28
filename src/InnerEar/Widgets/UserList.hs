@@ -36,9 +36,7 @@ userListWidget responses currentRole = elClass "div" "excerciseWrapper" $ do
       dynText userRole
       text ") "
       (fmap Just . tagDyn userHandle) <$> button "UserPage"
-  -- userNavs :: m (Dynamic t [Event t Handle])
-  -- so how do we flatten this?
-  userNavs' <- mapDyn leftmost userNavs -- m (Dynamic t (Event t Handle))
+  userNavs' <- mapDyn leftmost userNavs
   let userNavs'' = switchPromptlyDyn userNavs'
 
   -- widget asks to be closed when back button is pressed, or anytime role is not Administrator

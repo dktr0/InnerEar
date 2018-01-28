@@ -15,7 +15,8 @@ data Request =
   Authenticate Handle Password |
   Deauthenticate |
   PostPoint Point |
-  GetUserList 
+  GetUserList |
+  GetAllRecords Handle
   deriving (Eq,Show,Data,Typeable)
 
 

@@ -101,6 +101,7 @@ processRequest s i (Authenticate h p) = withServer s $ authenticate i h p
 processRequest s i Deauthenticate = withServer s $ deauthenticate i
 processRequest s i (PostPoint r) = withServer s $ postPoint i r
 processRequest s i GetUserList = withServer s $ getUserList i
+processRequest s i (GetAllRecords h) = withServer s $ getAllRecords i h
 
 
 authenticate :: ConnectionIndex -> Handle -> Password -> Server -> IO Server
@@ -165,6 +166,20 @@ getUserList i s = do
     putStrLn $ "getUserList "
     allUsers <- DB.findAllUsers (database s)
     forM_ allUsers $ \(User uh _ ur) -> respond s i (UserData (User uh "" ur)) -- ie. blanking passwords before transmission
+  else do
+    putStrLn "warning: getUserList from non-authenticated connection"
+  return s
+
+getAllRecords :: ConnectionIndex -> Handle -> Server -> IO Server
+getAllRecords i h s = do
+  let h' = getHandle i s
+  u <- maybe (return Nothing) (DB.findUser (database s)) h'
+  let r = maybe Nothing (Just . role) u
+  -- if authenticated as Administrator or Manager, or if authenticated as the user pertaining to the records, then proceed...
+  if (canSeeUserList r || (h' == (Just h))) then do
+    putStrLn $ "getAllRecords for " ++ h
+    allRecords <- DB.findAllRecords (database s) h
+    forM_ allRecords $ \x -> respond s i (RecordResponse x)
   else do
     putStrLn "warning: getUserList from non-authenticated connection"
   return s

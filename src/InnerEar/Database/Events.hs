@@ -6,6 +6,7 @@ import Text.Read
 import Data.Either
 import Data.Maybe
 import Data.Text
+import Data.Char
 import Database.SQLite.Simple
 import Database.SQLite.Simple.FromRow
 import Database.SQLite.Simple.ToRow
@@ -14,6 +15,7 @@ import Database.SQLite.Simple.ToField
 import Database.SQLite.Simple.Ok
 
 import InnerEar.Types.ExerciseId
+import InnerEar.Types.Handle
 import InnerEar.Types.Data
 
 -- definitions pertaining to "events", ie. the type Record and all of its dependencies
@@ -153,3 +155,6 @@ instance ToRow Record where
 
 postEvent :: Connection -> Record -> IO ()
 postEvent c r = execute c "INSERT INTO events (handle,time,event,exerciseId,config,question,answer,selection,shortTermEval,longTermEval,reflection) VALUES (?,?,?,?,?,?,?,?,?,?,?)" r
+
+findAllRecords :: Connection -> Handle -> IO [Record]
+findAllRecords conn h = query conn "SELECT handle,time,event,exerciseId,config,question,answer,selection,shortTermEval,longTermEval,reflection FROM events WHERE handle = ?" (Only (fmap Data.Char.toLower h))
