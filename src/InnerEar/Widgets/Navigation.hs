@@ -25,6 +25,7 @@ import InnerEar.Widgets.DynSvg
 import InnerEar.Widgets.Utility
 import InnerEar.Types.User
 import InnerEar.Widgets.UserList
+import InnerEar.Widgets.UserPage
 import InnerEar.Types.Handle
 
 import InnerEar.Exercises.ThresholdOfSilence
@@ -128,9 +129,8 @@ navigationPage responses currentRole UserListPage = do
   return (requests,never,nav')
 
 navigationPage responses currentRole (UserPage h) = do
-  text $ "UserPage for " ++ h
-  back <- (SplashPage <$) <$> button "Back to SplashPage"
-  return (never,never,back)
+  (requests,nav) <- userPageWidget h responses currentRole
+  return (requests,never,SplashPage <$ nav)
 
 runExerciseForNavigationPage :: (MonadWidget t m, Data c, Data q, Data a, Data e, Show c, Show q, Show a, Show e)
   => Exercise t m c q a e
