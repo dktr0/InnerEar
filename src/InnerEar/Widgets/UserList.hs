@@ -16,24 +16,36 @@ import Reflex.Synth.Synth
 
 userListWidget :: MonadWidget t m
   => Event t [Response] -> Dynamic t (Maybe Role) -> m (Event t Request,Event t (Maybe Handle))
-userListWidget responses role = elClass "div" "excerciseWrapper" $ do
+userListWidget responses currentRole = elClass "div" "excerciseWrapper" $ do
 
   -- after the widget is built it requests info on all users from the server, but only if role is Administrator
   postBuild <- getPostBuild
-  isAdministrator <- mapDyn (== (Just Administrator)) role
+  isAdministrator <- mapDyn (== (Just Administrator)) currentRole
   let getUserList = GetUserList <$ gate (current isAdministrator) postBuild
 
   -- select any and all server responses that are UserData to display a clickable map of all users
   let userEvents = fmap (catMaybes . fmap responseToUser) responses
   userMap <- foldDyn (\xs m -> Prelude.foldl (\m' (h,u) -> insert h u m') m xs) Data.Map.empty userEvents
-  userList <- mapDyn keys userMap
-  simpleList userList $ \v -> divClass "navButton" $ dynButton v
+  userList <- mapDyn elems userMap
+  userNavs <- simpleList userList $ \u -> do
+    userHandle <- mapDyn handle u
+    userRole <- mapDyn (show . role) u
+    divClass "navButton" $ do
+      dynText userHandle
+      text " ("
+      dynText userRole
+      text ") "
+      (fmap Just . tagDyn userHandle) <$> button "UserPage"
+  -- userNavs :: m (Dynamic t [Event t Handle])
+  -- so how do we flatten this?
+  userNavs' <- mapDyn leftmost userNavs -- m (Dynamic t (Event t Handle))
+  let userNavs'' = switchPromptlyDyn userNavs'
 
   -- widget asks to be closed when back button is pressed, or anytime role is not Administrator
   backButton <- (Nothing <$) <$> button "Back"
-  let notAdminPostBuild = (Nothing <$) $ ffilter (/= (Just Administrator)) $ tagDyn role postBuild
-  let notAdminLater = (Nothing <$) $ ffilter (/= (Just Administrator)) $ updated role
-  let nav = leftmost [backButton,notAdminPostBuild,notAdminLater]
+  let notAdminPostBuild = (Nothing <$) $ ffilter (/= (Just Administrator)) $ tagDyn currentRole postBuild
+  let notAdminLater = (Nothing <$) $ ffilter (/= (Just Administrator)) $ updated currentRole
+  let nav = leftmost [userNavs'',backButton,notAdminPostBuild,notAdminLater]
   return (getUserList,nav)
 
 responseToUser :: Response -> Maybe (String,User)
