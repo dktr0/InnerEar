@@ -59,7 +59,8 @@ sourceWidget''' inputId sourceMap iSource = do
     dd <- dropdown iSource (constDyn $ fmap fst sourceMap) $ DropdownConfig never (constDyn empty)
     s <- mapDyn (\x-> snd $ fromJust $ Data.Map.lookup x sourceMap) $ _dropdown_value dd  -- probably a better way to do this that doesn't use 'fromJust'
     isUserFile <- mapDyn isLoadedFile s
-    inputAttrs <- mapDyn (\x-> fromList [("accent","audio/*"),("id",inputId),(if x then "" else "hidden","")]) isUserFile
+    let staticAttr = fromList [("accent","audio/*"),("id",inputId)]
+    inputAttrs <- mapDyn (\x-> if (not x) then Data.Map.insert "hidden" "true" staticAttr else staticAttr) isUserFile
     input <- fileInput $ FileInputConfig inputAttrs
     let loadEv = (() <$) $ updated $ _fileInput_value input
     return (s,loadEv)
@@ -72,11 +73,13 @@ sourceWidget''' inputId sourceMap iSource = do
     initialParams <- mapDyn (maybe (PlaybackParam 0 1 False) id . getPlaybackParam) source
     text "loop"
     loop <- liftM _checkbox_value $ checkbox False $ CheckboxConfig (fmap loop $ updated initialParams) (constDyn empty)
+    let numberInputAttrs = constDyn $ fromList [("step","0.01"), ("max","1"), ("min","0")]
     text "start "
-    start <- textInput $ TextInputConfig "number" "0" (fmap (show . start) $ updated initialParams) (constDyn $ fromList [("step","0.01"),("class","startEndNumberInput")])
+    holdDyn "..." (fmap (show . start) $ updated initialParams) >>= dynText
+    start <- textInput $ TextInputConfig "number" "0" (fmap (show . start) $ updated initialParams) numberInputAttrs
     startVal <- mapDyn (maybe 0 id . ((readMaybe)::String->Maybe Double)) (_textInput_value start)
     text " end "
-    end <- textInput $ TextInputConfig "number" "1" (fmap (show . end) $ updated initialParams) (constDyn $ fromList [("step","0.01"),("class","startEndNumberInput")])
+    end <- textInput $ TextInputConfig "number" "1" (fmap (show . end) $ updated initialParams) numberInputAttrs
     endVal <- mapDyn (maybe 1.0 id . ((readMaybe)::String->Maybe Double)) (_textInput_value end)
     param <- combineDyn PlaybackParam startVal endVal >>= combineDyn (flip ($)) loop
     return (play, stop, param)
