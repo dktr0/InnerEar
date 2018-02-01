@@ -176,18 +176,19 @@ button.correctButton{
 }
 
 .svgBarContainer {
-  width: 30%;
+  width: 50%;
   background-color: hsl(120,100%,80%);
-
 }
 
-.svgBarContainer {
+.svgBarContainerFiveBand {
   width: 30%;
   background-color: hsl(120,100%,80%);
-
 }
 
-
+.svgBarContainerTenBand {
+  width: 50%;
+  background-color: hsl(120,100%,80%);
+}
 .bars {
   fill: hsl(120,100%,80%);
   stroke: black;
@@ -198,12 +199,10 @@ button.correctButton{
 
 
 .faintedLineToAdjustGraph {
-   width: 1px;
-  height: 100px;
+  width: 1px;
+  height: 150px;
   position: relative;
   right: 20%;
-  top: 11%;
-
 }
 
 .svgFaintedLine {
@@ -211,10 +210,23 @@ button.correctButton{
    height: 5px;
    background-color: #2F4F4F;
   position: relative;
+  left: 24%;
+}
+
+.svgFaintedLineFiveBand {
+   width: 1px;
+   height: 5px;
+   background-color: #2F4F4F;
+  position: relative;
   left: 15%;
+}
 
-
-
+.svgFaintedLineTenBand {
+   width: 1px;
+   height: 5px;
+   background-color: #2F4F4F;
+  position: relative;
+  left: 24%;
 }
 
  .faintedXaxis {
@@ -222,7 +234,7 @@ button.correctButton{
     height: 1%;
     background-color: #2F4F4F;
    position: relative;
-   top: 16.5%;
+   top: 20%;
 
 
   }
@@ -238,46 +250,50 @@ right:80%;
 .scoreLabel {
    color: hsl(120,100%,80%);
    text-align: center;
-   font-size: 50%;
+   font-size: 70%;
  }
 
 .emptyScoreLabel{
   color:transparent;
-     font-size: 50%;
+     font-size: 70%;
 
 }
 
 .xLabel {
    color: hsl(120,100%,80%);
-   font-size:50%;
+   font-size:70%;
    text-align: center;
-
 }
 
-.xLabelTenBand {
+.xLabelFiveBand {
    color: hsl(120,100%,80%);
    font-size:50%;
+   text-align: center;
+}
+.xLabelTenBand {
+   color: hsl(120,100%,80%);
+   font-size:80%;
    text-align: center;
 
 }
 
 .countLabel {
   color: hsl(120,100%,80%);
-  font-size: 50%;
+  font-size: 70%;
   text-align: center;
 position: relative;
-  top:6%;
+  top:4%;
 }
 
 
 .graphLabel {
    color: hsl(120,100%,80%);
-   font-size: 80%;
+   font-size: 100%;
    height: 10%;
    width: 100%;
     text-align: center;
   position: relative;
-  top: 10%;
+  bottom: 67%;
 }
 
 
@@ -286,26 +302,16 @@ position: relative;
    width: 15px;
    height: 10%;
    position: relative;
-   top: 9%;
+   top: 12%;
   left: 4%;
 }
-
-.countMainLabelPrime {
-   font-size: 60%;
-   width: 15px;
-   height: 10%;
-   position: relative;
-   top: 11%;
-  left: 4%;
-}
-
 
 .percentageMainLabel {
    height: 1%;
    width: 1%;
-   font-size: 60%;
+   font-size: 70%;
    position: relative;
-   bottom:25%;
+   bottom:26%;
    left: 5%;
 }
 
@@ -313,10 +319,10 @@ position: relative;
 .hzMainLabel {
   width: 15px;
   height: 10%;
-  font-size:  50%;
+  font-size:  60%;
   position: relative;
   left: 4%;
-  top: 15%;
+  top: 19%;
 
 }
 
@@ -453,21 +459,21 @@ input.soundSourceDropdown{
 .scoreBarWrapper {
   display: inline-block;
   position: relative;
-  bottom:50%;
+  bottom:55%;
   width: 50%;
 }
 
 .scoreBarWrapperFiveBand {
   display: inline-block;
   position: relative;
-  bottom:49%;
+  bottom:55%;
   width: 15%;
 }
 
 .scoreBarWrapperTenBand {
   display: inline-block;
   position: relative;
-  bottom:49%;
+  bottom:53%;
   width:7%;
 
 }
