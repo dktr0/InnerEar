@@ -37,41 +37,15 @@ faintedLineToAdjustGraph :: MonadWidget t m => String -> m ()
 faintedLineToAdjustGraph c = svgClass "svg" c $ return ()
 
 -- A dynamic bar for (Maybe Score)
-scoreBar :: MonadWidget t m => String -> Dynamic t (Maybe Score) -> m ()
-scoreBar key score  = elClass "div" "scoreBarWrapper" $ do
+scoreBar :: MonadWidget t m => (String,String,String) -> String -> Dynamic t (Maybe Score) -> m ()
+scoreBar (class1,class2,class3) key score  = elClass "div" class1 $ do
   bool <-  mapDyn (maybe False (const True)) score
   score' <-  mapDyn (maybe (Score 0 0 0) id) score -- Dynamic t Int
   percent <- mapDyn asPercent score'
-  let b = dynScoreLabel (constDyn "scoreLabel") percent >> dynBarCSS' percent (constDyn 100) (constDyn "svgBarContainer")
+  let b = dynScoreLabel (constDyn "scoreLabel") percent >> dynBarCSS' percent (constDyn 100) (constDyn class2)
   flippableDyn (return ()) b bool
-  let b2 = emptyScoreLabel >> faintedLineCSS "svgFaintedLine" >> dynBarCSS' percent (constDyn 100) (constDyn "svgBarContainer")
+  let b2 = emptyScoreLabel >> faintedLineCSS "svgFaintedLine" >> dynBarCSS' percent (constDyn 100) (constDyn class2)
   flippableDyn b2 (return ()) bool
   faintedLineToAdjustGraph "faintedLineToAdjustGraph"
-  xLabel "xLabel" key
+  xLabel class3 key
   mapDyn questionsAsked score' >>= dynCountLabel (constDyn "countLabel")
-
-scoreBar' :: MonadWidget t m => String -> Dynamic t (Maybe Score) -> m ()
-scoreBar' key score  = elClass "div" "scoreBarWrapperFiveBand" $ do
-    bool <-  mapDyn (maybe False (const True)) score
-    score' <-  mapDyn (maybe (Score 0 0 0) id) score -- Dynamic t Int
-    percent <- mapDyn asPercent score'
-    let b = dynScoreLabel (constDyn "scoreLabel") percent >> dynBarCSS' percent (constDyn 100) (constDyn "svgBarContainerFiveBand")
-    flippableDyn (return ()) b bool
-    let b2 = emptyScoreLabel >> faintedLineCSS "svgFaintedLineFiveBand" >> dynBarCSS' percent (constDyn 100) (constDyn "svgBarContainerFiveBand")
-    flippableDyn b2 (return ()) bool
-    faintedLineToAdjustGraph "faintedLineToAdjustGraph"
-    xLabel "xLabelFiveBand" key
-    mapDyn questionsAsked score' >>= dynCountLabel (constDyn "countLabel")
-
-scoreBar'' :: MonadWidget t m => String -> Dynamic t (Maybe Score) -> m ()
-scoreBar'' key score  = elClass "div" "scoreBarWrapperTenBand" $ do
-    bool <-  mapDyn (maybe False (const True)) score
-    score' <-  mapDyn (maybe (Score 0 0 0) id) score -- Dynamic t Int
-    percent <- mapDyn asPercent score'
-    let b = dynScoreLabel (constDyn "scoreLabel") percent >> dynBarCSS' percent (constDyn 100) (constDyn "svgBarContainerTenBand")
-    flippableDyn (return ()) b bool
-    let b2 = emptyScoreLabel >> faintedLineCSS "svgFaintedLineTenBand" >> dynBarCSS' percent (constDyn 100) (constDyn "svgBarContainerTenBand")
-    flippableDyn b2 (return ()) bool
-    faintedLineToAdjustGraph "faintedLineToAdjustGraph"
-    xLabel "xLabelTenBand" key
-    mapDyn questionsAsked score' >>= dynCountLabel (constDyn "countLabel")

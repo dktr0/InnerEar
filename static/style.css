@@ -449,6 +449,12 @@ input.soundSourceDropdown{
   height:100%;
 }
 
+.flexExperiment{
+  display:inline-flex;
+  width:100%;
+  height:100%;
+}
+
 .evalGraphFrameRow {
   display: inline-flex;
   height: 100%;
@@ -471,10 +477,11 @@ input.soundSourceDropdown{
 }
 
 .scoreBarWrapperTenBand {
-  display: inline-block;
-  position: relative;
+  /* display: inline-block; */
+  flex-grow: 1;
+  /* position: relative; */
   bottom:53%;
-  width:7%;
+  /* width:7%; */
 
 }
 
