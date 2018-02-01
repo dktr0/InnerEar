@@ -57,12 +57,16 @@ displayEval = displayMultipleChoiceEvaluationGraph' "Session Performance" "" ans
 generateQ :: Config -> [Datum Config [Answer] Answer (Map Answer Score)] -> IO ([Answer],Answer)
 generateQ _ _ = randomMultipleChoiceQuestion answers
 
+-- For dynRadioConfigWidget
+sourcesMap:: Map Int (String,Source)
+sourcesMap = fromList $ zip [0::Int,1..] [("Pink noise",NodeSource (BufferNode $ File "pinknoise.wav") (Just 2)), ("White noise", NodeSource (BufferNode $ File "whitenoise.wav") (Just 2))]
+
 thresholdOfSilenceExercise :: MonadWidget t m => Exercise t m Int [Answer] Answer (Map Answer Score)
 thresholdOfSilenceExercise = multipleChoiceExercise
   1
   answers
   instructions
-  (dynRadioConfigWidget "thersholdOfSilence" configMap)
+  (dynRadioConfigWidget "thersholdOfSilence" sourcesMap 0 configMap)
   renderAnswer
   ThresholdOfSilence
   (-20)

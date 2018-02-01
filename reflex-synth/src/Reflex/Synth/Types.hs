@@ -57,8 +57,8 @@ data OscillatorType = Sawtooth | Sine | Square deriving (Show, Read,Eq)
 data Oscillator = Oscillator OscillatorType Double Double deriving (Read,Show,Eq) --double params are freq and gain (in dB) (respectively)
 
 data PlaybackParam = PlaybackParam{
-  startTime::Double,
-  endTime::Double,
+  start::Double,    -- portion through the buffer that playback starts
+  end::Double,
   loop::Bool
 } deriving (Read, Show, Eq)
 
