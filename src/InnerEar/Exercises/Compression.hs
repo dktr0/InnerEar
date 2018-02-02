@@ -55,7 +55,7 @@ compressionExercise = multipleChoiceExercise
   1
   answers
   instructions
-  (dynRadioConfigWidget'' "compressionExercise" empty 0 configMap)
+  (dynRadioConfigWidget "compressionExercise" empty 0 configMap)
   renderAnswer
   Compression
   (20)

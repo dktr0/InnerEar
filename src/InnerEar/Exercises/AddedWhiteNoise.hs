@@ -51,12 +51,13 @@ instructions = el "div" $ do
   elClass "div" "instructionsText" $ text "In this exercise, a low level of noise (white noise) is potentially added to a reference signal. Your task is to detect whether or not the noise has been added. Configure the level of the noise progressively lower and lower to challenge yourself."
   elClass "div" "instructionsText" $ text "Note: the exercise will work right away with a sine wave as a reference tone (to which noise is or is not added), however it is strongly recommended that the exercise be undertaken with recorded material such as produced music, field recordings, etc. Click on the sound source menu to load a sound file from the local filesystem."
 
+
 addedWhiteNoiseExercise :: MonadWidget t m => Exercise t m Config [Answer] Answer (Map Answer Score)
 addedWhiteNoiseExercise = multipleChoiceExercise
   1
   [Answer False,Answer True]
   instructions
-  (dynRadioConfigWidget' "addedWhiteNoiseExercise" configMap)
+  (dynRadioConfigWidget "addedWhiteNoiseExercise" (singleton 1 ("300hz Sine Wave", NodeSource (OscillatorNode $ Oscillator Sine 440 0) (Just 2))) 1 configMap)
   renderAnswer
   AddedWhiteNoise
   (-10)
