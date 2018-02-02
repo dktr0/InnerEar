@@ -73,10 +73,14 @@ sourceWidget''' inputId sourceMap iSource = do
     initialParams <- mapDyn (maybe (PlaybackParam 0 1 False) id . getPlaybackParam) source
     text "loop"
     loop <- liftM _checkbox_value $ checkbox False $ CheckboxConfig (fmap loop $ updated initialParams) (constDyn empty)
-    let numberInputAttrs = constDyn $ fromList [("step","0.01"), ("max","1"), ("min","0")]
+    let numberInputAttrs = constDyn $ fromList [("step","0.01"), ("max","1"), ("min","0"),("class","numberInput"),("type","number")]
     text "start "
-    holdDyn "..." (fmap (show . start) $ updated initialParams) >>= dynText
-    start <- textInput $ TextInputConfig "number" "0" (fmap (show . start) $ updated initialParams) numberInputAttrs
+    -- holdDyn "..." (fmap (show . start) $ updated initialParams) >>= dynText
+
+    -- start <- textInput $ def & textInputConfig_attributes .~ numberInputAttrs & textInputConfig_setValue .~ (fmap (show . end) $ updated initialParams)
+
+    start <- textInput $ TextInputConfig "number" "0" (fmap (show . start)$ updated initialParams) numberInputAttrs -- def -- $ TextInputConfig "number" "0" (fmap (show . start) $ updated initialParams) numberInputAttrs
+    -- start <- textInput $ def & t
     startVal <- mapDyn (maybe 0 id . ((readMaybe)::String->Maybe Double)) (_textInput_value start)
     text " end "
     end <- textInput $ TextInputConfig "number" "1" (fmap (show . end) $ updated initialParams) numberInputAttrs

@@ -388,23 +388,11 @@ position: relative;
 
 
 
-
-
-
-
-
-
-/* Wrapping everything the user uses to select a sound source and load a buffer/loop it etc...*/
-
-/* Just containing the "Sound source:'' label and the dropdown*/
-.soundSourceDropdown{
-
-/*   width:100%; */
-/*   display: auto */
+.numberInput{
+  width:50px;
+  background-color:rgb(200,200,200)
 }
-input.soundSourceDropdown{
 
-}
 
 .userMediaWidget{
   display: auto
@@ -433,9 +421,6 @@ input.soundSourceDropdown{
   height:20%;
 }
 
-.bufferControls input {
-  width:10px;
-}
 
 .specEvalWrapper {
   display:inline-block;
@@ -597,9 +582,13 @@ textarea.journalItem {
   resize: none;
 }
 
+.configWidgetWrapper{
+  width:100%
+}
+
 .configWidget {
-  display: flex;
-  justify-content: space-between;
+  text-align: left;
+/*   justify-content: space-between; */
 }
 
 .radioConfigWidget {
@@ -607,8 +596,8 @@ textarea.journalItem {
 }
 
 .sourceWidget{
-  width: 45%;
-  padding:2px;
+  width: 90%;
+  padding:5%;
   background-color: rgb(30,30,30);
   text-align: left;
 }
