@@ -179,6 +179,13 @@ getLastNode (WebAudioGraph n) = n
 getLastNode (WebAudioGraph' _ n) = getLastNode n
 getLastNode (WebAudioGraph'' _ n) = getLastNode n
 
+getPlaybackParam::Source -> Maybe PlaybackParam
+getPlaybackParam (NodeSource (BufferNode (LoadedFile _ x)) _) = Just x
+getPlaybackParam _ = Nothing
+
+isLoadedFile::Source -> Bool
+isLoadedFile (NodeSource (BufferNode (LoadedFile _ _)) _) = True
+isLoadedFile _ = False
 
 getDestination :: IO WebAudioNode
 getDestination = do

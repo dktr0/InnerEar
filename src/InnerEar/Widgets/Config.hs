@@ -1,3 +1,4 @@
+{-# LANGUAGE RecursiveDo #-}
 module InnerEar.Widgets.Config where
 
 import Control.Monad.IO.Class (liftIO)
@@ -53,20 +54,27 @@ getPlaybackParam (NodeSource (BufferNode (LoadedFile _ x)) _) = Just x
 getPlaybackParam _ = Nothing
 
 sourceWidget''':: MonadWidget t m => String -> Map Int (String, Source) -> Int -> m (Dynamic t Source, Event t ())
-sourceWidget''' inputId sourceMap iSource = do
+sourceWidget''' inputId sourceMap iSource = mdo
   (source, loadEv) <- elClass "div" "sourceSelection" $ do
     text "Sound source: "
     dd <- dropdown iSource (constDyn $ fmap fst sourceMap) $ DropdownConfig never (constDyn empty)
     s <- mapDyn (\x-> snd $ fromJust $ Data.Map.lookup x sourceMap) $ _dropdown_value dd  -- probably a better way to do this that doesn't use 'fromJust'
     isUserFile <- mapDyn isLoadedFile s
-    let staticAttr = fromList [("accent","audio/*"),("id",inputId)]
+    let staticAttr = fromList [("accept","audio/*"),("id",inputId)]
     inputAttrs <- mapDyn (\x-> if (not x) then Data.Map.insert "hidden" "true" staticAttr else staticAttr) isUserFile
     input <- fileInput $ FileInputConfig inputAttrs
     let loadEv = (() <$) $ updated $ _fileInput_value input
     return (s,loadEv)
-  canvas <- elClass "div" "waveformWrapper" $ liftM fst $ elClass' "canvas" "waveformCanvas" (return ())
-  let canvasElement = _el_element canvas
-  performEvent_ $ fmap (liftIO . const (loadAndDrawBuffer inputId $ G.castToHTMLCanvasElement canvasElement)) loadEv
+  -- canvas <- elClass "div" "waveformWrapper" $ liftM fst $ elClass' "canvas" "waveformCanvas" (return ())
+  -- (canvas,_) <- elClass' "canvas" "waveformCanvas" (return ())
+  -- let canvasElement = _el_element canvas
+  -- performEvent_ $ fmap (liftIO . const (loadAndDrawBuffer inputId $ G.castToHTMLCanvasElement canvasElement)) loadEv
+  --
+  -- (startEndCanvas,_) <- elClass' "canvas" "startEndCanvas" (return())
+  -- let startEndChangeEv = fmapMaybe getPlaybackParam $ updated source'
+  -- performEvent_ $ fmap (\x-> liftIO $ (drawStartEnd x (G.castToHTMLCanvasElement $ _el_element startEndCanvas))) startEndChangeEv
+  sourceCanvasWidget (updated source)  ((<$) inputId loadEv) (updated playbackParam)
+
   (playReference, stopEv, playbackParam) <- elClass "div" "bufferControls" $ do
     play <- button "►"
     stop <- button "◼"
@@ -75,12 +83,7 @@ sourceWidget''' inputId sourceMap iSource = do
     loop <- liftM _checkbox_value $ checkbox False $ CheckboxConfig (fmap loop $ updated initialParams) (constDyn empty)
     let numberInputAttrs = constDyn $ fromList [("step","0.01"), ("max","1"), ("min","0"),("class","numberInput"),("type","number")]
     text "start "
-    -- holdDyn "..." (fmap (show . start) $ updated initialParams) >>= dynText
-
-    -- start <- textInput $ def & textInputConfig_attributes .~ numberInputAttrs & textInputConfig_setValue .~ (fmap (show . end) $ updated initialParams)
-
-    start <- textInput $ TextInputConfig "number" "0" (fmap (show . start)$ updated initialParams) numberInputAttrs -- def -- $ TextInputConfig "number" "0" (fmap (show . start) $ updated initialParams) numberInputAttrs
-    -- start <- textInput $ def & t
+    start <- textInput $ TextInputConfig "number" "0" (fmap (show . start)$ updated initialParams) numberInputAttrs
     startVal <- mapDyn (maybe 0 id . ((readMaybe)::String->Maybe Double)) (_textInput_value start)
     text " end "
     end <- textInput $ TextInputConfig "number" "1" (fmap (show . end) $ updated initialParams) numberInputAttrs
@@ -89,7 +92,35 @@ sourceWidget''' inputId sourceMap iSource = do
     return (play, stop, param)
   performEvent $ fmap liftIO $ fmap (const $ stopNodeByID inputId) stopEv
   source' <- combineDyn  (\s p-> case s of (NodeSource (BufferNode (LoadedFile a _)) b) -> NodeSource (BufferNode $ LoadedFile a p) b; otherwise-> s ) source playbackParam
+  mapDyn (show) source' >>= dynText
   return (source', playReference)
+
+
+sourceCanvasWidget:: MonadWidget t m => Event t Source -> Event t String -> Event t PlaybackParam -> m ()
+sourceCanvasWidget src loadEv paramChange = elClass "div" "sourceCanvasWrapper" $  do
+  (canvas,_) <- elClass' "canvas" "waveformCanvas" (return ())
+  let canvasElement = _el_element canvas
+  -- performEvent_ $ fmap (\s ->liftIO  (drawSource s $ G.castToHTMLCanvasElement canvasElement)) (leftmost [updated src, tagDyn src loadEv])
+  performEvent_ $ fmap (\inputId -> liftIO $ (loadAndDrawBuffer inputId $ G.castToHTMLCanvasElement canvasElement)) loadEv
+  performEvent_ $ fmap (\s ->liftIO  (drawSource s $ G.castToHTMLCanvasElement canvasElement)) src
+
+  performEvent_ $ fmap (liftIO . const clog) loadEv
+  performEvent_ $ fmap (liftIO . const clog2) src
+
+  (startEndCanvas,_) <- elClass' "canvas" "startEndCanvas" (return())
+  performEvent_ $ fmap (\x-> liftIO $ (drawStartEnd x (G.castToHTMLCanvasElement $ _el_element startEndCanvas))) paramChange
+  return ()
+
+foreign import javascript safe "console.log('loadEvent ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^' )" clog:: IO ()
+foreign import javascript safe "console.log('src event^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^' )" clog2:: IO ()
+
+  -- paramsEv <- mapDyn getPlaybackParam src >>= updated
+  -- (canvas,_) <- elClass' "canvas" "waveformCanvas" (return ())
+  -- let canvasElement = _el_element canvas
+  -- performEvent_ $ fmap (\s -> liftIO $  (drawCanvas s $ G.castToHTMLCanvasElement canvasElement)) (updated src)
+  -- -- clickEv <- wrapDomEvent (_el_element e) (onEventName Click) mouseOffsetXY
+  -- return src
+
 
 
 sineSourceConfig::(MonadWidget t m) => String -> Map String Double -> Double -> m (Dynamic t Double, Dynamic t Source, Event t (Maybe a))

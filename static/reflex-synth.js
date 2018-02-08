@@ -39,7 +39,6 @@ function createClipAtWaveShaper (db){
   var portion = (1-clip)/2
   var left = Math.floor(portion*shapeBuffer.length)
   var right = shapeBuffer.length-left
-
   for (var i =0; i<shapeBuffer.length; i=i+1){
     if (i < left){
       shapeBuffer[i] = ((-1)*clip)
@@ -120,13 +119,11 @@ function createCompressorNode (threshold, knee, ratio, attack, release){
 // 'url' is a string to a local (ie.. on the server) impulse response buffer (audio file)
 function createConvolverNode (url){
   var conv = ___ac.createConvolver();
-
   var request = new XMLHttpRequest();
   request.open('GET', url, true);
   request.responseType = 'arraybuffer';
   request.onload = function() {
     var audioData = request.response;
-
     ___ac.decodeAudioData(audioData, function(buffer) {
         conv.buffer = buffer;
       },
@@ -136,42 +133,19 @@ function createConvolverNode (url){
   return conv;
 }
 
-function createMediaNode (id){
-  var node
-  console.log(id)
-  if (userAudioNodes[id]){
-    var obj = userAudioNodes[id]
-    console.log('is in here')
-    if (obj.audioElement){
-      node = ___ac.createMediaElementSource(obj.audioElement)
-    } else{
-      var audioElement = document.getElementById(id+"Audio")
-      node = ___ac.createMediaElementSource(obj.audioElement)
-    }
-    userAudioNodes[id].node = node
-  } else {
-    console.log('else')
-    var audioElement = document.getElementById(id+"Audio")
-    node = ___ac.createMediaElementSource(audioElement)
-    userAudioNodes[id] = {node:node, audioElement:audioElement}
-  }
-  return node;
-}
 
-function loadBuffer(inputId){
-
+// Keep this - gets called when trying to play a LoadedFile where the buffer has not yet been loaded
+// Callback for if want to also draw the buffer to a canvas after buffer is loaded
+function loadBuffer(inputId, bufferDecodeCallback){
   if (userAudioNodes[inputId]==undefined){
       userAudioNodes[inputId]={}
   }
   var inputElement = document.getElementById(inputId)
-
   if (inputElement){
-
     var files = inputElement.files// function drawSineWave (canvas){
     if (files[0]){
       var file = files[0]
       var bufferReader = new FileReader ();
-
       // Decode and store the buffer in userAudioNodes
       bufferReader.readAsArrayBuffer(file)
       bufferReader.addEventListener('loadend',function(e){
@@ -184,12 +158,16 @@ function loadBuffer(inputId){
             } else {
               userAudioNodes[inputId] = {buffer:buffer}
             }
+            userAudioNodes.file = file
 
             // If the user hasn't changed the loopend, set loopend to the end of the soundfile
             if (userAudioNodes[inputId].loopEnd==undefined){
               userAudioNodes[inputId].loopEnd = buffer.duration
             }
             console.log("Buffer "+inputId+" successfully decoded.")
+            if (bufferDecodeCallback){
+              bufferDecodeCallback(inputId)
+            }
           },function(e){alert("Error decoding audio data, please try to load another file.")})
       })
 
@@ -211,9 +189,7 @@ function playMediaNode(s){
   }
 }
 
-
-
-
+// For files hosted on the server like pinknoise.wav...
 function createBufferSourceNodeFromURL(url) {
   var source = ___ac.createBufferSource()
   var request = new XMLHttpRequest();
@@ -221,7 +197,6 @@ function createBufferSourceNodeFromURL(url) {
   request.responseType = 'arraybuffer';
   request.onload = function() {
     var audioData = request.response;
-
     ___ac.decodeAudioData(audioData, function(buffer) {
         source.buffer = buffer;
       },
@@ -234,29 +209,22 @@ function createBufferSourceNodeFromURL(url) {
 
 
 function playBufferNode(id, s, e, loop, node){
-  // if(userAudioNodes[id].source){
-    // userAudioNodes[id].source.stop();
-  // }
   if (node.buffer){
-  e = Math.max(Math.min(1,e),0)
-  s = Math.max(Math.min(e,s),0)
-  var start= s*node.buffer.duration
-  var end = (e-s)*node.buffer.duration
-  console.log('end:' + end)
-  console.log('start' + start)
-  node.loopStart = start;
-  node.loopEnd = e*node.buffer.duration;
-  node.loop = loop
-  // node.start(___ac.currentTime, start, end)
-  node.start(___ac.currentTime, start)
-
-  lastPlayingBufferNode = node;
+    e = Math.max(Math.min(1,e),0)
+    s = Math.max(Math.min(e,s),0)
+    var loopStart= s*node.buffer.duration
+    var loopEnd = e*node.buffer.duration
+    node.loopStart = loopStart;
+    node.loopEnd = loopEnd;
+    node.loop = loop
+    node.start(___ac.currentTime, s*node.buffer.duration, (e-s)*node.buffer.duration)
+    lastPlayingBufferNode = node;
   }
   else {
     console.log("WARNING - playBufferNode called on a node with no buffer. [playBufferNode(id, s, e, loop, node)] ")
   }
-
 }
+
 
 function createBufferSourceNodeFromID(id,start,end,loop){
   var source = ___ac.createBufferSource();
@@ -275,110 +243,18 @@ function createBufferSourceNodeFromID(id,start,end,loop){
     return source;
   }
    else{
-     alert("Please load a sound file to use as a source.")
+     alert("Please load a sound file.")
    }
    return source;
 }
 
-function loadUserSoundFile(){
 
-  var filePicker = document.getElementById('soundFileInput')
-  var files = filePicker.files
-
-  if(files[0]){
-
-    var reader = new FileReader ();
-
-    reader.readAsArrayBuffer(files[0])
-    console.log('made it here ')
-    reader.addEventListener('loadend',function(e){
-      ___ac.decodeAudioData(reader.result, function(buffer){
-        bufferData = buffer
-        console.log('buffer data loaded and decoded')
-      })
-
-    })
-    var url = URL.createObjectURL(files[0])
-    console.log("url: "+url)
-
-    var aud = document.getElementById('userAudio')
-    aud.setAttribute('src',url)
-  }
-  else {
-    alert("Please select a sound file")
-    console.log("unsucessful load user soundfile")
-  }
-}
-
-function setAudioSrc(id){
-  if (userAudioNodes[id]){
-    var x = userAudioNodes[id]
-    // loads buffer and sets userAduioNodes[id].buffer to result
-    loadBuffer(id)
-
-
-    if (x.inputElement.files){
-      var file = files[0];
-
-
-      var urlReader = new FileReader();
-      // Get the file's URL
-      urlReader.readAsDataURL(file)
-      urlReader.addEventListener('loadend', function(e){
-        console.log('url loaded')
-        x.url = urlReader.result;
-        x.audioElement.setAttribute('src',x.url)
-      })
-    } else {
-      console.log ('error in setAudioSrc: no files for userAudioNodes['+id+']')
-    }
-  } else {
-    var audioElement = document.getElementById(id+"Audio")
-    var inputElement = document.getElementById(id+"Input")
-    if (audioElement && inputElement){
-      userAudioNodes[id].audioElement = audioElement
-      userAudioNodes[id].inputElement = inputElement
-      userAudioNodes[id].loopStart = 0;
-      userAudioNodes[id].loopEnd = undefined;
-      userAudioNodes[id].audioElement.ontimeupdate = audioOnTimeUpdate(userAudioNodes[id])
-
-    } else{
-      console.log('Error in setAudioSrc: either no input or audio element for: '+id)
-    }
-
-  }
-
-}
-
-
-
-function renderAudioWaveform(id, canvas, attempt){
-
-  if (attempt<5){___ac
-    var obj = userAudioNodes[id]
-
-
-    if (obj){
-      if (obj.buffer){
-        drawBufferOnCanvas(obj.buffer, canvas)
-      }
-      else{
-        console.log('### WARNING attempted to renderAudioWaveform before buffer of \''+id+'\' was set...\n trying again');
-        setTimeout(renderAudioWaveform(id,canvas,alert+1),2000)
-      }
-    } else {
-      console.log('### WARNING attempted to renderAudioWaveform before buffer of \''+id+'\' was set...\n trying again');
-      setTimeout(renderAudioWaveform(id,canvas,alert+1),2000)
-    }
-  }
-  else {
-    alert('Unable to properly load soundfile, you may need to reload the page.')
-  }
-}
-
-
-
-
+// Necessary to have a single function that first loads and then draws the buffer
+// because if tried to first load the buffer with reflex/haskell then draw the canvas,
+// wouldn't have the callback function
+// ie.:     <-  loadbuffer ....
+//           <- drawBuffer .....
+// won't work bc. can't get decode audio data callback from file loadBuffer...
 function loadAndDrawBuffer(inputId, canvas){
 
   var inputElement = document.getElementById(inputId)
@@ -388,6 +264,11 @@ function loadAndDrawBuffer(inputId, canvas){
     var files = inputElement.files
     if (files[0]){
       var file = files[0]
+
+      // See if the buffer has previously been loaded@
+      if (buffers[file.name]){
+      }
+
       var bufferReader = new FileReader ();
 
       // Decode and store the buffer in userAudioNodes
@@ -419,14 +300,42 @@ function loadAndDrawBuffer(inputId, canvas){
     console.log('Could not find dom element with id: '+inputId)
     alert('An error occurred, you may need to reload the page')
   }
-
-
 }
 
+// @ maybe don't want this...
+function drawLoadedFile(inputId, start, end, canvas){
+  var userAudioNode;
+  // has the user loaded a file with that input
+  if (userAudioNodes[inputId]){
+    var userAudioNode = userAudioNodes[i]
+    if (userAudioNode.buffer){
+        drawBufferOnCanvas(userAudioNode.buffer,start,end,canvas)
+    }
+  } else {
+  }
+}
+
+function drawStartEnd(s, e, canvas){
+
+  var ctx = canvas.getContext("2d")
+  start = Math.round(Math.max(Math.min(s,1),0)*canvas.width);
+  end = Math.round (Math.max(Math.min(e,1),0)*canvas.width);
+
+  ctx.clearRect(0,0, canvas.width, canvas.height)
+  ctx.strokeStyle = "#FF0000"
+  ctx.beginPath()
+  ctx.moveTo(start, 0)
+  ctx.lineTo(start, canvas.height)
+  ctx.stroke();
+
+  ctx.moveTo(end, 0)
+  ctx.lineTo(end, canvas.height)
+  ctx.stroke();
+}
+
+
+
 function startNode(node){
-  // if (lastPlayingBufferNode){
-  //   lastPlayingBufferNode.stop()
-  // }
   console.log(node)
   node.start()
 }
@@ -516,3 +425,26 @@ function dbToAmp (db){
 function ampToDb (amp){
   return 20*Math.log(amp)
 }
+
+
+// function createMediaNode (id){
+//   var node
+//   console.log(id)
+//   if (userAudioNodes[id]){
+//     var obj = userAudioNodes[id]
+//     console.log('is in here')
+//     if (obj.audioElement){
+//       node = ___ac.createMediaElementSource(obj.audioElement)
+//     } else{
+//       var audioElement = document.getElementById(id+"Audio")
+//       node = ___ac.createMediaElementSource(obj.audioElement)
+//     }
+//     userAudioNodes[id].node = node
+//   } else {
+//     console.log('else')
+//     var audioElement = document.getElementById(id+"Audio")
+//     node = ___ac.createMediaElementSource(audioElement)
+//     userAudioNodes[id] = {node:node, audioElement:audioElement}
+//   }
+//   return node;
+// }
