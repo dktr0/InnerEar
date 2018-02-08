@@ -48,7 +48,19 @@ displayMultipleChoiceEvaluationGraph''' graphLabel qLabel possibilities scoreMap
       where f k d = scoreBar ("scoreBarWrapperTenBand","svgBarContainerTenBand","svgFaintedLineTenBand","xLabelTenBand") (show k) d
         --elClass "div" "graphSpace"
 
-
+displayHistoricalEvaluationGraph :: (MonadWidget t m, Show a, Ord a) => String -> String -> [a] -> Dynamic t (Map a Score) -> Dynamic t (Map a Score) -> m ()
+displayHistoricalEvaluationGraph graphLabel qLabel possibilities currentScoreMap historicalScoreMap = elClass "div" "histEvalWrapper" $ do
+     currentScoreList <- mapDyn (\x -> fmap (\y -> Data.Map.lookup y x) possibilities) currentScoreMap
+     currentScoreMap' <- mapDyn (\x -> fromList $ zip possibilities x) currentScoreList
+     listWithKey currentScoreMap' f
+     historicalScoreList <- mapDyn (\x -> fmap (\y -> Data.Map.lookup y x) possibilities) historicalScoreMap
+     historicalScoreMap' <- mapDyn (\x -> fromList $ zip possibilities x) historicalScoreList
+     evalGraphFrame qLabel graphLabel
+     listWithKey historicalScoreMap' f
+     return ()
+       where
+       f k d = scoreBar ("scoreBarWrapper","svgBarContainer","svgFaintedLine", "xLabel") (show k) d
+       g k d = scoreBar ("scoreBarWrapperHist","svgBarContainerHist","svgFaintedLineHist", "xLabelHist") k d
 
 {- x graphLabel qLabel possibilities scoreMap = do
  listOfScores <- mapDyn ...
