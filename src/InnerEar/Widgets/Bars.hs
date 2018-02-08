@@ -47,5 +47,5 @@ scoreBar (class1,class2,class3) key score  = elClass "div" class1 $ do
   let b2 = emptyScoreLabel >> faintedLineCSS "svgFaintedLine" >> dynBarCSS' percent (constDyn 100) (constDyn class2)
   flippableDyn b2 (return ()) bool
   faintedLineToAdjustGraph "faintedLineToAdjustGraph"
+  faintedXaxis "faintedXaxis"
   xLabel class3 key
-  mapDyn questionsAsked score' >>= dynCountLabel (constDyn "countLabel")
