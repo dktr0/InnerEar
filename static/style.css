@@ -178,11 +178,13 @@ button.correctButton{
 .svgBarContainer {
   width: 50%;
   background-color: hsl(120,100%,80%);
+
 }
 
 .svgBarContainerFiveBand {
-  width: 30%;
+  width: 90%;
   background-color: hsl(120,100%,80%);
+
 }
 
 .svgBarContainerTenBand {
@@ -202,40 +204,44 @@ button.correctButton{
   width: 1px;
   height: 150px;
   position: relative;
-  right: 20%;
+  right: 24%;
+  top: 9%;
 }
 
 .svgFaintedLine {
    width: 1px;
    height: 5px;
-   background-color: #2F4F4F;
+  background-color: #2F4F4F;
   position: relative;
   left: 24%;
+  top: 9%;
 }
 
 .svgFaintedLineFiveBand {
    width: 1px;
    height: 5px;
-   background-color: #2F4F4F;
+  background-color: #2F4F4F;
   position: relative;
-  left: 15%;
+  left: 50%;
+  top: 9%;
 }
 
 .svgFaintedLineTenBand {
    width: 1px;
    height: 5px;
-   background-color: #2F4F4F;
+  background-color: #2F4F4F;
   position: relative;
   left: 24%;
+  top: 9%;
 }
 
  .faintedXaxis {
    /*width : 5%;*/
-  width : 50%;
+  width : 100%;
   height: 1px;
   background-color: #2F4F4F;
   position: relative;
-  top: 20%;
+  bottom: 19px;
 
 
   }
@@ -248,33 +254,39 @@ right:80%;
   top:  15%;
 }
 
-.scoreLabel {
+.scoreLabel
+{
    color: hsl(120,100%,80%);
    text-align: center;
    font-size: 70%;
- }
+}
 
 .emptyScoreLabel{
   color:transparent;
      font-size: 70%;
-
 }
 
 .xLabel {
    color: hsl(120,100%,80%);
    font-size:70%;
    text-align: center;
+   position: relative;
+   bottom: 8px;
 }
 
 .xLabelFiveBand {
    color: hsl(120,100%,80%);
    font-size:50%;
    text-align: center;
+    position: relative;
+   bottom: 8px;
 }
 .xLabelTenBand {
    color: hsl(120,100%,80%);
    font-size:80%;
    text-align: center;
+   position: relative;
+   bottom: 8px;
 
 }
 
@@ -282,8 +294,8 @@ right:80%;
   color: hsl(120,100%,80%);
   font-size: 70%;
   text-align: center;
-position: relative;
-  top:4%;
+  position: relative;
+  bottom:1px;
 }
 
 
@@ -295,6 +307,7 @@ position: relative;
     text-align: center;
   position: relative;
   bottom: 67%;
+
 }
 
 
@@ -303,8 +316,9 @@ position: relative;
    width: 15px;
    height: 10%;
    position: relative;
-   top: 12%;
+   top: 13%;
   left: 4%;
+
 }
 
 .percentageMainLabel {
@@ -314,6 +328,7 @@ position: relative;
    position: relative;
    bottom:26%;
    left: 5%;
+
 }
 
 
@@ -468,6 +483,8 @@ input.soundSourceDropdown{
   position: relative;
   bottom:55%;
   width: 50%;
+  margin-left: -10%;
+  margin-right: -10%;
 }
 
 .scoreBarWrapperFiveBand {
@@ -478,11 +495,11 @@ input.soundSourceDropdown{
 }
 
 .scoreBarWrapperTenBand {
-  /* display: inline-block; */
+  display: inline-block;
   flex-grow: 1;
-  /* position: relative; */
-  bottom:53%;
-  /* width:7%; */
+  position: relative;
+  bottom:55%;
+  width:7%;
 
 }
 
