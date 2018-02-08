@@ -108,7 +108,6 @@ navigationPage responses currentRole (ExercisePage Compression) =
   runExerciseForNavigationPage leftRightCentreExercise responses currentRole -}
 
 navigationPage responses currentRole TestPage = do
-  testOurDynSvg
   (requests,sounds,navUnit) <- testWidget responses
   return (requests,sounds,SplashPage <$ navUnit)
 
