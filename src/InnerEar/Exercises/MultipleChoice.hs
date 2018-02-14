@@ -236,7 +236,8 @@ answerSelected a s | a /= correctAnswer s && attemptsRemaining s > 1 = s {
       }
 
 answerSelected a s | a /= correctAnswer s && attemptsRemaining s <= 1 = toExploreMode $ s {
-      answerButtonModes = replaceAtSameIndex a (allAnswers s) IncorrectActivated (answerButtonModes s),
+      answerButtonModes = replaceAtSameIndex a (allAnswers s) IncorrectActivated $
+              replaceAtSameIndex (correctAnswer s) (allAnswers s) CorrectMissed (answerButtonModes s),
       scoreMap = markIncorrect a (correctAnswer s) $ scoreMap s
       }
 
@@ -252,3 +253,4 @@ toExploreMode s = s {
     f IncorrectActivated = IncorrectActivated
     f Correct = Correct
     f CorrectMissed = CorrectMissed
+
