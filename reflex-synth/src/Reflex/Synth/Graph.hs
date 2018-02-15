@@ -4,7 +4,11 @@ data NodeType = Oscillator | Gain | Destination deriving (Show)
 
 type Connection = Int
 
-data Node = Node NodeType [Connection] deriving (Show)
+data Node = Node {
+  nodeType :: NodeType,
+  internalConnections :: [Connection],
+  externalConnections :: [Connection]
+  } deriving (Show)
 
 data Graph a = Graph {
   nodes :: [Node],
@@ -27,39 +31,39 @@ instance Monad Graph where
     }
     where y = f (supplement x)
 
--- PROBLEM below: when nodes are combined how do we know if references in ys 
--- are to nodes within ys or to nodes within xs?
-
 combineNodes :: [Node] -> [Node] -> [Node]
-combineNodes xs ys = xs ++ fmap f ys
-  where f (Node t cs) = Node t $ fmap (+ (length xs)) cs 
+combineNodes xs ys = xs ++ fmap (translateRelativeConnections (length xs)) ys
+
+translateRelativeConnections :: Int -> Node -> Node
+translateRelativeConnections n xs = xs { internalConnections = [], externalConnections = externalConnections xs ++ y}
+  where y = fmap (+ n) $ internalConnections xs
 
 combineDurations :: Maybe Double -> Maybe Double -> Maybe Double
 combineDurations Nothing Nothing = Nothing
 combineDurations Nothing (Just x) = Just x
 combineDurations (Just x) Nothing = Just x
-combineDurations (Just x) (Just y) = Just (max x y) 
+combineDurations (Just x) (Just y) = Just (max x y)
 
 oscillator :: Graph Connection
-oscillator = Graph { 
-  nodes = [Node Oscillator []],
+oscillator = Graph {
+  nodes = [Node Oscillator [] []],
   duration = Nothing,
   supplement = 0
-  } 
- 
+  }
+
 gain :: Connection -> Graph Connection
 gain src = Graph {
-  nodes = [Node Gain [src]],
+  nodes = [Node Gain [] [src]],
   duration = Nothing,
   supplement = 0
   }
 
 destination :: Connection -> Graph ()
 destination src = Graph {
-  nodes = [Node Destination [src]],
+  nodes = [Node Destination [] [src]],
   duration = Nothing,
   supplement = ()
-  } 
+  }
 
 setDuration :: Maybe Double -> Graph ()
 setDuration x = Graph {
@@ -69,5 +73,4 @@ setDuration x = Graph {
   }
 
 test :: Graph ()
-test = oscillator >>= destination
-
+test = oscillator >>= gain >>= destination
