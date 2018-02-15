@@ -32,10 +32,10 @@ instance Monad Graph where
     where y = f (supplement x)
 
 combineNodes :: [Node] -> [Node] -> [Node]
-combineNodes xs ys = xs ++ fmap (translateRelativeConnections (length xs)) ys
+combineNodes xs ys = xs ++ fmap (translateExternalConnections (length xs)) ys
 
-translateRelativeConnections :: Int -> Node -> Node
-translateRelativeConnections n xs = xs { internalConnections = [], externalConnections = externalConnections xs ++ y}
+translateExternalConnections :: Int -> Node -> Node
+translateExternalConnections n xs = xs { internalConnections = y ++ externalConnections xs, externalConnections = []}
   where y = fmap (+ n) $ internalConnections xs
 
 combineDurations :: Maybe Double -> Maybe Double -> Maybe Double
@@ -74,3 +74,16 @@ setDuration x = Graph {
 
 test :: Graph ()
 test = oscillator >>= gain >>= destination
+
+test2 :: Graph ()
+test2 = do
+  x <- oscillator
+  y <- gain x
+  destination y
+
+-- test (above) doesn't work, but test2 does
+-- the difference between test and test2 has to do with the associativity of the >>= operator (left associative)
+-- so test = (oscillator >>= gain) >>= destination
+-- but test2 = oscillator >>= (\x -> gain x >>= destination)
+-- the model here violates one of the monad laws connected with associativity
+ 
