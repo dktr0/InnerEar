@@ -25,8 +25,8 @@ type Config = Int -- gain value for attenuated sounds
 configs :: [Config]
 configs = [-20,-30,-40,-50,-60,-70,-80,-90,-100,-110]
 
-configMap::Map String Config
-configMap = fromList $ fmap (\x-> (show x ++ " dB",x)) configs
+configMap::Map Int (String, Config)
+configMap = fromList $ zip [(0::Int),1..]$ fmap (\x-> (show x ++ " dB",x)) configs
 
 data Answer = Answer Bool deriving (Eq,Ord,Data,Typeable)
 
@@ -57,16 +57,16 @@ displayEval = displayMultipleChoiceEvaluationGraph' "Session Performance" "" ans
 generateQ :: Config -> [Datum Config [Answer] Answer (Map Answer Score)] -> IO ([Answer],Answer)
 generateQ _ _ = randomMultipleChoiceQuestion answers
 
--- For dynRadioConfigWidget
+
 sourcesMap:: Map Int (String,Source)
-sourcesMap = fromList $ zip [0::Int,1..] [("Pink noise",NodeSource (BufferNode $ File "pinknoise.wav") (Just 2)), ("White noise", NodeSource (BufferNode $ File "whitenoise.wav") (Just 2))]
+sourcesMap = fromList $ zip [0::Int,1..] [("Pink noise",NodeSource (BufferNode $ File "pinknoise.wav") (Just 2)), ("White noise", NodeSource (BufferNode $ File "whitenoise.wav") (Just 2)), ("Load a soundfile", NodeSource (BufferNode $ LoadedFile "thresholdOfSilenceExercise" (PlaybackParam 0 1 False)) Nothing)]
 
 thresholdOfSilenceExercise :: MonadWidget t m => Exercise t m Int [Answer] Answer (Map Answer Score)
 thresholdOfSilenceExercise = multipleChoiceExercise
   1
   answers
   instructions
-  (dynRadioConfigWidget "thersholdOfSilence" sourcesMap 0 configMap)
+  (configWidget "thresholdOfSilenceExercise" sourcesMap 0 "Attenuation:  " configMap) -- (dynRadioConfigWidget "fiveBandBoostCutExercise" sourcesMap 0  configMap)
   renderAnswer
   ThresholdOfSilence
   (-20)

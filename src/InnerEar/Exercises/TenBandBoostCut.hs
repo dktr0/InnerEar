@@ -2,6 +2,7 @@
 
 module InnerEar.Exercises.TenBandBoostCut (tenBandBoostCutExercise) where
 
+import Control.Monad (liftM)
 import Reflex
 import Reflex.Dom
 import Data.Map
@@ -84,16 +85,25 @@ convertBands LowBands = take 5 answers
 generateQ :: Config -> [Datum Config [Answer] Answer (Map Answer Score)] -> IO ([Answer],Answer)
 generateQ config _ = randomMultipleChoiceQuestion (convertBands $ fst config)
 
+sourcesMap:: Map Int (String,Source)
+sourcesMap = fromList $ zip [0::Int,1..] [("Pink noise",NodeSource (BufferNode $ File "pinknoise.wav") (Just 2)), ("White noise", NodeSource (BufferNode $ File "whitenoise.wav") (Just 2)), ("Load a soundfile", NodeSource (BufferNode $ LoadedFile "tenBandBoostCutExercise" (PlaybackParam 0 1 False)) Nothing)]
+
+-- temporary until config widget is changed to take a list/map of config parameters that can be changed
 tenBandsConfigWidget::MonadWidget t m => Config -> m (Dynamic t Config,  Dynamic t Source,  Event t (Maybe a)) -- dyn config, source, and event maybe answer for playing reference sound (config widget
 tenBandsConfigWidget c =  elClass "div" "configWidget" $ do
-  config <- elClass "div" "radioConfigWidget" $ do
+  config <- elClass "div" "tenBandsConfigWidget" $ do
     text "Spectrum Range: "
     (bands,_) <- safeDropdown (fst c) (fromList $ fmap (\x->(x,show x)) frequencyBands) (constDyn empty) never
-    (boost,_) <- radioWidget (fromList $ fmap (\x->(show x ++ " dB", x)) boostAmounts) (Just $ snd c)
-    combineDyn (\x y-> (x, maybe (snd c) id y ) ) bands  boost
-  let sources = (fromList $ zip [0::Int,1] $ fmap (\(x,y)-> (x, ((flip NodeSource) (Just 2) . BufferNode $ File y))) [("Pink noise","pinknoise.wav"),("White noise","whitenoise.wav")])
-  (source,playReference) <- sourceWidget'' ("tenBandsExercise") sources 0
+    let boostMap = fromList $ zip [(0::Int),1..] boostAmounts
+    let invertedBoostMap = fromList $ zip boostAmounts [(0::Int),1..]
+    let initialVal = maybe 0 id $ Data.Map.lookup  (snd c) invertedBoostMap
+    text "Boost/Cut amount: "
+    boost <- liftM  _dropdown_value $ dropdown initialVal (constDyn $ fmap show boostMap) def
+    boost' <- mapDyn (maybe 10 id . (flip Data.Map.lookup) boostMap) boost
+    combineDyn (, ) bands  boost'
+  (source,playReference) <- sourceWidget "tenBandBoostCutExercise" sourcesMap 0
   return (config, source, Nothing <$ playReference)
+
 
 tenBandBoostCutExercise :: MonadWidget t m => Exercise t m Config [Answer] Answer (Map Answer Score)
 tenBandBoostCutExercise = multipleChoiceExercise
