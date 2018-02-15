@@ -22,8 +22,8 @@ type Config = Double -- representing compression ratio, i.e. 2 = 2:1 compression
 configs :: [Config]
 configs = [20,10,5,2,1.5]
 
-configMap:: Map String Config
-configMap = fromList $ fmap (\x-> (show x++":1", x)) configs
+configMap:: Map Int (String, Config)
+configMap = fromList $ zip [(0::Int),1..] $ fmap (\x-> (show x++":1", x)) configs
 
 data Answer = Answer Bool deriving (Eq,Ord,Data,Typeable)
 
@@ -50,12 +50,17 @@ instructions :: MonadWidget t m => m ()
 instructions = el "div" $ do
   elClass "div" "instructionsText" $ text "In this exercise, a reference sound is either compressed or not and your task is to tell whether or not it has been compressed. The threshold of the compressor is set at -20 dBFS, and you can configure the exercise to work with smaller and smaller ratios for increased difficulty. Note that you must provide a source sound to use for the exercise (click on Browse to the right). Short musical excerpts that consistently have strong levels are recommended."
 
+
+sourcesMap:: Map Int (String,Source)
+sourcesMap = singleton 0 ("Load a soundfile", NodeSource (BufferNode $ LoadedFile "compressionExercise" (PlaybackParam 0 1 False)) Nothing)
+
+
 compressionExercise :: MonadWidget t m => Exercise t m Config [Answer] Answer (Map Answer Score)
 compressionExercise = multipleChoiceExercise
   1
   answers
   instructions
-  (dynRadioConfigWidget "compressionExercise" empty 0 configMap)
+  (configWidget "compressionExercise" sourcesMap 0 "Compression ratio:  " configMap) -- (dynRadioConfigWidget "fiveBandBoostCutExercise" sourcesMap 0  configMap)
   renderAnswer
   Compression
   (20)

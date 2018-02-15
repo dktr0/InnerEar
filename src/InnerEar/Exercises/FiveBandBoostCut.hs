@@ -60,7 +60,7 @@ fiveBandBoostCutExercise = multipleChoiceExercise
   3
   answers
   (return ())
-  (configWidget "fiveBandBoostCutExercise" sourcesMap 0 configMap) -- (dynRadioConfigWidget "fiveBandBoostCutExercise" sourcesMap 0  configMap)
+  (configWidget "fiveBandBoostCutExercise" sourcesMap 0 "Boost amount: " configMap) -- (dynRadioConfigWidget "fiveBandBoostCutExercise" sourcesMap 0  configMap)
   renderAnswer
   FiveBandBoostCut
   (configs!!0)

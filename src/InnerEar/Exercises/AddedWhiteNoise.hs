@@ -22,8 +22,8 @@ type Config = Double -- representing level of attenuation for added white noise
 configs :: [Config]
 configs = [-10,-20,-30,-40,-50,-60,-65,-70,-75,-80]
 
-configMap:: Map String Config
-configMap = fromList $ fmap (\x-> (show x++" dB", x)) configs
+configMap:: Map Int (String,Config)
+configMap = fromList $ zip [0::Int,1..] $ fmap (\x-> (show x++" dB", x)) configs
 
 data Answer = Answer Bool deriving (Eq,Ord,Data,Typeable)
 
@@ -52,12 +52,16 @@ instructions = el "div" $ do
   elClass "div" "instructionsText" $ text "Note: the exercise will work right away with a sine wave as a reference tone (to which noise is or is not added), however it is strongly recommended that the exercise be undertaken with recorded material such as produced music, field recordings, etc. Click on the sound source menu to load a sound file from the local filesystem."
 
 
+
+sourcesMap:: Map Int (String,Source)
+sourcesMap = fromList $ [(0,("300hz sine wave", NodeSource (OscillatorNode $ Oscillator Sine 440 0) (Just 2))), (1,("Load a soundfile", NodeSource (BufferNode $ LoadedFile "addedWhiteNoiseExercise" (PlaybackParam 0 1 False)) Nothing))]
+
 addedWhiteNoiseExercise :: MonadWidget t m => Exercise t m Config [Answer] Answer (Map Answer Score)
 addedWhiteNoiseExercise = multipleChoiceExercise
   1
   [Answer False,Answer True]
   instructions
-  (dynRadioConfigWidget "addedWhiteNoiseExercise" (singleton 1 ("300hz Sine Wave", NodeSource (OscillatorNode $ Oscillator Sine 440 0) (Just 2))) 1 configMap)
+  (configWidget "addedWhiteNoiseExercise" sourcesMap 0 "Noise level (dB): " configMap)
   renderAnswer
   AddedWhiteNoise
   (-10)

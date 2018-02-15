@@ -294,7 +294,7 @@ function loadAndDrawBuffer(inputId, canvas){
       })
 
     } else {
-      alert('Please select a sound file to load')
+      // alert('Please select a sound file to load')
     }
   } else {  // no element 'inputId'
     console.log('Could not find dom element with id: '+inputId)

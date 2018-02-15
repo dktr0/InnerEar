@@ -64,23 +64,23 @@ userMediaWidget inputId isEnabled = do
     return (s, loadEv)
 
 
-sourceWidget:: MonadWidget t m => String -> m (Dynamic t Source, Event t ())
-sourceWidget inputId = elClass "div" "sourceWidget" $ mdo
-  let staticSources = M.fromList $ zip [0::Int,1] $ fmap ((flip NodeSource) (Just 2) . BufferNode) [File "pinknoise.wav",File "whitenoise.wav"]
-  let ddMap = constDyn $  M.fromList $ zip [(0::Int)..] ["Pink noise", "White noise", "Load a sound file"]
-  -- Source selection dropdown
-  ddVal  <- elClass "div" "soundSourceDropdown" $ do
-    text "Sound source: "
-    let ddConfig = DropdownConfig (2 <$ loadEv) (constDyn M.empty)
-    dd <- dropdown 0 ddMap  ddConfig -- & dropdownConfig_attributes .~ (constDyn $ M.singleton "class" "soundSourceDropdown")
-    return $ _dropdown_value dd
-  isUserSource <- mapDyn (==2) ddVal
-  playReference <- elClass "div" "playReference" $ button "Listen to reference sound"
-  (userFileSource, loadEv) <- userMediaWidget "inputId" isUserSource
-  ddMapVal <- mapDyn (\x-> M.insert 2 x staticSources) userFileSource
-  source <- combineDyn (\i m-> maybe (NodeSource (BufferNode $ File "pinknoise.wav") $ Just 2) id $ M.lookup i m) ddVal ddMapVal
-  performEvent $ fmap liftIO $ fmap (const $ stopNodeByID inputId) $ playReference
-  return (source, playReference)
+-- sourceWidget:: MonadWidget t m => String -> m (Dynamic t Source, Event t ())
+-- sourceWidget inputId = elClass "div" "sourceWidget" $ mdo
+--   let staticSources = M.fromList $ zip [0::Int,1] $ fmap ((flip NodeSource) (Just 2) . BufferNode) [File "pinknoise.wav",File "whitenoise.wav"]
+--   let ddMap = constDyn $  M.fromList $ zip [(0::Int)..] ["Pink noise", "White noise", "Load a sound file"]
+--   -- Source selection dropdown
+--   ddVal  <- elClass "div" "soundSourceDropdown" $ do
+--     text "Sound source: "
+--     let ddConfig = DropdownConfig (2 <$ loadEv) (constDyn M.empty)
+--     dd <- dropdown 0 ddMap  ddConfig -- & dropdownConfig_attributes .~ (constDyn $ M.singleton "class" "soundSourceDropdown")
+--     return $ _dropdown_value dd
+--   isUserSource <- mapDyn (==2) ddVal
+--   playReference <- elClass "div" "playReference" $ button "Listen to reference sound"
+--   (userFileSource, loadEv) <- userMediaWidget "inputId" isUserSource
+--   ddMapVal <- mapDyn (\x-> M.insert 2 x staticSources) userFileSource
+--   source <- combineDyn (\i m-> maybe (NodeSource (BufferNode $ File "pinknoise.wav") $ Just 2) id $ M.lookup i m) ddVal ddMapVal
+--   performEvent $ fmap liftIO $ fmap (const $ stopNodeByID inputId) $ playReference
+--   return (source, playReference)
 
 
 sourceWidget'':: MonadWidget t m => String -> M.Map Int (String,Source) -> Int -> m (Dynamic t Source, Event t ())
