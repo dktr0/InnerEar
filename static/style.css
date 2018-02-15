@@ -178,7 +178,16 @@ button.correctButton{
 .svgBarContainer {
   width: 50%;
   background-color: hsl(120,100%,80%);
+}
 
+.svgBarContainerCurrent{
+  width: 30%;
+  background-color: hsl(120,100%,80%);
+}
+
+.svgBarContainerHist{
+  width: 30%;
+  background-color: orange;
 }
 
 .svgBarContainerFiveBand {
@@ -215,6 +224,24 @@ button.correctButton{
   position: relative;
   left: 24%;
   top: 9%;
+}
+
+.svgFaintedLineHist{
+  width: 1px;
+  height: 5px;
+ background-color: #2F4F4F;
+ position: relative;
+ left: 40%;
+ top: 9%;
+}
+
+.svgFaintedLineCurrent {
+  width: 1px;
+  height: 5px;
+ background-color: #2F4F4F;
+ position: relative;
+ left: 23%;
+ top: 9%;
 }
 
 .svgFaintedLineFiveBand {
@@ -259,6 +286,24 @@ right:80%;
    color: hsl(120,100%,80%);
    text-align: center;
    font-size: 70%;
+}
+
+.scoreLabelCurrent
+{
+   color: hsl(120,100%,80%);
+   position: relative;
+   right: 15%;
+  top: 12px;
+   text-align: center;
+   font-size: 70%;
+}
+
+.scoreLabelHist {
+   color: hsl(120,100%,80%);
+   text-align: center;
+   font-size: 70%;
+  position: relative;
+  left: 15%;
 }
 
 .emptyScoreLabel{
@@ -486,6 +531,16 @@ input.soundSourceDropdown{
   margin-left: -10%;
   margin-right: -10%;
 }
+
+.scoreBarWrapperHist {
+    display: inline-block;
+  position: relative;
+  bottom:50%;
+  width: 50%;
+  margin-left: -10%;
+  margin-right: -10%;
+}
+
 
 .scoreBarWrapperFiveBand {
   display: inline-block;

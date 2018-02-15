@@ -50,3 +50,21 @@ scoreBar (class1,class2,class3, class4) key score  = elClass "div" class1 $ do
   faintedXaxis "faintedXaxis"
   xLabel class4 key
   mapDyn questionsAsked score' >>= dynCountLabel (constDyn "countLabel")
+
+  -- A historical dynamic bar for (Maybe Score)
+scoreBarH :: MonadWidget t m => (String,String,String, String, String, String) -> String -> Dynamic t (Maybe Score) -> m ()
+scoreBarH (class1,class2,class3, class4, class5, class6) key currentScore = elClass "div" class1 $ do
+  bool <-  mapDyn (maybe False (const True)) currentScore
+  currentScore' <-  mapDyn (maybe (Score 0 0 0) id) currentScore -- Dynamic t Int
+  let histScore = currentScore
+  histScore' <- mapDyn (maybe (Score 0 0 0) id) histScore -- Dynamic t Int
+  currentPercent <- mapDyn asPercent currentScore'
+  histPercent <- mapDyn asPercent histScore'
+  let b = dynScoreLabel (constDyn "scoreLabelCurrent") currentPercent >> dynScoreLabel (constDyn "scoreLabelHist") histPercent >> dynBarCSS' currentPercent (constDyn 100) (constDyn class2) >> dynBarCSS' histPercent (constDyn 100) (constDyn class3)
+  flippableDyn (return ()) b bool
+  let b2 = emptyScoreLabel >> faintedLineCSS class4 >> faintedLineCSS class5 >> dynBarCSS' currentPercent (constDyn 100) (constDyn class2) >> dynBarCSS' histPercent (constDyn 100) (constDyn class3)
+  flippableDyn b2 (return ()) bool
+  faintedLineToAdjustGraph "faintedLineToAdjustGraph"
+  faintedXaxis "faintedXaxis"
+  xLabel class6 key
+  mapDyn questionsAsked currentScore' >>= dynCountLabel (constDyn "countLabel")
