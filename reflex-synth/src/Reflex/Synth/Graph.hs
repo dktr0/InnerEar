@@ -1,89 +1,52 @@
 module Reflex.Synth.Graph where
 
-data NodeType = Oscillator | Gain | Destination deriving (Show)
+data NodeType = Oscillator | Gain deriving (Show)
 
-type Connection = Int
+data Graph =
+  Source NodeType |
+  Sink Graph |
+  SourceSink NodeType Graph |
+  EmptyGraph
+  deriving (Show)
 
-data Node = Node {
-  nodeType :: NodeType,
-  internalConnections :: [Connection],
-  externalConnections :: [Connection]
-  } deriving (Show)
+combineGraphs :: Graph -> Graph -> Graph
+combineGraphs x@(Sink _) y = error $ "Sink can't be first: " ++ show x ++ " : " ++ show y
+combineGraphs x y@(Source _) = error $ "Source can't be second: " ++ show x ++ " : " ++ show y
+combineGraphs x (SourceSink t y) = SourceSink t (combineGraphs x y)
+combineGraphs x (Sink y) = Sink (combineGraphs x y)
+combineGraphs x EmptyGraph = x
 
-data Graph a = Graph {
-  nodes :: [Node],
-  duration :: Maybe Double,
+data Synth a = Synth {
+  graph :: Graph,
   supplement :: a
-  } deriving (Show)
-
-instance Functor Graph where
-  fmap f (Graph ns d s) = Graph ns d (f s)
-
-instance Applicative Graph where
-  pure x = Graph [] Nothing x
-  (Graph ns1 d1 f) <*> (Graph ns2 d2 x) = Graph (combineNodes ns1 ns2) (combineDurations d1 d2) $ f x
-
-instance Monad Graph where
-  x >>= f = Graph {
-    nodes = combineNodes (nodes x) (nodes y),
-    duration = combineDurations (duration x) (duration y),
-    supplement = supplement y
-    }
-    where y = f (supplement x)
-
-combineNodes :: [Node] -> [Node] -> [Node]
-combineNodes xs ys = xs ++ fmap (translateExternalConnections (length xs)) ys
-
-translateExternalConnections :: Int -> Node -> Node
-translateExternalConnections n xs = xs { internalConnections = y ++ externalConnections xs, externalConnections = []}
-  where y = fmap (+ n) $ internalConnections xs
-
-combineDurations :: Maybe Double -> Maybe Double -> Maybe Double
-combineDurations Nothing Nothing = Nothing
-combineDurations Nothing (Just x) = Just x
-combineDurations (Just x) Nothing = Just x
-combineDurations (Just x) (Just y) = Just (max x y)
-
-oscillator :: Graph Connection
-oscillator = Graph {
-  nodes = [Node Oscillator [] []],
-  duration = Nothing,
-  supplement = 0
   }
+  deriving (Show)
 
-gain :: Connection -> Graph Connection
-gain src = Graph {
-  nodes = [Node Gain [] [src]],
-  duration = Nothing,
-  supplement = 0
-  }
+instance Functor Synth where
+  fmap f x = x { supplement = f (supplement x) }
 
-destination :: Connection -> Graph ()
-destination src = Graph {
-  nodes = [Node Destination [] [src]],
-  duration = Nothing,
-  supplement = ()
-  }
+instance Applicative Synth where
+  pure x = Synth { graph = EmptyGraph, supplement = x }
+  (Synth g1 f) <*> (Synth g2 x) = Synth { graph = combineGraphs g1 g2, supplement = f x }
 
-setDuration :: Maybe Double -> Graph ()
-setDuration x = Graph {
-  nodes = [],
-  duration = x,
-  supplement = ()
-  }
+instance Monad Synth where
+  (Synth g1 a) >>= f = Synth { graph = combineGraphs g1 g2, supplement = b}
+    where (Synth g2 b) = f a
 
-test :: Graph ()
-test = oscillator >>= gain >>= destination
+oscillator :: Synth ()
+oscillator = Synth { graph = Source Oscillator, supplement = () }
 
-test2 :: Graph ()
+gain :: Synth ()
+gain = Synth { graph = SourceSink Gain EmptyGraph, supplement = () }
+
+destination :: Synth ()
+destination = Synth { graph = Sink EmptyGraph, supplement = () }
+
+test :: Synth ()
+test = oscillator >> gain >> destination
+
+test2 :: Synth ()
 test2 = do
-  x <- oscillator
-  y <- gain x
-  destination y
-
--- test (above) doesn't work, but test2 does
--- the difference between test and test2 has to do with the associativity of the >>= operator (left associative)
--- so test = (oscillator >>= gain) >>= destination
--- but test2 = oscillator >>= (\x -> gain x >>= destination)
--- the model here violates one of the monad laws connected with associativity
- 
+  oscillator
+  gain
+  destination
