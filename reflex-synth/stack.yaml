@@ -8,6 +8,9 @@ setup-info:
         url: http://ghcjs.tolysz.org/lts-6.30-9006030.tar.gz
         sha1: 2371e2ffe9e8781808b7a04313e6a0065b64ee51
 
+build:
+  haddock-hyperlink-source: false
+
 packages:
 - '.'
 
