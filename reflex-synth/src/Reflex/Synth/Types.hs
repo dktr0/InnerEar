@@ -57,8 +57,8 @@ data OscillatorType = Sawtooth | Sine | Square deriving (Show, Read,Eq)
 data Oscillator = Oscillator OscillatorType Double Double deriving (Read,Show,Eq) --double params are freq and gain (in dB) (respectively)
 
 data PlaybackParam = PlaybackParam{
-  startTime::Double,
-  endTime::Double,
+  start::Double,    -- portion through the buffer that playback starts
+  end::Double,
   loop::Bool
 } deriving (Read, Show, Eq)
 
@@ -179,6 +179,13 @@ getLastNode (WebAudioGraph n) = n
 getLastNode (WebAudioGraph' _ n) = getLastNode n
 getLastNode (WebAudioGraph'' _ n) = getLastNode n
 
+getPlaybackParam::Source -> Maybe PlaybackParam
+getPlaybackParam (NodeSource (BufferNode (LoadedFile _ x)) _) = Just x
+getPlaybackParam _ = Nothing
+
+isLoadedFile::Source -> Bool
+isLoadedFile (NodeSource (BufferNode (LoadedFile _ _)) _) = True
+isLoadedFile _ = False
 
 getDestination :: IO WebAudioNode
 getDestination = do

@@ -26,7 +26,7 @@ foreign import javascript safe " $r=createCompressorNode($1, $2, $3, $4, $5)" cr
 
 
 foreign import javascript safe "overlappedDictionary[$1]=$2" adddToOverlappedDictionary:: JSString -> JSVal -> IO ()
-foreign import javascript safe "loadUserSoundFile()" loadUserSoundFile :: IO ()
+
 
 foreign import javascript safe "$r= createMediaNode($1)" createMediaNode :: JSString -> IO JSVal
 
@@ -49,7 +49,6 @@ foreign import javascript safe "$r = createScriptProcessorNode($1)" createScript
 foreign import javascript safe "$r = createClipAtWaveShaper($1)" createClipAtWaveShaper :: JSVal -> IO JSVal
 foreign import javascript safe "$r = createConvolverNode($1)" createConvolverNode:: JSString -> IO JSVal
 
-foreign import javascript safe "setAudioSrc($1)" setAudioSrc :: JSString -> IO ()
 
 foreign import javascript safe "$r = ___ac.currentTime" getCurrentTime :: IO Double
 
@@ -76,7 +75,8 @@ foreign import javascript safe "playMediaNode($1)" playMediaNode:: JSString -> I
 
 
 foreign import javascript safe "loadAndDrawBuffer($1,$2)" loadAndDrawBuffer :: JSString -> JSVal -> IO ()
+foreign import javascript safe "drawLoadedFile($1, $2, $3, $4)" drawLoadedFile:: JSString -> JSVal -> JSVal -> JSVal -> IO ()
+foreign import javascript safe "drawStartEnd($1,$2,$3)" drawStartEnd :: JSVal -> JSVal -> JSVal -> IO ()  -- Start, end, canvas
 
 -- takes 'canvas' html elements - us 'toJSVal on the html element'
-foreign import javascript safe "renderAudioWaveform($1, $2,0)" renderAudioWaveform :: JSString -> JSVal -> IO()
 foreign import javascript safe "drawSineWave($1)" drawSineWave :: JSVal -> IO ()

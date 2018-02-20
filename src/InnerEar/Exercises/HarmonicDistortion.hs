@@ -22,8 +22,8 @@ type Config = Double -- representing threshold of clipping, and inverse of post-
 configs :: [Config]
 configs = [-12,-6,-3,-2,-1,-0.75,-0.5,-0.25,-0.1,-0.05]
 
-configMap:: Map String Config
-configMap = fromList $ fmap (\x-> (show x++" dB", x)) configs
+configMap:: Map Int (String,Config)
+configMap = fromList $ zip [0::Int,1..] $ fmap (\x-> (show x++" dB", x)) configs
 
 data Answer = Answer Bool deriving (Eq,Ord,Data,Typeable)
 
@@ -54,12 +54,17 @@ instructions = el "div" $ do
   elClass "div" "instructionsText" $ text "In this exercise, each question will sound either as a pure tone or as a clipped version of that tone."
   elClass "div" "instructionsText" $ text "You can configure the exercise to have different levels of clipping. For example, at the -10 dB setting any clipped sound will be clipped 10 dB below its peak (extreme clipping) resulting in a markedly brighter, buzzier sound. At the -0.5 dB setting, the signal will be clipped just 0.5 dB below its peak, resulting in a more subtle difference from the unclipped alternative."
 
+
+
+sourcesMap:: Map Int (String,Source)
+sourcesMap = fromList $ [(0,("300hz sine wave", NodeSource (OscillatorNode $ Oscillator Sine 440 0) (Just 2)))]
+
 harmonicDistortionExercise :: MonadWidget t m => Exercise t m Config [Answer] Answer (Map Answer Score)
 harmonicDistortionExercise = multipleChoiceExercise
   1
   [Answer False,Answer True]
   instructions
-  (sineSourceConfig "harmonicDistortionExercise" configMap)
+  (configWidget "harmonicDistortionExercise" sourcesMap 0 "Clip level: " configMap) -- (dynRadioConfigWidget "fiveBandBoostCutExercise" sourcesMap 0  configMap)
   renderAnswer
   HarmonicDistortion
   (-12)

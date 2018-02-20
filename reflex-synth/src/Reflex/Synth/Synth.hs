@@ -206,19 +206,22 @@ bufferInput s = elClass "div" "bufferInput" $ do
   performEvent_ $ fmap (liftIO . const (F.loadBuffer $ toJSString s)) ev
   return ev
 
-bufferInput'::MonadWidget t m => String -> m (Event t ())
-bufferInput' s = do
-  let attrs = FileInputConfig $ constDyn $ M.fromList $ zip ["accept","id"] ["audio/*",s++"Input"]
-  input <- fileInput attrs
-  let ev = (() <$) $ updated $ _fileInput_value input
-  performEvent_ $ fmap (liftIO . const (F.setAudioSrc $ toJSString s)) ev
-  return ev
+
 
 loadAndDrawBuffer:: String -> HTMLCanvasElement -> IO()
 loadAndDrawBuffer inputId canvas = do
   let el' = unHTMLCanvasElement canvas
   F.loadAndDrawBuffer (toJSString inputId) el'
 
+  -- Note: - for LoadedFile BufferNode sources, the first argument to LoadedFile (a string)
+  --            should correspond to the 'id' attribute of the input element.
+  --           - perhaps this should be rethought to be less coupled...
+drawSource :: Source -> HTMLCanvasElement -> IO ()
+drawSource (NodeSource (BufferNode (LoadedFile identifier (PlaybackParam _ _ _))) _) canvas = loadAndDrawBuffer identifier canvas
+drawSource _ _ = return ()
+
+drawStartEnd :: PlaybackParam -> HTMLCanvasElement -> IO ()
+drawStartEnd (PlaybackParam s e _) c = F.drawStartEnd (pToJSVal s) (pToJSVal e) (unHTMLCanvasElement c)
 
 
 createAudioElement::MonadWidget t m => String -> Dynamic t (M.Map String String) -> m (String)
@@ -245,7 +248,7 @@ holdAndConnectSound s ev = do
 
 
 
--- @Might want this again at some point..
+--  @ Might want this again at some point..
 --updatableSound::MonadWidget t m => Dynamic t WebAudioGraph -> Dynamic t WebAudioGraph -> m (Dynamic t  WebAudioGraph)
 --updatableSound first next = do
 --  x<-combineDyn (,) first next
@@ -309,17 +312,6 @@ createConvolverNode::Buffer -> IO WebAudioNode
 createConvolverNode (File s) = F.createConvolverNode (toJSString s) >>= return . WebAudioNode (ConvolverNode $ File s)
 createConvolverNode (LoadedFile _ _) = error "does not yet support loaded file for convolver*"
 
---renderAudioWaveform:: G.HTMLCanvasElement -> G.HTMLCanvasElement -> IO()
---renderAudioWaveform l r= do
---  let l' = G.unHTMLCanvasElement l
---  let r' = G.unHTMLCanvasElement  r
---  F.renderAudioWaveform l' r'
-
-
-renderAudioWaveform:: String -> HTMLCanvasElement -> IO ()
-renderAudioWaveform inputId el = do
-  let el' = unHTMLCanvasElement el
-  F.renderAudioWaveform (toJSString inputId) el'
 
 drawSineWave:: HTMLCanvasElement  -> IO ()
 drawSineWave el  = F.drawSineWave (unHTMLCanvasElement el)

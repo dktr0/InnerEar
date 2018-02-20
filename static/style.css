@@ -181,9 +181,20 @@ button.correctButton{
   background-color: hsl(120,100%,80%);
 }
 
-.svgBarContainerFiveBand {
+.svgBarContainerCurrent{
   width: 30%;
   background-color: hsl(120,100%,80%);
+}
+
+.svgBarContainerHist{
+  width: 30%;
+  background-color: orange;
+}
+
+.svgBarContainerFiveBand {
+  width: 90%;
+  background-color: hsl(120,100%,80%);
+
 }
 
 .svgBarContainerTenBand {
@@ -203,39 +214,62 @@ button.correctButton{
   width: 1px;
   height: 150px;
   position: relative;
-  right: 20%;
+  right: 24%;
+  top: 9%;
 }
 
 .svgFaintedLine {
    width: 1px;
    height: 5px;
-   background-color: #2F4F4F;
+  background-color: #2F4F4F;
   position: relative;
   left: 24%;
+  top: 9%;
+}
+
+.svgFaintedLineHist{
+  width: 1px;
+  height: 5px;
+ background-color: #2F4F4F;
+ position: relative;
+ left: 40%;
+ top: 9%;
+}
+
+.svgFaintedLineCurrent {
+  width: 1px;
+  height: 5px;
+ background-color: #2F4F4F;
+ position: relative;
+ left: 23%;
+ top: 9%;
 }
 
 .svgFaintedLineFiveBand {
    width: 1px;
    height: 5px;
-   background-color: #2F4F4F;
+  background-color: #2F4F4F;
   position: relative;
-  left: 15%;
+  left: 50%;
+  top: 9%;
 }
 
 .svgFaintedLineTenBand {
    width: 1px;
    height: 5px;
-   background-color: #2F4F4F;
+  background-color: #2F4F4F;
   position: relative;
   left: 24%;
+  top: 9%;
 }
 
  .faintedXaxis {
-    width : 80%;
-    height: 1%;
-    background-color: #2F4F4F;
-   position: relative;
-   top: 20%;
+   /*width : 5%;*/
+  width : 100%;
+  height: 1px;
+  background-color: #2F4F4F;
+  position: relative;
+  bottom: 19px;
 
 
   }
@@ -248,33 +282,57 @@ right:80%;
   top:  15%;
 }
 
-.scoreLabel {
+.scoreLabel
+{
    color: hsl(120,100%,80%);
    text-align: center;
    font-size: 70%;
- }
+}
+
+.scoreLabelCurrent
+{
+   color: hsl(120,100%,80%);
+   position: relative;
+   right: 15%;
+  top: 12px;
+   text-align: center;
+   font-size: 70%;
+}
+
+.scoreLabelHist {
+   color: hsl(120,100%,80%);
+   text-align: center;
+   font-size: 70%;
+  position: relative;
+  left: 15%;
+}
 
 .emptyScoreLabel{
   color:transparent;
      font-size: 70%;
-
 }
 
 .xLabel {
    color: hsl(120,100%,80%);
    font-size:70%;
    text-align: center;
+   position: relative;
+   bottom: 8px;
 }
 
 .xLabelFiveBand {
    color: hsl(120,100%,80%);
    font-size:50%;
    text-align: center;
+    position: relative;
+   bottom: 8px;
 }
 .xLabelTenBand {
    color: hsl(120,100%,80%);
    font-size:80%;
    text-align: center;
+   position: relative;
+   bottom: 8px;
 
 }
 
@@ -282,8 +340,8 @@ right:80%;
   color: hsl(120,100%,80%);
   font-size: 70%;
   text-align: center;
-position: relative;
-  top:4%;
+  position: relative;
+  bottom:1px;
 }
 
 
@@ -295,6 +353,7 @@ position: relative;
     text-align: center;
   position: relative;
   bottom: 67%;
+
 }
 
 
@@ -303,8 +362,9 @@ position: relative;
    width: 15px;
    height: 10%;
    position: relative;
-   top: 12%;
+   top: 13%;
   left: 4%;
+
 }
 
 .percentageMainLabel {
@@ -314,6 +374,7 @@ position: relative;
    position: relative;
    bottom:26%;
    left: 5%;
+
 }
 
 
@@ -395,23 +456,11 @@ position: relative;
 
 
 
-
-
-
-
-
-
-/* Wrapping everything the user uses to select a sound source and load a buffer/loop it etc...*/
-
-/* Just containing the "Sound source:'' label and the dropdown*/
-.soundSourceDropdown{
-
-/*   width:100%; */
-/*   display: auto */
+.numberInput{
+  width:50px;
+  background-color:rgb(200,200,200)
 }
-input.soundSourceDropdown{
 
-}
 
 .userMediaWidget{
   display: auto
@@ -429,10 +478,28 @@ input.soundSourceDropdown{
   height: 50%
 }
 
+.sourceCanvasWrapper {
+  width: 100%;
+  height:150px;
+  position:relative;
+}
+
 .waveformCanvas{
   width:100%;
   height: 100%;
   background-color:rgb(50,50,50);
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 0;
+}
+.startEndCanvas{
+  width:100%;
+  height: 100%;
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 1;
 }
 
 .bufferControls{
@@ -440,12 +507,15 @@ input.soundSourceDropdown{
   height:20%;
 }
 
-.bufferControls input {
-  width:10px;
-}
 
 .specEvalWrapper {
   display:inline-block;
+  width:100%;
+  height:100%;
+}
+
+.flexExperiment{
+  display:inline-flex;
   width:100%;
   height:100%;
 }
@@ -462,7 +532,19 @@ input.soundSourceDropdown{
   position: relative;
   bottom:55%;
   width: 50%;
+  margin-left: -10%;
+  margin-right: -10%;
 }
+
+.scoreBarWrapperHist {
+    display: inline-block;
+  position: relative;
+  bottom:50%;
+  width: 50%;
+  margin-left: -10%;
+  margin-right: -10%;
+}
+
 
 .scoreBarWrapperFiveBand {
   display: inline-block;
@@ -473,8 +555,9 @@ input.soundSourceDropdown{
 
 .scoreBarWrapperTenBand {
   display: inline-block;
+  flex-grow: 1;
   position: relative;
-  bottom:53%;
+  bottom:55%;
   width:7%;
 
 }
@@ -605,9 +688,13 @@ textarea.journalItem {
   resize: none;
 }
 
+.configWidgetWrapper{
+  width:100%
+}
+
 .configWidget {
-  display: flex;
-  justify-content: space-between;
+  text-align: left;
+/*   justify-content: space-between; */
 }
 
 .radioConfigWidget {
@@ -615,8 +702,8 @@ textarea.journalItem {
 }
 
 .sourceWidget{
-  width: 45%;
-  padding:2px;
+  width: 90%;
+  padding:5%;
   background-color: rgb(30,30,30);
   text-align: left;
 }
