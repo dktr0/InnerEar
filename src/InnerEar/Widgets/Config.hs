@@ -13,6 +13,7 @@ import Control.Monad (liftM)
 -- import Reflex.Dom.Contrib.Widgets.ButtonGroup (radioGroup)
 -- import Reflex.Dom.Contrib.Widgets.Common
 
+import InnerEar.Widgets.Canvas
 import InnerEar.Widgets.UserMedia
 import InnerEar.Widgets.Utility(radioWidget,elClass')
 import Reflex.Synth.Types
@@ -22,14 +23,14 @@ import Reflex.Synth.Synth
 --    one div with the class "radioConfigWidget" -> wrapping the radio configuration widget
 --    one div with the class "sourceWidget" -> wrapping the sound source selection widget
 
-dynRadioConfigWidget:: (MonadWidget t m, Eq c, Show c, Ord c) => String -> Map Int (String,Source) -> Int ->  Map String c -> c -> m(Dynamic t c, Dynamic t Source, Event t (Maybe a))
-dynRadioConfigWidget inputID sourceMap iSource configMap iConfig = elClass "div" "configWidget" $ do
-  config <- elClass "div" "radioConfigWidget" $ do
-    text "Exercise Configuration:  "
-    (dynVal, _) <- radioWidget configMap (Just iConfig)
-    mapDyn (maybe iConfig id) dynVal
-  (source,playReference) <- sourceWidget'' inputID sourceMap iSource
-  return (config, source, Nothing <$ playReference)
+-- dynRadioConfigWidget:: (MonadWidget t m, Eq c, Show c, Ord c) => String -> Map Int (String,Source) -> Int ->  Map String c -> c -> m(Dynamic t c, Dynamic t Source, Event t (Maybe a))
+-- dynRadioConfigWidget inputID sourceMap iSource configMap iConfig = elClass "div" "configWidget" $ do
+--   config <- elClass "div" "radioConfigWidget" $ do
+--     text "Exercise Configuration:  "
+--     (dynVal, _) <- radioWidget configMap (Just iConfig)
+--     mapDyn (maybe iConfig id) dynVal
+--   (source,playReference) <- sourceWidget'' inputID sourceMap iSource
+--   return (config, source, Nothing <$ playReference)
 --
 
 configWidget:: (MonadWidget t m, Eq c) => String -> Map Int (String,Source) -> Int -> String -> Map Int (String,c) -> c -> m(Dynamic t c, Dynamic t Source, Event t (Maybe a))
@@ -67,14 +68,16 @@ sourceWidget inputId sourceMap iSource = mdo
     initialParams <- mapDyn (maybe (PlaybackParam 0 1 False) id . getPlaybackParam) source
     text "loop"
     loop <- liftM _checkbox_value $ checkbox False $ CheckboxConfig (fmap loop $ updated initialParams) (constDyn empty)
-    let numberInputAttrs = constDyn $ fromList [("step","0.01"), ("max","1"), ("min","0"),("class","numberInput"),("type","number")]
-    text "start "
-    start <- textInput $ TextInputConfig "number" "0" (fmap (show . start)$ updated initialParams) numberInputAttrs
-    startVal <- mapDyn (maybe 0 id . ((readMaybe)::String->Maybe Double)) (_textInput_value start)
-    text " end "
-    end <- textInput $ TextInputConfig "number" "1" (fmap (show . end) $ updated initialParams) numberInputAttrs
-    endVal <- mapDyn (maybe 1.0 id . ((readMaybe)::String->Maybe Double)) (_textInput_value end)
-    param <- combineDyn PlaybackParam startVal endVal >>= combineDyn (flip ($)) loop
+    -- let numberInputAttrs = constDyn $ fromList [("step","0.01"), ("max","1"), ("min","0"),("class","numberInput"),("type","number")]
+    -- text "start "
+    -- start <- textInput $ TextInputConfig "number" "0" (fmap (show . start)$ updated initialParams) numberInputAttrs
+    -- startVal <- mapDyn (maybe 0 id . ((readMaybe)::String->Maybe Double)) (_textInput_value start)
+    -- text " end "
+    -- end <- textInput $ TextInputConfig "number" "1" (fmap (show . end) $ updated initialParams) numberInputAttrs
+    -- endVal <- mapDyn (maybe 1.0 id . ((readMaybe)::String->Maybe Double)) (_textInput_value end)
+    -- param <- combineDyn PlaybackParam startVal endVal >>= combineDyn (flip ($)) loop
+    rangePicker (0,1)
+    let param = constDyn $ PlaybackParam 0 1 False
     return (play, stop, param)
   performEvent $ fmap liftIO $ fmap (const $ stopNodeByID inputId) stopEv
   source' <- combineDyn  (\s p-> case s of (NodeSource (BufferNode (LoadedFile a _)) b) -> NodeSource (BufferNode $ LoadedFile a p) b; otherwise-> s ) source playbackParam
