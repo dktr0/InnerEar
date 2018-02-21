@@ -152,6 +152,7 @@ button.incorrectDisactivatedButton {
   border: 2px solid red;
   height: 100%;
   width: 100%;
+  margin: 1%;
   font-size: 100%;
 }
 
@@ -176,18 +177,30 @@ button.correctButton{
 }
 
 .svgBarContainer {
+  width: 50%;
+  background-color: hsl(120,100%,80%);
+}
+
+.svgBarContainerCurrent{
   width: 30%;
+  background-color: hsl(120,100%,80%);
+}
+
+.svgBarContainerHist{
+  width: 30%;
+  background-color: orange;
+}
+
+.svgBarContainerFiveBand {
+  width: 90%;
   background-color: hsl(120,100%,80%);
 
 }
 
-.svgBarContainer {
-  width: 30%;
+.svgBarContainerTenBand {
+  width: 50%;
   background-color: hsl(120,100%,80%);
-
 }
-
-
 .bars {
   fill: hsl(120,100%,80%);
   stroke: black;
@@ -198,31 +211,65 @@ button.correctButton{
 
 
 .faintedLineToAdjustGraph {
-   width: 1px;
-  height: 100px;
+  width: 1px;
+  height: 150px;
   position: relative;
-  right: 20%;
-  top: 11%;
-
+  right: 24%;
+  top: 9%;
 }
 
 .svgFaintedLine {
    width: 1px;
    height: 5px;
-   background-color: #2F4F4F;
+  background-color: #2F4F4F;
   position: relative;
-  left: 15%;
+  left: 24%;
+  top: 9%;
+}
 
+.svgFaintedLineHist{
+  width: 1px;
+  height: 5px;
+ background-color: #2F4F4F;
+ position: relative;
+ left: 40%;
+ top: 9%;
+}
 
+.svgFaintedLineCurrent {
+  width: 1px;
+  height: 5px;
+ background-color: #2F4F4F;
+ position: relative;
+ left: 23%;
+ top: 9%;
+}
 
+.svgFaintedLineFiveBand {
+   width: 1px;
+   height: 5px;
+  background-color: #2F4F4F;
+  position: relative;
+  left: 50%;
+  top: 9%;
+}
+
+.svgFaintedLineTenBand {
+   width: 1px;
+   height: 5px;
+  background-color: #2F4F4F;
+  position: relative;
+  left: 24%;
+  top: 9%;
 }
 
  .faintedXaxis {
-    width : 80%;
-    height: 1%;
-    background-color: #2F4F4F;
-   position: relative;
-   top: 16.5%;
+   /*width : 5%;*/
+  width : 100%;
+  height: 1px;
+  background-color: #2F4F4F;
+  position: relative;
+  bottom: 19px;
 
 
   }
@@ -235,49 +282,78 @@ right:80%;
   top:  15%;
 }
 
-.scoreLabel {
+.scoreLabel
+{
    color: hsl(120,100%,80%);
    text-align: center;
-   font-size: 50%;
- }
+   font-size: 70%;
+}
+
+.scoreLabelCurrent
+{
+   color: hsl(120,100%,80%);
+   position: relative;
+   right: 15%;
+  top: 12px;
+   text-align: center;
+   font-size: 70%;
+}
+
+.scoreLabelHist {
+   color: hsl(120,100%,80%);
+   text-align: center;
+   font-size: 70%;
+  position: relative;
+  left: 15%;
+}
 
 .emptyScoreLabel{
   color:transparent;
-     font-size: 50%;
-
+     font-size: 70%;
 }
 
 .xLabel {
    color: hsl(120,100%,80%);
-   font-size:50%;
+   font-size:70%;
    text-align: center;
-
+   position: relative;
+   bottom: 8px;
 }
 
-.xLabelTenBand {
+.xLabelFiveBand {
    color: hsl(120,100%,80%);
    font-size:50%;
    text-align: center;
+    position: relative;
+   bottom: 8px;
+}
+.xLabelTenBand {
+   color: hsl(120,100%,80%);
+   font-size:80%;
+   text-align: center;
+   position: relative;
+   bottom: 8px;
 
 }
 
 .countLabel {
   color: hsl(120,100%,80%);
-  font-size: 50%;
+  font-size: 70%;
   text-align: center;
-position: relative;
-  top:6%;
+  position: relative;
+  bottom:1px;
 }
 
 
 .graphLabel {
    color: hsl(120,100%,80%);
-   font-size: 80%;
+   font-size: 100%;
    height: 10%;
    width: 100%;
     text-align: center;
   position: relative;
-  top: 10%;
+  bottom: 67%;
+
 }
 
 
@@ -286,37 +362,29 @@ position: relative;
    width: 15px;
    height: 10%;
    position: relative;
-   top: 9%;
+   top: 13%;
   left: 4%;
-}
 
-.countMainLabelPrime {
-   font-size: 60%;
-   width: 15px;
-   height: 10%;
-   position: relative;
-   top: 11%;
-  left: 4%;
 }
-
 
 .percentageMainLabel {
    height: 1%;
    width: 1%;
-   font-size: 60%;
+   font-size: 70%;
    position: relative;
-   bottom:25%;
+   bottom:26%;
    left: 5%;
+
 }
 
 
 .hzMainLabel {
   width: 15px;
   height: 10%;
-  font-size:  50%;
+  font-size:  60%;
   position: relative;
   left: 4%;
-  top: 15%;
+  top: 19%;
 
 }
 
@@ -446,6 +514,12 @@ position: relative;
   height:100%;
 }
 
+.flexExperiment{
+  display:inline-flex;
+  width:100%;
+  height:100%;
+}
+
 .evalGraphFrameRow {
   display: inline-flex;
   height: 100%;
@@ -456,21 +530,34 @@ position: relative;
 .scoreBarWrapper {
   display: inline-block;
   position: relative;
+  bottom:55%;
+  width: 50%;
+  margin-left: -10%;
+  margin-right: -10%;
+}
+
+.scoreBarWrapperHist {
+    display: inline-block;
+  position: relative;
   bottom:50%;
   width: 50%;
+  margin-left: -10%;
+  margin-right: -10%;
 }
+
 
 .scoreBarWrapperFiveBand {
   display: inline-block;
   position: relative;
-  bottom:49%;
+  bottom:55%;
   width: 15%;
 }
 
 .scoreBarWrapperTenBand {
   display: inline-block;
+  flex-grow: 1;
   position: relative;
-  bottom:49%;
+  bottom:55%;
   width:7%;
 
 }
@@ -547,6 +634,7 @@ button.closeExerciseButton {
 /*   margin-bottom: 5%; */
   display: flex;
   text-align: center;
+  align-items: center;
   background-color: black;
   width: 100%;
   height: 20%;
