@@ -137,7 +137,7 @@ runExerciseForNavigationPage :: (MonadWidget t m, Data c, Data q, Data a, Data e
   -> Event t [Response] -> Dynamic t (Maybe Role)
   -> m (Event t Request,Event t Sound,Event t Navigation)
 runExerciseForNavigationPage ex responses currentRole = do
-  (newData,sounds,navUnit) <- runExercise ex
+  (newData,sounds,navUnit) <- runExercise ex responses
   currentRole' <- mapDyn isJust currentRole
   let newData' = gate (current currentRole') newData
   newPoint <- performEvent $ fmap (liftIO . datumToPoint . Left) $ newData'

@@ -1,4 +1,4 @@
-{-# LANGUAGE RecursiveDo #-}
+{-# LANGUAGE DeriveDataTypeable, RecursiveDo #-}
 
 module InnerEar.Exercises.MultipleChoice where
 
@@ -11,6 +11,8 @@ import Control.Monad (zipWithM)
 import Data.List (findIndices,partition,elemIndex)
 import Data.Maybe (fromJust)
 import System.Random
+import Text.JSON
+import Text.JSON.Generic
 
 import InnerEar.Types.ExerciseId
 import InnerEar.Types.Data
@@ -29,7 +31,7 @@ import Reflex.Synth.Types
 -- answers be provided, together with a pure function that converts an answer
 -- value to a sound.
 
-multipleChoiceExercise :: (MonadWidget t m, Show a, Eq a, Ord a)
+multipleChoiceExercise :: (MonadWidget t m, Show a, Eq a, Ord a, Data c, Data a)
   => Int -- maximum number of tries to allow
   -> [a]
   -> m ()
@@ -38,7 +40,7 @@ multipleChoiceExercise :: (MonadWidget t m, Show a, Eq a, Ord a)
   -> ExerciseId
   -> c
   -> (Dynamic t (Map a Score) -> m ())
-  -> (c -> [Datum c [a] a (Map a Score)] -> IO ([a],a))
+  -> (c -> [ExerciseDatum] -> IO ([a],a))
   -> Exercise t m c [a] a (Map a Score)
 
 multipleChoiceExercise maxTries answers iWidget cWidget render i c de g = Exercise {
@@ -51,7 +53,7 @@ multipleChoiceExercise maxTries answers iWidget cWidget render i c de g = Exerci
   questionWidget = multipleChoiceQuestionWidget maxTries answers i iWidget cWidget render de
   }
 
-multipleChoiceQuestionWidget :: (MonadWidget t m, Show a, Eq a, Ord a)
+multipleChoiceQuestionWidget :: (MonadWidget t m, Show a, Eq a, Ord a,Data a,Data c)
   => Int -- maximum number of tries
   -> [a] -- fixed list of potential answers
   -> ExerciseId
@@ -62,7 +64,7 @@ multipleChoiceQuestionWidget :: (MonadWidget t m, Show a, Eq a, Ord a)
   -> c
   -> Map a Score
   -> Event t ([a],a)
-  -> m (Event t (Datum c [a] a (Map a Score)),Event t Sound,Event t c,Event t ExerciseNavigation)
+  -> m (Event t ExerciseDatum,Event t Sound,Event t c,Event t ExerciseNavigation)
 
 multipleChoiceQuestionWidget maxTries answers exId exInstructions cWidget render eWidget config initialEval newQuestion = elClass "div" "exerciseWrapper" $ mdo
 
@@ -129,8 +131,8 @@ multipleChoiceQuestionWidget maxTries answers exId exInstructions cWidget render
   let questionWhileExplore = attachDynWith (\x y -> (possibleAnswers x,correctAnswer x,y)) multipleChoiceState answerPressed
   let listenedExploreData = attachDynWith (\c (q,a,s) -> ListenedExplore s c q a) dynConfig questionWhileExplore
   let datums = leftmost [listenedQuestionData,listenedReferenceData, answerData,listenedExploreData,journalData]
-
-  return (datums, playSounds,updated dynConfig,navEvents)
+  let datums' = fmap toExerciseDatum datums
+  return (datums', playSounds,updated dynConfig,navEvents)
 
 journalWidget :: MonadWidget t m => m (Event t (Datum c q a e))
 journalWidget = elClass "div" "journalItem" $ mdo
@@ -253,4 +255,3 @@ toExploreMode s = s {
     f IncorrectActivated = IncorrectActivated
     f Correct = Correct
     f CorrectMissed = CorrectMissed
-

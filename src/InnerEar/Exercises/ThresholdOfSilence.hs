@@ -13,7 +13,7 @@ import InnerEar.Exercises.MultipleChoice
 import InnerEar.Types.ExerciseId
 import InnerEar.Types.Exercise
 import InnerEar.Types.Score
-import InnerEar.Types.Data (Datum)
+import InnerEar.Types.Data
 import InnerEar.Widgets.Config
 import InnerEar.Widgets.UserMedia
 import InnerEar.Widgets.SpecEval
@@ -54,7 +54,7 @@ instructions = elClass "div" "instructionsText" $ text instructionsText
 displayEval :: MonadWidget t m => Dynamic t (Map Answer Score) -> m ()
 displayEval = displayMultipleChoiceEvaluationGraph' "Session Performance" "" answers
 
-generateQ :: Config -> [Datum Config [Answer] Answer (Map Answer Score)] -> IO ([Answer],Answer)
+generateQ :: Config -> [ExerciseDatum] -> IO ([Answer],Answer)
 generateQ _ _ = randomMultipleChoiceQuestion answers
 
 

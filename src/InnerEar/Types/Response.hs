@@ -33,3 +33,7 @@ getHandleFromAuthenticated _ = Nothing
 isAuthenticated :: Response -> Bool
 isAuthenticated (Authenticated _ _) = True
 isAuthenticated _ = False
+
+justRecordResponses :: Response -> Maybe Record
+justRecordResponses (RecordResponse r) = Just r
+justRecordResponses _ = Nothing
