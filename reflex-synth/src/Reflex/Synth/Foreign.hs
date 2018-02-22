@@ -3,6 +3,7 @@ module Reflex.Synth.Foreign where
 -- InnerEar.WebAudio.Foreign where
 
 import GHCJS.Types (JSVal,JSString)
+import GHCJS.DOM.Types (HTMLCanvasElement)
 --import qualified GHCJS.Prim as Prim (toJSString)
 
 
@@ -76,7 +77,8 @@ foreign import javascript safe "playMediaNode($1)" playMediaNode:: JSString -> I
 
 foreign import javascript safe "loadAndDrawBuffer($1,$2)" loadAndDrawBuffer :: JSString -> JSVal -> IO ()
 foreign import javascript safe "drawLoadedFile($1, $2, $3, $4)" drawLoadedFile:: JSString -> JSVal -> JSVal -> JSVal -> IO ()
-foreign import javascript safe "drawStartEnd($1,$2,$3)" drawStartEnd :: JSVal -> JSVal -> JSVal -> IO ()  -- Start, end, canvas
+-- foreign import javascript safe "drawStartEnd($1,$2,$3)" drawStartEnd :: JSVal -> JSVal -> JSVal -> IO ()  -- Start, end, canvas
 
 -- takes 'canvas' html elements - us 'toJSVal on the html element'
-foreign import javascript safe "drawSineWave($1)" drawSineWave :: JSVal -> IO ()
+foreign import javascript safe "drawSineWave($1)" drawSineWave :: HTMLCanvasElement -> IO ()
+foreign import javascript safe "drawFile($1, $2)" drawFile:: JSString -> HTMLCanvasElement -> IO ()

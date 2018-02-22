@@ -29,31 +29,23 @@ answers = [Odd,Even,All]
 
 renderAnswer :: Config -> Source -> Maybe Answer -> Sound
 
-
--- data OscillatorType = Sawtooth | Sine | Square deriving (Show, Read,Eq)
--- data Oscillator = Oscillator OscillatorType Double Double deriving (Read,Show,Eq) --double params are freq and gain (in dB) (respectively)
-
-OverlappedSound "arbitrary" $ fmap (OscillatorNode . Oscillator Sine)
-
-Oscillator Sine :: Double -> Double -> Oscillator
-
 renderAnswer f0 _ (Just Odd) = GainSound (OverlappedSound "arbitrary" $ bunchOfOscillators) (-20)
   where
-    fs = filter (< 20000) $ take 200 $ fmap (* f) [1,3 .. ] -- :: [Frequency]
+    fs = Prelude.filter (< 20000) $ take 200 $ fmap (* f0) [1,3 .. ] -- :: [Frequency]
     gs = [0,(-6) .. ]
-    bunchOfOscillators = fmap (\(x,y) -> NodeSource (OscillatorNode $ Oscillator Sine x y) (Just 2.0)) $ zip fs gs
+    bunchOfOscillators = fmap (\(x,y) -> Sound $ NodeSource (OscillatorNode $ Oscillator Sine (freqAsDouble x) y) (Just 2.0)) $ zip fs gs
 
 renderAnswer f0 _ (Just Even) = GainSound (OverlappedSound "arbitrary" $ bunchOfOscillators) (-20)
   where
-    fs = filter (< 20000) $ take 200 $ fmap (* f) [2,4 .. ] -- :: [Frequency]
+    fs = Prelude.filter (< 20000) $ take 200 $ fmap (* f0) [2,4 .. ] -- :: [Frequency]
     gs = [0,(-6) .. ]
-    bunchOfOscillators = fmap (\(x,y) -> NodeSource (OscillatorNode $ Oscillator Sine x y) (Just 2.0)) $ zip fs gs
+    bunchOfOscillators = fmap (\(x,y) -> Sound $ NodeSource (OscillatorNode $ Oscillator Sine (freqAsDouble x) y) (Just 2.0)) $ zip fs gs
 
 renderAnswer f0 _ (Just All) = GainSound (OverlappedSound "arbitrary" $ bunchOfOscillators) (-20)
   where
-    fs = filter (< 20000) $ take 200 $ fmap (* f) [1,2 .. ] -- :: [Frequency]
+    fs = Prelude.filter (< 20000) $ take 200 $ fmap (* f0) [1,2 .. ] -- :: [Frequency]
     gs = [0,(-6) .. ]
-    bunchOfOscillators = fmap (\(x,y) -> NodeSource (OscillatorNode $ Oscillator Sine x y) (Just 2.0)) $ zip fs gs
+    bunchOfOscillators = fmap (\(x,y) -> Sound $ NodeSource (OscillatorNode $ Oscillator Sine (freqAsDouble x) y) (Just 2.0)) $ zip fs gs
 
 renderAnswer f0 _ Nothing = NoSound
 
@@ -63,6 +55,16 @@ displayEval _ = return ()
 generateQ :: Config -> [ExerciseDatum] -> IO ([Answer],Answer)
 generateQ _ _ = randomMultipleChoiceQuestion answers
 
+oddEvenAllConfigWidget:: MonadWidget t m => Config -> m (Dynamic t Config, Dynamic t Source, Event t (Maybe a))
+oddEvenAllConfigWidget c = do
+  text "Fundamental Frequency: "
+  dd <- dropdown (freqAsDouble $ head configs) (constDyn $ fromList $ fmap (\x-> (freqAsDouble x, freqAsString x)) configs) (DropdownConfig never (constDyn empty))
+  let ddVal = _dropdown_value dd -- Dynamic Double
+  conf <- mapDyn (\x -> F x (show x++" Hz")) ddVal
+  source <- mapDyn (\x -> NodeSource (OscillatorNode $ Oscillator Sine x (-20)) (Just 2)) ddVal
+  -- playRef <- liftM (<$ Nothing) $ button "Play reference sound"
+  return (conf, source, never)
+
 instructions :: MonadWidget t m => m ()
 instructions = el "div" $ do
   elClass "div" "instructionsText" $ text "Instructions placeholder"
@@ -70,11 +72,11 @@ instructions = el "div" $ do
 oddEvenAllExercise :: MonadWidget t m => Exercise t m Config [Answer] Answer (Map Answer Score)
 oddEvenAllExercise = multipleChoiceExercise
   1
-  [Answer False,Answer True]
+  answers
   instructions
-  (configWidget "addedWhiteNoiseExercise" sourcesMap 0 "Noise level (dB): " configMap)
+  oddEvenAllConfigWidget
   renderAnswer
-  AddedWhiteNoise
+  OddEvenAll
   (-10)
   displayEval
   generateQ

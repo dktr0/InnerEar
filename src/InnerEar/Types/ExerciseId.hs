@@ -15,7 +15,8 @@ data ExerciseId =
   RT60 |
   Compression |
   LeftRightCentre |
-  HarmonicsOne
+  HarmonicsOne |
+  OddEvenAll 
   deriving (Show,Read,Eq,Data,Typeable)
 
 showExerciseTitle :: ExerciseId -> String
@@ -30,4 +31,3 @@ showExerciseTitle Compression = "Compression"
 showExerciseTitle LeftRightCentre = "LeftRightCentre"
 showExerciseTitle HarmonicsOne = "Harmonics One"
 showExerciseTitle _ = "Error: unknown exercise"
-
