@@ -37,7 +37,7 @@ renderAnswer f0 _ (Just Odd) = GainSound (OverlappedSound "arbitrary" $ bunchOfO
 
 renderAnswer f0 _ (Just Even) = GainSound (OverlappedSound "arbitrary" $ bunchOfOscillators) (-20)
   where
-    fs = Prelude.filter (< 20000) $ take 200 $ fmap (* f0) [2,4 .. ] -- :: [Frequency]
+    fs = Prelude.filter (< 20000) $ take 200 $ fmap (* f0) (1:[2,4 .. ]) -- :: [Frequency]
     gs = [0,(-6) .. ]
     bunchOfOscillators = fmap (\(x,y) -> Sound $ NodeSource (OscillatorNode $ Oscillator Sine (freqAsDouble x) y) (Just 2.0)) $ zip fs gs
 

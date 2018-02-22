@@ -26,7 +26,7 @@ runExercise :: forall t m c q a e. (MonadWidget t m, Data c, Data q, Data a, Dat
   => Exercise t m c q a e -> Event t [Response] -> m (Event t (ExerciseId,ExerciseDatum),Event t Sound,Event t ())
 runExercise ex responses = mdo
 
-  -- form databank for exercise by folding together pertinent database entries plus data transmitted up 
+  -- form databank for exercise by folding together pertinent database entries plus data transmitted up
   let records = ffilter (\x -> length x > 0) $ fmap (catMaybes . (fmap justRecordResponses)) responses -- Event t [Record]
   let points = fmap (fmap point) records -- Event t [Point], *** note: we probably shouldn't assume user handle matches...
   let datums = fmap (fmap datum) points -- Event t [Datum]
@@ -52,7 +52,7 @@ runExercise ex responses = mdo
 
   -- structuring of exercise data for reporting/collection upwards
   startedData <- (Started <$) <$> getPostBuild
-  let configData = Configured <$> configUpdate -- note: possiblity for data loss here with question event and leftmost
+  let configData = Configured <$> configUpdate -- note: possibility for data loss here with question event and leftmost
   let newQuestionData = attachDynWith (\c (q,a) -> NewQuestion c q a) config question
 
   let endedData = Ended <$ closeExercise
