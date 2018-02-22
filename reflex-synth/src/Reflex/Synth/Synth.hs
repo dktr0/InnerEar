@@ -144,12 +144,24 @@ createSound (FilteredSound s f) = do
   connectGraph graph
 
 
--- get duration of a sound. Nothing denotes that the sound will play indefinitely until the user hits stop.
-getT :: Sound -> Maybe Double
-getT (OverlappedSound identifier xs) = minimum $ fmap getT xs
-getT a = case (getSource a ) of
-  (NodeSource _ t) ->  t
-  otherwise -> Nothing
+-- -- get duration of a sound. Nothing denotes that the sound will play indefinitely until the user hits stop.
+-- getT :: Sound -> Maybe Double
+-- getT (OverlappedSound identifier xs) = minimum $ fmap getT xs
+-- getT a =
+-- getT a = case (getSource a ) of
+--   (NodeSource _ t) ->  t
+--   otherwise -> Nothing
+
+getT:: Sound -> Maybe Double
+getT (Sound (NodeSource _ t)) = t
+getT (GainSound s _) = getT s
+getT (FilteredSound (NodeSource _ t) _) = t
+getT (ProcessedSound s _) = getT s
+getT (NoSound) = Nothing
+getT (WaveShapedSound s _) = getT s
+getT (ReverberatedSound s _) = getT s
+getT (CompressedSound s _) = getT s
+getT (OverlappedSound _ xs) = minimum $ fmap getT xs
 
 getSource:: Sound -> Source
 getSource (Sound s) = s
@@ -182,7 +194,7 @@ performSound:: MonadWidget t m => Event t Sound -> m ()
 performSound event = do
   let n = fmap (\e-> do
                       let t = getT e
-                      graph <- createGraph e
+                      graph <- createGraph e   -- WebAudioNode''
                       startGraph graph
                       disconnectGraphAtTimeMaybe graph  t
                       ) event          -- Event t (IO ())
