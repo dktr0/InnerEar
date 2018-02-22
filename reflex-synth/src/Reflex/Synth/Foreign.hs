@@ -20,6 +20,8 @@ foreign import javascript safe "setTimeout(function () {$1.disconnect()}, $2*100
 
 foreign import javascript safe "$r=___ac.createGain()" createGain :: IO JSVal
 foreign import javascript safe "$r=___ac.createBiquadFilter()" createBiquadFilter :: IO JSVal
+foreign import javascript safe "$r=___ac.createDelay(10.0);" createDelay:: IO JSVal
+foreign import javascript safe "$1.delayTime = $2" setDelay:: JSVal -> Double -> IO ()
 -- foreign import javascript safe "$r=___ac.createOscillator()" createOscillator :: IO JSVal
 foreign import javascript safe "$r = new Oscillator($1, $2, $3)" createOscillator :: JSVal -> JSVal -> JSVal -> IO JSVal
 
