@@ -178,6 +178,8 @@ getLastNode:: WebAudioGraph -> WebAudioNode
 getLastNode (WebAudioGraph n) = n
 getLastNode (WebAudioGraph' _ n) = getLastNode n
 getLastNode (WebAudioGraph'' _ n) = getLastNode n
+getLastNode (WebAudioGraph''' xs x) = getLastNode x
+
 
 getPlaybackParam::Source -> Maybe PlaybackParam
 getPlaybackParam (NodeSource (BufferNode (LoadedFile _ x)) _) = Just x
