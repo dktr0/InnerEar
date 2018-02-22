@@ -82,7 +82,7 @@ convertBands MidBands = take 5 $ drop 3 $ answers
 convertBands Mid8Bands = take 8 $ drop 1 $ answers
 convertBands LowBands = take 5 answers
 
-generateQ :: Config -> [Datum Config [Answer] Answer (Map Answer Score)] -> IO ([Answer],Answer)
+generateQ :: Config -> [ExerciseDatum] -> IO ([Answer],Answer)
 generateQ config _ = randomMultipleChoiceQuestion (convertBands $ fst config)
 
 sourcesMap:: Map Int (String,Source)

@@ -28,6 +28,7 @@ import InnerEar.Types.Server
 import InnerEar.Types.Handle
 import InnerEar.Types.Password
 import InnerEar.Types.Data
+import InnerEar.Types.ExerciseId
 import InnerEar.Types.User
 
 import qualified InnerEar.Database.SQLite as DB
@@ -102,6 +103,7 @@ processRequest s i Deauthenticate = withServer s $ deauthenticate i
 processRequest s i (PostPoint r) = withServer s $ postPoint i r
 processRequest s i GetUserList = withServer s $ getUserList i
 processRequest s i (GetAllRecords h) = withServer s $ getAllRecords i h
+processRequest s i (GetAllExerciseEvents h e) = withServer s $ getAllExerciseEvents i h e
 
 
 authenticate :: ConnectionIndex -> Handle -> Password -> Server -> IO Server
@@ -149,6 +151,7 @@ postPoint i p s = do
   let h = snd ((connections s) ! i) -- should this be guarded against lookup failure, using getHandle like in getUserList below?
   if isJust h
     then do
+      possiblySendAllExerciseData i p s
       let r = Record (fromJust h) p
       putStrLn $ "posting record: " ++ (show r)
       DB.postEvent (database s) r
@@ -156,6 +159,15 @@ postPoint i p s = do
     else do
       putStrLn $ "warning: received post record attempt from non-or-differently-authenticated connection"
       return s
+
+possiblySendAllExerciseData :: ConnectionIndex -> Point -> Server -> IO ()
+possiblySendAllExerciseData i (Point (Left (exId,ExerciseStarted)) t) s = do
+  let h = snd ((connections s) ! i) -- should this be guarded against lookup failure, using getHandle like in getUserList below?
+  if isJust h
+    then getAllExerciseEvents i (fromJust h) exId s >> return ()
+    else return ()
+  return ()
+possiblySendAllExerciseData _ _ _ = return ()
 
 getUserList :: ConnectionIndex -> Server -> IO Server
 getUserList i s = do
@@ -183,6 +195,21 @@ getAllRecords i h s = do
   else do
     putStrLn "warning: getUserList from non-authenticated connection"
   return s
+
+getAllExerciseEvents :: ConnectionIndex -> Handle -> ExerciseId -> Server -> IO Server
+getAllExerciseEvents i h e s = do
+  let h' = getHandle i s
+  u <- maybe (return Nothing) (DB.findUser (database s)) h'
+  let r = maybe Nothing (Just . role) u
+  -- if authenticated as Administrator or Manager, or if authenticated as the user pertaining to the records, then proceed...
+  if (canSeeUserList r || (h' == (Just h))) then do
+    allRecords <- DB.findAllExerciseEvents (database s) h e
+    putStrLn $ "getAllExerciseEvents for " ++ h ++ " " ++ (show e) ++ ": " ++ (show (length allRecords)) ++ " values"
+    forM_ allRecords $ \x -> respond s i (RecordResponse x)
+  else do
+    putStrLn "warning: getUserList from non-authenticated connection"
+  return s
+
 
 withServer :: MVar Server -> (Server -> IO Server) -> IO ()
 withServer s f = takeMVar s >>= f >>= putMVar s

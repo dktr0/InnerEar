@@ -1,6 +1,6 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 
-module InnerEar.Exercises.AddedWhiteNoise (addedWhiteNoiseExercise) where
+module InnerEar.Exercises.OddEvenAll (oddEvenAllExercise) where
 
 import Reflex
 import Reflex.Dom
@@ -16,14 +16,12 @@ import InnerEar.Types.Score
 import InnerEar.Widgets.Config
 import InnerEar.Widgets.SpecEval
 import InnerEar.Types.Data
+import InnerEar.Types.Frequency
 
-type Config = Double -- representing level of attenuation for added white noise
+type Config = Frequency -- represents fundamental frequency for sound generation
 
 configs :: [Config]
-configs = [-10,-20,-30,-40,-50,-60,-65,-70,-75,-80]
-
-configMap:: Map Int (String,Config)
-configMap = fromList $ zip [0::Int,1..] $ fmap (\x-> (show x++" dB", x)) configs
+configs = [F 100 "100 Hz",F 200 "200 Hz", F 400 "400 Hz", F 800 "800 Hz", F 1600 "1600Hz", F 3200 "3200Hz"]
 
 data Answer = Answer Bool deriving (Eq,Ord,Data,Typeable)
 

@@ -47,7 +47,7 @@ renderAnswer db s f = case f of
 displayEval :: MonadWidget t m => Dynamic t (Map Answer Score) -> m ()
 displayEval = displayMultipleChoiceEvaluationGraph'' "Session performance" "Hz" answers
 
-generateQ :: Config -> [Datum Config [Answer] Answer (Map Answer Score)] -> IO ([Answer],Answer)
+generateQ :: Config -> [ExerciseDatum] -> IO ([Answer],Answer)
 generateQ _ _ = randomMultipleChoiceQuestion answers
 
 sourcesMap:: Map Int (String,Source)

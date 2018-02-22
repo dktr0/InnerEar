@@ -72,6 +72,10 @@ toDatum (ExerciseListenedExplore a1 c q a2) = ListenedExplore <$> decode a1 <*> 
 toDatum (ExerciseReflection r) = return $ Reflection r
 toDatum ExerciseEnded = return Ended
 
+toDatum' :: (JSON c, JSON q, JSON a, JSON e) => ExerciseDatum -> Maybe (Datum c q a e)
+toDatum' = f . toDatum
+  where f (Ok x) = Just x
+        f _ = Nothing
 
 -- | Some events of interest are not tied to a particular ear-training exercise.
 -- For these, we have the type SessionDatum.

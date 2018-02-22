@@ -15,7 +15,7 @@ import InnerEar.Types.Exercise
 import InnerEar.Types.Score
 import InnerEar.Widgets.Config
 import InnerEar.Widgets.SpecEval
-import InnerEar.Types.Data (Datum)
+import InnerEar.Types.Data
 
 type Config = Double -- representing compression ratio, i.e. 2 = 2:1 compression ratio
 
@@ -43,7 +43,7 @@ renderAnswer _ b _ = GainSound (Sound b) (-10) -- should just be source (b) down
 displayEval :: MonadWidget t m => Dynamic t (Map Answer Score) -> m ()
 displayEval = displayMultipleChoiceEvaluationGraph' "Session Performance" "" answers
 
-generateQ :: Config -> [Datum Config [Answer] Answer (Map Answer Score)] -> IO ([Answer],Answer)
+generateQ :: Config -> [ExerciseDatum] -> IO ([Answer],Answer)
 generateQ _ _ = randomMultipleChoiceQuestion [Answer False,Answer True]
 
 instructions :: MonadWidget t m => m ()
