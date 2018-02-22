@@ -44,6 +44,7 @@ data Node =
   CompressorNode  Compressor |
   WaveShaperNode WaveShaper|
   ScriptProcessorNode DSPEffect |
+  DelayNode Double |
   ConvolverNode Buffer deriving(Read,Show,Eq)
 
 data DSPEffect = DistortAtDb Double deriving (Read, Show, Eq)
@@ -52,7 +53,7 @@ data WaveShaper = ClipAt Double deriving (Show, Read, Eq)
 data Compressor = Compressor {threshold::Double, knee::Double, ratio::Double, attack::Double, release::Double} deriving (Show, Read, Eq)
 data Filter = NoFilter | Filter FilterType Double Double Double deriving (Read,Show,Eq) -- Freq, q, db
 
-data OscillatorType = Sawtooth | Sine | Square deriving (Show, Read,Eq)
+data OscillatorType = Sawtooth | Sine | Square | Triangle deriving (Show, Read,Eq)
 
 data Oscillator = Oscillator OscillatorType Double Double deriving (Read,Show,Eq) --double params are freq and gain (in dB) (respectively)
 
@@ -75,7 +76,8 @@ data Sound =
   ProcessedSound Sound DSPEffect |
   WaveShapedSound Sound WaveShaper |
   ReverberatedSound Sound Buffer |
-  OverlappedSound String [Sound] deriving (Read,Show)  -- String is sort of an unfortunately necessary identifier - so that if playing a sound of an indefinite length (such as a looped buffer) overlapped with other sounds, when you call 'stop' (Read,Show)
+  OverlappedSound String [Sound] |
+  DelayedSound Sound Double deriving (Read,Show)  -- String is sort of an unfortunately necessary identifier - so that if playing a sound of an indefinite length (such as a looped buffer) overlapped with other sounds, when you call 'stop' (Read,Show)
 
 soundTwo = OverlappedSound "Test" [Sound (NodeSource (OscillatorNode ( Oscillator Sine 440 (-10))) (Just 2)), Sound ( NodeSource (BufferNode ( File "pinknoise.wav")) (Just 2))]
 
@@ -108,7 +110,11 @@ createBiquadFilter (Filter filtType f q g) = do
   setFilterType filtType y
   return y
 
-
+createDelayNode::Double -> IO WebAudioNode
+createDelayNode delay = do
+  delayNode <- F.createDelay
+  F.setDelay delayNode delay
+  return (WebAudioNode (DelayNode delay) delayNode)
 
 createCompressorNode:: Compressor -> IO (WebAudioNode)
 createCompressorNode (Compressor a b c d e) = do

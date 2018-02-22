@@ -50,6 +50,7 @@ instance WebAudio Source where
       (CompressorNode _) -> error "CompressorNode cannot be a source node"
       (WaveShaperNode _) -> error "WaveShaperNode cannot be a source node"
       (ConvolverNode _) -> error "ConvolverNode cannot be a source node"
+      (DelayNode _) -> error "DelayNode cannot be a source node"
       (BufferNode (LoadedFile soundID _)) -> do
         stopNodeByID soundID
         x <- createNode node
@@ -121,6 +122,18 @@ instance WebAudio Sound where
     gain <- createGain 0 -- 0dB
     let graph = WebAudioGraph''' listOfGraphs gain
     connectGraph graph
+  -- createGraph (ScoreSound identifier xs) = do
+  --   stopOverlappedSound identifier
+  --   listOfGraphs <- mapM (createGraph . snd) xs
+  --   arrayOfSources <- toJSArray $ fmap (getJSVal . getFirstNode) listOfGraphs
+  --   F.adddToOverlappedDictionary (toJSString identifier) arrayOfSources
+  --   gain <- createGain 0
+  --   let graph = WebAudioGraph''' listOfGraphs gain
+  --   connectGraph graph
+  createGraph (DelayedSound s d) = do
+    g <- createGraph s
+    delay <- createDelayNode d
+    connectGraph (WebAudioGraph'' g $ WebAudioGraph delay)
   createGraph (CompressedSound s c) = do
     g <- createGraph s
     comp <- createCompressorNode c
@@ -161,6 +174,7 @@ getT (NoSound) = Nothing
 getT (WaveShapedSound s _) = getT s
 getT (ReverberatedSound s _) = getT s
 getT (CompressedSound s _) = getT s
+getT (DelayedSound s d) = fmap (+d) (getT s)
 getT (OverlappedSound _ xs) = minimum $ fmap getT xs
 
 getSource:: Sound -> Source
@@ -172,6 +186,7 @@ getSource (NoSound) = NodeSource SilentNode $ Just 2
 getSource (WaveShapedSound s _) = getSource s
 getSource (ReverberatedSound s _) = getSource s
 getSource (CompressedSound s _) = getSource s
+getSource (DelayedSound s _) = getSource s
 getSource (OverlappedSound _ _) = error "cannot get 'source' of an OverlappedSound"
 
 disconnectGraphAtTimeMaybe:: WebAudioGraph -> Maybe Double -> IO ()
