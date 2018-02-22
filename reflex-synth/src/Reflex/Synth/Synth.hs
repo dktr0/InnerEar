@@ -218,10 +218,14 @@ loadAndDrawBuffer inputId canvas = do
   --           - perhaps this should be rethought to be less coupled...
 drawSource :: Source -> HTMLCanvasElement -> IO ()
 drawSource (NodeSource (BufferNode (LoadedFile identifier (PlaybackParam _ _ _))) _) canvas = loadAndDrawBuffer identifier canvas
+drawSource (NodeSource (BufferNode (File s)) _) canvas = F.drawFile (toJSString s) canvas -- @should probably use less javascript here...
+drawSource (NodeSource (OscillatorNode (Oscillator Sine _ _) )_) canvas = F.drawSineWave canvas
 drawSource _ _ = return ()
 
-drawStartEnd :: PlaybackParam -> HTMLCanvasElement -> IO ()
-drawStartEnd (PlaybackParam s e _) c = F.drawStartEnd (pToJSVal s) (pToJSVal e) (unHTMLCanvasElement c)
+
+
+-- drawStartEnd :: PlaybackParam -> HTMLCanvasElement -> IO ()
+-- drawStartEnd (PlaybackParam s e _) c = F.drawStartEnd (pToJSVal s) (pToJSVal e) (unHTMLCanvasElement c)
 
 
 createAudioElement::MonadWidget t m => String -> Dynamic t (M.Map String String) -> m (String)
@@ -314,7 +318,7 @@ createConvolverNode (LoadedFile _ _) = error "does not yet support loaded file f
 
 
 drawSineWave:: HTMLCanvasElement  -> IO ()
-drawSineWave el  = F.drawSineWave (unHTMLCanvasElement el)
+drawSineWave el  = F.drawSineWave (el)
 
 
 

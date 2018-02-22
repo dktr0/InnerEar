@@ -79,6 +79,10 @@ dynButton :: MonadWidget t m => Dynamic t String -> m (Event t ())
 dynButton = (mapDyn button) >=> dynE
 
 
+hideableWidget::MonadWidget t m => Dynamic t Bool -> String -> m a -> m a
+hideableWidget b c m = do
+  attrs <- mapDyn (bool (fromList [("hidden","true"),("class",c)]) (singleton "class" c)) b
+  elDynAttr "div" attrs  m
 
 radioWidget::( MonadWidget t m, Ord v, Eq v)=> M.Map String v -> Maybe v -> m (Dynamic t (Maybe v), Event t (Maybe v))
 radioWidget radioMap iVal = el "table" $ do

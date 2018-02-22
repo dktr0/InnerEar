@@ -12,7 +12,7 @@ import Control.Monad (liftM)
 
 import InnerEar.Widgets.Canvas
 import InnerEar.Widgets.UserMedia
-import InnerEar.Widgets.Utility(radioWidget,elClass')
+import InnerEar.Widgets.Utility(radioWidget,elClass', hideableWidget)
 import Reflex.Synth.Types
 import Reflex.Synth.Synth
 
@@ -66,9 +66,16 @@ sourceCanvasWidget:: MonadWidget t m => Dynamic t Source -> Event t String -> Ev
 sourceCanvasWidget src loadEv paramChange = elClass "div" "sourceCanvasWrapper" $  do
   (canvas,_) <- elClass' "canvas" "waveformCanvas" (return ())
   let canvasElement = _el_element canvas
+  postBuild <- getPostBuild
   performEvent_ $ fmap (\inputId -> liftIO $ (loadAndDrawBuffer inputId $ G.castToHTMLCanvasElement canvasElement)) loadEv
-  performEvent_ $ fmap (\s ->liftIO  (drawSource s $ G.castToHTMLCanvasElement canvasElement)) (updated src)
-  range <- rangeSelect (0,1)
+  performEvent_ $ fmap (\s ->liftIO  (drawSource s $ G.castToHTMLCanvasElement canvasElement)) (leftmost [updated src, tagDyn src postBuild])
+
+  -- widgetHold :: MonadWidget t m => m a -> Event t (m a) -> m (Dynamic t a)
+  -- fmap (bool (return $ constDyn (0,1)) (rangeSelect (0,1)) . isLoadedFile ) $ updated src
+  -- return (constDyn (0,1)) $
+  isLF<- mapDyn isLoadedFile src
+  range <- hideableWidget isLF "" $ rangeSelect (0,1)
+  -- range <- rangeSelect (0,1)
   combineDyn (\s (b,e) -> case s of (NodeSource (BufferNode (LoadedFile s (PlaybackParam _ _ l))) dur) -> NodeSource (BufferNode $ LoadedFile s (PlaybackParam b e l)) dur; otherwise -> s) src range
 
 sineSourceConfig::(MonadWidget t m) => String -> Map String Double -> Double -> m (Dynamic t Double, Dynamic t Source, Event t (Maybe a))

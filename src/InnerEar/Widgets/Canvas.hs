@@ -14,7 +14,7 @@ import GHCJS.DOM.EventM
 
 import InnerEar.Widgets.Utility
 
-data CanvasEvent = ClickEvent {value::Double} | DragEvent {value::Double} | ReleaseEvent {value::Double}
+data CanvasEvent = ClickEvent {value::Double} | DragEvent {value::Double} | ReleaseEvent {value::Double} deriving (Show)
 
 toPercent:: CanvasEvent -> Double -> CanvasEvent
 toPercent (ClickEvent a) b = ClickEvent (a/b)
@@ -48,22 +48,26 @@ updateRangeState (ReleaseEvent x) (RangeState l r (Just (Right _)))
 --
 rangeSelect :: MonadWidget t m => (Double,Double) ->  m (Dynamic t (Double,Double))
 rangeSelect (l,r) = do
-  let initialRangeState = RangeState l (r) Nothing
-  canvasElement <- liftM (_el_element . fst) $ elClass' "canvas" "startEndCanvas" $ return ()
-  let resize = never
+  let initialRangeState = RangeState l r Nothing
+  (canvasElement,canvasPostBuild) <- liftM (\(a,b)->(_el_element a,b)) $ elClass' "canvas" "startEndCanvas" $ getPostBuild
+  -- let resize = never
   let htmlCanvasEl = DT.castToHTMLCanvasElement canvasElement -- HTMLCanvasElement
   postBuild <- getPostBuild
-  iWidthEv <- performEvent $ fmap (\_->liftIO (getClientWidth htmlCanvasEl)) postBuild -- (::MonadWidget t m => m (Event t Double))
-  resizeEv <- performEvent $ fmap (\_->liftIO (getClientWidth htmlCanvasEl)) resize -- (::MonadWidget t m => m (Event t Double))
-  canvasWidth <- holdDyn 0.5 $ leftmost [iWidthEv, resizeEv]
+  iWidth <- liftIO (getClientWidth htmlCanvasEl)::MonadWidget t m => m Double
+  iWidthEv <- performEvent $ fmap (\_->liftIO (getClientWidth htmlCanvasEl)) canvasPostBuild -- (::MonadWidget t m => m (Event t Double))
+  -- resizeEv <- performEvent $ fmap (\_->liftIO (getClientWidth htmlCanvasEl)) resize -- (::MonadWidget t m => m (Event t Double))
+  -- canvasWidth <- holdDyn 0.5 $ leftmost [iWidthEv, resizeEv]
   clickEv <- liftM ( fmap (ClickEvent . fromIntegral . fst )) $ wrapDomEvent canvasElement (onEventName D.Mousedown) mouseOffsetXY
   dragEv <- liftM (fmap (DragEvent . fromIntegral . fst)) $ wrapDomEvent canvasElement (onEventName D.Drag) mouseOffsetXY
   releaseEv <- liftM (fmap (ReleaseEvent . fromIntegral . fst)) $ wrapDomEvent canvasElement (onEventName D.Mouseup) mouseOffsetXY
   getCanvasWidth <- performEvent $ fmap (\_ -> liftIO (getClientWidth htmlCanvasEl)) $ leftmost [clickEv, dragEv, releaseEv]
-  canvasWidth <- holdDyn 0 $ leftmost [getCanvasWidth, iWidthEv]
+  canvasWidth <- holdDyn iWidth $ leftmost [getCanvasWidth] --, iWidthEv]
+  -- mapDyn (("c width:  " ++) . show) canvasWidth >>= dynText
   rangeState <- foldDyn updateRangeState  initialRangeState (attachDynWith (flip toPercent) canvasWidth $ leftmost [clickEv, dragEv, releaseEv])
   postBuild <- getPostBuild
   performEvent_ $ fmap (liftIO . drawRange htmlCanvasEl) (leftmost [updated rangeState, initialRangeState <$ postBuild])
+  -- display rangeState
+  -- holdDyn (ClickEvent 0) clickEv >>= mapDyn show >>= dynText
   forDyn rangeState $ \x -> (leftRange x, rightRange x)
 
 drawRange:: DT.HTMLCanvasElement -> RangeState -> IO ()
