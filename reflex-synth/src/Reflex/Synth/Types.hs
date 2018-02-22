@@ -310,6 +310,13 @@ startGraph (WebAudioGraph''' xs n)= do
   connect n dest
   sequence $ fmap (startNode . getFirstNode) xs
   return ()
+startGraph (WebAudioGraph'' (WebAudioGraph''' xs b) c) = do
+  dest <- getDestination
+  let l = getLastNode c
+  connect l dest
+  sequence $ fmap (startNode . getFirstNode) xs
+  return ()
+startGraph (WebAudioGraph' a (WebAudioGraph''' _ _)) = error "Error connecting one node to multiple. (see startGraph, in Types.hs)"
 startGraph a = do
   let f = getFirstNode a
   let l = getLastNode a
