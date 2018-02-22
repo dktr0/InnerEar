@@ -77,7 +77,9 @@ data Sound =
   WaveShapedSound Sound WaveShaper |
   ReverberatedSound Sound Buffer |
   OverlappedSound String [Sound] |
-  DelayedSound Sound Double deriving (Read,Show)  -- String is sort of an unfortunately necessary identifier - so that if playing a sound of an indefinite length (such as a looped buffer) overlapped with other sounds, when you call 'stop' (Read,Show)
+  DelayedSound Sound Double |
+  TwoNotesSound Sound Double Sound deriving (Read,Show)
+    -- String is sort of an unfortunately necessary identifier - so that if playing a sound of an indefinite length (such as a looped buffer) overlapped with other sounds, when you call 'stop' (Read,Show)
 
 soundTwo = OverlappedSound "Test" [Sound (NodeSource (OscillatorNode ( Oscillator Sine 440 (-10))) (Just 2)), Sound ( NodeSource (BufferNode ( File "pinknoise.wav")) (Just 2))]
 
@@ -309,6 +311,9 @@ connectGraphToDest g = do
 
 startFirstNode::WebAudioGraph -> IO()
 startFirstNode g = let f = getFirstNode g in startNode f
+
+delayedStartGraph :: Double -> WebAudioGraph -> IO ()
+delayedStartGraph
 
 startGraph :: WebAudioGraph -> IO()
 startGraph (WebAudioGraph''' xs n)= do
