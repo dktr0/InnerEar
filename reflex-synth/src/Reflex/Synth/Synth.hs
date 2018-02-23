@@ -175,12 +175,12 @@ getT (WaveShapedSound s _) = getT s
 getT (ReverberatedSound s _) = getT s
 getT (CompressedSound s _) = getT s
 getT (DelayedSound s d) = fmap (+d) (getT s)
-getT (TwoNotesSound n1 t n2) = do
-  t1 <- getT n1
-  let m = max t t1
-  t2 <- getT n2
-  return $ m + t2
-getT (OverlappedSound _ xs) = minimum $ fmap getT xs
+-- getT (TwoNotesSound n1 t n2) = do
+--   t1 <- getT n1
+--   let m = max t t1
+--   t2 <- getT n2
+--   return $ m + t2
+getT (OverlappedSound _ xs) = maximum $ fmap getT xs
 
 getSource:: Sound -> Source
 getSource (Sound s) = s
@@ -210,34 +210,45 @@ disconnectGraphAtTime (WebAudioGraph''' xs g) t = do
   mapM ((flip disconnectGraphAtTime) t) xs
   disconnectAllAtTime g t
 
-performSound :: MonadWidget t m => Event t Sound -> m ()
+
+performSound:: MonadWidget t m => Event t Sound -> m ()
 performSound event = do
-  let n = fmap someName event
+  let n = fmap (\e-> do
+                      let t = getT e
+                      graph <- createGraph e   -- WA''
+                      startGraph graph
+                      disconnectGraphAtTimeMaybe graph  t
+                      ) event          -- Event t (IO ())
   performEvent_ $ fmap liftIO n
+--
+-- performSound :: MonadWidget t m => Event t Sound -> m ()
+-- performSound event = do
+--   let n = fmap someName event
+--   performEvent_ $ fmap liftIO n
+--
+-- someName :: Sound -> IO ()
+--
+-- someName (TwoNoteSound n1 t n2) = do
+--   someName n1
+--   delayedSomeName t n2
+--
+-- someName e = do
+--   let t = getT e
+--   graph <- createGraph e   -- WebAudioNode''
+--   startGraph graph
+--   disconnectGraphAtTimeMaybe graph  t
+--
+-- delayedSomeName :: Double -> Sound -> IO ()
+-- delayedSomeName t e = do
+--   let t2 = getT e
+--   graph <- createGraph e
+--   delayedStartGraph t graph
+--   disconnectGraphAtTimeMaybe graph (t+t2)
 
-someName :: Sound -> IO ()
-
-someName (TwoNoteSound n1 t n2) = do
-  someName n1
-  delayedSomeName t n2
-
-someName e = do
-  let t = getT e
-  graph <- createGraph e   -- WebAudioNode''
-  startGraph graph
-  disconnectGraphAtTimeMaybe graph  t
-
-delayedSomeName :: Double -> Sound -> IO ()
-delayedSomeName t e = do
-  let t2 = getT e
-  graph <- createGraph e
-  delayedStartGraph t graph
-  disconnectGraphAtTimeMaybe graph (t+t2)
 
 audioElement::MonadWidget t m => m ()
 audioElement = elDynAttr "audio" attrs (return())
   where attrs = constDyn $ M.fromList $ zip ["id","controls"] ["userAudio","controls"]
-
 
 
 bufferInput::MonadWidget t m => String -> m (Event t ())

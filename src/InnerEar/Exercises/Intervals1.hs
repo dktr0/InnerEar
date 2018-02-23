@@ -47,8 +47,8 @@ renderAnswer _ _ (Just x) = GainSound (OverlappedSound "why?" [n1,n2]) (-20)
   where
     f1 = midicps 60
     f2 = midicps (60 + answerToSemitones x)
-    n1 = NodeSource (OscillatorNode $ Oscillator Triangle f1 0.0) (Just 0.8)
-    n2 = DelayedSound (NodeSource (OscillatorNode $ Oscillator Triangle f2 0.0) (Just 1.0)) 1.0
+    n1 = Sound $ NodeSource (OscillatorNode $ Oscillator Triangle f1 0.0) (Just 0.8)
+    n2 = DelayedSound (Sound $ NodeSource (OscillatorNode $ Oscillator Triangle f2 0.0) (Just 1.0)) 1.0
 
 renderAnswer _ _ Nothing = NoSound
 
@@ -56,14 +56,17 @@ instructions :: MonadWidget t m => m ()
 instructions = el "div" $ do
   elClass "div" "instructionsText" $ text "Instructions placeholder"
 
+generateQ :: Config -> [ExerciseDatum] -> IO ([Answer],Answer)
+generateQ _ _ = randomMultipleChoiceQuestion answers
+
 intervals1Exercise :: MonadWidget t m => Exercise t m Config [Answer] Answer (Map Answer Score)
 intervals1Exercise = multipleChoiceExercise
   3
   answers
   instructions
-  (return ())
+  (\x-> return (constDyn (), constDyn (NodeSource (SilentNode) $ Just 1), never))
   renderAnswer
   Intervals1
-  (-10)
+  ()
   (\_ -> return ())
   generateQ
