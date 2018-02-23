@@ -9,7 +9,7 @@ import Control.Monad.State
 
 newtype UniqueT m a = UniqueT (StateT Integer m a)
     deriving (Functor, Applicative, Monad, MonadTrans)
- 
+
 class Monad m => MonadUnique m where
     fresh :: m Integer
 
@@ -108,7 +108,7 @@ split i = fmap createChannelSource [0..i-1]
 parallel :: Int ->  (Int -> SynthBuilder ()) -> SynthBuilder ()
 parallel i f = lift $ Synth {
     graph = SourceSink (Parallel (fmap (\x -> graph (buildSynth (x >>= f))) (split i))) EmptyGraph,
-    env = [], -- TODO merge environments
+    env = foldl (\x y -> x ++ env (buildSynth (y >>= f))) [] (split i),
     forks = [],
     supplement = ()
 }
@@ -165,6 +165,10 @@ merge branchBuilders =
       supplement = ()
     }
 
+mix :: [SynthBuilder ()] -> SynthBuilder ()
+mix synths =
+  merge $ fmap (\x -> branch x >>= id) synths 
+
 test :: Synth ()
 test = buildSynth $ oscillator >> gain >> destination
 
@@ -216,3 +220,8 @@ test6 = buildSynth $ do
   merge [g, h]
   gain
   destination
+
+test7 :: Synth ()
+test7 = buildSynth $ do
+  oscillator
+  mix $ replicate 3 gain
