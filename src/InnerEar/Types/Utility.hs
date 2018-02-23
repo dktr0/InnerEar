@@ -20,3 +20,5 @@ replaceAtSameIndex k l mode = maybe id (\x->replaceAt x mode) index
         index = elemIndex k l
         replaceAt n item ls = a ++ (item:b) where (a, (_:b)) = splitAt n ls
 
+midicps :: Double -> Double
+midicps x = 440 * (2**((x-69)/12))

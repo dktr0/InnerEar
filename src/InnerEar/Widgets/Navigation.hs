@@ -35,6 +35,8 @@ import InnerEar.Exercises.FiveBandBoostCut
 import InnerEar.Exercises.TenBandBoostCut
 import InnerEar.Exercises.AddedWhiteNoise
 import InnerEar.Exercises.Compression
+import InnerEar.Exercises.OddEvenAll
+import InnerEar.Exercises.SpectralShape
 
 data Navigation =
   SplashPage |
@@ -63,7 +65,10 @@ includedExercises = [
   FiveBandBoostCut,
   TenBandBoostCut,
   AddedWhiteNoise,
-  Compression
+  Compression,
+  OddEvenAll,
+  SpectralShape,
+  Intervals1
   ]
 
 buttonForExercise :: MonadWidget t m => ExerciseId -> m (Event t Navigation)
@@ -104,6 +109,13 @@ navigationPage responses currentRole (ExercisePage AddedWhiteNoise) =
   runExerciseForNavigationPage rt60Exercise responses currentRole -}
 navigationPage responses currentRole (ExercisePage Compression) =
   runExerciseForNavigationPage compressionExercise responses currentRole
+navigationPage responses currentRole (ExercisePage OddEvenAll) =
+  runExerciseForNavigationPage oddEvenAllExercise responses currentRole
+navigationPage responses currentRole (ExercisePage SpectralShape) =
+  runExerciseForNavigationPage spectralShapeExercise responses currentRole
+navigationPage responses currentRole (ExercisePage Intervals1) =
+  runExerciseForNavigationPage intervals1Exercise responses currentRole
+
 {- navigationPage responses currentRole (ExercisePage LeftRightCentre) =
   runExerciseForNavigationPage leftRightCentreExercise responses currentRole -}
 

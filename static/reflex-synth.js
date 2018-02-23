@@ -257,6 +257,7 @@ function createBufferSourceNodeFromID(id,start,end,loop){
 // won't work bc. can't get decode audio data callback from file loadBuffer...
 function loadAndDrawBuffer(inputId, canvas){
 
+  canvas.getContext('2d').clearRect(0,0,canvas.width, canvas.height)
   var inputElement = document.getElementById(inputId)
 
   if (inputElement){
@@ -302,17 +303,19 @@ function loadAndDrawBuffer(inputId, canvas){
   }
 }
 
-// @ maybe don't want this...
-function drawLoadedFile(inputId, start, end, canvas){
-  var userAudioNode;
-  // has the user loaded a file with that input
-  if (userAudioNodes[inputId]){
-    var userAudioNode = userAudioNodes[i]
-    if (userAudioNode.buffer){
-        drawBufferOnCanvas(userAudioNode.buffer,start,end,canvas)
-    }
-  } else {
-  }
+
+function drawFile (filePath, canvas){
+  var request = new XMLHttpRequest();
+  request.open('GET', filePath, true);
+  request.responseType = 'arraybuffer';
+  request.onload = function() {
+    var audioData = request.response;
+    ___ac.decodeAudioData(audioData, function(buffer) {
+        drawBufferOnCanvas(buffer, canvas)
+      },
+      function(e){ console.log("Error with decoding audio data " + e); });
+  } //request onload
+  request.send();
 }
 
 function drawStartEnd(s, e, canvas){
