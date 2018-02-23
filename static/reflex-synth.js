@@ -4,6 +4,15 @@ var overlappedDictionary = {}
 var lastPlayingBufferNode;
 var userAudioNodes = {}
 
+function showThings(a,b,c,d){
+  console.log(a)
+  console.log(b)
+
+  console.log(c)
+  console.log(d)
+
+}
+
 function startSilentNode () {
   // a permanent buffernode sound  so the sound icon always displays at the
   // top of their window (so the icon doesn't sway student's responses in exercises such as)

@@ -40,15 +40,6 @@ createDelayNode delay = do
   F.setDelay delayNode delay
   return (WebAudioNode (DelayNode delay) delayNode)
 
-createEnvelope:: Envelope -> IO WebAudioNode
-createEnvelope (Custom points dur) = do
-  gain <- createGain 0
-  gainGain <- F.getGain (getJSVal gain)
-  setAmp 0.0 gain
-  array<- toJSArray $ fmap pToJSVal points
-  currentTime <- F.getCurrentTime
-  F.setValueCurveAtTime gainGain array currentTime dur
-  return (WebAudioNode (EnvelopeNode (Custom points dur)) (getJSVal gain))
 
 
 createWaveShaperNode:: WaveShaper -> IO WebAudioNode
@@ -64,12 +55,29 @@ createOscillator (Oscillator t freq db) = do
   -- F.connect osc g
   -- F.startNode osc
   return (WebAudioNode (OscillatorNode $ Oscillator t freq db) osc)
-createOscillator (Oscillator' t env db) = do
+createOscillator (Oscillator' t (Custom curve dur) db) = do
   osc <- F.createOscillator (Prim.toJSString $ fmap toLower $ show t) (pToJSVal (0::Int)) (pToJSVal db)
-  envelope <- createEnvelope env
+  putStrLn "before getFreq"
   freq <- F.getFrequency osc
-  F.connect freq (getJSVal envelope)
-  return (WebAudioNode (OscillatorNode $ Oscillator' t env db) osc)
+  putStrLn "before toJSArray"
+  array <- toJSArray $ fmap pToJSVal curve
+  putStrLn "before get current t"
+  -- putStrLn (show array)
+  currentT <- F.getCurrentTime
+  putStrLn "before setValuecurve"
+  F.setValueCurveAtTime freq array currentT dur
+  putStrLn "after setValueCurveAtTime"
+  return (WebAudioNode (OscillatorNode $ Oscillator' t (Custom curve dur) db) osc)
+
+createEnvelope:: Envelope -> IO WebAudioNode
+createEnvelope (Custom points dur) = do
+  gain <- createGain 0
+  gainGain <- F.getGain (getJSVal gain)
+  setAmp 0.0 gain
+  array<- toJSArray $ fmap pToJSVal points
+  currentT <- F.getCurrentTime
+  F.setValueCurveAtTime gainGain array currentT dur
+  return (WebAudioNode (EnvelopeNode (Custom points dur)) (getJSVal gain))
 
 
 createGain :: Double -> IO WebAudioNode
