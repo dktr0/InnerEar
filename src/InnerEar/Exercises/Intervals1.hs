@@ -68,5 +68,5 @@ intervals1Exercise = multipleChoiceExercise
   renderAnswer
   Intervals1
   ()
-  (\_ -> return ())
+  (displayMultipleChoiceEvaluationGraph'' "Session Performance" "" answers)
   generateQ

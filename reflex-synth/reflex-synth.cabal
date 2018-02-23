@@ -21,5 +21,11 @@ Library
   GHC-Options:     -Wall -fwarn-tabs
   Exposed-modules: Reflex.Synth.Types
                    Reflex.Synth.Synth
-  other-modules:   Reflex.Synth.Foreign
+                   Reflex.Synth.NodeSpec
+                   Reflex.Synth.Sound
+                   Reflex.Synth.WebAudio
+                   Reflex.Synth.WebAudioGraph
+                   Reflex.Synth.WebAudioNode
+                   Reflex.Synth.Foreign
+  other-modules:
   default-language: Haskell2010

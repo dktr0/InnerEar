@@ -38,6 +38,7 @@ import InnerEar.Exercises.Compression
 import InnerEar.Exercises.OddEvenAll
 import InnerEar.Exercises.SpectralShape
 import InnerEar.Exercises.Intervals1
+-- import InnerEar.Exercises.FrequencyEnvelope
 
 data Navigation =
   SplashPage |
@@ -69,7 +70,8 @@ includedExercises = [
   Compression,
   OddEvenAll,
   SpectralShape,
-  Intervals1
+  Intervals1,
+  FrequencyEnvelope
   ]
 
 buttonForExercise :: MonadWidget t m => ExerciseId -> m (Event t Navigation)
@@ -116,6 +118,8 @@ navigationPage responses currentRole (ExercisePage SpectralShape) =
   runExerciseForNavigationPage spectralShapeExercise responses currentRole
 navigationPage responses currentRole (ExercisePage Intervals1) =
   runExerciseForNavigationPage intervals1Exercise responses currentRole
+-- navigationPage responses currentRole (ExercisePage FrequencyEnvelope) =
+--  runExerciseForNavigationPage frequencyEnvelopeExercise responses currentRole
 
 {- navigationPage responses currentRole (ExercisePage LeftRightCentre) =
   runExerciseForNavigationPage leftRightCentreExercise responses currentRole -}
