@@ -17,7 +17,7 @@ import InnerEar.Widgets.Config
 import InnerEar.Widgets.UserMedia
 import InnerEar.Widgets.SpecEval
 
-import InnerEar.Types.Data (Datum)
+import InnerEar.Types.Data
 import InnerEar.Widgets.UserMedia
 
 type Config = Double -- representing amount of gain that is applied (or not)
@@ -51,7 +51,7 @@ displayEval = displayVerticalMultipleChoiceEvaluationGraph "" "" answers
 --displayHistoricalEvaluationGraph "Historical Performance" "" answers
 --displayMultipleChoiceEvaluationGraph' "Session Performance" "" answers
 
-generateQ :: Config -> [Datum Config [Answer] Answer (Map Answer Score)] -> IO ([Answer],Answer)
+generateQ :: Config -> [ExerciseDatum] -> IO ([Answer],Answer)
 generateQ _ _ = randomMultipleChoiceQuestion answers
 
 sourcesMap:: Map Int (String,Source)

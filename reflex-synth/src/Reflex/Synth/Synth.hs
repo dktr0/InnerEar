@@ -50,6 +50,7 @@ instance WebAudio Source where
       (CompressorNode _) -> error "CompressorNode cannot be a source node"
       (WaveShaperNode _) -> error "WaveShaperNode cannot be a source node"
       (ConvolverNode _) -> error "ConvolverNode cannot be a source node"
+      (DelayNode _) -> error "DelayNode cannot be a source node"
       (BufferNode (LoadedFile soundID _)) -> do
         stopNodeByID soundID
         x <- createNode node
@@ -121,6 +122,18 @@ instance WebAudio Sound where
     gain <- createGain 0 -- 0dB
     let graph = WebAudioGraph''' listOfGraphs gain
     connectGraph graph
+  -- createGraph (ScoreSound identifier xs) = do
+  --   stopOverlappedSound identifier
+  --   listOfGraphs <- mapM (createGraph . snd) xs
+  --   arrayOfSources <- toJSArray $ fmap (getJSVal . getFirstNode) listOfGraphs
+  --   F.adddToOverlappedDictionary (toJSString identifier) arrayOfSources
+  --   gain <- createGain 0
+  --   let graph = WebAudioGraph''' listOfGraphs gain
+  --   connectGraph graph
+  createGraph (DelayedSound s d) = do
+    g <- createGraph s
+    delay <- createDelayNode d
+    connectGraph (WebAudioGraph'' g $ WebAudioGraph delay)
   createGraph (CompressedSound s c) = do
     g <- createGraph s
     comp <- createCompressorNode c
@@ -144,12 +157,30 @@ createSound (FilteredSound s f) = do
   connectGraph graph
 
 
--- get duration of a sound. Nothing denotes that the sound will play indefinitely until the user hits stop.
-getT :: Sound -> Maybe Double
-getT (OverlappedSound identifier xs) = minimum $ fmap getT xs
-getT a = case (getSource a ) of
-  (NodeSource _ t) ->  t
-  otherwise -> Nothing
+-- -- get duration of a sound. Nothing denotes that the sound will play indefinitely until the user hits stop.
+-- getT :: Sound -> Maybe Double
+-- getT (OverlappedSound identifier xs) = minimum $ fmap getT xs
+-- getT a =
+-- getT a = case (getSource a ) of
+--   (NodeSource _ t) ->  t
+--   otherwise -> Nothing
+
+getT:: Sound -> Maybe Double
+getT (Sound (NodeSource _ t)) = t
+getT (GainSound s _) = getT s
+getT (FilteredSound (NodeSource _ t) _) = t
+getT (ProcessedSound s _) = getT s
+getT (NoSound) = Nothing
+getT (WaveShapedSound s _) = getT s
+getT (ReverberatedSound s _) = getT s
+getT (CompressedSound s _) = getT s
+getT (DelayedSound s d) = fmap (+d) (getT s)
+-- getT (TwoNotesSound n1 t n2) = do
+--   t1 <- getT n1
+--   let m = max t t1
+--   t2 <- getT n2
+--   return $ m + t2
+getT (OverlappedSound _ xs) = maximum $ fmap getT xs
 
 getSource:: Sound -> Source
 getSource (Sound s) = s
@@ -160,6 +191,7 @@ getSource (NoSound) = NodeSource SilentNode $ Just 2
 getSource (WaveShapedSound s _) = getSource s
 getSource (ReverberatedSound s _) = getSource s
 getSource (CompressedSound s _) = getSource s
+getSource (DelayedSound s _) = getSource s
 getSource (OverlappedSound _ _) = error "cannot get 'source' of an OverlappedSound"
 
 disconnectGraphAtTimeMaybe:: WebAudioGraph -> Maybe Double -> IO ()
@@ -178,22 +210,45 @@ disconnectGraphAtTime (WebAudioGraph''' xs g) t = do
   mapM ((flip disconnectGraphAtTime) t) xs
   disconnectAllAtTime g t
 
+
 performSound:: MonadWidget t m => Event t Sound -> m ()
 performSound event = do
   let n = fmap (\e-> do
                       let t = getT e
-                      graph <- createGraph e
+                      graph <- createGraph e   -- WA''
                       startGraph graph
                       disconnectGraphAtTimeMaybe graph  t
                       ) event          -- Event t (IO ())
   performEvent_ $ fmap liftIO n
-
+--
+-- performSound :: MonadWidget t m => Event t Sound -> m ()
+-- performSound event = do
+--   let n = fmap someName event
+--   performEvent_ $ fmap liftIO n
+--
+-- someName :: Sound -> IO ()
+--
+-- someName (TwoNoteSound n1 t n2) = do
+--   someName n1
+--   delayedSomeName t n2
+--
+-- someName e = do
+--   let t = getT e
+--   graph <- createGraph e   -- WebAudioNode''
+--   startGraph graph
+--   disconnectGraphAtTimeMaybe graph  t
+--
+-- delayedSomeName :: Double -> Sound -> IO ()
+-- delayedSomeName t e = do
+--   let t2 = getT e
+--   graph <- createGraph e
+--   delayedStartGraph t graph
+--   disconnectGraphAtTimeMaybe graph (t+t2)
 
 
 audioElement::MonadWidget t m => m ()
 audioElement = elDynAttr "audio" attrs (return())
   where attrs = constDyn $ M.fromList $ zip ["id","controls"] ["userAudio","controls"]
-
 
 
 bufferInput::MonadWidget t m => String -> m (Event t ())
@@ -218,10 +273,14 @@ loadAndDrawBuffer inputId canvas = do
   --           - perhaps this should be rethought to be less coupled...
 drawSource :: Source -> HTMLCanvasElement -> IO ()
 drawSource (NodeSource (BufferNode (LoadedFile identifier (PlaybackParam _ _ _))) _) canvas = loadAndDrawBuffer identifier canvas
+drawSource (NodeSource (BufferNode (File s)) _) canvas = F.drawFile (toJSString s) canvas -- @should probably use less javascript here...
+drawSource (NodeSource (OscillatorNode (Oscillator Sine _ _) )_) canvas = F.drawSineWave canvas
 drawSource _ _ = return ()
 
-drawStartEnd :: PlaybackParam -> HTMLCanvasElement -> IO ()
-drawStartEnd (PlaybackParam s e _) c = F.drawStartEnd (pToJSVal s) (pToJSVal e) (unHTMLCanvasElement c)
+
+
+-- drawStartEnd :: PlaybackParam -> HTMLCanvasElement -> IO ()
+-- drawStartEnd (PlaybackParam s e _) c = F.drawStartEnd (pToJSVal s) (pToJSVal e) (unHTMLCanvasElement c)
 
 
 createAudioElement::MonadWidget t m => String -> Dynamic t (M.Map String String) -> m (String)
@@ -314,7 +373,7 @@ createConvolverNode (LoadedFile _ _) = error "does not yet support loaded file f
 
 
 drawSineWave:: HTMLCanvasElement  -> IO ()
-drawSineWave el  = F.drawSineWave (unHTMLCanvasElement el)
+drawSineWave el  = F.drawSineWave (el)
 
 
 

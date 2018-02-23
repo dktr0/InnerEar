@@ -13,7 +13,7 @@ import InnerEar.Exercises.MultipleChoice
 import InnerEar.Types.ExerciseId
 import InnerEar.Types.Exercise
 import InnerEar.Types.Score
-import InnerEar.Types.Data (Datum)
+import InnerEar.Types.Data
 import InnerEar.Widgets.Config
 import InnerEar.Widgets.UserMedia
 import InnerEar.Widgets.SpecEval
@@ -40,7 +40,9 @@ instance Show Answer where
 renderAnswer :: Config -> Source -> Maybe Answer -> Sound
 renderAnswer db s (Just (Answer True)) = GainSound (Sound s)  ((fromIntegral db)::Double) -- 2.0 -- should be a sound source attenuated by dB value
 renderAnswer db _ (Just (Answer False)) = NoSound -- 2.0
-renderAnswer db s (Nothing) = GainSound (Sound s) ((fromIntegral db)::Double)
+renderAnswer db _ Nothing = GainSound (OverlappedSound "test" oscs) (-20)
+  where oscs = fmap (\x -> DelayedSound (Sound $ NodeSource (OscillatorNode $ Oscillator Sine x 0) (Just 0.5)) (x/100) ) [100::Double,200,300,400,500,600,700,800]
+-- renderAnswer db s (Nothing) = GainSound (Sound s) ((fromIntegral db)::Double)
 
 instructionsText = "In this exercise, the system either makes no sound at all \
     \or it plays a sound that has been reduced in level by some specific amount \
@@ -54,7 +56,7 @@ instructions = elClass "div" "instructionsText" $ text instructionsText
 displayEval :: MonadWidget t m => Dynamic t (Map Answer Score) -> m ()
 displayEval = displayMultipleChoiceEvaluationGraph' "Session Performance" "" answers
 
-generateQ :: Config -> [Datum Config [Answer] Answer (Map Answer Score)] -> IO ([Answer],Answer)
+generateQ :: Config -> [ExerciseDatum] -> IO ([Answer],Answer)
 generateQ _ _ = randomMultipleChoiceQuestion answers
 
 

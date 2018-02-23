@@ -17,12 +17,13 @@ import InnerEar.Types.Request
 import InnerEar.Types.Response
 import Reflex.Synth.Types
 import Reflex.Synth.Synth
-import InnerEar.Widgets.Bars
-import InnerEar.Widgets.AnswerButton
-import InnerEar.Widgets.SpecEval
-import InnerEar.Widgets.Labels
 import InnerEar.Types.Score
 import InnerEar.Types.Frequency
+import InnerEar.Widgets.AnswerButton
+import InnerEar.Widgets.Bars
+import InnerEar.Widgets.Canvas
+import InnerEar.Widgets.Labels
+import InnerEar.Widgets.SpecEval
 
 
 testWidget :: MonadWidget t m

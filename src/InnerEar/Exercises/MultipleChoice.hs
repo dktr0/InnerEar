@@ -1,4 +1,4 @@
-{-# LANGUAGE RecursiveDo #-}
+{-# LANGUAGE DeriveDataTypeable, RecursiveDo #-}
 
 module InnerEar.Exercises.MultipleChoice where
 
@@ -11,6 +11,8 @@ import Control.Monad (zipWithM)
 import Data.List (findIndices,partition,elemIndex)
 import Data.Maybe (fromJust)
 import System.Random
+import Text.JSON
+import Text.JSON.Generic
 
 import InnerEar.Types.ExerciseId
 import InnerEar.Types.Data
@@ -29,7 +31,7 @@ import Reflex.Synth.Types
 -- answers be provided, together with a pure function that converts an answer
 -- value to a sound.
 
-multipleChoiceExercise :: (MonadWidget t m, Show a, Eq a, Ord a)
+multipleChoiceExercise :: (MonadWidget t m, Show a, Eq a, Ord a, Data c, Data a, Ord c)
   => Int -- maximum number of tries to allow
   -> [a]
   -> m ()
@@ -38,7 +40,7 @@ multipleChoiceExercise :: (MonadWidget t m, Show a, Eq a, Ord a)
   -> ExerciseId
   -> c
   -> (Dynamic t (Map a Score) -> m ())
-  -> (c -> [Datum c [a] a (Map a Score)] -> IO ([a],a))
+  -> (c -> [ExerciseDatum] -> IO ([a],a))
   -> Exercise t m c [a] a (Map a Score)
 
 multipleChoiceExercise maxTries answers iWidget cWidget render i c de g = Exercise {
@@ -51,7 +53,7 @@ multipleChoiceExercise maxTries answers iWidget cWidget render i c de g = Exerci
   questionWidget = multipleChoiceQuestionWidget maxTries answers i iWidget cWidget render de
   }
 
-multipleChoiceQuestionWidget :: (MonadWidget t m, Show a, Eq a, Ord a)
+multipleChoiceQuestionWidget :: (MonadWidget t m, Show a, Eq a, Ord a,Data a,Data c,Ord c)
   => Int -- maximum number of tries
   -> [a] -- fixed list of potential answers
   -> ExerciseId
@@ -62,12 +64,13 @@ multipleChoiceQuestionWidget :: (MonadWidget t m, Show a, Eq a, Ord a)
   -> c
   -> Map a Score
   -> Event t ([a],a)
-  -> m (Event t (Datum c [a] a (Map a Score)),Event t Sound,Event t c,Event t ExerciseNavigation)
+  -> m (Event t ExerciseDatum,Event t Sound,Event t c,Event t ExerciseNavigation)
 
 multipleChoiceQuestionWidget maxTries answers exId exInstructions cWidget render eWidget config initialEval newQuestion = elClass "div" "exerciseWrapper" $ mdo
 
-  let initialState = initialMultipleChoiceState answers maxTries
-  let newQuestion' = fmap newQuestionMultipleChoiceState newQuestion
+  let initialState = initialMultipleChoiceState config answers maxTries
+  let newQuestionAndConfig = attachDyn dynConfig newQuestion
+  let newQuestion' = fmap (\(c,q) -> newQuestionMultipleChoiceState c q) newQuestionAndConfig
   questionHeard0 <- holdDyn False $ leftmost [False <$ newQuestion,True <$ playQuestion]
   let questionHeard = nubDyn questionHeard0
   let questionHeard' = fmap (const onceQuestionHeard) $ ffilter (==True) $ updated questionHeard
@@ -76,7 +79,8 @@ multipleChoiceQuestionWidget maxTries answers exId exInstructions cWidget render
   multipleChoiceState <- foldDyn ($) initialState stateChanges
   modes <- mapDyn answerButtonModes multipleChoiceState
   modes' <- mapM (\x-> mapDyn (!!x) modes) [0,1..9]
-  scores <- mapDyn scoreMap multipleChoiceState
+  -- scores <- mapDyn scoreMap multipleChoiceState
+  scores <- combineDyn (\x y -> maybe empty id $ Data.Map.lookup x (scoreMap y) ) dynConfig multipleChoiceState
 
   -- user interface
   (closeExercise,playQuestion,answerPressed,nextQuestionNav) <- elClass "div" "topRow" $ do
@@ -100,7 +104,6 @@ multipleChoiceQuestionWidget maxTries answers exId exInstructions cWidget render
   journalData <- elClass "div" "bottomRow" $ do
     elClass "div" "evaluation" $ do
       eWidget scores
-      -- display scores
     elClass "div" "journal" $ journalWidget
 
   let answerEvent = gate (fmap (==AnswerMode) . fmap mode . current $ multipleChoiceState) answerPressed
@@ -129,8 +132,8 @@ multipleChoiceQuestionWidget maxTries answers exId exInstructions cWidget render
   let questionWhileExplore = attachDynWith (\x y -> (possibleAnswers x,correctAnswer x,y)) multipleChoiceState answerPressed
   let listenedExploreData = attachDynWith (\c (q,a,s) -> ListenedExplore s c q a) dynConfig questionWhileExplore
   let datums = leftmost [listenedQuestionData,listenedReferenceData, answerData,listenedExploreData,journalData]
-
-  return (datums, playSounds,updated dynConfig,navEvents)
+  let datums' = fmap toExerciseDatum datums
+  return (datums', playSounds,updated dynConfig,navEvents)
 
 journalWidget :: MonadWidget t m => m (Event t (Datum c q a e))
 journalWidget = elClass "div" "journalItem" $ mdo
@@ -167,24 +170,26 @@ trivialBWidget = holdDyn () $ never
 
 data MultipleChoiceMode = ListenMode | AnswerMode | ExploreMode deriving (Eq)
 
-data MultipleChoiceState a = MultipleChoiceState {
+data MultipleChoiceState a c = MultipleChoiceState {
   mode :: MultipleChoiceMode,
+  currentConfig :: c,
   correctAnswer :: a,
   allAnswers :: [a],
   possibleAnswers :: [a],
   answerButtonModes :: [AnswerButtonMode],
   attemptsRemainingDefault :: Int,
   attemptsRemaining :: Int,
-  scoreMap :: Map a Score
+  scoreMap :: Map c (Map a Score)
   }
 
 -- initialMultipleChoiceState provides a useful initial configuration of
 -- the MultipleChoiceState for the time before a new question has been
 -- generated.
 
-initialMultipleChoiceState :: [a] -> Int -> MultipleChoiceState a
-initialMultipleChoiceState xs n = MultipleChoiceState {
+initialMultipleChoiceState :: Ord c => c -> [a] -> Int -> MultipleChoiceState a c
+initialMultipleChoiceState c xs n = MultipleChoiceState {
   mode = ListenMode,
+  currentConfig = c,
   correctAnswer = xs!!0,
   allAnswers = xs,
   possibleAnswers = xs,
@@ -197,9 +202,10 @@ initialMultipleChoiceState xs n = MultipleChoiceState {
 -- When a multiple choice question is generated, all of the buttons are
 -- not possible, pending the user listening to the correct answer.
 
-newQuestionMultipleChoiceState :: ([a],a) -> MultipleChoiceState a -> MultipleChoiceState a
-newQuestionMultipleChoiceState (xs,x) s = s {
+newQuestionMultipleChoiceState :: Ord c => c -> ([a],a) -> MultipleChoiceState a c -> MultipleChoiceState a c
+newQuestionMultipleChoiceState c (xs,x) s = s {
   mode = ListenMode,
+  currentConfig = c,
   correctAnswer = x,
   possibleAnswers = xs,
   answerButtonModes = NotPossible <$ allAnswers s,
@@ -210,7 +216,7 @@ newQuestionMultipleChoiceState (xs,x) s = s {
 -- of the buttons that represent possible answers become possible and the
 -- mode changes to AnswerMode (the only mode in which answers are processed)
 
-onceQuestionHeard :: Eq a => MultipleChoiceState a -> MultipleChoiceState a
+onceQuestionHeard :: Eq a => MultipleChoiceState a c -> MultipleChoiceState a c
 onceQuestionHeard s = s { mode = AnswerMode, answerButtonModes = m }
   where m = fmap f $ fmap (flip elem $ possibleAnswers s) $ allAnswers s
         f True = Possible
@@ -220,28 +226,31 @@ onceQuestionHeard s = s { mode = AnswerMode, answerButtonModes = m }
 -- Otherwise (i.e. AnswerMode) the state is updated in different ways depending
 -- on whether the answer is correct or incorrect, and
 
-answerSelected :: (Eq a,Ord a) => a -> MultipleChoiceState a -> MultipleChoiceState a
+answerSelected :: (Eq a,Ord a,Ord c) => a -> MultipleChoiceState a c -> MultipleChoiceState a c
 answerSelected _ s | mode s == ListenMode = s
 answerSelected _ s | mode s == ExploreMode = s
 
 answerSelected a s | a == correctAnswer s = toExploreMode $ s {
       answerButtonModes = replaceAtSameIndex a (allAnswers s) Correct (answerButtonModes s),
-      scoreMap = markCorrect a $ scoreMap s
+      scoreMap = insert (currentConfig s) newSpecificMap (scoreMap s)
       }
+      where newSpecificMap = markCorrect a $ findWithDefault empty (currentConfig s) (scoreMap s)
 
 answerSelected a s | a /= correctAnswer s && attemptsRemaining s > 1 = s {
       answerButtonModes = replaceAtSameIndex a (allAnswers s) IncorrectDisactivated (answerButtonModes s),
       attemptsRemaining = attemptsRemaining s - 1,
-      scoreMap = markIncorrect a (correctAnswer s) $ scoreMap s
+      scoreMap = insert (currentConfig s) newSpecificMap (scoreMap s)
       }
+      where newSpecificMap = markIncorrect a (correctAnswer s)$ findWithDefault empty (currentConfig s) (scoreMap s)
 
 answerSelected a s | a /= correctAnswer s && attemptsRemaining s <= 1 = toExploreMode $ s {
       answerButtonModes = replaceAtSameIndex a (allAnswers s) IncorrectActivated $
               replaceAtSameIndex (correctAnswer s) (allAnswers s) CorrectMissed (answerButtonModes s),
-      scoreMap = markIncorrect a (correctAnswer s) $ scoreMap s
+      scoreMap = insert (currentConfig s) newSpecificMap (scoreMap s)
       }
+      where newSpecificMap = markIncorrect a (correctAnswer s) $ findWithDefault empty (currentConfig s) (scoreMap s)
 
-toExploreMode :: MultipleChoiceState a -> MultipleChoiceState a
+toExploreMode :: MultipleChoiceState a c -> MultipleChoiceState a c
 toExploreMode s = s {
   mode = ExploreMode,
   answerButtonModes = fmap f $ answerButtonModes s
@@ -253,4 +262,3 @@ toExploreMode s = s {
     f IncorrectActivated = IncorrectActivated
     f Correct = Correct
     f CorrectMissed = CorrectMissed
-
