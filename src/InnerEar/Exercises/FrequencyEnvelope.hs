@@ -78,7 +78,7 @@ scaleRange :: Double -> Double -> (Double -> Double) -> Double -> Double
 scaleRange r1 r2 f x = linlin 0.0 1.0 r1 r2 $ f x
 
 linlin :: Double -> Double -> Double -> Double -> Double -> Double
-linlin in1 in2 out1 out2 x = (x-in1)/(in2-in1)*(out2-out1)+out2
+linlin in1 in2 out1 out2 x = (x-in1)/(in2-in1)*(out2-out1)+out1
 
 sampleEnvelope :: Int -> (Double -> Double) -> Duration -> [Double]
 sampleEnvelope r f d = fmap (f . (\x -> x * fromIntegral(d)/1000.0/fromIntegral(r))) $ fmap fromIntegral [0, 1 .. (r-1)]
@@ -87,7 +87,7 @@ renderAnswer :: Config -> Source -> Maybe Answer -> Sound
 renderAnswer c@(s,d,o) _ (Just a) = Sound $ NodeSource x (Just (fromIntegral d))
   where
     e = sampleEnvelope 200 (actualEnvelope c a) d
-    e' = Custom { curve = e, duration = (fromIntegral d) }
+    e' = Custom { curve = e, duration = (fromIntegral d / 1000) }
     x = OscillatorNode $ Oscillator' Triangle e' (-20.0)
 renderAnswer _ _ Nothing = NoSound
 
