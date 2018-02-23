@@ -37,29 +37,40 @@ createAudioContext = F.createAudioContext
 startSilentNode:: IO ()
 startSilentNode = F.startSilentNode
 
-performSound :: MonadWidget t m => Event t Sound -> m ()
+
+performSound:: MonadWidget t m => Event t Sound -> m ()
 performSound event = do
-  let n = fmap someName event
+  let n = fmap (\e-> do
+                      let t = getT e
+                      graph <- createGraph e   -- WA''
+                      startGraph graph
+                      disconnectGraphAtTimeMaybe graph  t
+                      ) event          -- Event t (IO ())
   performEvent_ $ fmap liftIO n
-
-someName :: Sound -> IO ()
-
-someName (TwoNoteSound n1 t n2) = do
-  someName n1
-  delayedSomeName t n2
-
-someName e = do
-  let t = getT e
-  graph <- createGraph e   -- WebAudioNode''
-  startGraph graph
-  disconnectGraphAtTimeMaybe graph  t
-
-delayedSomeName :: Double -> Sound -> IO ()
-delayedSomeName t e = do
-  let t2 = getT e
-  graph <- createGraph e
-  delayedStartGraph t graph
-  disconnectGraphAtTimeMaybe graph (t+t2)
+--
+-- performSound :: MonadWidget t m => Event t Sound -> m ()
+-- performSound event = do
+--   let n = fmap someName event
+--   performEvent_ $ fmap liftIO n
+--
+-- someName :: Sound -> IO ()
+--
+-- someName (TwoNoteSound n1 t n2) = do
+--   someName n1
+--   delayedSomeName t n2
+--
+-- someName e = do
+--   let t = getT e
+--   graph <- createGraph e   -- WebAudioNode''
+--   startGraph graph
+--   disconnectGraphAtTimeMaybe graph  t
+--
+-- delayedSomeName :: Double -> Sound -> IO ()
+-- delayedSomeName t e = do
+--   let t2 = getT e
+--   graph <- createGraph e
+--   delayedStartGraph t graph
+--   disconnectGraphAtTimeMaybe graph (t+t2)
 
 audioElement::MonadWidget t m => m ()
 audioElement = elDynAttr "audio" attrs (return())
@@ -107,7 +118,7 @@ createAudioElement s m = elDynAttr "audio" m (return s)
 -- when event fires, disconnects source from everything and connects source to
 -- the Node contained in the event. connects the node to the dest.
 -- useful for swapping 'effects' on MediaNodes
-holdAndConnectSound:: MonadWidget t m => Source -> Event t Node -> m ()
+holdAndConnectSound:: MonadWidget t m => Source -> Event t NodeSpec -> m ()
 holdAndConnectSound s ev = do
   g <- liftIO (createGraph s)
   liftIO (connectGraphToDest g)

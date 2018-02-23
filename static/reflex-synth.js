@@ -101,8 +101,6 @@ function getDistortAtDbFunc(db){
 
 function setGain(db, node){
   var amp  = Math.pow(10,db/20)
-  console.log("db:  "+db)
-  console.log("amp: "+amp)
   node.gain.value = amp;
 }
 

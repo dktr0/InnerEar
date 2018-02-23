@@ -37,6 +37,7 @@ import InnerEar.Exercises.AddedWhiteNoise
 import InnerEar.Exercises.Compression
 import InnerEar.Exercises.OddEvenAll
 import InnerEar.Exercises.SpectralShape
+import InnerEar.Exercises.Intervals1
 
 data Navigation =
   SplashPage |

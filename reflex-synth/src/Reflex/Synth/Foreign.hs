@@ -21,14 +21,14 @@ foreign import javascript safe "setTimeout(function () {$1.disconnect()}, $2*100
 foreign import javascript safe "$r=___ac.createGain()" createGain :: IO JSVal
 foreign import javascript safe "$r=___ac.createBiquadFilter()" createBiquadFilter :: IO JSVal
 foreign import javascript safe "$r=___ac.createDelay(10.0);" createDelay:: IO JSVal
-foreign import javascript safe "$1.delayTime = $2" setDelay:: JSVal -> Double -> IO ()
+foreign import javascript safe "$1.delayTime.value = $2" setDelay:: JSVal -> Double -> IO ()
 -- foreign import javascript safe "$r=___ac.createOscillator()" createOscillator :: IO JSVal
 foreign import javascript safe "$r = new Oscillator($1, $2, $3)" createOscillator :: JSVal -> JSVal -> JSVal -> IO JSVal
 
 foreign import javascript safe " $r=createCompressorNode($1, $2, $3, $4, $5)" createCompressorNode:: JSVal -> JSVal -> JSVal -> JSVal -> JSVal -> IO JSVal
 
 
-foreign import javascript safe "overlappedDictionary[$1]=$2" adddToOverlappedDictionary:: JSString -> JSVal -> IO ()
+foreign import javascript safe "overlappedDictionary[$1]=$2" adddToOverlappedDictionary:: JSVal -> JSVal -> IO ()
 
 
 foreign import javascript safe "$r= createMediaNode($1)" createMediaNode :: JSString -> IO JSVal
@@ -36,6 +36,8 @@ foreign import javascript safe "$r= createMediaNode($1)" createMediaNode :: JSSt
 
 foreign import javascript safe "setGain($1, $2)" setGain :: Double -> JSVal -> IO ()   -- Setting Gain to a DB value (NOT AMPLITUDE)
 foreign import javascript safe "$2.gain.value = $1" setAmp::Double -> JSVal -> IO ()
+foreign import javascript safe "$r = $1.gain" getGain :: JSVal -> IO JSVal
+foreign import javascript safe "$r = $1.frequency" getFrequency :: JSVal -> IO JSVal
 foreign import javascript safe "$1.loop=$2" setBufferNodeLoop :: JSVal -> JSVal -> IO ()
 foreign import javascript safe "$1.setAmp($2)" setOscillatorAmp:: JSVal -> Double -> IO ()
 foreign import javascript safe "$2.frequency.value = $1" setFrequency :: Double -> JSVal -> IO()
@@ -57,6 +59,8 @@ foreign import javascript safe "$r = ___ac.currentTime" getCurrentTime :: IO Dou
 
 foreign import javascript safe "$3.gain.setValueAtTime($1,$2)" setAmpAtTime :: Double -> Double -> JSVal-> IO ()
 foreign import javascript safe "$3.gain.linearRampToValueAtTime($1, $2)" linearRampToGainAtTime:: Double -> Double -> JSVal -> IO ()
+foreign import javascript safe "$1.setValueCurveAtTime($2,$3,$4)":: setValueCurveAtTime :: JSVal -> JSVal -> Double -> Double -> IO () -- AudioParam -> jsArray -> start time -> duration
+
 
 foreign import javascript safe "$r = ___ac.createOscillator()" createSilentNode:: IO JSVal
 

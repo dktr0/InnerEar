@@ -2,6 +2,7 @@ module Reflex.Synth.Sound where
 
 import Reflex.Synth.NodeSpec
 
+
 data Sound =
   NoSound |
   Sound Source |
@@ -20,14 +21,14 @@ soundTwo = OverlappedSound "Test" [Sound (NodeSource (OscillatorNode ( Oscillato
 
 -- soundOne = OverlappedSound "Test" [Sound $ NodeSource (OscillatorNode $ Oscillator Sine 440 (-10)) (Just 2)]
 
-
-createSound :: Sound -> IO WebAudioGraph
-createSound (FilteredSound s f) = do
-  sourceNode <- createGraph s
-  filterNode <- createGraph f
-  dest <- getDestination
-  let graph = WebAudioGraph'' sourceNode (WebAudioGraph'' filterNode (WebAudioGraph dest))
-  connectGraph graph
+-- 
+-- createSound :: Sound -> IO WebAudioGraph
+-- createSound (FilteredSound s f) = do
+--   sourceNode <- createGraph s
+--   filterNode <- createGraph f
+--   dest <- getDestination
+--   let graph = WebAudioGraph'' sourceNode (WebAudioGraph'' filterNode (WebAudioGraph dest))
+--   connectGraph graph
 
 
 -- -- get duration of a sound. Nothing denotes that the sound will play indefinitely until the user hits stop.

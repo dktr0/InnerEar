@@ -29,16 +29,25 @@ createBiquadFilter (Filter filtType f q g) = do
   setFilterType filtType y
   return y
 
+createCompressorNode:: Compressor -> IO (WebAudioNode)
+createCompressorNode (Compressor a b c d e) = do
+  ref <- F.createCompressorNode (pToJSVal a) (pToJSVal b) (pToJSVal c) (pToJSVal d) (pToJSVal e)
+  return $ WebAudioNode (CompressorNode $ Compressor a b c d e) ref
+
 createDelayNode::Double -> IO WebAudioNode
 createDelayNode delay = do
   delayNode <- F.createDelay
   F.setDelay delayNode delay
   return (WebAudioNode (DelayNode delay) delayNode)
 
-createCompressorNode:: Compressor -> IO (WebAudioNode)
-createCompressorNode (Compressor a b c d e) = do
-  ref <- F.createCompressorNode (pToJSVal a) (pToJSVal b) (pToJSVal c) (pToJSVal d) (pToJSVal e)
-  return $ WebAudioNode (CompressorNode $ Compressor a b c d e) ref
+createEnvelope:: Envelope -> IO WebAudioNode
+createEnvelope (Custom points dur) = do
+  gain <- createGain 0
+  gainGain <- getGain gain
+  setAmp 0.0 gain
+  F.setValueCurveAtTime gainGain (toJSArray points) 0 dur
+  return (WebAudioNode (Envelope (Custom points dur)) gain)
+
 
 createWaveShaperNode:: WaveShaper -> IO WebAudioNode
 createWaveShaperNode (ClipAt db) = F.createClipAtWaveShaper (pToJSVal db) >>= return . WebAudioNode (WaveShaperNode $ ClipAt db)
@@ -53,6 +62,12 @@ createOscillator (Oscillator t freq db) = do
   -- F.connect osc g
   -- F.startNode osc
   return (WebAudioNode (OscillatorNode $ Oscillator t freq db) osc)
+createOscillator (Oscillator' t env db) = do
+  osc <- F.createOscillator (Prim.toJSString $ fmap toLower $ show t) 0 (pToJSVal db)
+  envelope <- createEnvelope env
+  freq <- getFrequency osc
+  connect freq envelope
+  return (WebAudio (OscillatorNode $ Oscillator' t env db) osc)
 
 
 createGain :: Double -> IO WebAudioNode
@@ -60,6 +75,10 @@ createGain g = do
   x <- F.createGain
   F.setGain g x
   return (WebAudioNode (GainNode g) x)
+
+createSilentNode::IO WebAudioNode
+createSilentNode = F.createSilentNode >>= return . WebAudioNode (SilentNode)
+
 
 createBufferNode :: Buffer -> IO WebAudioNode
 createBufferNode (File path) = do
