@@ -6,7 +6,8 @@ import qualified Data.Map as M
 import Reflex
 import Reflex.Dom
 import Reflex.Synth.Types
--- import Reflex.Synth.Synth
+import Reflex.Synth.Synth
+import qualified Reflex.Synth.Foreign as F
 import Reflex.Dom.Contrib.Widgets.ButtonGroup (radioGroup)
 import Reflex.Dom.Contrib.Widgets.Common
 import qualified GHCJS.DOM.Types as G

@@ -77,7 +77,7 @@ createGain g = do
   F.setGain g x
   return (WebAudioNode (GainNode g) x)
 
-createSilentNode::IO WebAudioNode
+createSilentNode :: IO WebAudioNode
 createSilentNode = F.createSilentNode >>= return . WebAudioNode (SilentNode)
 
 

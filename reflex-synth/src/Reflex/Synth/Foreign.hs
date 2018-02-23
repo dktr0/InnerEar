@@ -59,7 +59,7 @@ foreign import javascript safe "$r = ___ac.currentTime" getCurrentTime :: IO Dou
 
 foreign import javascript safe "$3.gain.setValueAtTime($1,$2)" setAmpAtTime :: Double -> Double -> JSVal-> IO ()
 foreign import javascript safe "$3.gain.linearRampToValueAtTime($1, $2)" linearRampToGainAtTime:: Double -> Double -> JSVal -> IO ()
-foreign import javascript safe "$1.setValueCurveAtTime($2,$3,$4)"setValueCurveAtTime :: JSVal -> JSVal -> Double -> Double -> IO () -- AudioParam -> jsArray -> start time -> duration
+foreign import javascript safe "$1.setValueCurveAtTime($2,$3,$4)" setValueCurveAtTime :: JSVal -> JSVal -> Double -> Double -> IO () -- AudioParam -> jsArray -> start time -> duration
 
 
 foreign import javascript safe "$r = ___ac.createOscillator()" createSilentNode:: IO JSVal

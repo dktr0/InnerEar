@@ -3,7 +3,8 @@ module Reflex.Synth.Types (
   module Reflex.Synth.WebAudioNode,
   module Reflex.Synth.WebAudioGraph,
   module Reflex.Synth.Sound,
-  module Reflex.Synth.WebAudio
+  module Reflex.Synth.WebAudio,
+  module Reflex.Synth.Types
   ) where
 
 import Reflex.Synth.NodeSpec
@@ -28,8 +29,6 @@ import GHCJS.Marshal(fromJSVal)
 import GHCJS.Marshal.Pure (pToJSVal)
 import GHCJS.Prim (toJSArray)
 
-createSilentNode :: IO WebAudioNode
-createSilentNode = F.createSilentNode >>= return . WebAudioNode (SilentNode)
 
 createAudioContext :: IO ()
 createAudioContext = F.createAudioContext

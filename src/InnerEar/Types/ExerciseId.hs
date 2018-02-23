@@ -18,7 +18,9 @@ data ExerciseId =
   HarmonicsOne |
   OddEvenAll |
   SpectralShape |
-  Intervals1
+  Intervals1 |
+  FrequencyEnvelope |
+  AmplitudeEnvelope
   deriving (Show,Read,Eq,Data,Typeable)
 
 showExerciseTitle :: ExerciseId -> String
@@ -35,4 +37,6 @@ showExerciseTitle HarmonicsOne = "Harmonics One"
 showExerciseTitle OddEvenAll = "Odd, Even, or All Harmonics"
 showExerciseTitle SpectralShape = "Spectral Shape"
 showExerciseTitle Intervals1 = "Intervals 1: P1 M2 M3 P4 P5"
+showExerciseTitle FrequencyEnvelope = "Frequency Envelope"
+showExerciseTitle AmplitudeEnvelope = "Amplitude Envelope"
 showExerciseTitle _ = "Error: unknown exercise"
