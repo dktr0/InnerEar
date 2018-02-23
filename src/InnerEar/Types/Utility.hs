@@ -22,3 +22,6 @@ replaceAtSameIndex k l mode = maybe id (\x->replaceAt x mode) index
 
 midicps :: Double -> Double
 midicps x = 440 * (2**((x-69)/12))
+
+ampdb :: Double -> Double
+ampdb x = 20 * (logBase 10 x)
