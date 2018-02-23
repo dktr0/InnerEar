@@ -9,6 +9,7 @@ import InnerEar.Types.Utility
 import InnerEar.Types.Handle
 import InnerEar.Types.Password
 import InnerEar.Types.Data
+import InnerEar.Types.ExerciseId
 
 data Request =
   CreateUser Handle Password |
@@ -16,7 +17,8 @@ data Request =
   Deauthenticate |
   PostPoint Point |
   GetUserList |
-  GetAllRecords Handle
+  GetAllRecords Handle |
+  GetAllExerciseEvents Handle ExerciseId -- 
   deriving (Eq,Show,Data,Typeable)
 
 

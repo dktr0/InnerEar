@@ -17,6 +17,7 @@ import Database.SQLite.Simple.Ok
 import InnerEar.Types.ExerciseId
 import InnerEar.Types.Handle
 import InnerEar.Types.Data
+import InnerEar.Types.ExerciseId
 
 -- definitions pertaining to "events", ie. the type Record and all of its dependencies
 
@@ -158,3 +159,6 @@ postEvent c r = execute c "INSERT INTO events (handle,time,event,exerciseId,conf
 
 findAllRecords :: Connection -> Handle -> IO [Record]
 findAllRecords conn h = query conn "SELECT handle,time,event,exerciseId,config,question,answer,selection,shortTermEval,longTermEval,reflection FROM events WHERE handle = ?" (Only (fmap Data.Char.toLower h))
+
+findAllExerciseEvents :: Connection -> Handle -> ExerciseId -> IO [Record]
+findAllExerciseEvents conn h e = query conn "SELECT handle,time,event,exerciseId,config,question,answer,selection,shortTermEval,longTermEval,reflection FROM events WHERE handle = ? AND exerciseId = ?" (fmap Data.Char.toLower h,show e)
