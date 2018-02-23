@@ -46,7 +46,8 @@ createEnvelope (Custom points dur) = do
   gainGain <- F.getGain (getJSVal gain)
   setAmp 0.0 gain
   array<- toJSArray $ fmap pToJSVal points
-  F.setValueCurveAtTime gainGain array 0 dur
+  currentTime <- F.getCurrentTime
+  F.setValueCurveAtTime gainGain array currentTime dur
   return (WebAudioNode (EnvelopeNode (Custom points dur)) (getJSVal gain))
 
 

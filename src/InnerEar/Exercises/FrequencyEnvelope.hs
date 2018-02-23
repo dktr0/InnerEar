@@ -21,8 +21,8 @@ import InnerEar.Types.Utility
 
 type Similarity = Int
 type Duration = Int
-type Octaves = Double
-type Config = (Similarity,Duration,Range)
+type Octave = Double
+type Config = (Similarity,Duration,Octave)
 
 similarities :: [Similarity]
 similarities = [1,2,3,4]
@@ -66,10 +66,10 @@ lowPitch :: Octave -> Double -- double is Frequency
 lowPitch o = midicps $ 69-(o*12/2)
 
 highPitch :: Octave -> Double -- double is Frequency
-highPitch _ = midicps $ 69+(o*12/2)
+highPitch o = midicps $ 69+(o*12/2)
 
 actualEnvelope :: Config -> Answer -> Double -> Double
-actualEnvelope (s,d,o) a = scaleRange (lowPitch o) (highPitch o) $ scaleDomain 0.0 d $ getEnvelope s a
+actualEnvelope (s,d,o) a = scaleRange (lowPitch o) (highPitch o) $ scaleDomain 0.0 (fromIntegral(d)/1000.0) $ getEnvelope s a
 
 scaleDomain :: Double -> Double -> (Double -> Double) -> Double -> Double
 scaleDomain d1 d2 f x = f $ linlin d1 d2 0.0 1.0 x
@@ -78,14 +78,17 @@ scaleRange :: Double -> Double -> (Double -> Double) -> Double -> Double
 scaleRange r1 r2 f x = linlin 0.0 1.0 r1 r2 $ f x
 
 linlin :: Double -> Double -> Double -> Double -> Double -> Double
-linlin in1 in2 out1 out2 x = linlin (x-in1)/(in2-in1)*(out2-out1)+out2
+linlin in1 in2 out1 out2 x = (x-in1)/(in2-in1)*(out2-out1)+out2
 
-sampleEnvelope :: Int -> (Double -> Double) -> Duration -> [(Double,Double)]
-sampleEnvelope r f d = fmap (f . (\x -> x * d / r)) $ [0, 1 .. (r-1)]
+sampleEnvelope :: Int -> (Double -> Double) -> Duration -> [Double]
+sampleEnvelope r f d = fmap (f . (\x -> x * fromIntegral(d)/1000.0/fromIntegral(r))) $ fmap fromIntegral [0, 1 .. (r-1)]
 
 renderAnswer :: Config -> Source -> Maybe Answer -> Sound
-renderAnswer c@(s,d,o) _ (Just a) = OurCoolSound e
-  where e = sampleEnvelope 200 (actualEnvelope c a d) d
+renderAnswer c@(s,d,o) _ (Just a) = Sound $ NodeSource x (Just (fromIntegral d))
+  where
+    e = sampleEnvelope 200 (actualEnvelope c a) d
+    e' = Custom { curve = e, duration = (fromIntegral d) }
+    x = OscillatorNode $ Oscillator' Triangle e' (-20.0)
 renderAnswer _ _ Nothing = NoSound
 
 displayEval :: MonadWidget t m => Dynamic t (Map Answer Score) -> m ()
@@ -97,12 +100,17 @@ generateQ _ _ = randomMultipleChoiceQuestion answers
 thisConfigWidget:: MonadWidget t m => Config -> m (Dynamic t Config, Dynamic t Source, Event t (Maybe a))
 thisConfigWidget c@(s,d,o) = do
   text "Similarity: "
-  simDropDown <- dropdown similarities (constDyn $ fromList $ zip similarities similarities) (DropdownConfig never (constDyn empty))
+  simDropDown <- dropdown (head similarities) (constDyn $ fromList [ (x,show x) | x <- similarities ]) (DropdownConfig never (constDyn empty))
   text "Duration: "
-  durDropDown <- dropdown durations (constDyn $ fromList $ zip durations durations) (DropdownConfig never (constDyn empty))
+  durDropDown <- dropdown (head durations) (constDyn $ fromList [ (x,show x) | x <- durations]) (DropdownConfig never (constDyn empty))
   text "Octaves: "
-  octDropDown <- dropdown octaves (constDyn $ fromList $ zip octaves octaves) (DropdownConfig never (constDyn empty))
-  conf <- (,,) <$> _dropdown_value simDropDown <*> _dropdown_value durDropDown <*> _dropdown_value octDropDown
+  octDropDown <- dropdown (head octaves) (constDyn $ fromList [ (x,show x) | x <- octaves]) (DropdownConfig never (constDyn empty))
+  let sim = _dropdown_value simDropDown
+  let dur = _dropdown_value durDropDown
+  let oct = _dropdown_value octDropDown
+  simDur <- combineDyn (,) sim dur
+  simDurOct <- combineDyn (,) simDur oct
+  conf <- mapDyn (\((x,y),z) -> (x,y,z)) simDurOct
   let source = constDyn $ NodeSource (SilentNode) (Just 1.0)
   return (conf, source, never)
 
@@ -118,6 +126,6 @@ frequencyEnvelopeExercise = multipleChoiceExercise
   thisConfigWidget
   renderAnswer
   FrequencyEnvelope
-  (-10)
+  (1,1000,8.0)
   displayEval
   generateQ
