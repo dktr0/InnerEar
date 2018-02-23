@@ -17,6 +17,7 @@ import InnerEar.Widgets.Config
 import InnerEar.Widgets.SpecEval
 import InnerEar.Types.Data
 import InnerEar.Types.Frequency
+import InnerEar.Types.Utility
 
 type Config = Frequency -- represents fundamental frequency for sound generation
 
@@ -28,9 +29,6 @@ data Answer = Steep | Linear | Gradual | Flat | InverseGradual | InverseLinear |
 
 answers = [Steep,Linear,Gradual,Flat,InverseGradual,InverseLinear,InverseSteep]
 
-ampdb :: Double -> Double
-ampdb x = 20 * (logBase 10 x)
-
 getShape :: Answer -> [Double]
 getShape Steep = fmap (ampdb . (\x -> 1/(x*x))) [1,2 ..]
 getShape Linear = fmap (ampdb . (\x -> 1/x)) [1,2 ..]
@@ -39,6 +37,7 @@ getShape Flat = fmap (ampdb . (\x -> 1)) [1,2 ..]
 getShape InverseGradual = fmap (ampdb . (\x -> 1/sqrt x)) [1,2 ..]
 getShape InverseLinear = fmap (ampdb . (\x -> 1/x)) [1,2 ..]
 getShape InverseSteep = fmap (ampdb . (\x -> 1/(x*x))) [1,2 ..]
+
 
 renderAnswer :: Config -> Source -> Maybe Answer -> Sound
 

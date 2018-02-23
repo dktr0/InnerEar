@@ -71,7 +71,7 @@ instructions = el "div" $ do
 
 oddEvenAllExercise :: MonadWidget t m => Exercise t m Config [Answer] Answer (Map Answer Score)
 oddEvenAllExercise = multipleChoiceExercise
-  1
+  2
   answers
   instructions
   oddEvenAllConfigWidget
