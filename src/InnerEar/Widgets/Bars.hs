@@ -16,7 +16,30 @@ dynBarCSS' percent barWidth c =  do
     --let class' = constDyn (singleton "class" "svgBarContainer")
     svgHeight <- mapDyn (* 150) percent
     svgHeight' <- mapDyn (singleton "height" . show) svgHeight
-    let rotate' = constDyn (singleton "transform" "rotate (180)")
+    let rotate' = constDyn (singleton "style" "transform:rotate(-180deg)")
+    attrs <- mconcatDyn [class', svgHeight', rotate']
+    svgDynAttr "svg" attrs $ return ()
+
+dynBarCSSV :: MonadWidget t m =>  Dynamic t Double -> Dynamic t Float -> Dynamic t String -> m ()
+dynBarCSSV percent barWidth c =  do
+    class' <- mapDyn (singleton "class") c
+   --let class' = constDyn (singleton "class" "svgBarContainer")
+    svgHeight <- mapDyn (* 150) percent
+    svgHeight' <- mapDyn (singleton "height" . show) svgHeight
+    let rotate' = constDyn (singleton "style" "transform:rotate(90deg)")
+    attrs <- mconcatDyn [class', svgHeight', rotate']
+    svgDynAttr "svg" attrs $ return ()
+
+--inverted bars
+dynBarCSSInv :: MonadWidget t m =>  Dynamic t Double -> Dynamic t Float -> Dynamic t String -> m ()
+dynBarCSSInv percent barWidth c =  do
+    class' <- mapDyn (singleton "class") c
+    --let class' = constDyn (singleton "class" "svgBarContainer")
+    svgHeight <- mapDyn (* 150) percent
+    svgHeight' <- mapDyn (singleton "height" . show) svgHeight
+    --let svgPos = constDyn 70
+    --let svgPos' = constDyn (singleton "top" . show) svgPos
+    let rotate' = constDyn (singleton "style" "transform:rotate(-180deg)")
     attrs <- mconcatDyn [class', svgHeight', rotate']
     svgDynAttr "svg" attrs $ return ()
 
@@ -50,6 +73,39 @@ scoreBar (class1,class2,class3, class4) key score  = elClass "div" class1 $ do
   faintedXaxis "faintedXaxis"
   xLabel class4 key
   mapDyn questionsAsked score' >>= dynCountLabel (constDyn "countLabel")
+
+  -- A dynamic bar for (Maybe Score)
+scoreBarV :: MonadWidget t m => (String,String,String, String) -> String -> Dynamic t (Maybe Score) -> m ()
+scoreBarV (class1,class2,class3, class4) key score  = elClass "div" class1 $ do
+  bool <-  mapDyn (maybe False (const True)) score
+  score' <-  mapDyn (maybe (Score 0 0 0) id) score -- Dynamic t Int
+  percent <- mapDyn asPercent score'
+  let b = dynScoreLabel (constDyn "scoreLabelV") percent >> dynBarCSS' percent (constDyn 100) (constDyn class2)
+  flippableDyn (return ()) b bool
+  let b2 = emptyScoreLabel >> faintedLineCSS class3 >> dynBarCSS' percent (constDyn 100) (constDyn class2)
+  flippableDyn b2 (return ()) bool
+  faintedLineToAdjustGraph "faintedLineToAdjustGraph"
+  faintedXaxis "faintedXaxis"
+  xLabel class4 key
+  mapDyn questionsAsked score' >>= dynCountLabel (constDyn "countLabelV")
+
+--inverted bars
+scoreBarInvertedH :: MonadWidget t m => (String, String, String, String, String, String) -> String -> Dynamic t (Maybe Score) -> m()
+scoreBarInvertedH (class1, class2, class3, class4, class5, class6) key currentScore = elClass "div" class1 $ do
+  bool <- mapDyn (maybe False (const True)) currentScore
+  currentScore' <- mapDyn (maybe (Score 0 0 0) id) currentScore
+  let histScore = currentScore
+  histScore' <- mapDyn (maybe (Score 0 0 0) id) histScore -- Dynamic t Int
+  currentPercent <- mapDyn asPercent currentScore'
+  histPercent <- mapDyn asPercent histScore'
+  let b = dynScoreLabel (constDyn "scoreLabelCurrent") currentPercent >> dynScoreLabel (constDyn "scoreLabelHist") histPercent >> dynBarCSS' currentPercent (constDyn 100) (constDyn class2) >> dynBarCSSInv histPercent (constDyn 100) (constDyn class3)
+  flippableDyn (return ()) b bool
+  let b2 = emptyScoreLabel >> faintedLineCSS class4 >> faintedLineCSS class5 >> dynBarCSS' currentPercent (constDyn 100) (constDyn class2) >> dynBarCSSInv histPercent (constDyn 100) (constDyn class3)
+  flippableDyn b2 (return ()) bool
+  faintedLineToAdjustGraph "faintedLineToAdjustGraph"
+  faintedXaxis "faintedXaxisMirror"
+  xLabel class6 key
+  mapDyn questionsAsked currentScore' >>= dynCountLabel (constDyn "countLabel")
 
   -- A historical dynamic bar for (Maybe Score)
 scoreBarH :: MonadWidget t m => (String,String,String, String, String, String) -> String -> Dynamic t (Maybe Score) -> m ()

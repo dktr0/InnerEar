@@ -181,14 +181,35 @@ button.correctButton{
   background-color: hsl(120,100%,80%);
 }
 
+.svgBarContainerVertical {
+  width: 59%;
+  background-color: white;
+}
+
 .svgBarContainerCurrent{
   width: 30%;
   background-color: hsl(120,100%,80%);
 }
 
+.svgBarContainerCurrentMirror {
+  width: 30%;
+  background-color: hsl(120,100%,80%);
+  position: relative;
+  bottom: 84px;
+}
+
 .svgBarContainerHist{
   width: 30%;
   background-color: orange;
+}
+
+.svgBarContainerHistMirror{
+  width: 30%;
+   background-color: white;
+   position: relative;
+   /*top: 21px;
+   /*transform: rotate(40deg);*/
+   right: 90px;
 }
 
 .svgBarContainerFiveBand {
@@ -227,6 +248,17 @@ button.correctButton{
   top: 9%;
 }
 
+.svgFaintedLineVertical{
+
+  width: 1px;
+  height: 5px;
+ background-color: #2F4F4F;
+ position: relative;
+ left: 24%;
+ top: 9%;
+}
+
+
 .svgFaintedLineHist{
   width: 1px;
   height: 5px;
@@ -236,7 +268,24 @@ button.correctButton{
  top: 9%;
 }
 
+.svgFaintedLineHistMirror {
+  width: 1px;
+  height: 5px;
+ background-color: #2F4F4F;
+ position: relative;
+ left: 40%;
+ top: 9%;
+}
+
 .svgFaintedLineCurrent {
+  width: 1px;
+  height: 5px;
+ background-color: #2F4F4F;
+ position: relative;
+ left: 23%;
+ top: 9%;
+}
+.svgFaintedLineCurrentMirror {
   width: 1px;
   height: 5px;
  background-color: #2F4F4F;
@@ -270,23 +319,52 @@ button.correctButton{
   background-color: #2F4F4F;
   position: relative;
   bottom: 19px;
+}
 
 
-  }
+
+
+.faintedXaxisMirror {
+  /*width : 5%;*/
+ width : 100%;
+ height: 1px;
+ background-color: #2F4F4F;
+ position: relative;
+ bottom: 100px;
+}
+
 
 .faintedYaxis {
-    width : 1%;
+    width : 10;
     height:50%;
     position: relative;
 right:80%;
   top:  15%;
 }
 
+.faintedYaxisV {
+  background-color: #2F4F4F;
+    width : 1px;
+    height:100%;
+  position: relative;
+  bottom: 60%;
+
+}
 .scoreLabel
 {
    color: hsl(120,100%,80%);
    text-align: center;
    font-size: 70%;
+}
+
+.scoreLabelV
+{
+   color: white;
+   text-align: center;
+   font-size: 70%;
+  transform: rotate(-90deg);
+  position: relative;
+  bottom: 10px;
 }
 
 .scoreLabelCurrent
@@ -320,6 +398,15 @@ right:80%;
    bottom: 8px;
 }
 
+.xLabelVertical{
+  color: white;
+  font-size:70%;
+  text-align: center;
+  position: relative;
+  top: 40px;
+  transform: rotate(-90deg);
+}
+
 .xLabelFiveBand {
    color: hsl(120,100%,80%);
    font-size:50%;
@@ -336,12 +423,29 @@ right:80%;
 
 }
 
+.xLabelMirror {
+   color: hsl(120,100%,80%);
+   font-size:70%;
+   text-align: center;
+   position: relative;
+   bottom: 8px;
+}
+
 .countLabel {
   color: hsl(120,100%,80%);
   font-size: 70%;
   text-align: center;
   position: relative;
   bottom:1px;
+}
+
+.countLabelV {
+  color: whitesmoke;
+  font-size: 75%;
+  text-align: center;
+  position: relative;
+  bottom:35px;
+  transform: rotate(-90deg);
 }
 
 
@@ -357,14 +461,24 @@ right:80%;
 }
 
 
+
 .countMainLabel {
-   font-size: 60%;
+  font-size: 60%;
+  width: 15px;
+  height: 10%;
+  position: relative;
+  top: 13%;
+  left: 4%;
+}
+.countMainLabelV {
+  color: white;
+   font-size: 80%;
    width: 15px;
    height: 10%;
    position: relative;
-   top: 13%;
-  left: 4%;
-
+   top: 42%;
+  left: 20%;
+  transform: rotate(-90deg);
 }
 
 .percentageMainLabel {
@@ -374,7 +488,17 @@ right:80%;
    position: relative;
    bottom:26%;
    left: 5%;
+}
 
+.percentageMainLabelV {
+  color:
+  height: 1%;
+   width: 1%;
+   font-size: 70%;
+   position: relative;
+   bottom:50%;
+   left: 85%;
+transform: rotate(-90deg);
 }
 
 
@@ -514,6 +638,18 @@ right:80%;
   height:100%;
 }
 
+.specEvalWrapperV {
+  display:inline-block;
+  ;
+  width:50%;
+  height:100%;
+    transform: rotate(90deg);
+  position: relative;
+  left: 10%;
+  top: 10%;
+
+}
+
 .flexExperiment{
   display:inline-flex;
   width:100%;
@@ -536,6 +672,15 @@ right:80%;
   margin-right: -10%;
 }
 
+.scoreBarWrapperVertical {
+  display: inline-block;
+  position: relative;
+  bottom:55%;
+  width: 50%;
+  margin-left: -10%;
+  margin-right: -10%;
+}
+
 .scoreBarWrapperHist {
     display: inline-block;
   position: relative;
@@ -545,6 +690,15 @@ right:80%;
   margin-right: -10%;
 }
 
+.scoreBarWrapperHistMirror {
+  display: inline-block;
+position: relative;
+bottom:50%;
+width: 50%;
+margin-left: -10%;
+margin-right: -10%;
+
+}
 
 .scoreBarWrapperFiveBand {
   display: inline-block;
@@ -559,8 +713,9 @@ right:80%;
   position: relative;
   bottom:55%;
   width:7%;
-
 }
+
+
 
 .explanation{
   text-align: justify;
