@@ -43,9 +43,14 @@ data Node =
   MediaNode String |
   CompressorNode  Compressor |
   WaveShaperNode WaveShaper|
+  EnvelopeNode Envelope |
   ScriptProcessorNode DSPEffect |
   DelayNode Double |
   ConvolverNode Buffer deriving(Read,Show,Eq)
+
+data Envelope = Tri CurveShape | Trapezoid CurveShape CurveShape CurveShape | Adsr CurveShape CurveShape CurveShape CurveShape
+
+data CurveShape = Curve { time::Double, curve::Double} | Line {time::Double}
 
 data DSPEffect = DistortAtDb Double deriving (Read, Show, Eq)
 
