@@ -43,10 +43,11 @@ createDelayNode delay = do
 createEnvelope:: Envelope -> IO WebAudioNode
 createEnvelope (Custom points dur) = do
   gain <- createGain 0
-  gainGain <- getGain gain
+  gainGain <- F.getGain (getJSVal gain)
   setAmp 0.0 gain
-  F.setValueCurveAtTime gainGain (toJSArray points) 0 dur
-  return (WebAudioNode (Envelope (Custom points dur)) gain)
+  array<- toJSArray $ fmap pToJSVal points
+  F.setValueCurveAtTime gainGain array 0 dur
+  return (WebAudioNode (EnvelopeNode (Custom points dur)) (getJSVal gain))
 
 
 createWaveShaperNode:: WaveShaper -> IO WebAudioNode
@@ -63,11 +64,11 @@ createOscillator (Oscillator t freq db) = do
   -- F.startNode osc
   return (WebAudioNode (OscillatorNode $ Oscillator t freq db) osc)
 createOscillator (Oscillator' t env db) = do
-  osc <- F.createOscillator (Prim.toJSString $ fmap toLower $ show t) 0 (pToJSVal db)
+  osc <- F.createOscillator (Prim.toJSString $ fmap toLower $ show t) (pToJSVal (0::Int)) (pToJSVal db)
   envelope <- createEnvelope env
-  freq <- getFrequency osc
-  connect freq envelope
-  return (WebAudio (OscillatorNode $ Oscillator' t env db) osc)
+  freq <- F.getFrequency osc
+  F.connect freq (getJSVal envelope)
+  return (WebAudioNode (OscillatorNode $ Oscillator' t env db) osc)
 
 
 createGain :: Double -> IO WebAudioNode
