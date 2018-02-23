@@ -21,7 +21,7 @@ soundTwo = OverlappedSound "Test" [Sound (NodeSource (OscillatorNode ( Oscillato
 
 -- soundOne = OverlappedSound "Test" [Sound $ NodeSource (OscillatorNode $ Oscillator Sine 440 (-10)) (Just 2)]
 
--- 
+--
 -- createSound :: Sound -> IO WebAudioGraph
 -- createSound (FilteredSound s f) = do
 --   sourceNode <- createGraph s
@@ -54,7 +54,7 @@ getT (TwoNotesSound n1 t n2) = do
   let m = max t t1
   t2 <- getT n2
   return $ m + t2
-getT (OverlappedSound _ xs) = minimum $ fmap getT xs
+getT (OverlappedSound _ xs) = maximum $ fmap getT xs
 
 getSource:: Sound -> Source
 getSource (Sound s) = s
