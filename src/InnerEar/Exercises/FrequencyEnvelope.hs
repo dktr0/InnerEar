@@ -84,7 +84,7 @@ sampleEnvelope :: Int -> (Double -> Double) -> Duration -> [Double]
 sampleEnvelope r f d = fmap (f . (\x -> x * fromIntegral(d)/1000.0/fromIntegral(r))) $ fmap fromIntegral [0, 1 .. (r-1)]
 
 renderAnswer :: Config -> Source -> Maybe Answer -> Sound
-renderAnswer c@(s,d,o) _ (Just a) = Sound $ NodeSource x (Just (fromIntegral d))
+renderAnswer c@(s,d,o) _ (Just a) = Sound $ NodeSource x (Just (fromIntegral d/1000))
   where
     e = sampleEnvelope 200 (actualEnvelope c a) d
     e' = Custom { curve = e, duration = (fromIntegral d / 1000) }
