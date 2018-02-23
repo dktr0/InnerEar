@@ -8,6 +8,9 @@ function Oscillator (type, freq, db){
   this.oscillator = osc;
   this.gain = gain;
   this.oscillator.connect(this.gain)
+  // return this
+  this.frequency = osc.frequency;
+  this.type = osc.type
 }
 
 Oscillator.prototype.start = function (){
@@ -17,6 +20,14 @@ Oscillator.prototype.start = function (){
 Oscillator.prototype.stop = function (){
   this.oscillator.stop();
 }
+
+// Oscillator.prototype.frequency = function (){
+//   return this.oscillator.frequency
+// }
+//
+// Oscillator.prototype.gain = function(){
+//   return this.gain.gain;
+// }
 
 Oscillator.prototype.disconnect = function (a){
   if (a==undefined){
