@@ -17,11 +17,11 @@ data NodeSpec =
   WaveShaperNode WaveShaper|
   ScriptProcessorNode DSPEffect |
   DelayNode Double |
-  EnvelopeNode Envelop |
+  EnvelopeNode Envelope |
   ConvolverNode Buffer deriving(Read,Show,Eq)
 
 
-data Envelope = Custom {curve::[Double], duration::Double}
+data Envelope = Custom {curve::[Double], duration::Double} deriving (Show, Eq, Read)
 
 
 data DSPEffect = DistortAtDb Double deriving (Read, Show, Eq)
