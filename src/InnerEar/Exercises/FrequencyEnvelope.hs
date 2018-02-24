@@ -58,10 +58,6 @@ linearEnvelope _ x = x
 quickerEnvelope :: Double -> Double -> Double
 quickerEnvelope e x = 1 - (slowerEnvelope e (1-x))
 
-riseToRiseAndFall :: (Double -> Double) -> Double -> Double
-riseToRiseAndFall f x | x <= 0.5 = f (x*2)
-riseToRiseAndFall f x | x > 0.5 = f ((1-x)*2)
-
 lowPitch :: Octave -> Double -- double is Frequency
 lowPitch o = midicps $ 69-(o*12/2)
 
@@ -70,15 +66,6 @@ highPitch o = midicps $ 69+(o*12/2)
 
 actualEnvelope :: Config -> Answer -> Double -> Double
 actualEnvelope (s,d,o) a = scaleRange (lowPitch o) (highPitch o) $ scaleDomain 0.0 (fromIntegral(d)/1000.0) $ getEnvelope s a
-
-scaleDomain :: Double -> Double -> (Double -> Double) -> Double -> Double
-scaleDomain d1 d2 f x = f $ linlin d1 d2 0.0 1.0 x
-
-scaleRange :: Double -> Double -> (Double -> Double) -> Double -> Double
-scaleRange r1 r2 f x = linlin 0.0 1.0 r1 r2 $ f x
-
-linlin :: Double -> Double -> Double -> Double -> Double -> Double
-linlin in1 in2 out1 out2 x = (x-in1)/(in2-in1)*(out2-out1)+out1
 
 sampleEnvelope :: Int -> (Double -> Double) -> Duration -> [Double]
 sampleEnvelope r f d = fmap (f . (\x -> x * fromIntegral(d)/1000.0/fromIntegral(r))) $ fmap fromIntegral [0, 1 .. (r-1)]
