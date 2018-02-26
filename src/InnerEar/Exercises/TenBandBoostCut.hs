@@ -59,7 +59,7 @@ frequencyBands::[FrequencyBand]
 frequencyBands = [AllBands, HighBands, Mid8Bands, MidBands, LowBands]
 
 boostAmounts::[Double]
-boostAmounts = [-10,-6,-3,-2,-1,1,2,3,6,10]
+boostAmounts = reverse [-10,-6,-3,-2,-1,1,2,3,6,10]
 
 type Config = (FrequencyBand, Double) -- FrequencyBand and Boost/Cut amount
 
@@ -81,6 +81,10 @@ convertBands HighBands = drop 5 answers
 convertBands MidBands = take 5 $ drop 3 $ answers
 convertBands Mid8Bands = take 8 $ drop 1 $ answers
 convertBands LowBands = take 5 answers
+
+instructions :: MonadWidget t m => m ()
+instructions = el "div" $ do
+  elClass "div" "instructionsText" $ text "In this exercise, a filter is applied to a specific region of the spectrum, either boosting or cutting the energy in that part of the spectrum by a specified amount. Your task is to identify which part of the spectrum has been boosted or cut. Challenge yourself and explore additional possibilities by trying cuts (instead of boosts) to the spectrum, and by trying more subtle boosts/cuts (dB values progressively closer to 0)."
 
 generateQ :: Config -> [ExerciseDatum] -> IO ([Answer],Answer)
 generateQ config _ = randomMultipleChoiceQuestion (convertBands $ fst config)
@@ -109,10 +113,10 @@ tenBandBoostCutExercise :: MonadWidget t m => Exercise t m Config [Answer] Answe
 tenBandBoostCutExercise = multipleChoiceExercise
   3
   answers
-  (return ())
+  instructions
   tenBandsConfigWidget
   renderAnswer
   TenBandBoostCut
-  (AllBands, -10)
+  (AllBands, 10)
   (displayMultipleChoiceEvaluationGraph''' "Session Performance" "Hz" answers)
   generateQ
