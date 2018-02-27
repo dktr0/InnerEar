@@ -3,7 +3,11 @@ module Reflex.Synth.WebAudio where
 import Reflex.Synth.NodeSpec
 import Reflex.Synth.WebAudioNode
 import Reflex.Synth.WebAudioGraph
+import qualified Reflex.Synth.Foreign as F
 import Reflex.Synth.Sound
+
+import GHCJS.Prim (toJSString)
+import GHCJS.Prim (toJSArray)
 
 class WebAudio a where
   createGraph :: a -> IO WebAudioGraph
@@ -15,7 +19,7 @@ instance WebAudio Filter where
 instance WebAudio Buffer where
   createGraph (File path) = createBufferNode (File path) >>= return . WebAudioGraph
 
-instance WebAudio Node where
+instance WebAudio NodeSpec where
   createGraph n = do
     node <- createNode n
     return $ WebAudioGraph $ WebAudioNode n (getJSVal node)

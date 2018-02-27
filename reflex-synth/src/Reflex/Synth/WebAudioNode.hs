@@ -29,16 +29,18 @@ createBiquadFilter (Filter filtType f q g) = do
   setFilterType filtType y
   return y
 
+createCompressorNode:: Compressor -> IO (WebAudioNode)
+createCompressorNode (Compressor a b c d e) = do
+  ref <- F.createCompressorNode (pToJSVal a) (pToJSVal b) (pToJSVal c) (pToJSVal d) (pToJSVal e)
+  return $ WebAudioNode (CompressorNode $ Compressor a b c d e) ref
+
 createDelayNode::Double -> IO WebAudioNode
 createDelayNode delay = do
   delayNode <- F.createDelay
   F.setDelay delayNode delay
   return (WebAudioNode (DelayNode delay) delayNode)
 
-createCompressorNode:: Compressor -> IO (WebAudioNode)
-createCompressorNode (Compressor a b c d e) = do
-  ref <- F.createCompressorNode (pToJSVal a) (pToJSVal b) (pToJSVal c) (pToJSVal d) (pToJSVal e)
-  return $ WebAudioNode (CompressorNode $ Compressor a b c d e) ref
+
 
 createWaveShaperNode:: WaveShaper -> IO WebAudioNode
 createWaveShaperNode (ClipAt db) = F.createClipAtWaveShaper (pToJSVal db) >>= return . WebAudioNode (WaveShaperNode $ ClipAt db)
@@ -53,6 +55,29 @@ createOscillator (Oscillator t freq db) = do
   -- F.connect osc g
   -- F.startNode osc
   return (WebAudioNode (OscillatorNode $ Oscillator t freq db) osc)
+createOscillator (Oscillator' t (Custom curve dur) db) = do
+  osc <- F.createOscillator (Prim.toJSString $ fmap toLower $ show t) (pToJSVal (0::Int)) (pToJSVal db)
+  putStrLn "before getFreq"
+  freq <- F.getFrequency osc
+  putStrLn "before toJSArray"
+  array <- toJSArray $ fmap pToJSVal curve
+  putStrLn "before get current t"
+  -- putStrLn (show array)
+  currentT <- F.getCurrentTime
+  putStrLn "before setValuecurve"
+  F.setValueCurveAtTime freq array currentT dur
+  putStrLn "after setValueCurveAtTime"
+  return (WebAudioNode (OscillatorNode $ Oscillator' t (Custom curve dur) db) osc)
+
+createEnvelope:: Envelope -> IO WebAudioNode
+createEnvelope (Custom points dur) = do
+  gain <- createGain 0
+  gainGain <- F.getGain (getJSVal gain)
+  setAmp 0.0 gain
+  array<- toJSArray $ fmap pToJSVal points
+  currentT <- F.getCurrentTime
+  F.setValueCurveAtTime gainGain array currentT dur
+  return (WebAudioNode (EnvelopeNode (Custom points dur)) (getJSVal gain))
 
 
 createGain :: Double -> IO WebAudioNode
@@ -60,6 +85,10 @@ createGain g = do
   x <- F.createGain
   F.setGain g x
   return (WebAudioNode (GainNode g) x)
+
+createSilentNode :: IO WebAudioNode
+createSilentNode = F.createSilentNode >>= return . WebAudioNode (SilentNode)
+
 
 createBufferNode :: Buffer -> IO WebAudioNode
 createBufferNode (File path) = do

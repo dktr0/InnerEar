@@ -17,7 +17,12 @@ data NodeSpec =
   WaveShaperNode WaveShaper|
   ScriptProcessorNode DSPEffect |
   DelayNode Double |
+  EnvelopeNode Envelope |
   ConvolverNode Buffer deriving(Read,Show,Eq)
+
+
+data Envelope = Custom {curve::[Double], duration::Double} deriving (Show, Eq, Read)
+
 
 data DSPEffect = DistortAtDb Double deriving (Read, Show, Eq)
 
@@ -29,7 +34,9 @@ data Filter = NoFilter | Filter FilterType Double Double Double deriving (Read,S
 
 data OscillatorType = Sawtooth | Sine | Square | Triangle deriving (Show, Read,Eq)
 
-data Oscillator = Oscillator OscillatorType Double Double deriving (Read,Show,Eq) --double params are freq and gain (in dB) (respectively)
+data Oscillator = Oscillator OscillatorType Double Double | Oscillator' OscillatorType Envelope Double deriving (Read,Show,Eq) --double params are freq and gain (in dB) (respectively)
+
+-- data Oscillator = Oscillator
 
 data PlaybackParam = PlaybackParam{
   start::Double,    -- portion through the buffer that playback starts

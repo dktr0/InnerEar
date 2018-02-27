@@ -40,8 +40,9 @@ instance Show Answer where
 renderAnswer :: Config -> Source -> Maybe Answer -> Sound
 renderAnswer db s (Just (Answer True)) = GainSound (Sound s)  ((fromIntegral db)::Double) -- 2.0 -- should be a sound source attenuated by dB value
 renderAnswer db _ (Just (Answer False)) = NoSound -- 2.0
-renderAnswer db _ Nothing = GainSound (OverlappedSound "test" oscs) (-20)
-  -- where oscs = fmap (\x -> DelayedSound (Sound $ NodeSource (OscillatorNode $ Oscillator Sine x 0) (Just 2)) (x/100) ) [100::Double,200,300,400,500,600,700,800]
+-- renderAnswer db _ Nothing = GainSound (OverlappedSound "test" oscs) (-20)
+--   where oscs = fmap (\x -> DelayedSound (Sound $ NodeSource (OscillatorNode $ Oscillator Sine x 0) (Just 0.5)) (x/100) ) [100::Double,200,300,400,500,600,700,800]
+-- renderAnswer db _ Nothing
 renderAnswer db s (Nothing) = GainSound (Sound s) ((fromIntegral db)::Double)
 
 instructionsText = "In this exercise, the system either makes no sound at all \
