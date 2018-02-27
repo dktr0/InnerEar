@@ -4,6 +4,10 @@ module Reflex.Synth.Graph (
   Synth,
   SynthBuilder,
   buildSynth,
+  synthSource,
+  synthNode,
+  synthSink,
+  audioParamSink,
   ref,
   deref,
   parallelChannels,
@@ -18,6 +22,7 @@ module Reflex.Synth.Graph (
 
 import qualified Data.Map as Map
 import Control.Monad.State
+import Reflex.Synth.Spec
 
 -- See https://wiki.haskell.org/New_monads/MonadUnique for a simple monad transformer to support
 -- generating unique values.
@@ -40,22 +45,26 @@ evalUniqueT (UniqueT s) = evalStateT s 0
 type Reference = Integer
 type Env = Map.Map Reference Graph
 
-data SourceSpec
+data SourceProps 
   = SourceRef Reference
-  | Constant
-  | Oscillator
+  | SourceSpec SourceNodeSpec
+  deriving (Show)
+  
+data SourceSinkProps
+  = SourceSinkRef Reference
+  | Parallel [Graph]
+  | SourceSinkSpec NodeSpec
   deriving (Show)
 
-data NodeSpec
-  = SourceSinkRef Reference
-  | Gain
-  | Parallel [Graph]
+data SinkProps
+  = SinkParamRef Graph AudioParam
+  | SinkSpec SinkNodeSpec
   deriving (Show)
 
 data Graph
-  = Source SourceSpec
-  | Sink Graph
-  | SourceSink NodeSpec Graph
+  = Source SourceProps
+  | Sink SinkProps Graph
+  | SourceSink SourceSinkProps Graph
   | Join [Graph] Graph -- Join xs y merges xs with unconnected inputs being connected to y
   | Fork Graph Graph -- The first graph may have its own source in which case this is a loose diverge
   | EmptyGraph
@@ -64,25 +73,25 @@ data Graph
 type AudioParam = String
 
 data Change
-  = SetValue { node :: Graph, param :: AudioParam, value :: Double, endTime :: Double }
-  | LinearRampToValue { node :: Graph, param :: AudioParam, value :: Double, endTime :: Double }
-  | ExponentialRampToValue { node :: Graph, param :: AudioParam, value :: Double, endTime :: Double }
-  | CurveToValue { node :: Graph, param :: AudioParam, values :: [Double], startTime :: Double, duration :: Double }
+  = SetValue { node :: Graph, param :: AudioParam, value :: Double, endTime :: Time }
+  | LinearRampToValue { node :: Graph, param :: AudioParam, value :: Double, endTime :: Time }
+  | ExponentialRampToValue { node :: Graph, param :: AudioParam, value :: Double, endTime :: Time }
+  | CurveToValue { node :: Graph, param :: AudioParam, values :: [Double], startTime :: Time, duration :: Time }
   deriving (Show)
 
 connectGraphs :: Graph -> Graph -> Graph
 connectGraphs EmptyGraph y = y
 connectGraphs x EmptyGraph = x
-connectGraphs x@(Sink _) y = error $ "Sink can't be first: " ++ show x ++ " : " ++ show y
+connectGraphs x@(Sink _ _) y = error $ "Sink can't be first: " ++ show x ++ " : " ++ show y
 connectGraphs x y@(Source _) = error $ "Source can't be second: " ++ show x ++ " : " ++ show y
-connectGraphs x (SourceSink t y) = SourceSink t (connectGraphs x y)
+connectGraphs x (SourceSink spec y) = SourceSink spec (connectGraphs x y)
 connectGraphs x (Join gs y) = Join gs (connectGraphs x y)
 connectGraphs x (Fork br y) = Fork br (connectGraphs x y)
-connectGraphs x (Sink y) = Sink (connectGraphs x y)
+connectGraphs x (Sink spec y) = Sink spec (connectGraphs x y)
 
 graphSource :: Graph -> Graph
 graphSource g@(Source _) = g
-graphSource (Sink input) = graphSource input
+graphSource (Sink _ input) = graphSource input
 graphSource (SourceSink _ input) = graphSource input
 graphSource (Join _ input) = graphSource input
 graphSource (Fork _ input) = graphSource input
@@ -123,14 +132,18 @@ buildSynth = evalUniqueT
 synthOfGraph :: Graph -> a -> SynthBuilder a
 synthOfGraph g s = lift $ Synth { graph = g, env = Map.empty, changes = [], supplement = s }
 
-oscillator :: SynthBuilder ()
-oscillator = synthOfGraph (Source Oscillator) ()
+synthSource :: SourceNodeSpec -> SynthBuilder ()
+synthSource = synthOfGraph . SourceNode . SourceSpec
 
-gain :: SynthBuilder ()
-gain = synthOfGraph (SourceSink Gain EmptyGraph) ()
+synthNode :: NodeSpec -> SynthBuilder ()
+synthNode spec = synthOfGraph $ SourceSink (SourceSinkSpec spec) EmptyGraph
 
-destination :: SynthBuilder ()
-destination = synthOfGraph (Sink EmptyGraph) ()
+synthSink :: SinkNodeSpec -> SynthBuilder ()
+synthSink spec = synthOfGraph $ Sink (SinkSpec spec) EmptyGraph
+
+audioParamSink :: Graph -> AudioParam -> SynthBuilder ()
+-- TODO only match references here? It doesn't make sense to modulate an isolated node
+audioParamSink g param = synthOfGraph $ Sink (SinkParamRef g param) EmptyGraph
 
 splitChannels :: Int -> [SynthBuilder Int]
 splitChannels i = fmap createChannelSource [0..i-1]
@@ -210,84 +223,14 @@ change c = lift $ Synth {
   supplement = ()
 }
 
-setParamValue :: Graph -> AudioParam -> Double -> Double -> SynthBuilder ()
+setParamValue :: Graph -> AudioParam -> Double -> Time -> SynthBuilder ()
 setParamValue n p v e = change $ SetValue n p v e
 
-linearRampToParamValue :: Graph -> AudioParam -> Double -> Double -> SynthBuilder ()
+linearRampToParamValue :: Graph -> AudioParam -> Double -> Time -> SynthBuilder ()
 linearRampToParamValue n p v e = change $ LinearRampToValue n p v e
 
-exponentialRampToParamValue :: Graph -> AudioParam -> Double -> Double -> SynthBuilder ()
+exponentialRampToParamValue :: Graph -> AudioParam -> Double -> Time -> SynthBuilder ()
 exponentialRampToParamValue n p v e = change $ ExponentialRampToValue n p v e
 
-curveToParamValue :: Graph -> AudioParam -> [Double] -> Double -> Double -> SynthBuilder ()
+curveToParamValue :: Graph -> AudioParam -> [Double] -> Time -> Time -> SynthBuilder ()
 curveToParamValue n p vs s d = change $ CurveToValue n p vs s d
-
-test :: Synth ()
-test = buildSynth $ oscillator >> gain >> destination
-
-test2 :: Synth ()
-test2 = buildSynth $ do
-  oscillator
-  gain
-  destination
-
-test3 :: Synth ()
-test3 = buildSynth $ do
-  oscillator
-  parallelChannels 2 $ \c -> do
-    if c == 0
-      then gain
-      else return ()
-  destination
-
-test4 :: Synth ()
-test4 = buildSynth $ do
-  osc <- ref oscillator
-  deref osc
-  destination
-
-test5 :: Synth ()
-test5 = buildSynth $ do
-  lfo <- ref oscillator
-  g <- ref gain
-  oscillator
-  diverge $ do
-    gain
-    destination
-  diverge $ do
-    deref lfo
-    deref g
-    destination
-  gain
-  destination
-
-test6 :: Synth ()
-test6 = buildSynth $ do
-  gGain <- ref gain
-  oscillator
-  g <- branch $ do
-    deref gGain
-    gain
-  h <- branch $ gain
-  merge [g, h]
-  gain
-  destination
-
-test7 :: Synth ()
-test7 = buildSynth $ do
-  oscillator
-  mix $ replicate 3 gain
-  return ()
-
-test8 :: Synth ()
-test8 = buildSynth $ do
-  g <- ref gain
-  setParamValue g "gain" 0.0 1.0
-  
-test9 :: Synth ()
-test9 = buildSynth $ do
-  oscillator
-  diverge $ do
-    gain
-    destination
-  gain

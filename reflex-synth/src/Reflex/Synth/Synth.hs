@@ -43,7 +43,7 @@ instance WebAudio Source where
         v <- createMediaNode a
         let graph = WebAudioGraph v
         createGraph graph
-      (Destination) -> error "Destination cannot be a source node"
+--      (Destination) -> error "Destination cannot be a source node"
       (GainNode _) -> error "GainNode cannot be a source node"
       (FilterNode _) -> error "FilterNode cannot be a source node"
       (ScriptProcessorNode _) -> error "ScriptProcessorNode cannot be a source node"
