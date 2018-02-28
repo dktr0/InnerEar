@@ -1,4 +1,4 @@
-module Reflex.Synth.NodeSpec where
+module Reflex.Synth.Spec where
 
 data SourceNodeSpec
   = Silent
@@ -86,10 +86,13 @@ instance Num Time where
   t1 + t2 = Millis $ (getInMillis t1) + (getInMillis t2)
   t1 - t2 = Millis $ (getInMillis t1) - (getInMillis t2)
   t1 * t2 = Millis $ (getInMillis t1) * (getInMillis t2)
-  t1 / t2 = Millis $ (getInMillis t1) / (getInMillis t2)
   abs (Millis ms) = Millis $ abs ms
   abs (Sec s) = Sec $ abs s
-  signum = signum . getInMillis
+  signum x = 
+    case getInMillis x of 
+      y | y < 0 -> -1
+        | y == 0 -> 0
+        | otherwise -> 1
   fromInteger ms = Millis $ fromIntegral ms
 
 data OscillatorType 

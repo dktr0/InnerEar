@@ -1,6 +1,11 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 module Reflex.Synth.Graph (
+  SourceProps,
+  SourceSinkProps,
+  SinkProps,
+  Graph,
+  Change,
   Synth,
   SynthBuilder,
   buildSynth,
@@ -11,6 +16,7 @@ module Reflex.Synth.Graph (
   ref,
   deref,
   parallelChannels,
+  diverge,
   branch,
   merge,
   mix,
@@ -21,7 +27,8 @@ module Reflex.Synth.Graph (
 ) where
 
 import qualified Data.Map as Map
-import Control.Monad.State
+import Control.Monad.Trans.Class
+import Control.Monad.Trans.State
 import Reflex.Synth.Spec
 
 -- See https://wiki.haskell.org/New_monads/MonadUnique for a simple monad transformer to support
@@ -89,14 +96,6 @@ connectGraphs x (Join gs y) = Join gs (connectGraphs x y)
 connectGraphs x (Fork br y) = Fork br (connectGraphs x y)
 connectGraphs x (Sink spec y) = Sink spec (connectGraphs x y)
 
-graphSource :: Graph -> Graph
-graphSource g@(Source _) = g
-graphSource (Sink _ input) = graphSource input
-graphSource (SourceSink _ input) = graphSource input
-graphSource (Join _ input) = graphSource input
-graphSource (Fork _ input) = graphSource input
-graphSource EmptyGraph = EmptyGraph
-
 data Synth a = Synth {
     graph :: Graph,
     env :: Env,
@@ -133,17 +132,17 @@ synthOfGraph :: Graph -> a -> SynthBuilder a
 synthOfGraph g s = lift $ Synth { graph = g, env = Map.empty, changes = [], supplement = s }
 
 synthSource :: SourceNodeSpec -> SynthBuilder ()
-synthSource = synthOfGraph . SourceNode . SourceSpec
+synthSource spec = synthOfGraph (Source $ SourceSpec spec) ()
 
 synthNode :: NodeSpec -> SynthBuilder ()
-synthNode spec = synthOfGraph $ SourceSink (SourceSinkSpec spec) EmptyGraph
+synthNode spec = synthOfGraph (SourceSink (SourceSinkSpec spec) EmptyGraph) ()
 
 synthSink :: SinkNodeSpec -> SynthBuilder ()
-synthSink spec = synthOfGraph $ Sink (SinkSpec spec) EmptyGraph
+synthSink spec = synthOfGraph (Sink (SinkSpec spec) EmptyGraph) ()
 
 audioParamSink :: Graph -> AudioParam -> SynthBuilder ()
 -- TODO only match references here? It doesn't make sense to modulate an isolated node
-audioParamSink g param = synthOfGraph $ Sink (SinkParamRef g param) EmptyGraph
+audioParamSink g p = synthOfGraph (Sink (SinkParamRef g p) EmptyGraph) ()
 
 splitChannels :: Int -> [SynthBuilder Int]
 splitChannels i = fmap createChannelSource [0..i-1]
