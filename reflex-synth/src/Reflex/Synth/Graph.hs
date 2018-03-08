@@ -54,11 +54,11 @@ evalUniqueT (UniqueT s) = evalStateT s 0
 type Reference = Integer
 type Env = Map.Map Reference Graph
 
-data SourceProps 
+data SourceProps
   = SourceRef Reference
   | SourceSpec SourceNodeSpec
   deriving (Show)
-  
+
 data SourceSinkProps
   = SourceSinkRef Reference
   | Parallel [Graph]
@@ -70,7 +70,7 @@ data SinkProps
   | SinkSpec SinkNodeSpec
   deriving (Show)
 
-data Graph -- TODO this is actually a forrest instead of trees
+data Graph
   = Source SourceProps
   | Sink SinkProps Graph
   | SourceSink SourceSinkProps Graph
@@ -92,7 +92,7 @@ data Synth a = Synth {
     changes :: [Change],
     supplement :: a
   } deriving (Show)
-  
+
 type SynthBuilder = UniqueT Synth
 
 buildSynth :: SynthBuilder a -> Synth a
@@ -107,23 +107,19 @@ connectGraphs x (SourceSink spec y) = SourceSink spec (connectGraphs x y)
 connectGraphs x (Sink spec y) = Sink spec (connectGraphs x y)
 
 connectGraphs' :: ([Graph], [Graph]) -> Graph -> ([Graph], [Graph])
-connectGraphs' ([], completed) y = 
-  if isComplete y
-    then ([], y:completed) -- Already completed
-    else ([y], completed) -- Incomplete, push to working stack
-connectGraphs' (x@(Sink _ _):tl, completed) y@(Sink _ _) =
-  if isComplete y
-    then (x:tl, y:completed)
-    else (y:x:tl, completed)
-connectGraphs' (hd:tl, completed) y =
-  if hasSource y -- y has it's own source, new branch **incomplete** branch
-    then if isComplete y
-      then (hd:tl, y:completed)
-      else (y:hd:tl, completed)
-    else let connected = connectGraphs hd y in
-      if isComplete connected 
-        then (tl, connected:completed)
-        else (connected:tl, completed)
+connectGraphs' ([], completed) y
+  | isComplete y = ([], y:completed) -- Already completed
+  | otherwise = ([y], completed) -- Incomplete, push to working stack
+connectGraphs' (x@(Sink _ _):tl, completed) y@(Sink _ _)
+  | isComplete y = (x:tl, y:completed)
+  | otherwise = (y:x:tl, completed)
+connectGraphs' (hd:tl, completed) y
+  | isComplete y = (hd:tl, y:completed)
+  | hasSource y  = (y:hd:tl, completed)
+  | otherwise = if isComplete connected
+    then (tl, connected:completed)
+    else (connected:tl, completed)
+  where connected = connectGraphs hd y
 
 connectGraphStacks :: ([Graph], [Graph]) -> ([Graph], [Graph]) -> ([Graph], [Graph])
 connectGraphStacks (incomp1, comp1) ([], comp2) = (incomp1, comp1 ++ comp2)
@@ -150,15 +146,15 @@ instance Functor Synth where
 
 instance Applicative Synth where
   pure x = Synth { graphs = ([], []), env = Map.empty, changes = [], supplement = x }
-  (Synth g1 e1 cs1 f) <*> (Synth g2 e2 cs2 x) = Synth { 
-    graphs = connectGraphStacks g1 g2, 
+  (Synth g1 e1 cs1 f) <*> (Synth g2 e2 cs2 x) = Synth {
+    graphs = connectGraphStacks g1 g2,
     env = Map.union e1 e2,
     changes = cs1 ++ cs2,
     supplement = f x
   }
 
 instance Monad Synth where
-  (Synth g1 e1 cs1 a) >>= f = Synth { 
+  (Synth g1 e1 cs1 a) >>= f = Synth {
     graphs = connectGraphStacks g1 g2,
     env = Map.union e1 e2,
     changes = cs1 ++ cs2,
@@ -166,11 +162,11 @@ instance Monad Synth where
   } where (Synth g2 e2 cs2 b) = f a
 
 synthOfGraph :: Graph -> a -> SynthBuilder a
-synthOfGraph g s = lift $ Synth { 
+synthOfGraph g s = lift $ Synth {
   graphs = if isComplete g then ([], [g]) else ([g], []),
-  env = Map.empty, 
-  changes = [], 
-  supplement = s 
+  env = Map.empty,
+  changes = [],
+  supplement = s
 }
 
 synthSource :: SourceNodeSpec -> SynthBuilder ()
@@ -277,15 +273,17 @@ exponentialRampToParamValue n p v e = change $ ExponentialRampToValue n p v e
 curveToParamValue :: Graph -> AudioParam -> [Double] -> Time -> Time -> SynthBuilder ()
 curveToParamValue n p vs s d = change $ CurveToValue n p vs s d
 
-test1 :: ([Graph], [Graph])
-test1 = graphs $ buildSynth $ do
-  synthSource $ Oscillator Sine (Hz 440)
+-- test1 :: ([Graph], [Graph])
+test1 :: Synth ()
+test1 = buildSynth $ do
+  r <- ref $ synthSource $ Oscillator Sine (Hz 440)
+  linearRampToParamValue r "freq" 880 (Sec 4.0) 
   synthSource $ Oscillator Sine (Hz 220)
   synthSink Destination
   synthSink Destination
   synthSource $ Oscillator Sawtooth (Hz 110)
   synthSink Destination
-  
+
 test2 :: Synth ()
 test2 = buildSynth $ do
   g <- ref $ synthSource $ Oscillator Sine (Hz 440)
