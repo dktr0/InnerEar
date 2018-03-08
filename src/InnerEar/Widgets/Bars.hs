@@ -11,32 +11,6 @@ import InnerEar.Widgets.Utility
 import InnerEar.Widgets.Labels
 import InnerEar.Types.Score
 
-replaceEach ::  String -> String
-replaceEach [] = []
-replaceEach (x:xs)
-   |x == '(' = replaceEach xs
-   |x == ')' = replaceEach xs
-   |otherwise = x:replaceEach xs
-
-listToString :: [(Double,Double)] -> String
-listToString [] = []
-listToString (x:xs) = concat [replaceEach $ show x, " ", listToString xs]
-
-listToString' :: [Double] -> String
-listToString' [] = []
-listToString' (x:y:zs) = concat [ show x, ",", show y, " ",  listToString' zs]
-
-shapeLine ::  MonadWidget t m => [Double] -> m ()
-shapeLine listOfPoints = do
-    svgClass "svg" "shapeContainer" $ do
-      let listOfPoints' = listToString' listOfPoints
-      let c = constDyn (singleton "style" "fill:none;stroke:black;stroke-width:3")
-      let points = constDyn (singleton "points" listOfPoints')
-      attrs <- mconcatDyn [c, points]
-      svgDynAttr "polyline" attrs $ return ()
-
-      --instructions dynamic t c
-
 dynBarCSS' :: MonadWidget t m =>  Dynamic t Double -> Dynamic t Float -> Dynamic t String -> m ()
 dynBarCSS' percent barWidth c =  do
     class' <- mapDyn (singleton "class") c

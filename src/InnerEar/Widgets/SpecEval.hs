@@ -57,7 +57,6 @@ displayMultipleChoiceEvaluationGraph' :: (MonadWidget t m, Show a, Ord a) => Str
 displayMultipleChoiceEvaluationGraph' graphLabel qLabel possibilities scoreMap = elClass "div" "specEvalWrapper" $ do
       scoreList <- mapDyn (\x -> fmap (\y -> Data.Map.lookup y x) possibilities) scoreMap -- m (Dynamic t [Maybe Score])
       scoreMap' <- mapDyn (\x -> fromList $ zip possibilities x) scoreList -- (Dynamic t (Map a (Maybe Score)))
-      shapeLine [20,20, 40,25, 60,40, 80,120, 120,140, 200,180]
       evalGraphFrame qLabel graphLabel
       listWithKey scoreMap' f
       return ()

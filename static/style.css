@@ -237,6 +237,11 @@ button.correctButton{
   right:100%;
  }
 
+.polyline {
+  fill: none;
+  stroke:black;
+  stroke-width:3;
+}
 
 .faintedLineToAdjustGraph {
   width: 1px;
