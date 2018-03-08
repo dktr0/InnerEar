@@ -26,17 +26,32 @@ evalGraphFrame xMainLabel graphLabel = do
   elClass "div" "graphLabel" $ text graphLabel
   return ()
 
-switchGraphWidget :: MonadWidget t m => m ()
-switchGraphWidget = el "div" $ do
-    let countries = Data.Map.fromList [(1 :: Int, "Session Performance"), (2, "Historical Performance")]
-    text "Graph selection: "
-    dd <- dropdown 2 (constDyn countries) def
-    el "p" $ return ()
-  --  let selItem = result <$> value dd
-  --  dynText selItem
+evalGraphFrame' :: MonadWidget t m =>  String ->  String -> String -> m ()
+evalGraphFrame' xMainLabel countMainLabelClass percentageMainLabelClass = do
+    faintedYaxis "faintedYaxis"
+    hzMainLabel "hzMainLabel" xMainLabel
+    countMainLabel countMainLabelClass "#"
+    percentageMainLabel percentageMainLabelClass "%"
+    --elClass "div" "graphLabel" $ text graphLabel
+    return ()
 
---result :: Int -> T.Text
---result key = "You selected: " <> fromJust (Map.lookup key countries)
+graphDropdown :: MonadWidget t m => m ()
+graphDropdown = el "div" $ do
+  ddVal <- el "div" $ do
+    text "Graph selection: "
+    let typesOfGraph = Data.Map.fromList [(1 :: Int, "Session Performance"), (2, "Historical Performance")]
+    dd <- dropdown 1 (constDyn typesOfGraph) def
+    return $ _dropdown_value dd
+  return ()
+
+{--switchGraph :: Bool -> String -> String -> [a] -> Dynamic t (Map a Score) -> m ()
+switchGraph bool graphLabel qLabel possibilities currentScoreMap = do
+  --bool <- mapDyn (maybe False (const True)) selection
+  let current = displayHistoricalEvaluationGraph  graphLabel qLabel possibilities currentScoreMap
+  flippableDyn (return ()) current bool
+  let historical = displayHistoricalEvaluationGraph  graphLabel qLabel possibilities currentScoreMap
+  flippableDyn historical (return ()) bool
+--}
 
 displayMultipleChoiceEvaluationGraph' :: (MonadWidget t m, Show a, Ord a) => String -> String -> [a] -> Dynamic t (Map a Score) -> m ()
 displayMultipleChoiceEvaluationGraph' graphLabel qLabel possibilities scoreMap = elClass "div" "specEvalWrapper" $ do
@@ -64,18 +79,40 @@ displayMultipleChoiceEvaluationGraph''' graphLabel qLabel possibilities scoreMap
       listWithKey scoreMap' f
       return ()
       where f k d = scoreBar ("scoreBarWrapperTenBand","svgBarContainerTenBand","svgFaintedLineTenBand","xLabelTenBand") (show k) d
-        --elClass "div" "graphSpace"
+
+displayVerticalMultipleChoiceEvaluationGraph :: (MonadWidget t m, Show a, Ord a) => String -> String -> [a] -> Dynamic t (Map a Score) -> m ()
+displayVerticalMultipleChoiceEvaluationGraph graphLabel qLabel possibilities scoreMap = elClass "div" "specEvalWrapperV" $ do
+      scoreList <- mapDyn (\x -> fmap (\y -> Data.Map.lookup y x) possibilities) scoreMap -- m (Dynamic t [Maybe Score])
+      scoreMap' <- mapDyn (\x -> fromList $ zip possibilities x) scoreList -- (Dynamic t (Map a (Maybe Score)))
+      evalGraphFrame' qLabel "countMainLabelV" "percentageMainLabelV"
+      listWithKey scoreMap' f
+      faintedYaxis "faintedYaxisV"
+      return ()
+      where f k d = scoreBarV ("scoreBarWrapperVertical","svgBarContainerVertical","svgFaintedLineVertical","xLabelVertical") (show k) d
 
 displayHistoricalEvaluationGraph :: (MonadWidget t m, Show a, Ord a) => String -> String -> [a] -> Dynamic t (Map a Score) -> m ()
 displayHistoricalEvaluationGraph graphLabel qLabel possibilities currentScoreMap = elClass "div" "specEvalWrapper" $ do
      currentScoreList <- mapDyn (\x -> fmap (\y -> Data.Map.lookup y x) possibilities) currentScoreMap
      currentScoreMap' <- mapDyn (\x -> fromList $ zip possibilities x) currentScoreList
-     switchGraphWidget
+     graphDropdown
      evalGraphFrame qLabel graphLabel
      listWithKey currentScoreMap' f -- Dynamic t (Map k v) -> (k -> Dynamic t v -> m a) -> m (Dynamic t (Map k a))
      return ()
        where
-       f k d = scoreBarH ("scoreBarWrapperHist","svgBarContainerCurrent", "svgBarContainerHist", "svgFaintedLineCurrent","svgFaintedLineHist", "xLabel") (show k) d
+         f k d = scoreBarH ("scoreBarWrapperHist","svgBarContainerCurrent", "svgBarContainerHist", "svgFaintedLineCurrent","svgFaintedLineHist", "xLabel") (show k) d
+
+displayHistoricalEvaluationGraph2 :: (MonadWidget t m, Show a, Ord a) => String -> [a] -> Dynamic t (Map a Score) -> m ()
+displayHistoricalEvaluationGraph2 qLabel possibilities currentScoreMap = elClass "div" "specEvalWrapper" $ do
+  --  graphDropdown >> evalGraphFrame' qLabel
+    currentScoreList <- mapDyn (\x -> fmap (\y -> Data.Map.lookup y x) possibilities) currentScoreMap
+    currentScoreMap' <- mapDyn (\x -> fromList $ zip possibilities x) currentScoreList
+
+    listWithKey currentScoreMap' f -- Dynamic t (Map k v) -> (k -> Dynamic t v -> m a) -> m (Dynamic t (Map k a))
+    return ()
+      where
+      f k d = scoreBarInvertedH ("scoreBarWrapperHistMirror","svgBarContainerCurrentMirror", "svgBarContainerHistMirror", "svgFaintedLineCurrentMirror","svgFaintedLineHistMirror", "xLabelMirror") (show k) d
+
+
 
 {- x graphLabel qLabel possibilities scoreMap = do
  listOfScores <- mapDyn ...

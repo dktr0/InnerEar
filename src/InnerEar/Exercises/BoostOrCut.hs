@@ -47,7 +47,8 @@ renderAnswer _ s (Just (Answer False)) = GainSound (Sound s) (-10)-- 2.0 -- shou
 renderAnswer db s Nothing = GainSound (Sound s) (-10)
 
 displayEval :: MonadWidget t m => Dynamic t (Map Answer Score) -> m ()
-displayEval = displayHistoricalEvaluationGraph "Historical Performance" "" answers
+displayEval = displayVerticalMultipleChoiceEvaluationGraph "" "" answers
+--displayHistoricalEvaluationGraph "Historical Performance" "" answers
 --displayMultipleChoiceEvaluationGraph' "Session Performance" "" answers
 
 generateQ :: Config -> [ExerciseDatum] -> IO ([Answer],Answer)
