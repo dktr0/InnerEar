@@ -222,6 +222,13 @@ button.correctButton{
   width: 50%;
   background-color: hsl(120,100%,80%);
 }
+
+.shapeContainer {
+  width: 100%;
+  height: 50%;
+  background-color: white;
+}
+
 .bars {
   fill: hsl(120,100%,80%);
   stroke: black;
