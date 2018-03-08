@@ -15,6 +15,7 @@ destination = synthSink Destination
 ampEnvelope :: Time -> Time -> Amplitude -> Time -> Time -> SynthBuilder ()
 ampEnvelope a d s st r = do
   g <- ref $ gain (Amp 0.0) -- make the node to modulate
+  deref g
   
   -- linear attack to amp 1 ending at time a
   linearRampToParamValue g "gain" 1.0 a 
@@ -99,6 +100,52 @@ test10 = buildSynth $ do
   g <- ref $ gain (Db $ -20)
   deref g -- TODO make a ref that also includes the node in addition to the ref
   diverge $ do -- lfo gain modulation
-    oscillator Sine (Hz 2)
+    oscillator Sine (Hz 2) -- osc.connect(g.gain)
     audioParamSink g "gain"
   destination
+
+test11 :: Synth ()
+test11 = buildSynth $ do
+  oscillator Sine (Hz 400)
+  g <- gain (Db $ -20)
+  --mergeDiverge $ do
+  do
+    oscillator Sine (Hz 2)
+    audioParam g "gain"
+  destination
+  
+test12 :: Synth ()
+test12 = buildSynth $ do
+  oscillator Sine (Hz 440)
+  b <- gain (Db $ -20)
+  do
+    filter
+    destination
+  do
+    audioFrom b
+    myAmazingDistortion
+    destination
+  -- destination error
+  
+  myAmazingSynth
+  myAmazingSynth
+  
+  oscillator
+  destination
+  mergeDiverge $ oscillator >> destination
+
+additive :: [(Double, Double)] -> SynthBuilder [Graph]
+additive = mapM $ \(freq, amp) -> do
+  oscillator Sine (Hz freq)
+  gain (Amp amp)
+  
+mixM :: ()
+
+myAmazingDistortion :: SynthBuilder Graph
+myAmazingDistortion = do
+  distortion
+  filter
+  distortion
+    
+    
+    

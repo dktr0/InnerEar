@@ -8,6 +8,8 @@ module Reflex.Synth.Graph (
   Change,
   Synth,
   SynthBuilder,
+  Reference,
+  Env,
   buildSynth,
   synthSource,
   synthNode,
@@ -15,11 +17,11 @@ module Reflex.Synth.Graph (
   audioParamSink,
   ref,
   deref,
-  parallelChannels,
-  diverge,
-  branch,
-  merge,
-  mix,
+--  parallelChannels,
+--  diverge,
+--  branch,
+--  merge,
+--  mix,
   setParamValue,
   linearRampToParamValue,
   exponentialRampToParamValue,
@@ -68,12 +70,10 @@ data SinkProps
   | SinkSpec SinkNodeSpec
   deriving (Show)
 
-data Graph
+data Graph -- TODO this is actually a forrest instead of trees
   = Source SourceProps
   | Sink SinkProps Graph
   | SourceSink SourceSinkProps Graph
-  | Join [Graph] Graph -- Join xs y merges xs with unconnected inputs being connected to y
-  | Fork Graph Graph -- The first graph may have its own source in which case this is a loose diverge
   | EmptyGraph
   deriving (Show)
 
@@ -86,30 +86,72 @@ data Change
   | CurveToValue { node :: Graph, param :: AudioParam, values :: [Double], startTime :: Time, duration :: Time }
   deriving (Show)
 
+data Synth a = Synth {
+    graphs :: ([Graph], [Graph]),
+    env :: Env,
+    changes :: [Change],
+    supplement :: a
+  } deriving (Show)
+  
+type SynthBuilder = UniqueT Synth
+
+buildSynth :: SynthBuilder a -> Synth a
+buildSynth = evalUniqueT
+
 connectGraphs :: Graph -> Graph -> Graph
 connectGraphs EmptyGraph y = y
 connectGraphs x EmptyGraph = x
 connectGraphs x@(Sink _ _) y = error $ "Sink can't be first: " ++ show x ++ " : " ++ show y
 connectGraphs x y@(Source _) = error $ "Source can't be second: " ++ show x ++ " : " ++ show y
 connectGraphs x (SourceSink spec y) = SourceSink spec (connectGraphs x y)
-connectGraphs x (Join gs y) = Join gs (connectGraphs x y)
-connectGraphs x (Fork br y) = Fork br (connectGraphs x y)
 connectGraphs x (Sink spec y) = Sink spec (connectGraphs x y)
 
-data Synth a = Synth {
-    graph :: Graph,
-    env :: Env,
-    changes :: [Change],
-    supplement :: a
-  } deriving (Show)
+connectGraphs' :: ([Graph], [Graph]) -> Graph -> ([Graph], [Graph])
+connectGraphs' ([], completed) y = 
+  if isComplete y
+    then ([], y:completed) -- Already completed
+    else ([y], completed) -- Incomplete, push to working stack
+connectGraphs' (x@(Sink _ _):tl, completed) y@(Sink _ _) =
+  if isComplete y
+    then (x:tl, y:completed)
+    else (y:x:tl, completed)
+connectGraphs' (hd:tl, completed) y =
+  if hasSource y -- y has it's own source, new branch **incomplete** branch
+    then if isComplete y
+      then (hd:tl, y:completed)
+      else (y:hd:tl, completed)
+    else let connected = connectGraphs hd y in
+      if isComplete connected 
+        then (tl, connected:completed)
+        else (connected:tl, completed)
+
+connectGraphStacks :: ([Graph], [Graph]) -> ([Graph], [Graph]) -> ([Graph], [Graph])
+connectGraphStacks (incomp1, comp1) ([], comp2) = (incomp1, comp1 ++ comp2)
+connectGraphStacks stacks (hd:tl, complete) =
+  connectGraphStacks (connectGraphs' stacks hd) (tl, complete)
+
+isComplete :: Graph -> Bool
+isComplete (Sink _ x) = hasSource x
+isComplete _ = False
+
+getSource :: Graph -> Graph
+getSource x@(Source _) = x
+getSource (Sink _ x) = getSource x
+getSource (SourceSink _ x) = getSource x
+getSource EmptyGraph = EmptyGraph
+
+hasSource :: Graph -> Bool
+hasSource g = case getSource g of
+  Source _ -> True
+  _ -> False
 
 instance Functor Synth where
   fmap f x = x { supplement = f (supplement x) }
 
 instance Applicative Synth where
-  pure x = Synth { graph = EmptyGraph, env = Map.empty, changes = [], supplement = x }
+  pure x = Synth { graphs = ([], []), env = Map.empty, changes = [], supplement = x }
   (Synth g1 e1 cs1 f) <*> (Synth g2 e2 cs2 x) = Synth { 
-    graph = connectGraphs g1 g2, 
+    graphs = connectGraphStacks g1 g2, 
     env = Map.union e1 e2,
     changes = cs1 ++ cs2,
     supplement = f x
@@ -117,19 +159,19 @@ instance Applicative Synth where
 
 instance Monad Synth where
   (Synth g1 e1 cs1 a) >>= f = Synth { 
-    graph = connectGraphs g1 g2,
+    graphs = connectGraphStacks g1 g2,
     env = Map.union e1 e2,
     changes = cs1 ++ cs2,
     supplement = b
   } where (Synth g2 e2 cs2 b) = f a
 
-type SynthBuilder = UniqueT Synth
-
-buildSynth :: SynthBuilder a -> Synth a
-buildSynth = evalUniqueT
-
 synthOfGraph :: Graph -> a -> SynthBuilder a
-synthOfGraph g s = lift $ Synth { graph = g, env = Map.empty, changes = [], supplement = s }
+synthOfGraph g s = lift $ Synth { 
+  graphs = if isComplete g then ([], [g]) else ([g], []),
+  env = Map.empty, 
+  changes = [], 
+  supplement = s 
+}
 
 synthSource :: SourceNodeSpec -> SynthBuilder ()
 synthSource spec = synthOfGraph (Source $ SourceSpec spec) ()
@@ -150,27 +192,28 @@ splitChannels i = fmap createChannelSource [0..i-1]
     createChannelSource x = synthOfGraph EmptyGraph x
 
 -- |parallel is a closed fork-join that works on the channels of the input.
-parallelChannels :: Int ->  (Int -> SynthBuilder ()) -> SynthBuilder ()
-parallelChannels i f = lift $ Synth { -- TODO pass supplement through
-    graph = SourceSink (Parallel (fmap (\x -> graph (buildSynth (x >>= f))) (splitChannels i))) EmptyGraph,
-    env = foldl (\x y -> Map.union x $ env (buildSynth (y >>= f))) Map.empty (splitChannels i),
-    changes = foldl (\x y -> x ++ changes (buildSynth (y >>= f))) [] (splitChannels i),
-    supplement = ()
-}
+--parallelChannels :: Int ->  (Int -> SynthBuilder ()) -> SynthBuilder ()
+--parallelChannels i f = lift $ Synth { -- TODO pass supplement through
+--    graph = SourceSink (Parallel (fmap (\x -> graph (buildSynth (x >>= f))) (splitChannels i))) EmptyGraph,
+--    env = foldl (\x y -> Map.union x $ env (buildSynth (y >>= f))) Map.empty (splitChannels i),
+--    changes = foldl (\x y -> x ++ changes (buildSynth (y >>= f))) [] (splitChannels i),
+--    supplement = ()
+--}
 
 ref :: SynthBuilder a -> SynthBuilder Graph
 ref r = do
-  let (Synth g e cs _) = buildSynth r in do
+  let (Synth (g:_, []) e cs _) = buildSynth r in do
     uid <- fresh
-    lift $ Synth {
-      graph = EmptyGraph,
-      env = Map.insert uid g e,
-      changes = cs,
-      supplement =
-        case g of
+    let reference = case g of
           (Source _) -> Source (SourceRef uid)
           (SourceSink _ g') -> SourceSink (SourceSinkRef uid) g'
           _ -> error $ "Cannot reference " ++ show g
+    synthOfGraph reference ()
+    lift $ Synth {
+      graphs = ([], []),
+      env = Map.insert uid g e,
+      changes = cs,
+      supplement = reference
     }
 
 deref :: Graph -> SynthBuilder ()
@@ -179,44 +222,44 @@ deref g = synthOfGraph g ()
 -- |diverge branches away from the main synth but retains references from the
 -- original. Divergent forks must eventually connect to a destination which may
 -- be the same destination as the top level synth (AudioContext).
-diverge :: SynthBuilder a -> SynthBuilder a
-diverge forkBuilder =
-  let (Synth g e cs s) = buildSynth forkBuilder in do
-    lift $ Synth {
-      graph = Fork g EmptyGraph,
-      env = e,
-      changes = cs,
-      supplement = s
-    }
+--diverge :: SynthBuilder a -> SynthBuilder a
+--diverge forkBuilder =
+--  let (Synth g e cs s) = buildSynth forkBuilder in do
+--    lift $ Synth {
+--      graph = Unconnected g EmptyGraph,
+--      env = e,
+--      changes = cs,
+--      supplement = s
+--    }
 
-branch :: SynthBuilder a -> SynthBuilder (SynthBuilder a)
-branch branchBuilder =
-  let (Synth g e cs s) = buildSynth branchBuilder in do
-    return $ lift $ Synth {
-      graph = g,
-      env = e,
-      changes = cs,
-      supplement = s
-    }
+--branch :: SynthBuilder a -> SynthBuilder (SynthBuilder a)
+--branch branchBuilder =
+--  let (Synth g e cs s) = buildSynth branchBuilder in do
+--    return $ lift $ Synth {
+--      graph = g,
+--      env = e,
+--      changes = cs,
+--      supplement = s
+--    }
 
 -- |merge is the opposite of `diverge` which merges the nodes.
-merge :: [SynthBuilder a] -> SynthBuilder [a]
-merge branchBuilders =
-  let branches = fmap buildSynth branchBuilders in do
-    lift $ Synth {
-      graph = Join (fmap graph branches) EmptyGraph,
-      env = foldl (\x y -> Map.union x $ env y) Map.empty branches,
-      changes = foldl (\x y -> x ++ (changes y)) [] branches,
-      supplement = fmap supplement branches
-    }
+--merge :: [SynthBuilder a] -> SynthBuilder [a]
+--merge branchBuilders =
+--  let branches = fmap buildSynth branchBuilders in do
+--    lift $ Synth {
+--      graph = Join (fmap graph branches) EmptyGraph,
+--      env = foldl (\x y -> Map.union x $ env y) Map.empty branches,
+--      changes = foldl (\x y -> x ++ (changes y)) [] branches,
+--      supplement = fmap supplement branches
+--    }
 
-mix :: [SynthBuilder a] -> SynthBuilder [a]
-mix synths =
-  merge $ fmap (\x -> branch x >>= id) synths
+--mix :: [SynthBuilder a] -> SynthBuilder [a]
+--mix synths =
+--  merge $ fmap (\x -> branch x >>= id) synths
 
 change :: Change -> SynthBuilder ()
 change c = lift $ Synth {
-  graph = EmptyGraph,
+  graphs = ([], []),
   env = Map.empty,
   changes = [c],
   supplement = ()
@@ -233,3 +276,17 @@ exponentialRampToParamValue n p v e = change $ ExponentialRampToValue n p v e
 
 curveToParamValue :: Graph -> AudioParam -> [Double] -> Time -> Time -> SynthBuilder ()
 curveToParamValue n p vs s d = change $ CurveToValue n p vs s d
+
+test1 :: ([Graph], [Graph])
+test1 = graphs $ buildSynth $ do
+  synthSource $ Oscillator Sine (Hz 440)
+  synthSource $ Oscillator Sine (Hz 220)
+  synthSink Destination
+  synthSink Destination
+  synthSource $ Oscillator Sawtooth (Hz 110)
+  synthSink Destination
+  
+test2 :: Synth ()
+test2 = buildSynth $ do
+  g <- ref $ synthSource $ Oscillator Sine (Hz 440)
+  return ()
