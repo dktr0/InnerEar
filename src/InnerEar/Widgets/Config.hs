@@ -70,7 +70,7 @@ sourceCanvasWidget src loadEv paramChange = elClass "div" "sourceCanvasWrapper" 
   performEvent_ $ fmap (\inputId -> liftIO $ (loadAndDrawBuffer inputId $ G.castToHTMLCanvasElement canvasElement)) loadEv
   performEvent_ $ fmap (\s ->liftIO  (drawSource s $ G.castToHTMLCanvasElement canvasElement)) (leftmost [updated src, tagDyn src postBuild])
   isLF<- mapDyn isLoadedFile src
-  range <- hideableWidget isLF "" $ rangeSelect (0,1)
+  range <- rangeSelect isLF (0,1)
   combineDyn (\s (b,e) -> case s of (NodeSource (BufferNode (LoadedFile s (PlaybackParam _ _ l))) dur) -> NodeSource (BufferNode $ LoadedFile s (PlaybackParam b e l)) dur; otherwise -> s) src range
 
 sineSourceConfig::(MonadWidget t m) => String -> Map String Double -> Double -> m (Dynamic t Double, Dynamic t Source, Event t (Maybe a))
