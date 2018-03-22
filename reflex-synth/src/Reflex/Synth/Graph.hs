@@ -9,6 +9,7 @@ module Reflex.Synth.Graph (
   Env,
   buildSynth,
   synthSource,
+  synthSourceSink,
   synthSink,
   audioParamSink,
   setParamValue,
@@ -42,12 +43,15 @@ evalUniqueT (UniqueT s) = evalStateT s 0
 
 type AudioParam = String
 
-data Reference = RefToNode Integer | RefToParamOfNode Integer AudioParam deriving (Show)
+data Reference 
+  = RefToNode Integer 
+  | RefToParamOfNode Integer AudioParam 
+  deriving (Show)
 
-data NodeProps =
-  SourceSpec SourceNodeSpec |
-  SourceSinkSpec NodeSpec |
-  SinkSpec SinkNodeSpec
+data NodeProps 
+  = SourceSpec SourceNodeSpec 
+  | SourceSinkSpec SourceSinkNodeSpec 
+  | SinkSpec SinkNodeSpec
   deriving (Show)
 
 type Env = Map.Map Integer NodeProps
@@ -97,10 +101,11 @@ connectGraphs' (x@(Sink _ _):tl, completed) y@(Sink _ _)
 connectGraphs' (hd:tl, completed) y
   | isComplete y = (hd:tl, y:completed)
   | hasSource y  = (y:hd:tl, completed)
-  | otherwise = if isComplete connected
-    then (tl, connected:completed)
-    else (connected:tl, completed)
-  where connected = connectGraphs hd y
+  | otherwise = 
+      if isComplete connected
+        then (tl, connected:completed)
+        else (connected:tl, completed)
+      where connected = connectGraphs hd y
 
 connectGraphStacks :: ([Graph], [Graph]) -> ([Graph], [Graph]) -> ([Graph], [Graph])
 connectGraphStacks (incomp1, comp1) ([], comp2) = (incomp1, comp1 ++ comp2)
@@ -155,7 +160,7 @@ synthSource spec = do
   r <- fresh
   lift $ makeSynth r (Source (RefToNode r)) (SourceSpec spec)
 
-synthSourceSink :: NodeSpec -> SynthBuilder Graph
+synthSourceSink :: SourceSinkNodeSpec -> SynthBuilder Graph
 synthSourceSink spec = do
   r <- fresh
   lift $ makeSynth r (SourceSink (RefToNode r) EmptyGraph) (SourceSinkSpec spec)
@@ -176,11 +181,11 @@ makeSynth r g np = Synth {
 
 audioParamSink :: Graph -> AudioParam -> SynthBuilder Graph
 audioParamSink g p = lift $ Synth {
-  graphs = ([g'],[]),
-  env = Map.empty,
-  changes = [],
-  deletionTime = Nothing,
-  supplement = g
+    graphs = ([g'],[]),
+    env = Map.empty,
+    changes = [],
+    deletionTime = Nothing,
+    supplement = g
   }
   where g' = Sink (RefToParamOfNode (getNodeId g) p) EmptyGraph
 
@@ -213,11 +218,11 @@ curveToParamValue g p vs s d = change g $ CurveToValue g p vs s d
 
 setDeletionTime :: Time -> SynthBuilder ()
 setDeletionTime t = lift $ Synth {
-  graphs = ([], []),
-  env = Map.empty,
-  changes = [],
-  deletionTime = Just t,
-  supplement = ()
+    graphs = ([], []),
+    env = Map.empty,
+    changes = [],
+    deletionTime = Just t,
+    supplement = ()
   }
 
 test1 :: Synth ()

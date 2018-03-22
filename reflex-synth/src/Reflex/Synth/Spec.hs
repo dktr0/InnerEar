@@ -8,7 +8,7 @@ data SourceNodeSpec where
   -- TODO | Buffer BufferSrc
 deriving instance Show SourceNodeSpec
 
-data NodeSpec
+data SourceSinkNodeSpec
   = Filter FilterSpec
   -- TODO | Convolver Buffer normalize :: Boolean
   | Delay Time
