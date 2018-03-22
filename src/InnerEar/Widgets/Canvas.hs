@@ -48,8 +48,9 @@ updateRangeState (ReleaseEvent x) (RangeState l r (Just (Right _)))
 
 
 --
-rangeSelect :: MonadWidget t m =>   (Double,Double) ->  m (Dynamic t (Double,Double))
-rangeSelect (l,r) = do
+
+rangeSelect :: MonadWidget t m =>   Dynamic t Bool -> (Double,Double) ->  m (Dynamic t (Double,Double))
+rangeSelect visible (l,r) = do
   let initialRangeState = RangeState l r Nothing
   (canvasElement,canvasPostBuild) <- liftM (\(a,b)->(_el_element a,b)) $ elClass' "canvas" "startEndCanvas" $ getPostBuild
   let htmlCanvasEl = DT.castToHTMLCanvasElement canvasElement -- HTMLCanvasElement
@@ -63,10 +64,10 @@ rangeSelect (l,r) = do
   getCanvasOffsetWidth <- performEvent $ fmap (\_ -> liftIO (getOffsetWidth htmlCanvasEl)) $ leftmost [clickEv, dragEv, releaseEv]
   canvasWidth <- holdDyn iWidth $ leftmost [getCanvasOffsetWidth,iWidthEv] --, iWidthEv]
   -- mapDyn (("canvasWidth: "++) . show) canvasWidth >>= dynText
-  rangeState <- foldDyn updateRangeState  initialRangeState (attachDynWith (flip toPercent) canvasWidth $ leftmost [clickEv, dragEv, releaseEv])
+  rangeState <- foldDyn updateRangeState  initialRangeState (attachDynWith (flip toPercent) canvasWidth $ fmap snd $ ffilter fst $ attachDyn visible $ leftmost [clickEv, dragEv, releaseEv])
   postBuild <- getPostBuild
-  performEvent_ $ fmap (liftIO . drawRange htmlCanvasEl) (leftmost [updated rangeState, initialRangeState <$ postBuild])
-  -- display rangeState
+  performEvent_ $ fmap (\(visible,r) -> liftIO $ if visible then drawRange htmlCanvasEl r else return ()) (attachDyn visible $ leftmost [updated rangeState, initialRangeState <$ postBuild])
+  performEvent_ $ fmap (\(r,visible)-> liftIO (if visible then drawRange htmlCanvasEl r else clearCanvas htmlCanvasEl)) $ attachDyn rangeState $ leftmost [updated visible, tagDyn visible canvasPostBuild]
   forDyn rangeState $ \x -> (leftRange x, rightRange x)
 
 drawRange:: DT.HTMLCanvasElement -> RangeState -> IO ()
