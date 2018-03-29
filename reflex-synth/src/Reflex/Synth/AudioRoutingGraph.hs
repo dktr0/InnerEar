@@ -109,3 +109,26 @@ foreign import javascript safe
 foreign import javascript safe
   "new Float32Array($1)"
   js_typedArrayFromArray :: JSVal -> IO Float32Array
+
+
+
+foreign import javascript safe
+  "$1.connect($2)"
+  js_connect :: JSVal -> JSVal -> IO ()
+  
+foreign import javascript safe
+  "$1.disconnect($2)"
+  js_disconnect :: JSVal -> JSVal -> IO ()
+  
+foreign import javascript safe
+  "$1.disconnect()"
+  js_disconnectAll :: JSVal -> IO ()
+  
+foreign import javascript safe
+  "$1.start()"
+  js_start :: JSVal -> IO ()
+  
+foreign import javascript safe
+  "$1.stop()"
+  js_stop :: JSVal -> IO ()
+  

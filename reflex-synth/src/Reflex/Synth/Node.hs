@@ -1,6 +1,14 @@
 module Reflex.Synth.Node (
   WebAudioContext,
-  Node(..)
+  Node(..),
+  instantiateSourceNode,
+  instantiateSourceSinkNode,
+  instantiateSinkNode,
+  connect,
+  disconnect,
+  disconnectAll,
+  start,
+  stop
 ) where
 
 import Reflex.Synth.AudioRoutingGraph
@@ -19,9 +27,34 @@ data Node
   | ScriptProcessorNode { jsval :: JSVal }
   -- Sink nodes
   | DestinationNode { jsval :: JSVal }
+  | AudioParamNode { jsval :: JSVal }
+  
+instance Show Node where
+  show (AudioBufferSourceNode _) = "AudioBufferSourceNode"
+  show (OscillatorNode _) = "OscillatorNode"
+  show (BiquadFilterNode _) = "BiquadFilterNode"
+  show (DelayNode _) = "DelayNode"
+  show (DynamicsCompressorNode _) = "DynamicsCompressorNode"
+  show (GainNode _) = "GainNode"
+  show (WaveShaperNode _) = "WaveShaperNode"
+  show (ScriptProcessorNode _) = "ScriptProcessorNode"
+  show (DestinationNode _) = "DestinationNode"
+  
+isSourceNode :: Node -> Bool
+isSourceNode (AudioBufferSourceNode _) = True
+isSourceNode (OscillatorNode _) = True
+isSourceNode _ = False
+
+isSinkNode :: Node -> Bool
+isSinkNode (DestinationNode _) = True
+isSinkNode (AudioParamNode _) = True
+isSinkNode _ = False
 
 createAudioContext :: IO WebAudioContext
 createAudioContext = js_newAudioContext
+
+getCurrentTime :: WebAudioContext -> IO Time
+getCurrentTime ctx = js_currentTime ctx >>= return . Sec
 
 setFrequencyHz :: (FrequencyInHz f) => JSVal -> f -> WebAudioContext -> IO ()
 setFrequencyHz node f = js_setParamValue (js_audioParam node "frequency") $ inHz f
@@ -99,40 +132,38 @@ configureBiquadFilterNode (AllPass f q) node ctx =
 instantiateSinkNode :: SinkNodeSpec -> WebAudioContext -> IO Node
 instantiateSinkNode Destination ctx = js_destination ctx >>= return . DestinationNode 
 
-
-
-
-
-
-getDestination :: IO Node
-getDestination = getDestination_ >>= return . Destination
-
-getAudioBufferSourceNode :: ? -> IO Node
-getAudioBufferSourceNode x = getAudioBufferSourceNode_ x >>= return . AudioBufferSourceNode
-
--- type Amplitude = Gain
-
-getGainNode :: Gain -> IO Node
-getGainNode g = getGainNode_ g >>= return . GainNode
-
 connect :: Node -> Node -> IO ()
-connect (Destination _) _ = error "Destination can't be source"
-connect _ (AudioBufferSourceNode _) = error "AudioBufferSourceNode can't be sink"
-connect x y = connect_ (nodeJSVal x) (nodeJSVal y)
+connect from to
+  | isSink from = error $ (show from) ++ " can't be connect source."
+  | isSource to = error $ (show to) ++ " can't be connect target." 
+  | otherwise   = js_connect (jsval from) (jsval to)
 
 disconnect :: Node -> Node -> IO ()
-disconnect (Destination _) _ = error "Destination can't be source"
-disconnect _ (AudioBufferSourceNode _) = error "AudioBufferSourceNode can't be sink"
-disconnect x y = disconnect_ (nodeJSVal x) (nodeJSVal y)
+disconnect from to
+  | isSink from = error $ (show from) ++ " can't be disconnect source."
+  | isSource to = error $ (show to) ++ " can't be disconnect target." 
+  | otherwise   = js_disconnect (jsval from) (jsval into)
 
 disconnectAll :: Node -> IO ()
-disconnectAll (Destination _) = return ()
-disconnectAll x = disconnectAll_ (nodeJSVal x)
+disconnectAll x
+  | isSink x = return ()
+  | otherwise  = js_disconnectAll (jsval x)
 
 start :: Node -> IO ()
-start (AudioBufferSourceNode x) = start_ x
-start _ = return ()
+start x
+  | isSource x = js_start (jsval x)
+  | otherwise  = return ()
 
 stop :: Node -> IO ()
-stop (AudioBufferSourceNode x) = stop_ x
-stop _ = return ()
+stop x
+  | isSource x = js_stop (jsval x)
+  | otherwise  = return ()
+
+setParamValueAtTime :: (TimeInSec t) => Node -> String -> Double -> t -> IO ()
+setParamValueAtTime node paramName value time = do
+  param <- js_audioParam (jsval node) $ pToJSVal paramName
+  js_setParamValueAtTime param value (pToJSVal $ inSec t)
+
+linearRampToParamValueAtTime :: (TimeInSec t) => Node -> String -> Double -> t -> IO ()
+linearRampToPAramValueAtTime node param value time = do
+  param <- js_audioPAram (jsval node)
