@@ -1,8 +1,6 @@
-
-
-
-
-
+module Reflex.Synth.Synthstance (
+  
+) where
 
 data Synthstance = Synthstance
 
