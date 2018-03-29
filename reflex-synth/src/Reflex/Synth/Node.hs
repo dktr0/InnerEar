@@ -47,18 +47,7 @@ instantiateSourceNode (Oscillator t f) ctx = do
   js_setField osc "type" $ pToJSVal t
   setFrequencyHz osc f ctx
   return $ OscillatorNode osc
-  
-data SourceSinkNodeSpec where
-  Filter :: FilterSpec -> SourceSinkNodeSpec
-  -- TODO | Convolver Buffer normalize :: Boolean
-  Delay :: (TimeInSec t) => t -> SourceSinkNodeSpec
-  Compressor :: (AmplitudeInDb t, AmplitudeInDb k, AmplitudeInDb r, AmplitudeInDb d, TimeInSec a, TimeInSec e) => { 
-      threshold :: t, knee :: k, ratio :: r, reduction :: d, attack :: a, release :: e
-    } -> SourceSinkNodeSpec
-  Gain :: (AmplitudeInAmp a) => a -> SourceSinkNodeSpec
-  WaveShaper :: [Double] -> OversampleAmount -> SourceSinkNodeSpec
-  -- DistortAt Amplitude
-deriving instance Show SourceSinkNodeSpec
+
 instantiateSourceSinkNode :: SourceSinkNodeSpec -> WebAudioContext -> IO Node
 instantiateSourceSinkNode (Filter spec) ctx = do
   filter <- js_createBiquadFilter ctx
@@ -68,7 +57,26 @@ instantiateSourceSinkNode (Delay t) = do
   delay <- js_createDelay $ inSec t -- createDelay needs a maxDelayTime
   js_setParamValue delay "delayTime" (inSec t) ctx
   return $ DelayNode delay
-  
+instantiateSourceSinkNode (Compressor thr kne rat red att rel) ctx = do
+  comp <- js_createDynamicsCompressor ctx
+  let setProp n v = js_setParamValue (js_audioParam comp n) v ctx in
+    setProp "threshold" $ inDb thr
+    setProp "knee" $ inDb kne
+    setProp "ratio" $ inDb rat
+    js_setField comp "reduction" $ inDb red
+    setProp "attack" $ inSec att
+    setProp "release" $ inSec rel
+    return $ DynamicsCompressorNode comp
+instantiateSourceSinkNode (Gain g) ctx = do
+  gain <- js_createGain ctx
+  js_setParamValue (js_audioParam gain "gain") (inAmp g) ctx
+  return $ GainNode gain
+instantiateSourceSinkNode (WaveShaper curve oversample) ctx = do
+  shaper <- js_createWaveShaper ctx
+  curveArray <- js_typedArrayFromArray $ toJSArray $ fmap pToJSVal curve
+  js_setField shaper "curve" curveArray
+  js_setField shaper "oversample" $ pToJSVal oversample
+  return $ WaveShaperNode shaper
 
 configureBiquadFilterNode :: FilterSpec -> JSVal -> WebAudioContext -> IO ()
 configureBiquadFilterNode (LowPass f q) node ctx =
@@ -87,6 +95,14 @@ configureBiquadFilterNode (Notch f q) node ctx =
   js_setField node "type" "notch" >> setFrequency node f ctx >> setQ node q ctx
 configureBiquadFilterNode (AllPass f q) node ctx =
   js_setField node "type" "allpass" >> setFrequency node f ctx >> setQ node q ctx
+
+instantiateSinkNode :: SinkNodeSpec -> WebAudioContext -> IO Node
+instantiateSinkNode Destination ctx = js_destination ctx >>= return . DestinationNode 
+
+
+
+
+
 
 getDestination :: IO Node
 getDestination = getDestination_ >>= return . Destination

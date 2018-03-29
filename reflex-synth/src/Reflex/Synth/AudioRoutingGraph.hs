@@ -1,8 +1,4 @@
-module Reflex.Synth.AudioRoutingGraph (
-  WebAudioContext
-  js_newAudioContext,
-  
-) where
+module Reflex.Synth.AudioRoutingGraph where
 
 import Reflex.Synth.Spec
 import Reflex.Synth.Graph
@@ -49,6 +45,21 @@ foreign import javascript safe
   "$1.createDelay($2)"
   js_createDelay :: WebAudioContext -> Double -> IO JSVal
   
+foreign import javascript safe
+  "$1.createDynamicsCompressor()"
+  js_createDynamicsCompressor :: WebAudioContext -> IO JSVal
+  
+foreign import javascript safe
+  "$1.createGain()"
+  js_createGain :: WebAudioContext -> IO JSVal
+
+foreign import javascript safe
+  "$1.createWaveShaper()"
+  js_createWaveShaper :: WebAudioContext -> IO JSVal
+
+foreign import javascript safe
+  "$1.destination"
+  js_destination :: WebAudioContext -> IO JSVal
 
 
 foreign import javascript safe
@@ -95,63 +106,6 @@ foreign import javascript safe
   \else for (var i = 0, len = a.length; i < len; i++) $1[i] = $2;"
   js_typedArrayFill :: Float32Array -> Float -> IO ()
 
-
-
-
--- source nodes
 foreign import javascript safe
-  "$1.createBufferSource()"
-  js_newBufferSource :: WebAudioContext -> IO (AudioSource BufferSourceNode)
-foreign import javascript safe
-  "$1.loop = $2"
-  js_loop :: BufferSourceNode -> Bool -> IO ()
-
-foreign import javascript safe
-  "$1.createOscillator()"
-  js_newOscillator :: WebAudioContext -> IO (AudioNode OscillatorNode)
-
--- intermediate nodes
--- Q: 1, detune: 0, frequency: 350, gain: 0
-foreign import javascript safe
-  "$1.createBiquadFilter()"
-  js_newBiquadFilter :: WebAudioContext -> IO (AudioNode BiquadFilterNode)
-  
-foreign import javascript safe
-  "$1.createDelay()"
-  js_newDelay :: WebAudioContext -> IO (AudioNode DelayNode)
-
-foreign import javascript safe
-  "$1.createDynamicsCompressor()"
-  js_newDynamicsCompressor :: WebAudioContext -> IO (AudioNode DynamicsCompressorNode)
-
--- sink nodes
-foreign import javascript safe
-  "$1.destination"
-  js_destination :: WebAudioContext -> IO (AudioNode DestinationNode)
-
-
-foreign import javascript safe
-  "$1.connect($2)"
-  js_connect :: (AudioSource a) => a -> AudioNode b -> IO ()
-
-newSilentNode :: WebAudioContext -> IO BufferSourceNode
-newSilentNode ctx = do
-  sampleRate <- js_sampleRate ctx
-  buffer <- js_createAudioBuffer 1 (ceiling $ sampleRate * 10) sampleRate ctx
-  channelData <- js_channelData buffer 0
-  js_typedArrayFill channelData 0
-  js_newBufferSource ctx
-  --TODO set source to buffer
-
-type AudioNodeConstructor a = WebAudioContext -> IO (AudioNode a)
-
-compile :: Synth a -> IO WebAudioContext
-compile _ = undefined
-
-newSourceNodeFromSpec :: SourceNodeSpec -> WebAudioContext -> IO JSVal
-newSourceNodeFromSpec Silent = newSilentNode
---newSourceNodeFromSpec (Oscillator oscType freq) = js_newOscillator (pToJSVal oscType) (inHz freq)
-
-newSinkNodeFromSpec :: SinkNodeSpec -> WebAudioContext -> IO (AudioNode a)
-newSinkNodeFromSpec Destination = js_destination
-
+  "new Float32Array($1)"
+  js_typedArrayFromArray :: JSVal -> IO Float32Array
