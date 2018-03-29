@@ -33,10 +33,15 @@ instance Show Answer where
 
 answers = [Answer False,Answer True]
 
+-- Nothing -> no effect (reference)
+-- Just True -> with added noise
+-- Just Fals -> no added noise
+
 renderAnswer :: Config -> Source -> Maybe Answer -> Sound
-renderAnswer db (NodeSource node dur) (Just (Answer True)) = OverlappedSound "addedWhiteNoiseExercise"  [GainSound (Sound $ NodeSource node dur) (-10) , GainSound (Sound $ NodeSource (BufferNode $ File "whitenoise.wav") dur ) db] -- should be soundSource (b) at -10 plus whiteNoise at dB
-renderAnswer db b (Just (Answer False)) = OverlappedSound "addedWhiteNoiseExercise" [GainSound (Sound b) (-10)] -- note: this must be an overlapped sound so that it cuts off the previous playing sound...
-renderAnswer db b Nothing = OverlappedSound "addedWhiteNoiseExercise" [GainSound (Sound b) (-10)] -- should also just be soundSource (b) at -10
+renderAnswer db (NodeSource (BufferNode (LoadedFile s p)) Nothing) (Just (Answer True)) = OverlappedSound "addedWhiteNoiseExercise"  [GainSound (Sound $ NodeSource (BufferNode  (LoadedFile s p)) Nothing) (-10) , GainSound (Sound $ NodeSource (BufferNode $ File "whitenoise.wav") Nothing) db] (if (loop p) then Max else OnBufferEnd s)
+renderAnswer db (NodeSource node dur) (Just (Answer True)) = OverlappedSound "addedWhiteNoiseExercise"  [GainSound (Sound $ NodeSource node dur) (-10) , GainSound (Sound $ NodeSource (BufferNode $ File "whitenoise.wav") dur ) db] Min  -- should be soundSource (b) at -10 plus whiteNoise at dB
+renderAnswer db b (Just (Answer False)) = OverlappedSound "addedWhiteNoiseExercise" [GainSound (Sound b) (-10)] Min -- note: this must be an overlapped sound so that it cuts off the previous playing sound...
+renderAnswer db b Nothing = OverlappedSound "addedWhiteNoiseExercise" [GainSound (Sound b) (-10)] Min-- should also just be soundSource (b) at -10
 -- note also: default sound source for this is a 300 Hz sine wave, but user sound files are possible
 -- pink or white noise should NOT be possible as selectable sound source types
 

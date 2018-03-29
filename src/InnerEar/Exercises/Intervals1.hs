@@ -43,7 +43,7 @@ answers = [P1,M2,M3,P4,P5]
 -- *** note: random pitches requires renderAnswer to return IO Sound instead of Sound
 renderAnswer :: Config -> Source -> Maybe Answer -> Sound
 
-renderAnswer _ _ (Just x) = GainSound (OverlappedSound "why?" [n1,n2]) (-20)
+renderAnswer _ _ (Just x) = GainSound (OverlappedSound "why?" [n1,n2] Max) (-20)
   where
     f1 = midicps 60
     f2 = midicps (60 + answerToSemitones x)

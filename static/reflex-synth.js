@@ -1,5 +1,4 @@
 var bufferData
-var buffers = {}
 var overlappedDictionary = {}
 var lastPlayingBufferNode;
 var userAudioNodes = {}
@@ -72,6 +71,16 @@ function connectAdditiveNode(listOfNodes, toNode){
   }
 }
 
+function disconnectAllAtTime (n,t){
+  setTimeout(function(){
+    try{
+      n.disconnect();
+    } catch(e){
+      //for buffernodes that complain if you try to reference them after they've played...
+    }
+  }, t*1000)
+}
+
 //Need to stop and disconnect all sources
 function stopOverlappedSound(id){
   if (overlappedDictionary[id] != undefined){
@@ -79,9 +88,15 @@ function stopOverlappedSound(id){
 
     for (var i=0; i<nodes.length; i=i+1){
       console.log("STOPING AN OVERLAPPED NODE NOW")
-      console.log(typeof(nodes[i]))
-      nodes[i].stop()
-      nodes[i].disconnect();
+      try {
+        console.log("gets here??????")
+        nodes[i].stop()
+        console.log("gets here2   ??????");
+        nodes[i].disconnect();
+        console.log("gets here3  ??????");
+      } catch(e){
+        console.log("hmm...")
+      }
     }
     overlappedDictionary[id] = undefined
   }
@@ -273,9 +288,7 @@ function loadAndDrawBuffer(inputId, canvas){
     if (files[0]){
       var file = files[0]
 
-      // See if the buffer has previously been loaded@
-      if (buffers[file.name]){
-      }
+
 
       var bufferReader = new FileReader ();
 

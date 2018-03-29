@@ -5,6 +5,7 @@ module Reflex.Synth.Foreign where
 import GHCJS.Types (JSVal,JSString)
 import GHCJS.DOM.Types (HTMLCanvasElement)
 --import qualified GHCJS.Prim as Prim (toJSString)
+import GHCJS.Marshal.Pure (pToJSVal)
 
 
 foreign import javascript safe "___ac = new AudioContext()" createAudioContext:: IO ()
@@ -16,7 +17,12 @@ foreign import javascript safe "connectAdditiveNode($1,$2)" connectAdditiveNode:
 foreign import javascript safe "$1.disconnect($2)" disconnect ::JSVal -> JSVal -> IO()
 foreign import javascript safe "$1.disconnect()" disconnectAll::JSVal -> IO()
 
-foreign import javascript safe "setTimeout(function () {$1.disconnect()}, $2*1000)" disconnectAllAtTime:: JSVal -> JSVal -> IO ()
+
+-- foreign import javascript safe "setTimeout(function () { try { $1.disconnect() } catch (e){ } }, $2*1000)" disconnectAllAtTime:: JSVal -> JSVal -> IO ()
+
+-- foreign import javascript safe "setTimeout(function(){try{ ($1).disconnect() }catche(e){console.log('hmm')}}, $2*1000);" disconnectAllAtTime:: JSVal -> JSVal -> IO ()
+
+foreign import javascript safe "disconnectAllAtTime($1, $2)"  disconnectAllAtTime:: JSVal -> JSVal -> IO ()
 
 foreign import javascript safe "$r=___ac.createGain()" createGain :: IO JSVal
 foreign import javascript safe "$r=___ac.createBiquadFilter()" createBiquadFilter :: IO JSVal
@@ -38,6 +44,10 @@ foreign import javascript safe "setGain($1, $2)" setGain :: Double -> JSVal -> I
 foreign import javascript safe "$2.gain.value = $1" setAmp::Double -> JSVal -> IO ()
 foreign import javascript safe "$r = $1.gain" getGain :: JSVal -> IO JSVal
 foreign import javascript safe "$r = $1.frequency" getFrequency :: JSVal -> IO JSVal
+foreign import javascript safe "$r = $1.buffer" getBufferFromSourceNode :: JSVal -> IO JSVal
+foreign import javascript safe "$r = $1.duration" getBufferDuration ::JSVal -> IO Double
+foreign import javascript safe "$r = userAudioNodes[$1].buffer" getBufferByID:: JSVal -> IO JSVal
+
 foreign import javascript safe "$1.loop=$2" setBufferNodeLoop :: JSVal -> JSVal -> IO ()
 foreign import javascript safe "$1.setAmp($2)" setOscillatorAmp:: JSVal -> Double -> IO ()
 foreign import javascript safe "$2.frequency.value = $1" setFrequency :: Double -> JSVal -> IO()
@@ -79,6 +89,7 @@ foreign import javascript safe "startNode($1)" startNode :: JSVal -> IO ()
 foreign import javascript safe "startNodes($1)" startNodes:: JSVal -> IO ()  -- JSarray of nodes (in an additive node) loop through and run 'start'
 foreign import javascript safe "stopNodeByID($1)" stopNodeByID::JSString -> IO ()
 foreign import javascript safe "stopOverlappedSound($1)" stopOverlappedSound:: JSString -> IO ()
+foreign import javascript safe "setTimeout(function() {stopOverlappedSound($1)}, $2*1000)" stopOverlappedSoundAtT :: JSVal -> Float -> IO ()
 foreign import javascript safe "playMediaNode($1)" playMediaNode:: JSString -> IO()
 
 
