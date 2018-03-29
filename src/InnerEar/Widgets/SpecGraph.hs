@@ -17,29 +17,35 @@ import InnerEar.Types.Score
 import InnerEar.Widgets.Labels
 import InnerEar.Widgets.Bars
 
---a framework for the shape graph
-shapeGraphFrame :: MonadWidget t m =>  String -> String -> m ()
-shapeGraphFrame xMainLabel graphLabel = do
-  faintedYaxis "faintedYaxis"
-  hzMainLabel "hzMainLabel" xMainLabel
-  countMainLabel "countMainLabel" "#"
-  percentageMainLabel "percentageMainLabel" "%"
-  elClass "div" "graphLabel" $ text graphLabel
-  return ()
+--a list of frequencies (a list for the x axis)
+xPoints :: [Double]
+xPoints = [0, 1 .. 10000] -- :: [Frequency]
 
 --a list to generate points in the y axis
-steepList :: [Double]
-steepList = fmap ((\x -> 1/(x*x))) [1,2::Double .. ]
+linearGraphYPoints :: [Double]
+linearGraphYPoints = fmap (\x -> x) xPoints
 
---a list of frequencies (a list for the x axis)
-fList :: Double -> [Double]
-fList freq = Prelude.filter (< 20000) $ take 10 $ fmap (* freq) [1,2 .. ] -- :: [Frequency]
+--a list to generate points in the y axis
+steepGraphYpoints :: [Double]
+steepGraphYpoints = fmap (\x -> (x*x)) xPoints
+
+gradualGrapYpoints :: [Double]
+gradualGrapYpoints = fmap (\x -> sqrt x) xPoints
+
+flatGraphYpoints :: [Double]
+flatGraphYpoints = fmap (\x -> 100) xPoints
 
 --a generator of steep graphs
-steepGraph :: MonadWidget t m => Double -> m ()
-steepGraph freq = do
-      let listOfPoints = zip (fList freq) steepList
-      shapeLine (constDyn "polyline") listOfPoints
+graphGen :: MonadWidget t m => [Double] -> [Double] -> m ()
+graphGen xPoints yPoints= do
+      let xAndYPoints = zip xPoints yPoints
+      shapeLine (constDyn "polyline") xAndYPoints
       return ()
 
+{--linearGraph :: MonadWidget t m =>  m ()
+linearGraph = elClass "div" "specGraphWrapper" $ do
+       let listOfPoints = zip (fList) linearGraphList
+       shapeLine (constDyn "polyline") listOfPoints
+       return ()
+--}
 --shapeLine [20,20, 40,25, 60,40, 80,120, 120,140, 200,180]

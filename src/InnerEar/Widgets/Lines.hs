@@ -36,7 +36,7 @@ shapeLine c listOfPoints = do
       let listOfPoints' = listToString listOfPoints
       c' <- mapDyn (singleton "class") c
       let points = constDyn (singleton "points" listOfPoints')
-      --attrs <- mconcatDyn [c', points]
-      svgDynAttr "polyline" points $ return ()
+      attrs <- mconcatDyn [c', points]
+      svgDynAttr "polyline" attrs $ return ()
 
 --instructions dynamic t c
