@@ -18,6 +18,8 @@ import InnerEar.Widgets.SpecEval
 import InnerEar.Types.Data
 import InnerEar.Types.Frequency
 import InnerEar.Types.Utility
+import InnerEar.Widgets.SpecGraph
+
 
 type Config = Frequency -- represents fundamental frequency for sound generation
 
@@ -104,6 +106,9 @@ thisConfigWidget c = do
 instructions :: MonadWidget t m => m ()
 instructions = el "div" $ do
   elClass "div" "instructionsText" $ text "Instructions placeholder"
+  --shapeLine (constDyn "polyline") [(0,5), (5,10), (10,15), (15,20), (20,25), (25,30)]
+  steepGraph 100
+
 
 spectralShapeExercise :: MonadWidget t m => Exercise t m Config [Answer] Answer (Map Answer Score)
 spectralShapeExercise = multipleChoiceExercise
