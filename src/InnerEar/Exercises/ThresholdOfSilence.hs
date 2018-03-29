@@ -17,6 +17,7 @@ import InnerEar.Types.Data
 import InnerEar.Widgets.Config
 import InnerEar.Widgets.UserMedia
 import InnerEar.Widgets.SpecEval
+import InnerEar.Widgets.AnswerButton
 
 
 
@@ -36,6 +37,10 @@ answers = [Answer True,Answer False]
 instance Show Answer where
   show (Answer True) = "Attenuated Sound"
   show (Answer False) = "No sound at all"
+
+instance Buttonable Answer where
+  makeButton = showAnswerButton
+
 
 renderAnswer :: Config -> Source -> Maybe Answer -> Sound
 renderAnswer db s (Just (Answer True)) = GainSound (Sound s)  ((fromIntegral db)::Double) -- 2.0 -- should be a sound source attenuated by dB value

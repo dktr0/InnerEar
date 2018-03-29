@@ -17,6 +17,7 @@ import InnerEar.Widgets.Config
 import InnerEar.Widgets.SpecEval
 import InnerEar.Types.Data
 import InnerEar.Types.Frequency
+import InnerEar.Widgets.AnswerButton
 
 type Config = Frequency -- represents fundamental frequency for sound generation
 
@@ -24,6 +25,9 @@ configs :: [Config]
 configs = [F 100 "100 Hz",F 200 "200 Hz", F 400 "400 Hz", F 800 "800 Hz", F 1600 "1600Hz", F 3200 "3200Hz"]
 
 data Answer = Odd | Even | All deriving (Eq,Ord,Data,Typeable,Show)
+
+instance Buttonable Answer where
+  makeButton = showAnswerButton
 
 answers = [Odd,Even,All]
 

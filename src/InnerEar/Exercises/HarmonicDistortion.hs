@@ -16,6 +16,7 @@ import InnerEar.Types.Score
 import InnerEar.Widgets.Config
 import InnerEar.Widgets.SpecEval
 import InnerEar.Types.Data
+import InnerEar.Widgets.AnswerButton
 
 type Config = Double -- representing threshold of clipping, and inverse of post-clip normalization
 
@@ -30,6 +31,9 @@ data Answer = Answer Bool deriving (Eq,Ord,Data,Typeable)
 instance Show Answer where
   show (Answer True) = "Clipped"
   show (Answer False) = "Not Clipped"
+
+instance Buttonable Answer where
+  makeButton = showAnswerButton
 
 answers = [Answer False,Answer True]
 --

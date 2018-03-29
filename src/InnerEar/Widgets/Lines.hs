@@ -21,8 +21,10 @@ replaceEach (x:xs)
 
 --a helper function to get "x,y x,y"
 listToString :: [(Double,Double)] -> String
-listToString [] = []
-listToString (x:xs) = concat [replaceEach $ show $ x, " ", listToString xs]
+-- listToString [] = []
+-- listToString (x:xs) = concat [replaceEach $ show $ x, " ", listToString xs]
+
+listToString xs = concat $ Prelude.map (\(x,y) -> show x ++ "," ++ show y ++ " ") xs
 
 --a helper function to get "x,y x,y"
 listToString' :: [Double] -> String
@@ -38,5 +40,14 @@ shapeLine c listOfPoints = do
       let points = constDyn (singleton "points" listOfPoints')
       attrs <- mconcatDyn [c', points]
       svgDynAttr "polyline" attrs $ return ()
+
+shapeLine' ::  MonadWidget t m => String -> [(Double, Double)] -> m ()
+shapeLine' c listOfPoints = do
+    svgClass "svg" "shapeContainer" $ do
+      let listOfPoints' = listToString listOfPoints
+      let c' = singleton "class" c
+      let points = singleton "points" listOfPoints'
+      let attrs = mconcat [c',points]
+      svgAttr "polyline" attrs $ return ()
 
 --instructions dynamic t c

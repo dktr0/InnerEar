@@ -31,7 +31,7 @@ import Reflex.Synth.Types
 -- answers be provided, together with a pure function that converts an answer
 -- value to a sound.
 
-multipleChoiceExercise :: (MonadWidget t m, Show a, Eq a, Ord a, Data c, Data a, Ord c)
+multipleChoiceExercise :: (MonadWidget t m, Show a, Eq a, Ord a, Data c, Data a, Ord c,Buttonable a)
   => Int -- maximum number of tries to allow
   -> [a]
   -> m ()
@@ -53,7 +53,7 @@ multipleChoiceExercise maxTries answers iWidget cWidget render i c de g = Exerci
   questionWidget = multipleChoiceQuestionWidget maxTries answers i iWidget cWidget render de
   }
 
-multipleChoiceQuestionWidget :: (MonadWidget t m, Show a, Eq a, Ord a,Data a,Data c,Ord c)
+multipleChoiceQuestionWidget :: (MonadWidget t m, Show a, Eq a, Ord a,Data a,Data c,Ord c, Buttonable a)
   => Int -- maximum number of tries
   -> [a] -- fixed list of potential answers
   -> ExerciseId
@@ -90,7 +90,9 @@ multipleChoiceQuestionWidget maxTries answers exId exInstructions cWidget render
     (x,y,z) <- elClass "div" "buttonInterface" $ do
       x <- elClass "div" "listenButton" $ buttonClass "Listen" "listenButton"
       y <- elClass "div" "answerButtonWrapper" $ do
-        leftmost <$> zipWithM (\f m -> answerButton (show f) m f) answers modes'
+        -- leftmost <$> zipWithM (\f m -> answerButton (show f) m f) answers modes'
+        leftmost <$> zipWithM makeButton answers modes'
+
       z <- elClass "div" "nextButton" $ revealableButton "Next" "nextButton" questionHeard
       return (x,y,z)
     return (CloseExercise <$ w,x,y,InQuestion <$ z)

@@ -58,13 +58,19 @@ buttonClass s c = do
   (e, _) <- elAttr' "button" (singleton "class" c) $ text s
   return $ domEvent Click e
 
+
+clickableDiv :: MonadWidget t m => Dynamic t String -> a -> m b -> m (Event t a)
+clickableDiv c v children = do
+  attrs <- mapDyn (singleton "class") c
+  (element, _) <- elDynAttr' "div" attrs $ children
+  clickEv <- wrapDomEvent (_el_element element) (onEventName Click) (mouseXY)
+  return $ (v <$) clickEv
+
+
 -- with displayed text that can change
 clickableDivDynClass:: MonadWidget t m => Dynamic t String -> Dynamic t String -> a -> m (Event t a)
-clickableDivDynClass label c val = do
-  attrs <- mapDyn (singleton "class") c
-  (element, _) <- elDynAttr' "div" attrs $ dynText label
-  clickEv <- wrapDomEvent (_el_element element) (onEventName Click) (mouseXY)
-  return $ (val <$) clickEv
+clickableDivDynClass label c val = clickableDiv c val $ dynText label
+
 
 
 

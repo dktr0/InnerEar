@@ -35,7 +35,6 @@ gradualGrapYpoints = fmap (\x -> sqrt x) xPoints
 flatGraphYpoints :: [Double]
 flatGraphYpoints = fmap (\x -> 100) xPoints
 
---a generator of steep graphs
 graphGen :: MonadWidget t m => [Double] -> [Double] -> m ()
 graphGen xPoints yPoints= do
       let xAndYPoints = zip xPoints yPoints

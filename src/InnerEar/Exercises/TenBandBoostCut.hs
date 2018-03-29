@@ -21,6 +21,7 @@ import InnerEar.Exercises.MultipleChoice
 import InnerEar.Widgets.Config
 import InnerEar.Widgets.UserMedia
 import InnerEar.Widgets.Utility (radioWidget, safeDropdown)
+import InnerEar.Widgets.AnswerButton
 
 data FrequencyBand = AllBands | HighBands  | Mid8Bands | MidBands | LowBands deriving (Eq,Data,Typeable, Read)
 
@@ -63,16 +64,19 @@ boostAmounts = reverse [-10,-6,-3,-2,-1,1,2,3,6,10]
 
 type Config = (FrequencyBand, Double) -- FrequencyBand and Boost/Cut amount
 
-type Answer = Frequency
+newtype Answer = Answer { frequency :: Frequency } deriving (Show,Eq,Ord,Data,Typeable)
+
+instance Buttonable Answer where
+  makeButton = showAnswerButton
 
 answers :: [Answer]
 answers = [
-  F 31 "31", F 63 "63", F 125 "125", F 250 "250", F 500 "500",
-  F 1000 "1k", F 2000 "2k", F 4000 "4k", F 8000 "8k", F 16000 "16k"]
+  Answer $ F 31 "31",Answer $ F 63 "63", Answer $ F 125 "125", Answer $ F 250 "250", Answer $ F 500 "500",
+  Answer $ F 1000 "1k", Answer $ F 2000 "2k", Answer $ F 4000 "4k", Answer $ F 8000 "8k", Answer $ F 16000 "16k"]
 
 renderAnswer :: Config -> Source -> Maybe Answer -> Sound
 renderAnswer (_,boost) s f = case f of
-  (Just freq) -> GainSound (FilteredSound s $ Filter Peaking (freqAsDouble freq) 1.4 boost) (-10)
+  (Just freq) -> GainSound (FilteredSound s $ Filter Peaking (freqAsDouble (frequency freq)) 1.4 boost) (-10)
   Nothing -> GainSound (Sound s) (-10)
 
 convertBands :: FrequencyBand -> [Answer]

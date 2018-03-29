@@ -18,6 +18,7 @@ import InnerEar.Widgets.SpecEval
 import InnerEar.Types.Data
 import InnerEar.Types.Frequency
 import InnerEar.Types.Utility
+import InnerEar.Widgets.AnswerButton
 
 type Similarity = Int
 type Duration = Int
@@ -35,6 +36,9 @@ octaves = [8.0,4.0,2.0,1.0,0.5,1/6,1/12]
 
 data Answer = Quicker | Linear | Slower
   deriving (Eq,Ord,Data,Typeable,Show)
+
+instance Buttonable Answer where
+  makeButton = showAnswerButton
 
 answers = [Quicker,Linear,Slower]
 

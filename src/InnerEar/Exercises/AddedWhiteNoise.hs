@@ -16,6 +16,7 @@ import InnerEar.Types.Score
 import InnerEar.Widgets.Config
 import InnerEar.Widgets.SpecEval
 import InnerEar.Types.Data
+import InnerEar.Widgets.AnswerButton
 
 type Config = Double -- representing level of attenuation for added white noise
 
@@ -30,6 +31,9 @@ data Answer = Answer Bool deriving (Eq,Ord,Data,Typeable)
 instance Show Answer where
   show (Answer True) = "With Noise"
   show (Answer False) = "Clean"
+
+instance Buttonable Answer where
+  makeButton = showAnswerButton
 
 answers = [Answer False,Answer True]
 
