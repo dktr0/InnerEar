@@ -1,26 +1,27 @@
-{-# LANGUAGE GADTs, StandaloneDeriving #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module Reflex.Synth.Spec where
 
 import GHCJS.Marshal.Pure
+import GHCJS.Types
+import Control.Applicative
 
-data SourceNodeSpec where
-  Silent :: SourceNodeSpec
-  Oscillator :: (FrequencyInHz f) => OscillatorType -> f -> SourceNodeSpec
+data SourceNodeSpec
+  = Silent
+  | Oscillator OscillatorType Frequency
   -- TODO | Buffer BufferSrc
-deriving instance Show SourceNodeSpec
+  deriving (Show)
 
-data SourceSinkNodeSpec where
-  Filter :: FilterSpec -> SourceSinkNodeSpec
+data SourceSinkNodeSpec
+  = Filter FilterSpec
   -- TODO | Convolver Buffer normalize :: Boolean
-  Delay :: (TimeInSec t) => t -> SourceSinkNodeSpec
-  Compressor :: (AmplitudeInDb t, AmplitudeInDb k, AmplitudeInDb r, AmplitudeInDb d, TimeInSec a, TimeInSec e) => { 
-      threshold :: t, knee :: k, ratio :: r, reduction :: d, attack :: a, release :: e
-    } -> SourceSinkNodeSpec
-  Gain :: (AmplitudeInAmp a) => a -> SourceSinkNodeSpec
-  WaveShaper :: [Double] -> OversampleAmount -> SourceSinkNodeSpec
+  | Delay Time
+  -- Compressor threshold knee ratio reduction attack release
+  | Compressor Amplitude Amplitude Amplitude Gain Time Time
+  | Gain Gain
+  | WaveShaper [Double] OversampleAmount
   -- DistortAt Amplitude
-deriving instance Show SourceSinkNodeSpec
+  deriving (Show)
 
 data SinkNodeSpec
   = Destination
@@ -34,21 +35,20 @@ data OscillatorType
   deriving (Show, Eq)
 
 instance PToJSVal OscillatorType where
-  pToJSVal Sine = "sine"
-  pToJSVal Square = "square"
-  pToJSVal Sawtooth = "sawtooth"
-  pToJSVal Triangle = "triangle"
+  pToJSVal Sine = jsval ("sine" :: JSString)
+  pToJSVal Square = jsval ("square" :: JSString)
+  pToJSVal Sawtooth = jsval ("sawtooth" :: JSString)
+  pToJSVal Triangle = jsval ("triangle" :: JSString)
 
-data FilterSpec where
-  -- frequency -> Q -> gain
-  LowPass :: (FrequencyInHz f) => f -> Double -> FilterSpec
-  HighPass :: (FrequencyInHz f) => f -> Double -> FilterSpec
-  BandPass :: (FrequencyInHz f) => f -> Double -> FilterSpec
-  LowShelf :: (FrequencyInHz f, AmplitudeInDb g) => f -> g -> FilterSpec
-  HighShelf :: (FrequencyInHz f, AmplitudeInDb g) => f -> g -> FilterSpec
-  Peaking :: (FrequencyInHz f, AmplitudeInDb g) => f -> Double -> g -> FilterSpec
-  Notch :: (FrequencyInHz f) => f -> Double -> FilterSpec
-  AllPass :: (FrequencyInHz f) => f -> Double -> FilterSpec
+data FilterSpec
+  = LowPass Frequency Double
+  | HighPass Frequency Double
+  | BandPass Frequency Double
+  | LowShelf Frequency Gain
+  | HighShelf Frequency Gain
+  | Peaking Frequency Double Gain
+  | Notch Frequency Double
+  | AllPass Frequency Double
   -- | IIR [Double] [Double] feedforward feedback
   deriving (Show)
 
@@ -59,84 +59,56 @@ data OversampleAmount
   deriving (Show)
   
 instance PToJSVal OversampleAmount where
-  pToJSVal None = "none"
-  pToJSVal Times2 = "x2"
-  pToJSVal Times4 = "x4"
+  pToJSVal None = jsval ("none" :: JSString)
+  pToJSVal Times2 = jsval ("x2" :: JSString)
+  pToJSVal Times4 = jsval ("x4" :: JSString)
 
 data Amplitude
   = Amp Double
   | Db Double
-  deriving (Show, Eq)
+  deriving (Show)
 
-class AmplitudeInAmp a where
-  inAmp :: a -> Double
+type Gain = Amplitude
 
-instance Show (AmplitudeInAmp a) where
-  show = show . inAmp
+inAmp :: Amplitude -> Double
+inAmp (Amp a) = a
+inAmp (Db db) = 10.0 ** (db / 20.0)
 
-instance AmplitudeInAmp Amplitude where
-  inAmp (Amp a) = a
-  inAmp (Db db) = 10.0 ** (db / 20.0)
-
-class AmplitudeInDb a where
-  inDb :: a -> Double
-
-instance Show (AmplitudeInDb a) where
-  show x = (show $ inDb x) ++ "dB"
-
-instance AmplitudeInDb Amplitude where
-  inDb (Amp a) = 20.0 * (logBase 10 a)
-  inDb (Db db) = db
+inDb :: Amplitude -> Double
+inDb (Amp a) = 20.0 * (logBase 10 a)
+inDb (Db db) = db
 
 data Frequency
   = Hz Double
   | Midi Double
-  deriving (Show, Eq)
+  deriving (Show)
 
-class FrequencyInHz a where
-  inHz :: a -> Double
+inHz :: Frequency -> Double
+inHz (Hz hz) = hz
+inHz (Midi n) = 440.0 * (2.0 ** ((n - 69.0) / 12.0))
 
-instance Show (FrequencyInHz a) where
-  show x = (show $ inHz x) ++ "Hz"
-
-instance FrequencyInHz Frequency where
-  inHz (Hz hz) = hz
-  inHz (Midi n) = 440.0 * (2.0 ** ((n - 69.0) / 12.0))
-
-class FrequencyInMidi a where
-  inMidi :: a -> Double
-
-instance Show (FrequencyInMidi a) where
-  show x = (show $ inMidi x) ++ "midi"
-
-instance FrequencyInMidi Frequency where
-  inMidi (Hz hz) = 69.0 + 12.0 * (logBase 2 (hz / 440.0))
-  inMidi (Midi n) = n
+inMidi :: Frequency -> Double
+inMidi (Hz hz) = 69.0 + 12.0 * (logBase 2 (hz / 440.0))
+inMidi (Midi n) = n
 
 data Time
   = Sec Double
   | Millis Double
-  deriving (Show, Eq)
+  deriving (Show)
 
-class TimeInSeconds a where
-  inSec :: a -> Double
+inSec :: Time -> Double
+inSec (Sec s) = s
+inSec (Millis ms) = ms / 1000.0
 
-instance Show (TimeInSeconds a) where
-  show x = (show $ inSec x) ++ "s"
+inMillis :: Time -> Double
+inMillis (Sec s) = s * 1000.0
+inMillis (Millis ms) = ms
 
-instance TimeInSeconds Time where
-  inSec (Sec s) = s
-  inSec (Millis ms) = ms / 1000.0
+instance Eq Time where
+  t1 == t2 = inMillis t1 == inMillis t2
 
-class TimeInMillis a where
-  inMillis :: a -> Double 
-
-instance Show (TimeInMillis a) where
-  show x = (show $ inMillis x) ++ "ms"
-
-instance TimeInMillis Time where
-  inMillis (Sec s) = s * 1000.0
-  inMillis (Millis ms) = ms
+instance Ord Time where
+  t1 <= t2 = inMillis t1 <= inMillis t2
 
 instance Num Time where
   t1 + t2 = Millis $ (inMillis t1) + (inMillis t2)
