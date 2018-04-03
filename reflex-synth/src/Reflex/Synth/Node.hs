@@ -8,6 +8,7 @@ module Reflex.Synth.Node (
   instantiateSourceNode,
   instantiateSourceSinkNode,
   instantiateSinkNode,
+  instantiateLegacyNode,
   audioParamNode,
   connect,
   disconnect,
@@ -27,6 +28,10 @@ import GHCJS.Marshal.Pure
 import GHCJS.Foreign.Callback(asyncCallback1, releaseCallback)
 import GHCJS.Prim(JSVal, toJSArray, toJSString)
 
+import qualified Reflex.Synth.Sound as L
+import qualified Reflex.Synth.WebAudio as L
+import qualified Reflex.Synth.WebAudioGraph as L
+
 data Node
   -- Source nodes
   = AudioBufferSourceNode { jsval :: JSVal }
@@ -41,6 +46,8 @@ data Node
   -- Sink nodes
   | DestinationNode { jsval :: JSVal }
   | AudioParamNode { jsval :: JSVal }
+  -- Legacy
+  | LegacyNode L.WebAudioGraph
   
 instance Show Node where
   show (AudioBufferSourceNode _) = "AudioBufferSourceNode"
@@ -52,10 +59,12 @@ instance Show Node where
   show (WaveShaperNode _) = "WaveShaperNode"
   show (ScriptProcessorNode _) = "ScriptProcessorNode"
   show (DestinationNode _) = "DestinationNode"
+  show (LegacyNode _) = "LegacyNode"
   
 isSourceNode :: Node -> Bool
 isSourceNode (AudioBufferSourceNode _) = True
 isSourceNode (OscillatorNode _) = True
+isSourceNode (LegacyNode _) = True
 isSourceNode _ = False
 
 isSinkNode :: Node -> Bool
@@ -149,6 +158,11 @@ configureBiquadFilterNode (AllPass f q) node ctx =
 instantiateSinkNode :: SinkNodeSpec -> WebAudioContext -> IO Node
 instantiateSinkNode Destination ctx = js_destination ctx >>= return . DestinationNode 
 
+instantiateLegacyNode :: L.Sound -> IO Node
+instantiateLegacyNode sound = do
+  graph <- L.createGraph sound
+  return $ LegacyNode graph  
+
 audioParamNode :: Node -> String -> Node
 audioParamNode node paramName =
   AudioParamNode $ pToJSVal $ js_audioParam (jsval node) (toJSString paramName)
@@ -166,16 +180,19 @@ disconnect from to
   | otherwise   = js_disconnect (jsval from) (jsval to)
 
 disconnectAll :: Node -> IO ()
+disconnectAll (LegacyNode graph) = L.disconnectGraphAtTime graph 0.0
 disconnectAll x
   | isSinkNode x = return ()
   | otherwise  = js_disconnectAll (jsval x)
 
 start :: Time -> Node -> IO ()
+start _ (LegacyNode graph) = L.startGraph graph -- The old start doesn't take a time
 start t x
   | isSourceNode x = js_start (jsval x) $ inSec t
   | otherwise  = return ()
 
 stop :: Time -> Node -> IO ()
+stop _ (LegacyNode graph) = return () -- Can't stop a legacy node
 stop t x
   | isSourceNode x = js_stop (jsval x) $ inSec t
   | otherwise  = return ()

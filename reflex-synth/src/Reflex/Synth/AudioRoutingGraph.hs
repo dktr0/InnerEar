@@ -24,7 +24,7 @@ foreign import javascript safe
   js_newAudioContext :: IO WebAudioContext
 
 foreign import javascript safe
-  "window.__ac = $1;"
+  "window.___ac = $1;"
   js_setGlobalAudioContext :: WebAudioContext -> IO () 
 
 foreign import javascript safe
@@ -32,9 +32,9 @@ foreign import javascript safe
   js_globalAudioContext :: IO WebAudioContext
 
 foreign import javascript safe
-  "if (window.__ac == null) { \
-  \    window.__ac = new (window.AudioContext || window.webkitAudioContext)();\
-  \} $r = window.__ac;"
+  "if (window.___ac == null) { \
+  \    window.___ac = new (window.AudioContext || window.webkitAudioContext)();\
+  \} $r = window.___ac;"
   js_setupGlobalAudioContext :: IO WebAudioContext
   
 foreign import javascript safe

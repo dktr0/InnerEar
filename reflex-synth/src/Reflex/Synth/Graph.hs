@@ -12,6 +12,7 @@ module Reflex.Synth.Graph (
   synthSource,
   synthSourceSink,
   synthSink,
+  synthLegacy,
   getNodeId,
   audioParamSink,
   setParamValue,
@@ -24,6 +25,8 @@ import qualified Data.Map as Map
 import Control.Monad.Trans.Class
 import Control.Monad.Trans.State
 import Reflex.Synth.Spec
+import qualified Reflex.Synth.NodeSpec as L
+import qualified Reflex.Synth.Sound as L
 
 -- See https://wiki.haskell.org/New_monads/MonadUnique for a simple monad transformer to support
 -- generating unique values.
@@ -54,6 +57,7 @@ data NodeProps
   = SourceSpec SourceNodeSpec 
   | SourceSinkSpec SourceSinkNodeSpec 
   | SinkSpec SinkNodeSpec
+  | Legacy L.Sound
   deriving (Show)
 
 type Env = Map.Map Integer NodeProps
@@ -172,6 +176,24 @@ synthSink :: SinkNodeSpec -> SynthBuilder Graph
 synthSink spec = do
   r <- fresh
   lift $ makeSynth r (Sink (RefToNode r) EmptyGraph) (SinkSpec spec)
+
+-- Lift a legacy L.Sound into a SynthBuilder. This creates a trivial completed
+-- graph while storing the sound specification in the env. This helper does not
+-- return a reference to the graph because there should be no further interaction
+-- with legacy nodes within the SynthBuilder context.
+synthLegacy :: L.Sound -> SynthBuilder ()
+synthLegacy sound = do
+  rSound <- fresh
+  rDest <- fresh
+  let source = Source (RefToNode rSound)
+  let sink = Sink (RefToNode rDest) source
+  lift $ Synth {
+    graphs = ([], [sink]),
+    env = Map.singleton rSound (Legacy sound),
+    changes = [],
+    deletionTime = fmap Sec $ L.getT sound,
+    supplement = ()
+  }
 
 makeSynth :: Integer -> Graph -> NodeProps -> Synth Graph
 makeSynth r g np = Synth {
