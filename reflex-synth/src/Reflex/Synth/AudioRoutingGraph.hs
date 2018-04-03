@@ -4,19 +4,38 @@ import Reflex.Synth.Spec
 import Reflex.Synth.Graph
 import GHCJS.Types
 import GHCJS.Marshal.Pure
+import GHCJS.Foreign.Callback
 import qualified Data.Map as Map
 
 newtype WebAudioContext = WebAudioContext JSVal
-
 newtype AudioParam = AudioParam JSVal
-
 newtype AudioBuffer = AudioBuffer JSVal
-
 newtype Float32Array = Float32Array JSVal
+newtype EndedEvent = EndedEvent JSVal
+
+instance PToJSVal WebAudioContext where pToJSVal (WebAudioContext val) = val
+instance PToJSVal AudioParam where pToJSVal (AudioParam val) = val
+instance PToJSVal AudioBuffer where pToJSVal (AudioBuffer val) = val
+instance PToJSVal Float32Array where pToJSVal (Float32Array val) = val
+instance PToJSVal EndedEvent where pToJSVal (EndedEvent val) = val
 
 foreign import javascript safe 
   "new (window.AudioContext || window.webkitAudioContext)()"
   js_newAudioContext :: IO WebAudioContext
+
+foreign import javascript safe
+  "window.__ac = $1;"
+  js_setGlobalAudioContext :: WebAudioContext -> IO () 
+
+foreign import javascript safe
+  "$r = window.__ac;"
+  js_globalAudioContext :: IO WebAudioContext
+
+foreign import javascript safe
+  "if (window.__ac == null) { \
+  \    window.__ac = new (window.AudioContext || window.webkitAudioContext)();\
+  \} $r = window.__ac;"
+  js_setupGlobalAudioContext :: IO WebAudioContext
   
 foreign import javascript safe
   "$1.currentTime"
@@ -64,11 +83,11 @@ foreign import javascript safe
 
 foreign import javascript safe
   "$1[$2] = $3;"
-  js_setField :: JSVal -> JSString -> JSVal -> IO ()
+  js_setField :: JSVal -> JSVal -> JSVal -> IO ()
   
 foreign import javascript safe
   "$1[$2]"
-  js_audioParam :: JSVal -> JSString -> IO AudioParam
+  js_audioParam :: JSVal -> JSVal -> AudioParam
   
 foreign import javascript safe
   "$1.setValueAtTime($2, $3.currentTime);"
@@ -102,8 +121,12 @@ foreign import javascript safe
   -- buffer -> channel (0 indexed) -> data
   
 foreign import javascript safe
-  "if (Float32Array.prototype.fill !== void 0) $1.fill($2); \n\
-  \else for (var i = 0, len = a.length; i < len; i++) $1[i] = $2;"
+  "if (Float32Array.prototype.fill !== void 0) { \
+  \  $1.fill($2); \
+  \} else { \
+  \  for (var i = 0, len = a.length; i < len; i++) \
+  \    $1[i] = $2; \
+  \} "
   js_typedArrayFill :: Float32Array -> Float -> IO ()
 
 foreign import javascript safe
@@ -125,10 +148,13 @@ foreign import javascript safe
   js_disconnectAll :: JSVal -> IO ()
   
 foreign import javascript safe
-  "$1.start()"
-  js_start :: JSVal -> IO ()
+  "$1.start($2)"
+  js_start :: JSVal -> Double -> IO ()
   
 foreign import javascript safe
-  "$1.stop()"
-  js_stop :: JSVal -> IO ()
-  
+  "$1.stop($2)"
+  js_stop :: JSVal -> Double -> IO ()
+
+foreign import javascript safe
+  "$1.onended = $2"
+  js_onended :: JSVal -> Callback (JSVal -> IO ()) -> IO ()

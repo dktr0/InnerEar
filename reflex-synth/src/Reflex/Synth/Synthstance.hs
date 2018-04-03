@@ -1,50 +1,100 @@
 module Reflex.Synth.Synthstance (
-  
+  instantiateSynth,
+  startSynth,
+  stopSynth,
+  stopSynthNow
 ) where
 
+import Reflex.Synth.Graph
 import Reflex.Synth.Node
+import Reflex.Synth.Spec
+import Data.Foldable(find)
+import Data.Map(Map,(!))
 
-data Synthstance = Synthstance
+data Synthstance = Synthstance {
+    synth :: Synth (),
+    audioContext :: WebAudioContext,
+    nodes :: Map Integer Node,
+    --audioBuffers :: Map Int AudioBuffer, -- TODO restarting a AudioBufferSourceNode needs to replace the buffers
+    nodeChanges :: [(Integer, Time -> Node -> IO ())],
+    started :: Bool
+  }
 
 type Synstance = Synthstance
 
-nodePropToNodes :: NodeProps -> IO Node
-nodePropToNodes (SourceSpec x) = instantiateSourceNode x
-nodePropToNodes (SourceSinkSpec x) = instantiateSourceSinkNode x
-nodePropToNodes (SinkSpec x) = instantiateSinkNode x
+instantiateNode :: WebAudioContext -> NodeProps -> IO Node
+instantiateNode ctx (SourceSpec x) = instantiateSourceNode x ctx
+instantiateNode ctx (SourceSinkSpec x) = instantiateSourceSinkNode x ctx
+instantiateNode ctx (SinkSpec x) = instantiateSinkNode x ctx
 
-connectGraph :: Map Int Node -> Graph -> IO ()
-connectGraph m (Source _) = return ()
-connectGraph m (Sink (RefToNode i) g) = do
-  connect (getNodeId g)  (m!!i)
-  connectGraph m g
-connectGraph m (Sink (RefToParamOfNode i p) g) = do
-  connectToParamOfNode (m!!(getNodeId g)) p (m!!i)
-  connectGraph m g
-connectGraph m (SourceSink (RefToNode i) g) = do
-  connect (getNodeId g)  (m!!i)
-  connectGraph m g
-connectGraph m (SourceSink (RefToParamOfNode i p) g) = do
-  connectToParamOfNode (m!!(getNodeId g)) p (m!!i)
-  connectGraph m g
+connectGraph :: Map Integer Node -> Graph -> IO ()
+connectGraph m (Source (RefToNode _)) = return ()
+connectGraph m (SourceSink (RefToNode to) from) = do
+  connect (m!getNodeId from) $ m!to
+connectGraph m (Sink (RefToNode to) from) = do
+  connect (m!getNodeId from) $ m!to
+  connectGraph m from
+connectGraph m (Sink (RefToParamOfNode to paramName) from) = do
+  let param = audioParamNode (m!to) paramName
+  connect (m!getNodeId from) param
+  connectGraph m from
+connectGraph _ _ = error "Malformed graph structure."
 
-instantiateChange :: Map Int Node -> Change -> IO ()
-instantiateChange m (SetValue g p v t) = setValue (m!!(getNodeId g)) p v t
-instantiateChange m (LinearRampToValue g p v t) = linearRampToValue (m!!(getNodeId g)) p v t
-instantiateChange m (ExponentialRampToValue g p v t) = exponentialRampToValue (m!!(getNodeId g)) p v t
-instantiateChange m (CurveToValue g p v t d) = curveToValue (m!!(getNodeId g)) p v t d
+instantiateChange :: Change -> Time -> Node -> IO ()
+instantiateChange (SetValue _ paramName val endTime) startTime node =
+  setParamValueAtTime node paramName val $ startTime + endTime
+instantiateChange (LinearRampToValue _ paramName val endTime) startTime node =
+  linearRampToParamValueAtTime node paramName val $ startTime + endTime
+instantiateChange (ExponentialRampToValue _ paramName val endTime) startTime node =
+  exponentialRampToParamValueAtTime node paramName val $ startTime + endTime
+instantiateChange (CurveToValue _ paramName curve curveStartTime duration) startTime node =
+  setParamValueCurveAtTime node paramName curve (startTime + curveStartTime) duration
 
-deleteNode :: Maybe Time -> Node -> IO ()
-deleteNode (Nothing) _ = return ()
-deleteNode (Just t) n = stopDeferred t n >> disconnectAllDeferred t n
+-- Attach an 'onended' callback to the first sourcenode
+disconnectOnStop :: (Foldable t) => t Node -> IO ()
+disconnectOnStop ns = let (Just src) = find isSourceNode ns in
+  onended src $ \_ -> mapM_ disconnectAll $ ns
 
 instantiateSynth :: Synth a -> IO Synthstance
 instantiateSynth x = do
-  ctx <- createAudioContext
-  curTime <- getCurrentTime ctx
-  
-  ns <- mapM nodePropToNodes $ env x
-  mapM (connectGraph ns) $ snd (graphs x)
-  mapM (instantiateChange ns) $ changes x
-  mapM deleteNode $ elems ns
-  return Synthstance
+  ctx <- globalAudioContext
+  ns <- mapM (instantiateNode ctx) $ env x
+  mapM_ (connectGraph ns) $ snd (graphs x)
+  disconnectOnStop ns
+  return $ Synthstance {
+    synth = x >> return (),
+    audioContext = ctx,
+    nodes = ns,
+    nodeChanges = fmap (\c -> (getNodeId $ node c, instantiateChange c)) (changes x),
+    started = False
+  }
+
+-- Start the inst at the scheduled time. If the inst has a duration then it's stop
+-- is also scheduled. 
+startSynth :: Time -> Synthstance -> IO Synthstance
+startSynth time inst = do
+  let ns = nodes inst
+  if started inst then return () else do
+    mapM_ (start time) ns
+    case deletionTime $ synth inst of
+      Just end -> stopSynth (time + end) inst
+      Nothing -> return ()
+  let cs = nodeChanges inst
+  mapM_ (\(id, scheduleChange) -> scheduleChange time $ ns!id) cs
+  return $ inst { started = True }
+
+stopSynth :: Time -> Synthstance -> IO ()
+stopSynth time inst = mapM_ (stop time) $ nodes inst
+
+stopSynthNow :: Synthstance -> IO ()
+stopSynthNow inst = do
+  time <- getCurrentTime $ audioContext inst
+  stopSynth time inst
+
+restartSynth :: Time -> Synthstance -> IO Synthstance
+restartSynth time inst = do
+  stopSynth time inst
+  inst' <- instantiateSynth $ synth inst
+  startSynth time inst'
+
+

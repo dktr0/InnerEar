@@ -1,16 +1,18 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 module Reflex.Synth.Graph (
-  Graph,
-  Change,
-  Synth,
+  Graph(..),
+  Change(..),
+  Synth(..),
   SynthBuilder,
-  Reference,
+  Reference(..),
+  NodeProps(..),
   Env,
   buildSynth,
   synthSource,
   synthSourceSink,
   synthSink,
+  getNodeId,
   audioParamSink,
   setParamValue,
   linearRampToParamValue,
@@ -75,6 +77,7 @@ data Synth a = Synth {
     env :: Env,
     changes :: [Change],
     deletionTime :: Maybe Time,
+    -- TODO preDelete :: Bool, delete what ever is already going on and start this one
     supplement :: a
   } deriving (Show)
 
