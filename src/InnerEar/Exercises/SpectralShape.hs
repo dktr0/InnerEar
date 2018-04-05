@@ -36,12 +36,22 @@ instance Buttonable Answer where
   -- makeButton a m = answerButton' m a $ do
   makeButton a m = clickableDiv (constDyn "someClass") a $ do
     elClass "div" "someClass" $ text (show a)
-    elClass "div" "someClass" $ text (show a)
-    let xAndYPoints = [ (x*4,y*100) | x <- [1,2 .. 25] , y <- take 25 (getShape a) ]
+    let xAndYPoints = zip [0,1 .. 25] (take 25 (getShape' a))
     elClass "div" "someClass" $ shapeLine' "polyline" xAndYPoints
+    --elClass "div" "someClass" $ shapeLine' "polyline" [(0,0),(1,1),(2,2),(3,3),(4,4),(5,5),(6,6),(7,7),(8,8),(9,9),(10,10),(11,11),(12,12),(13,13),(14,14),(15,15),(16,16),(17,17),(18,18),(19,19),(20,20),(21,21),(22,22),(23,23),(24,24),(25,25)]
     return ()
 
 answers = [Steep,Linear,Gradual,Flat,InverseGradual,InverseLinear,InverseSteep]
+
+getShape' :: Answer -> [Double]
+getShape' Steep = fmap (ampdb . (\x -> (x*x))) (reverse [0, 1 .. 25])
+getShape' Linear = fmap (ampdb . (\x -> x)) (reverse [0, 1 .. 25])
+getShape' Gradual = fmap (ampdb . (\x -> sqrt x)) (reverse [0, 1 .. 25])
+getShape' Flat = fmap (ampdb . (\x -> 1)) [0,1 .. 200]
+getShape' InverseGradual =  fmap (ampdb . (\x -> sqrt x)) [0,1 .. 200]
+getShape' InverseLinear =  fmap (ampdb . (\x -> x)) [0,1 .. 200]
+getShape' InverseSteep =   fmap (ampdb . (\x -> (x*x))) [0,1 .. 200]
+
 
 getShape :: Answer -> [Double]
 getShape Steep = fmap (ampdb . (\x -> 1/(x*x))) [1,2 .. 200]
@@ -119,7 +129,7 @@ instructions :: MonadWidget t m => m ()
 instructions = el "div" $ do
   elClass "div" "instructionsText" $ text "Instructions placeholder"
   --shapeLine (constDyn "polyline") [(10,10), (20,20), (30,30), (40,40), (50,50), (60,60)]
-  graphGen xPoints linearGraphYPoints
+  --graphGen xPoints linearGraphYPoints
 
 spectralShapeExercise :: MonadWidget t m => Exercise t m Config [Answer] Answer (Map Answer Score)
 spectralShapeExercise = multipleChoiceExercise
