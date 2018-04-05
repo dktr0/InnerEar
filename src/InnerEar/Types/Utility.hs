@@ -26,6 +26,9 @@ midicps x = 440 * (2**((x-69)/12))
 ampdb :: Double -> Double
 ampdb x = 20 * (logBase 10 x)
 
+dbamp :: Double -> Double
+dbamp x = 10 ** (x/20)
+
 riseToRiseAndFall :: (Double -> Double) -> Double -> Double
 riseToRiseAndFall f x | x <= 0.5 = f (x*2)
 riseToRiseAndFall f x | x > 0.5 = f ((1-x)*2)
