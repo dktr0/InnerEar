@@ -9,7 +9,7 @@ import Control.Applicative
 data SourceNodeSpec
   = Silent
   | Oscillator OscillatorType Frequency
-  -- TODO | Buffer BufferSrc
+  | Buffer BufferSrc PlaybackParam
   deriving (Show)
 
 data SourceSinkNodeSpec
@@ -27,12 +27,11 @@ data SinkNodeSpec
   = Destination
   deriving (Show)
 
-data OscillatorType 
-  = Sine 
-  | Square 
-  | Sawtooth 
-  | Triangle 
-  deriving (Show, Eq)
+data OscillatorType = Sine   | Square   | Sawtooth   | Triangle deriving (Show, Eq)
+
+data BufferSrc s = Uploaded String | Local String deriving (Show, Eq) -- TODO is this the best way to handle loaded files?...
+
+data PlaybackParam = PlaybackParam {start::Double, end::Double, loop::Bool} deriving (Show, Eq)
 
 instance PToJSVal OscillatorType where
   pToJSVal Sine = jsval ("sine" :: JSString)
@@ -57,7 +56,7 @@ data OversampleAmount
   | Times2
   | Times4
   deriving (Show)
-  
+
 instance PToJSVal OversampleAmount where
   pToJSVal None = jsval ("none" :: JSString)
   pToJSVal Times2 = jsval ("x2" :: JSString)
@@ -116,8 +115,8 @@ instance Num Time where
   t1 * t2 = Millis $ (inMillis t1) * (inMillis t2)
   abs (Millis ms) = Millis $ abs ms
   abs (Sec s) = Sec $ abs s
-  signum x = 
-    case inMillis x of 
+  signum x =
+    case inMillis x of
       y | y < 0 -> -1
         | y == 0 -> 0
         | otherwise -> 1

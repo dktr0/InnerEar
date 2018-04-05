@@ -45,14 +45,14 @@ evalUniqueT (UniqueT s) = evalStateT s 0
 
 type AudioParam = String
 
-data Reference 
-  = RefToNode Integer 
-  | RefToParamOfNode Integer AudioParam 
+data Reference
+  = RefToNode Integer
+  | RefToParamOfNode Integer AudioParam
   deriving (Show)
 
-data NodeProps 
-  = SourceSpec SourceNodeSpec 
-  | SourceSinkSpec SourceSinkNodeSpec 
+data NodeProps
+  = SourceSpec SourceNodeSpec
+  | SourceSinkSpec SourceSinkNodeSpec
   | SinkSpec SinkNodeSpec
   deriving (Show)
 
@@ -104,8 +104,8 @@ connectGraphs' (x@(Sink _ _):tl, completed) y@(Sink _ _)
 connectGraphs' (hd:tl, completed) y
   | isComplete y = (hd:tl, y:completed)
   | hasSource y  = (y:hd:tl, completed)
-  | otherwise = 
-      if isComplete connected
+  | otherwise =
+      if isComplete connected 
         then (tl, connected:completed)
         else (connected:tl, completed)
       where connected = connectGraphs hd y

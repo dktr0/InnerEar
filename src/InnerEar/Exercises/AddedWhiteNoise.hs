@@ -45,6 +45,15 @@ renderAnswer db b Nothing = OverlappedSound "addedWhiteNoiseExercise" [GainSound
 -- note also: default sound source for this is a 300 Hz sine wave, but user sound files are possible
 -- pink or white noise should NOT be possible as selectable sound source types
 
+renderAnswer:: Config -> Synth a -> Maybe Answer -> Synth b
+renderAnswer db s (Just (Answer True)) = buildSynth $ do
+  s >>= gain (Db -10) >>= destination
+  audioBufferSource (Buffer (Local "whitenoise.wav") (PlaybackParam 0 1 True)) >>= gain (Db db) >>= destination
+  -- TODO - how will our Synth Monad handle when things should stop? - Imagine a short sound file, how does the whitenoise know when to stop? vs. a long soundfile where the whitenoise should loop infinitely...
+renderAnswer db s _ = buildSynth $ s >>= gain (Db -10) >>= destination -- If play reference or no added whitenoise, just play back source at -10
+
+
+
 displayEval :: MonadWidget t m => Dynamic t (Map Answer Score) -> m ()
 displayEval = displayMultipleChoiceEvaluationGraph' "Session Performance" "" answers
 
