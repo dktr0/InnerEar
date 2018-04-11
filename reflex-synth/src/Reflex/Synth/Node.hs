@@ -26,7 +26,8 @@ import Reflex.Synth.AudioRoutingGraph
 import Reflex.Synth.Spec
 import GHCJS.Marshal.Pure
 import GHCJS.Foreign.Callback(asyncCallback1, releaseCallback)
-import GHCJS.Prim(JSVal, toJSArray, toJSString)
+import GHCJS.Prim(JSVal, toJSArray, toJSString, fromJSInt, getProp)
+import Control.Monad
 
 import qualified Reflex.Synth.Sound as L
 import qualified Reflex.Synth.WebAudio as L
@@ -38,6 +39,7 @@ data Node
   | OscillatorNode { jsval :: JSVal }
   -- SourceSink nodes
   | BiquadFilterNode { jsval :: JSVal }
+  | ConvolverNode { jsval :: JSVal }
   | DelayNode { jsval :: JSVal }
   | DynamicsCompressorNode { jsval :: JSVal }
   | GainNode { jsval :: JSVal }
@@ -53,6 +55,7 @@ instance Show Node where
   show (AudioBufferSourceNode _) = "AudioBufferSourceNode"
   show (OscillatorNode _) = "OscillatorNode"
   show (BiquadFilterNode _) = "BiquadFilterNode"
+  show (ConvolverNode _) = "ConvolverNode"
   show (DelayNode _) = "DelayNode"
   show (DynamicsCompressorNode _) = "DynamicsCompressorNode"
   show (GainNode _) = "GainNode"
@@ -95,7 +98,7 @@ instantiateSourceNode Silent ctx = do
   sampleRate <- js_sampleRate ctx
   buffer <- js_createAudioBuffer 1 (ceiling $ sampleRate * 10) sampleRate ctx
   channelData <- js_channelData buffer 0
-  js_typedArrayFill channelData 0
+  js_typedArrayFill 0.0 channelData
   src <- js_createBufferSource ctx
   js_setField src (toJSString "buffer") $ pToJSVal buffer
   js_setField src (toJSString "loop") $ pToJSVal True
@@ -111,6 +114,16 @@ instantiateSourceSinkNode (Filter spec) ctx = do
   filter <- js_createBiquadFilter ctx
   configureBiquadFilterNode spec filter ctx
   return $ BiquadFilterNode filter
+instantiateSourceSinkNode (Convolver buffer normalize) ctx = do
+  convolver <- js_createConvolver ctx
+  sampleRate <- js_sampleRate ctx
+  bufferData <- instantiateArraySpec buffer
+  nSamples <- js_typedArrayLength bufferData
+  buffer <- js_createAudioBuffer 1 nSamples sampleRate ctx -- TODO use a buffer spec instead of array spec
+  js_copyToChannel bufferData 1 buffer
+  js_setField convolver (toJSString "buffer") $ pToJSVal buffer
+  js_setField convolver (toJSString "normalize") $ pToJSVal normalize
+  return $ ConvolverNode convolver
 instantiateSourceSinkNode (Delay t) ctx = do
   delay <- js_createDelay ctx $ inSec t -- createDelay needs a maxDelayTime
   js_setParamValue (js_audioParam delay (toJSString "delayTime")) (inSec t) ctx
@@ -131,11 +144,26 @@ instantiateSourceSinkNode (Gain g) ctx = do
   return $ GainNode gain
 instantiateSourceSinkNode (WaveShaper curve oversample) ctx = do
   shaper <- js_createWaveShaper ctx
-  curveArray <- toJSArray $ fmap pToJSVal curve
-  typedCurveArray <- js_typedArrayFromArray curveArray
-  js_setField shaper (toJSString "curve") $ pToJSVal typedCurveArray
+  curveArray <- instantiateArraySpec curve
+  js_setField shaper (toJSString "curve") $ pToJSVal curveArray
   js_setField shaper (toJSString "oversample") $ pToJSVal oversample
   return $ WaveShaperNode shaper
+instantiateSourceSinkNode (DistortAt amp) ctx = do
+  processor <- js_createScriptProcessor ctx 2 2 -- stereo in and out
+  let clip = inAmp amp
+  onaudioprocess <- asyncCallback1 $ \ape -> do
+    input <- js_apeInputBuffer ape
+    output <- js_apeOutputBuffer ape
+    numSamples <- js_bufferLength input
+    forM_ [0, 1] $ \chan -> do
+      inData <- js_channelData input chan
+      outData <- js_channelData output chan
+      forM_ [0..numSamples] $ \sample -> do
+        val <- js_typedArrayGetAt sample inData
+        js_typedArraySetAt sample (max (-clip) $ min val clip) outData
+  js_onaudioprocess processor onaudioprocess
+  releaseCallback onaudioprocess
+  return $ ScriptProcessorNode processor
 
 configureBiquadFilterNode :: FilterSpec -> JSVal -> WebAudioContext -> IO ()
 configureBiquadFilterNode (LowPass f q) node ctx =
@@ -154,6 +182,29 @@ configureBiquadFilterNode (Notch f q) node ctx =
   js_setField node (toJSString "type") (toJSString "notch") >> setFrequencyHz node f ctx >> setQ node q ctx
 configureBiquadFilterNode (AllPass f q) node ctx =
   js_setField node (toJSString "type") (toJSString "allpass") >> setFrequencyHz node f ctx >> setQ node q ctx
+
+instantiateArraySpec :: Either Float32Array FloatArraySpec -> IO Float32Array
+instantiateArraySpec (Left f32Arr) = return f32Arr
+instantiateArraySpec (Right spec) = do
+  array <- js_createTypedArray $ arraySpecSize spec
+  fillArray 0 spec array
+  return array
+
+fillArray :: Int -> FloatArraySpec -> Float32Array -> IO ()
+fillArray _ EmptyArray _ = return ()
+fillArray i (Const n x tl) arr = do
+  js_typedArraySetConst i (i + n) x arr 
+  fillArray (i + n) tl arr
+fillArray i (Segment xs tl) arr = do
+  jsArray <- toJSArray $ fmap pToJSVal xs
+  len <- fmap fromJSInt $ getProp jsArray "length"
+  js_typedArraySet i jsArray arr
+  fillArray (i + len) tl arr
+fillArray i (Repeated rep xs tl) arr = do
+  jsArray <- toJSArray $ fmap pToJSVal xs
+  len <- fmap fromJSInt $ getProp jsArray "length"
+  forM_ [0..rep-1] $ \it -> js_typedArraySet (i + (it * len)) jsArray arr
+  fillArray (i + (rep * len)) tl arr
 
 instantiateSinkNode :: SinkNodeSpec -> WebAudioContext -> IO Node
 instantiateSinkNode Destination ctx = js_destination ctx >>= return . DestinationNode 
@@ -201,8 +252,6 @@ onended :: Node -> (Node -> IO ()) -> IO ()
 onended n cb = do
   onend <- asyncCallback1 $ \_ -> cb n
   js_onended (jsval n) onend
-  -- haskell doesn't need the reference to the callback anymore as js_onended took
-  -- it and saved it in the event handler
   releaseCallback onend
 
 setParamValueAtTime :: Node -> String -> Double -> Time -> IO ()

@@ -1,26 +1,28 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE OverloadedStrings, StandaloneDeriving #-}
 
 module Reflex.Synth.Spec where
 
 import GHCJS.Marshal.Pure
 import GHCJS.Types
-import Control.Applicative
+import Data.Semigroup
+import Reflex.Synth.AudioRoutingGraph(Float32Array)
 
 data SourceNodeSpec
   = Silent
   | Oscillator OscillatorType Frequency
-  -- TODO | Buffer BufferSrc
+  | Buffer (Either Float32Array FloatArraySpec) Double Double Bool
   deriving (Show)
 
 data SourceSinkNodeSpec
   = Filter FilterSpec
-  -- TODO | Convolver Buffer normalize :: Boolean
+  -- Convolver buffer normalize
+  | Convolver (Either Float32Array FloatArraySpec) Bool
   | Delay Time
   -- Compressor threshold knee ratio reduction attack release
   | Compressor Amplitude Amplitude Amplitude Gain Time Time
   | Gain Gain
-  | WaveShaper [Double] OversampleAmount
-  -- DistortAt Amplitude
+  | WaveShaper (Either Float32Array FloatArraySpec) OversampleAmount
+  | DistortAt Amplitude
   deriving (Show)
 
 data SinkNodeSpec
@@ -39,6 +41,37 @@ instance PToJSVal OscillatorType where
   pToJSVal Square = jsval ("square" :: JSString)
   pToJSVal Sawtooth = jsval ("sawtooth" :: JSString)
   pToJSVal Triangle = jsval ("triangle" :: JSString)
+
+data FloatArraySpec
+  = EmptyArray
+  | Const Int Double FloatArraySpec
+  | Segment [Double] FloatArraySpec
+  | Repeated Int [Double] FloatArraySpec
+  deriving (Show)
+
+instance Semigroup FloatArraySpec where
+  EmptyArray <> x = x
+  x <> EmptyArray = x
+  (Const i x tl) <> y = Const i x $ tl <> y
+  (Segment xs tl) <> y = Segment xs $ tl <> y
+  (Repeated i xs tl) <> y = Repeated i xs $ tl <> y
+
+instance Monoid FloatArraySpec where mempty = EmptyArray
+
+arraySpecMap :: (Double -> Double) -> FloatArraySpec -> FloatArraySpec
+arraySpecMap f EmptyArray = EmptyArray
+arraySpecMap f (Const i x tl)= Const i (f x) $ arraySpecMap f tl
+arraySpecMap f (Segment xs tl) = Segment (fmap f xs) $ arraySpecMap f tl
+arraySpecMap f (Repeated i xs tl) = Repeated i (fmap f xs) $ arraySpecMap f tl
+
+arraySpecSize :: FloatArraySpec -> Int
+arraySpecSize EmptyArray = 0
+arraySpecSize (Const i _ tl) = i + arraySpecSize tl
+arraySpecSize (Segment xs tl) = (length xs) + arraySpecSize tl
+arraySpecSize (Repeated i xs tl) = (i * (length xs)) + arraySpecSize tl
+
+listToArraySpec :: [Double] -> FloatArraySpec
+listToArraySpec xs = Segment xs EmptyArray
 
 data FilterSpec
   = LowPass Frequency Double
@@ -123,16 +156,4 @@ instance Num Time where
         | otherwise -> 1
   fromInteger ms = Millis $ fromIntegral ms
 
---data PlaybackParam = PlaybackParam{
---  start::Double,    -- portion through the buffer that playback starts
---  end::Double,
---  loop::Bool
---} deriving (Read, Show, Eq)
---
---getPlaybackParam :: Source -> Maybe PlaybackParam
---getPlaybackParam (NodeSource (BufferNode (LoadedFile _ x)) _) = Just x
---getPlaybackParam _ = Nothing
---
---isLoadedFile :: Source -> Bool
---isLoadedFile (NodeSource (BufferNode (LoadedFile _ _)) _) = True
---isLoadedFile _ = False
+-- TODO AudioBuffer spec with float32arrays and maybe a sample rate?

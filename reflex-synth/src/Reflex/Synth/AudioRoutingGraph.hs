@@ -1,7 +1,5 @@
 module Reflex.Synth.AudioRoutingGraph where
 
-import Reflex.Synth.Spec
-import Reflex.Synth.Graph
 import GHCJS.Types
 import GHCJS.Marshal.Pure
 import GHCJS.Foreign.Callback
@@ -11,13 +9,18 @@ newtype WebAudioContext = WebAudioContext JSVal
 newtype AudioParam = AudioParam JSVal
 newtype AudioBuffer = AudioBuffer JSVal
 newtype Float32Array = Float32Array JSVal
-newtype EndedEvent = EndedEvent JSVal
+
+instance Show WebAudioContext where show _ = "WebAudioContext"
+instance Show AudioParam where show _ = "AudioParam"
+instance Show AudioBuffer where show _ = "AudioBuffer"
+instance Show Float32Array where show _ = "Float32Array"
 
 instance PToJSVal WebAudioContext where pToJSVal (WebAudioContext val) = val
 instance PToJSVal AudioParam where pToJSVal (AudioParam val) = val
 instance PToJSVal AudioBuffer where pToJSVal (AudioBuffer val) = val
 instance PToJSVal Float32Array where pToJSVal (Float32Array val) = val
-instance PToJSVal EndedEvent where pToJSVal (EndedEvent val) = val
+
+-- WebAudioContext functions
 
 foreign import javascript safe 
   "new (window.AudioContext || window.webkitAudioContext)()"
@@ -44,9 +47,11 @@ foreign import javascript safe
   
 foreign import javascript safe
   "$1.sampleRate"
-  js_sampleRate :: WebAudioContext -> IO Float
+  js_sampleRate :: WebAudioContext -> IO Double
   -- ctx -> sampleRate (frames/sec)
   
+
+-- Node instantiation functions
 
 foreign import javascript safe
   "$1.createOscillator()"
@@ -59,6 +64,10 @@ foreign import javascript safe
 foreign import javascript safe
   "$1.createBiquadFilter()"
   js_createBiquadFilter :: WebAudioContext -> IO JSVal
+
+foreign import javascript safe
+  "$1.createConvolver()"
+  js_createConvolver :: WebAudioContext -> IO JSVal
   
 foreign import javascript safe
   "$1.createDelay($2)"
@@ -77,9 +86,16 @@ foreign import javascript safe
   js_createWaveShaper :: WebAudioContext -> IO JSVal
 
 foreign import javascript safe
+  "$1.createScriptProcessor(void 0, $2, $3)"
+  js_createScriptProcessor :: WebAudioContext -> Int -> Int -> IO JSVal
+  -- ctx -> numInputChan -> numOutputChan -> IO node
+
+foreign import javascript safe
   "$1.destination"
   js_destination :: WebAudioContext -> IO JSVal
 
+
+-- Parameter functions
 
 foreign import javascript safe
   "$1[$2] = $3;"
@@ -110,51 +126,111 @@ foreign import javascript safe
   js_setParamValueCurveAtTime :: AudioParam -> Float32Array -> Double -> Double -> IO ()
   
 
+-- Audio buffer/float32 array functions
+
 foreign import javascript safe
   "$4.createAudioBuffer($1, $2, $3)"
-  js_createAudioBuffer :: Int -> Int -> Float -> WebAudioContext -> IO AudioBuffer
+  js_createAudioBuffer :: Int -> Int -> Double -> WebAudioContext -> IO AudioBuffer
   -- numChannels -> length (in samples) -> sampleRate (frames/sec) -> ctx -> buffer
 
 foreign import javascript safe
   "$1.getChannelData($2)"
   js_channelData :: AudioBuffer -> Int -> IO Float32Array
   -- buffer -> channel (0 indexed) -> data
+
+foreign import javascript safe
+  "$3.copyToChannel($1, $2);"
+  js_copyToChannel :: Float32Array -> Int -> AudioBuffer -> IO ()
+
+foreign import javascript safe
+  "$1.length"
+  js_bufferLength :: AudioBuffer -> IO Int
+
+foreign import javascript safe
+  "$1.numberOfChannels"
+  js_bufferNumChannels :: AudioBuffer -> IO Int
   
 foreign import javascript safe
   "if (Float32Array.prototype.fill !== void 0) { \
-  \  $1.fill($2); \
+  \  $2.fill($1); \
   \} else { \
   \  for (var i = 0, len = a.length; i < len; i++) \
-  \    $1[i] = $2; \
-  \} "
-  js_typedArrayFill :: Float32Array -> Float -> IO ()
+  \    $2[i] = $1; \
+  \}"
+  js_typedArrayFill :: Double -> Float32Array -> IO ()
+
+foreign import javascript safe
+  "if (Float32Array.prototype.fill !== void 0) { \
+  \  $4.fill($3, $1, $2); \
+  \} else { \
+  \  for (var i = $1, len = Math.min($2, a.length); i < len; i++) \
+  \    $4[i] = $3; \
+  \}"
+  js_typedArraySetConst :: Int -> Int -> Double -> Float32Array -> IO ()
+  -- fromIdx -> toIdx (exclusive) -> value -> array -> IO () 
+
+foreign import javascript safe
+  "$3.set($2, $1);"
+  js_typedArraySet :: Int -> JSVal -> Float32Array -> IO () 
+  -- startIdx -> fillFromJSArray -> array -> IO ()
+
+foreign import javascript safe
+  "$2[$1]"
+  js_typedArrayGetAt :: Int -> Float32Array -> IO Double
+
+foreign import javascript safe
+  "$3[$1] = $2;"
+  js_typedArraySetAt :: Int -> Double -> Float32Array -> IO ()
 
 foreign import javascript safe
   "new Float32Array($1)"
   js_typedArrayFromArray :: JSVal -> IO Float32Array
 
-
+foreign import javascript safe
+  "new Float32Array($1)"
+  js_createTypedArray :: Int -> IO Float32Array
 
 foreign import javascript safe
-  "$1.connect($2)"
+  "$1.length"
+  js_typedArrayLength :: Float32Array -> IO Int
+
+-- Node control functions
+
+foreign import javascript safe
+  "$1.connect($2);"
   js_connect :: JSVal -> JSVal -> IO ()
   
 foreign import javascript safe
-  "$1.disconnect($2)"
+  "$1.disconnect($2);"
   js_disconnect :: JSVal -> JSVal -> IO ()
   
 foreign import javascript safe
-  "$1.disconnect()"
+  "$1.disconnect();"
   js_disconnectAll :: JSVal -> IO ()
   
 foreign import javascript safe
-  "$1.start($2)"
+  "$1.start($2);"
   js_start :: JSVal -> Double -> IO ()
   
 foreign import javascript safe
-  "$1.stop($2)"
+  "$1.stop($2);"
   js_stop :: JSVal -> Double -> IO ()
 
+
+-- Event processing
+
 foreign import javascript safe
-  "$1.onended = $2"
+  "$1.onended = $2;"
   js_onended :: JSVal -> Callback (JSVal -> IO ()) -> IO ()
+
+foreign import javascript safe
+  "$1.onaudioprocess = $2;"
+  js_onaudioprocess :: JSVal -> Callback (JSVal -> IO ()) -> IO ()
+
+foreign import javascript safe
+  "$1.inputBuffer"
+  js_apeInputBuffer :: JSVal -> IO AudioBuffer
+
+foreign import javascript safe
+  "$1.outputBuffer"
+  js_apeOutputBuffer :: JSVal -> IO AudioBuffer

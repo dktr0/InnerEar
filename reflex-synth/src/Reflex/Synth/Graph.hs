@@ -229,17 +229,17 @@ change a c = lift $ Synth {
   supplement = a
 }
 
-setParamValue :: Graph -> AudioParam -> Double -> Time -> SynthBuilder Graph
-setParamValue g p v e = change g $ SetValue g p v e
+setParamValue :: AudioParam -> Double -> Time -> Graph -> SynthBuilder Graph
+setParamValue p v e g = change g $ SetValue g p v e
 
-linearRampToParamValue :: Graph -> AudioParam -> Double -> Time -> SynthBuilder Graph
-linearRampToParamValue g p v e = change g $ LinearRampToValue g p v e
+linearRampToParamValue :: AudioParam -> Double -> Time -> Graph -> SynthBuilder Graph
+linearRampToParamValue p v e g = change g $ LinearRampToValue g p v e
 
-exponentialRampToParamValue :: Graph -> AudioParam -> Double -> Time -> SynthBuilder Graph
-exponentialRampToParamValue g p v e = change g $ ExponentialRampToValue g p v e
+exponentialRampToParamValue :: AudioParam -> Double -> Time -> Graph -> SynthBuilder Graph
+exponentialRampToParamValue p v e g = change g $ ExponentialRampToValue g p v e
 
-curveToParamValue :: Graph -> AudioParam -> [Double] -> Time -> Time -> SynthBuilder Graph
-curveToParamValue g p vs s d = change g $ CurveToValue g p vs s d
+curveToParamValue :: AudioParam -> [Double] -> Time -> Time -> Graph -> SynthBuilder Graph
+curveToParamValue p vs s d g = change g $ CurveToValue g p vs s d
 
 setDeletionTime :: Time -> SynthBuilder ()
 setDeletionTime t = lift $ Synth {

@@ -20,17 +20,21 @@ ampEnvelope a d s st r = do
   g <- gain (Amp 0.0) -- make the node to modulate
   
   -- linear attack to amp 1 ending at time a
-  linearRampToParamValue g "gain" 1.0 a 
+  linearRampToParamValue "gain" 1.0 a g
   -- exp decay to amp s after time a and ending at time a + d
-  exponentialRampToParamValue g "gain" (inAmp s) $ a + d
-  setParamValue g "gain" (inAmp s) $ a + d + st
-  linearRampToParamValue g "gain" 0.0 $ a + d + st + r
+  exponentialRampToParamValue "gain" (inAmp s) (a + d) g
+  setParamValue "gain" (inAmp s) (a + d + st) g
+  linearRampToParamValue "gain" 0.0 (a + d + st + r) g
 
---clipAt :: Amplitude -> SynthBuilder Graph
---clipAt amp = do
-  -- TODO this might get really inefficient for the transition from haskell to js when
-  -- it can be optimized with Float32Array.fill calls as well as the required double iteration
-  -- over a somewhat large array
+clipAt :: Amplitude -> SynthBuilder Graph
+clipAt amp =
+  let nSamples = 65536
+  let clip = inAmp amp
+  let portion = (1.0 - clip) / 2.0
+  let left = Const (floor $ portion * nSamples) (-clip)
+  let mid = listToBuffer [(2*i) / (nSamples - 1) | i <- [left..right-1]]
+  let right = Const (portion - (floor $ portion * nSamples)) clip
+  synthSourceSink $ WaveShaper (Right $ left mid right EmptyBuffer) None
 
 legacySound :: L.Sound -> SynthBuilder ()
 legacySound = synthLegacy 
