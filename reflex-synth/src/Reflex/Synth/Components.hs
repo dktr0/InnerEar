@@ -2,12 +2,13 @@ module Reflex.Synth.Components where
 
 import Reflex.Synth.Graph
 import Reflex.Synth.Spec
-
-import qualified Reflex.Synth.Sound as L
-import qualified Reflex.Synth.NodeSpec as L
+import Data.Monoid(mconcat)
 
 oscillator :: OscillatorType -> Frequency -> SynthBuilder Graph
 oscillator oscType freq = synthSource $ Oscillator oscType freq
+
+audioBufferSource:: BufferSrc -> PlaybackParam -> SynthBuilder Graph
+audioBufferSource b p = synthSource $ Buffer b p
 
 gain :: Amplitude -> SynthBuilder Graph
 gain amp = synthSourceSink $ Gain amp
@@ -18,7 +19,7 @@ destination = synthSink Destination
 ampEnvelope :: Time -> Time -> Amplitude -> Time -> Time -> SynthBuilder Graph
 ampEnvelope a d s st r = do
   g <- gain (Amp 0.0) -- make the node to modulate
-  
+
   -- linear attack to amp 1 ending at time a
   linearRampToParamValue "gain" 1.0 a g
   -- exp decay to amp s after time a and ending at time a + d
@@ -28,16 +29,14 @@ ampEnvelope a d s st r = do
 
 clipAt :: Amplitude -> SynthBuilder Graph
 clipAt amp =
-  let nSamples = 65536
-  let clip = inAmp amp
-  let portion = (1.0 - clip) / 2.0
-  let left = Const (floor $ portion * nSamples) (-clip)
-  let mid = listToBuffer [(2*i) / (nSamples - 1) | i <- [left..right-1]]
-  let right = Const (portion - (floor $ portion * nSamples)) clip
-  synthSourceSink $ WaveShaper (Right $ left mid right EmptyBuffer) None
-
-legacySound :: L.Sound -> SynthBuilder ()
-legacySound = synthLegacy 
+  let nSamples = 65536 :: Int in
+  let clip = inAmp amp in
+  let portion = (1.0 - clip) / 2.0 in
+  let nConstSamples = floor $ portion * fromIntegral nSamples in
+  let left = Const nConstSamples (-clip) EmptyArray in
+  let mid = listToArraySpec [(2.0 * fromIntegral i) / (fromIntegral $ nSamples - 1) | i <- [nConstSamples..(nSamples-nConstSamples)-1]] in
+  let right = Const nConstSamples clip EmptyArray in
+  synthSourceSink $ WaveShaper (Right $ mconcat [left, mid, right]) None
 
 test :: Synth ()
 test = buildSynth $ oscillator Sine (Hz 440) >> gain (Amp 0.5) >> destination >> return ()
@@ -58,9 +57,9 @@ test3 = buildSynth $ do
 test4 :: Synth ()
 test4 = buildSynth $ do
   g <- gain (Amp 0.5)
-  setParamValue g "gain" 0.0 $ Sec 1.0
+  setParamValue "gain" 0.0 (Sec 1.0) g
   return ()
-  
+
 test5 :: Synth ()
 test5 = buildSynth $ do
   oscillator Sine (Hz 440)
@@ -70,9 +69,3 @@ test5 = buildSynth $ do
     audioParamSink g "gain"
   destination
   return ()
-
-test6 :: Synth ()
-test6 = buildSynth $ legacySound $ L.GainSound (L.OverlappedSound "why?" [n1, n2]) (-20)
-  where
-    n1 = L.Sound $ L.NodeSource (L.OscillatorNode $ L.Oscillator L.Triangle 440 0.0) (Just 0.8)
-    n2 = L.DelayedSound (L.Sound $ L.NodeSource (L.OscillatorNode $ L.Oscillator L.Triangle 880 0.0) (Just 1.0)) 1.0

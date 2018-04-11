@@ -40,7 +40,7 @@ startSilentNode = F.startSilentNode
 performSound:: MonadWidget t m => Event t Sound -> m ()
 performSound event = do
   let n = fmap (\e-> do
-                      let t = getT e
+                      t <- getT e
                       graph <- createGraph e   -- WA''
                       startGraph graph
                       disconnectGraphAtTimeMaybe graph  t

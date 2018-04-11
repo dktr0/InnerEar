@@ -8,7 +8,6 @@ module Reflex.Synth.Node (
   instantiateSourceNode,
   instantiateSourceSinkNode,
   instantiateSinkNode,
-  instantiateLegacyNode,
   audioParamNode,
   connect,
   disconnect,
@@ -29,13 +28,9 @@ import GHCJS.Foreign.Callback(asyncCallback1, releaseCallback)
 import GHCJS.Prim(JSVal, toJSArray, toJSString, fromJSInt, getProp)
 import Control.Monad
 
-import qualified Reflex.Synth.Sound as L
-import qualified Reflex.Synth.WebAudio as L
-import qualified Reflex.Synth.WebAudioGraph as L
-
 data Node
   -- Source nodes
-  = AudioBufferSourceNode { jsval :: JSVal }
+  = AudioBufferSourceNode { jsval :: JSVal , playbackParams:: PlaybackParam}  -- Also needs playbackParams b.c. some playback properties are only specified when you call 'start()' on that node
   | OscillatorNode { jsval :: JSVal }
   -- SourceSink nodes
   | BiquadFilterNode { jsval :: JSVal }
@@ -48,11 +43,9 @@ data Node
   -- Sink nodes
   | DestinationNode { jsval :: JSVal }
   | AudioParamNode { jsval :: JSVal }
-  -- Legacy
-  | LegacyNode L.WebAudioGraph
-  
+
 instance Show Node where
-  show (AudioBufferSourceNode _) = "AudioBufferSourceNode"
+  show (AudioBufferSourceNode _ _) = "AudioBufferSourceNode"
   show (OscillatorNode _) = "OscillatorNode"
   show (BiquadFilterNode _) = "BiquadFilterNode"
   show (ConvolverNode _) = "ConvolverNode"
@@ -62,12 +55,10 @@ instance Show Node where
   show (WaveShaperNode _) = "WaveShaperNode"
   show (ScriptProcessorNode _) = "ScriptProcessorNode"
   show (DestinationNode _) = "DestinationNode"
-  show (LegacyNode _) = "LegacyNode"
-  
+
 isSourceNode :: Node -> Bool
-isSourceNode (AudioBufferSourceNode _) = True
+isSourceNode (AudioBufferSourceNode _ _) = True
 isSourceNode (OscillatorNode _) = True
-isSourceNode (LegacyNode _) = True
 isSourceNode _ = False
 
 isSinkNode :: Node -> Bool
@@ -102,12 +93,29 @@ instantiateSourceNode Silent ctx = do
   src <- js_createBufferSource ctx
   js_setField src (toJSString "buffer") $ pToJSVal buffer
   js_setField src (toJSString "loop") $ pToJSVal True
-  return $ AudioBufferSourceNode src
+  return $ AudioBufferSourceNode src (PlaybackParam 0 1 True)
 instantiateSourceNode (Oscillator t f) ctx = do
   osc <- js_createOscillator ctx
   js_setField osc (toJSString "type") $ pToJSVal t
   setFrequencyHz osc f ctx
   return $ OscillatorNode osc
+-- instantiateSourceNode (Buffer bufSrc (PlaybackParam start end loop)) ctx = do
+--   buf <- case bufSrc of
+--     (Uploaded s) -> js_lookupUploadedBuffer s
+--     (Local s) -> js_lookupLocalBuffer s
+--   isNull <- js_isUndefined buf
+--   src <- js_createBufferSource ctx
+--   js_setField src (toJSString "loopstart") $ pToJSVal start
+--   js_setField src (toJSString "loopend") $ pToJSVal end
+--   js_setField src (toJSString "loop") $ pToJSVal loop
+--   if (not isNull) then js_setField src (toJSString "buffer") (pToJSVal buf) else
+--     do
+--       js_Alert "Sound file is still loading..."
+--       case bufSrc of
+--         (Uploaded s) -> js_loadUploadedBuffer s
+--         (Local s)-> js_loadLocalBuffer s
+--       return ()
+--   return $ AudioBufferSourceNode src param
 
 instantiateSourceSinkNode :: SourceSinkNodeSpec -> WebAudioContext -> IO Node
 instantiateSourceSinkNode (Filter spec) ctx = do
@@ -207,12 +215,7 @@ fillArray i (Repeated rep xs tl) arr = do
   fillArray (i + (rep * len)) tl arr
 
 instantiateSinkNode :: SinkNodeSpec -> WebAudioContext -> IO Node
-instantiateSinkNode Destination ctx = js_destination ctx >>= return . DestinationNode 
-
-instantiateLegacyNode :: L.Sound -> IO Node
-instantiateLegacyNode sound = do
-  graph <- L.createGraph sound
-  return $ LegacyNode graph  
+instantiateSinkNode Destination ctx = js_destination ctx >>= return . DestinationNode
 
 audioParamNode :: Node -> String -> Node
 audioParamNode node paramName =
@@ -221,29 +224,26 @@ audioParamNode node paramName =
 connect :: Node -> Node -> IO ()
 connect from to
   | isSinkNode from = error $ (show from) ++ " can't be connect source."
-  | isSourceNode to = error $ (show to) ++ " can't be connect target." 
+  | isSourceNode to = error $ (show to) ++ " can't be connect target."
   | otherwise   = js_connect (jsval from) (jsval to)
 
 disconnect :: Node -> Node -> IO ()
 disconnect from to
   | isSinkNode from = error $ (show from) ++ " can't be disconnect source."
-  | isSourceNode to = error $ (show to) ++ " can't be disconnect target." 
+  | isSourceNode to = error $ (show to) ++ " can't be disconnect target."
   | otherwise   = js_disconnect (jsval from) (jsval to)
 
 disconnectAll :: Node -> IO ()
-disconnectAll (LegacyNode graph) = L.disconnectGraphAtTime graph 0.0
 disconnectAll x
   | isSinkNode x = return ()
   | otherwise  = js_disconnectAll (jsval x)
 
 start :: Time -> Node -> IO ()
-start _ (LegacyNode graph) = L.startGraph graph -- The old start doesn't take a time
 start t x
   | isSourceNode x = js_start (jsval x) $ inSec t
   | otherwise  = return ()
 
 stop :: Time -> Node -> IO ()
-stop _ (LegacyNode graph) = return () -- Can't stop a legacy node
 stop t x
   | isSourceNode x = js_stop (jsval x) $ inSec t
   | otherwise  = return ()

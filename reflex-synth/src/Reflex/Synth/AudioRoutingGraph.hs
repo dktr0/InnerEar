@@ -22,7 +22,7 @@ instance PToJSVal Float32Array where pToJSVal (Float32Array val) = val
 
 -- WebAudioContext functions
 
-foreign import javascript safe 
+foreign import javascript safe
   "new (window.AudioContext || window.webkitAudioContext)()"
   js_newAudioContext :: IO WebAudioContext
 
@@ -39,28 +39,28 @@ foreign import javascript safe
   \    window.___ac = new (window.AudioContext || window.webkitAudioContext)();\
   \} $r = window.___ac;"
   js_setupGlobalAudioContext :: IO WebAudioContext
-  
+
 foreign import javascript safe
   "$1.currentTime"
   js_currentTime :: WebAudioContext -> IO Double
   -- time in seconds
-  
+
 foreign import javascript safe
   "$1.sampleRate"
   js_sampleRate :: WebAudioContext -> IO Double
   -- ctx -> sampleRate (frames/sec)
-  
+
 
 -- Node instantiation functions
 
 foreign import javascript safe
   "$1.createOscillator()"
   js_createOscillator :: WebAudioContext -> IO JSVal
-  
+
 foreign import javascript safe
   "$1.createBufferSource()"
   js_createBufferSource :: WebAudioContext -> IO JSVal
-  
+
 foreign import javascript safe
   "$1.createBiquadFilter()"
   js_createBiquadFilter :: WebAudioContext -> IO JSVal
@@ -72,11 +72,11 @@ foreign import javascript safe
 foreign import javascript safe
   "$1.createDelay($2)"
   js_createDelay :: WebAudioContext -> Double -> IO JSVal
-  
+
 foreign import javascript safe
   "$1.createDynamicsCompressor()"
   js_createDynamicsCompressor :: WebAudioContext -> IO JSVal
-  
+
 foreign import javascript safe
   "$1.createGain()"
   js_createGain :: WebAudioContext -> IO JSVal
@@ -100,31 +100,31 @@ foreign import javascript safe
 foreign import javascript safe
   "$1[$2] = $3;"
   js_setField :: JSVal -> JSVal -> JSVal -> IO ()
-  
+
 foreign import javascript safe
   "$1[$2]"
   js_audioParam :: JSVal -> JSVal -> AudioParam
-  
+
 foreign import javascript safe
   "$1.setValueAtTime($2, $3.currentTime);"
   js_setParamValue :: AudioParam -> Double -> WebAudioContext -> IO ()
-  
+
 foreign import javascript safe
   "$1.setValueAtTime($2, $3);"
   js_setParamValueAtTime :: AudioParam -> Double -> Double -> IO ()
-  
+
 foreign import javascript safe
   "$1.linearRampToValueAtTime($2, $3);"
   js_linearRampToParamValueAtTime :: AudioParam -> Double -> Double -> IO ()
-  
+
 foreign import javascript safe
   "$1.exponentialRampToValueAtTime($2, $3);"
   js_exponentialRampToParamValueAtTime :: AudioParam -> Double -> Double -> IO ()
-  
+
 foreign import javascript safe
   "$1.setValueCurveAtTime($2, $3, $4);"
   js_setParamValueCurveAtTime :: AudioParam -> Float32Array -> Double -> Double -> IO ()
-  
+
 
 -- Audio buffer/float32 array functions
 
@@ -194,24 +194,25 @@ foreign import javascript safe
   "$1.length"
   js_typedArrayLength :: Float32Array -> IO Int
 
+
 -- Node control functions
 
 foreign import javascript safe
   "$1.connect($2);"
   js_connect :: JSVal -> JSVal -> IO ()
-  
+
 foreign import javascript safe
   "$1.disconnect($2);"
   js_disconnect :: JSVal -> JSVal -> IO ()
-  
+
 foreign import javascript safe
   "$1.disconnect();"
   js_disconnectAll :: JSVal -> IO ()
-  
+
 foreign import javascript safe
   "$1.start($2);"
   js_start :: JSVal -> Double -> IO ()
-  
+
 foreign import javascript safe
   "$1.stop($2);"
   js_stop :: JSVal -> Double -> IO ()
@@ -234,3 +235,10 @@ foreign import javascript safe
 foreign import javascript safe
   "$1.outputBuffer"
   js_apeOutputBuffer :: JSVal -> IO AudioBuffer
+
+
+-- Utility
+
+foreign import javascript safe
+  "$r = $1==undefined"
+  js_isUndefined:: JSVal -> IO Bool

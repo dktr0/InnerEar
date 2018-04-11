@@ -48,12 +48,6 @@ createWaveShaperNode (ClipAt db) = F.createClipAtWaveShaper (pToJSVal db) >>= re
 createOscillator :: Oscillator -> IO WebAudioNode
 createOscillator (Oscillator t freq db) = do
   osc <- F.createOscillator (Prim.toJSString $ fmap toLower $ show t) (pToJSVal freq) (pToJSVal db)
-  -- F.setOscillatorType (Prim.toJSString $ fmap toLower $ show t) osc  -- Web Audio won't accept 'Sine' must be 'sine'
-  -- F.setFrequency freq osc
-  -- g <- F.createGain
-  -- F.setAmp 0 g
-  -- F.connect osc g
-  -- F.startNode osc
   return (WebAudioNode (OscillatorNode $ Oscillator t freq db) osc)
 createOscillator (Oscillator' t (Custom curve dur) db) = do
   osc <- F.createOscillator (Prim.toJSString $ fmap toLower $ show t) (pToJSVal (0::Int)) (pToJSVal db)

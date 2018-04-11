@@ -33,12 +33,26 @@ instance Show Answer where
 
 answers = [Answer False,Answer True]
 
+-- Nothing -> no effect (reference)
+-- Just True -> with added noise
+-- Just Fals -> no added noise
+
 renderAnswer :: Config -> Source -> Maybe Answer -> Sound
-renderAnswer db (NodeSource node dur) (Just (Answer True)) = OverlappedSound "addedWhiteNoiseExercise"  [GainSound (Sound $ NodeSource node dur) (-10) , GainSound (Sound $ NodeSource (BufferNode $ File "whitenoise.wav") dur ) db] -- should be soundSource (b) at -10 plus whiteNoise at dB
-renderAnswer db b (Just (Answer False)) = OverlappedSound "addedWhiteNoiseExercise" [GainSound (Sound b) (-10)] -- note: this must be an overlapped sound so that it cuts off the previous playing sound...
-renderAnswer db b Nothing = OverlappedSound "addedWhiteNoiseExercise" [GainSound (Sound b) (-10)] -- should also just be soundSource (b) at -10
+renderAnswer db (NodeSource (BufferNode (LoadedFile s p)) Nothing) (Just (Answer True)) = OverlappedSound "addedWhiteNoiseExercise"  [GainSound (Sound $ NodeSource (BufferNode  (LoadedFile s p)) Nothing) (-10) , GainSound (Sound $ NodeSource (BufferNode $ File "whitenoise.wav") Nothing) db] (if (loop p) then Max else OnBufferEnd s)
+renderAnswer db (NodeSource node dur) (Just (Answer True)) = OverlappedSound "addedWhiteNoiseExercise"  [GainSound (Sound $ NodeSource node dur) (-10) , GainSound (Sound $ NodeSource (BufferNode $ File "whitenoise.wav") dur ) db] Min  -- should be soundSource (b) at -10 plus whiteNoise at dB
+renderAnswer db b (Just (Answer False)) = OverlappedSound "addedWhiteNoiseExercise" [GainSound (Sound b) (-10)] Min -- note: this must be an overlapped sound so that it cuts off the previous playing sound...
+renderAnswer db b Nothing = OverlappedSound "addedWhiteNoiseExercise" [GainSound (Sound b) (-10)] Min-- should also just be soundSource (b) at -10
 -- note also: default sound source for this is a 300 Hz sine wave, but user sound files are possible
 -- pink or white noise should NOT be possible as selectable sound source types
+
+renderAnswer:: Config -> Synth a -> Maybe Answer -> Synth b
+renderAnswer db s (Just (Answer True)) = buildSynth $ do
+  s >>= gain (Db -10) >>= destination
+  audioBufferSource (Buffer (Local "whitenoise.wav") (PlaybackParam 0 1 True)) >>= gain (Db db) >>= destination
+  -- TODO - how will our Synth Monad handle when things should stop? - Imagine a short sound file, how does the whitenoise know when to stop? vs. a long soundfile where the whitenoise should loop infinitely...
+renderAnswer db s _ = buildSynth $ s >>= gain (Db -10) >>= destination -- If play reference or no added whitenoise, just play back source at -10
+
+
 
 displayEval :: MonadWidget t m => Dynamic t (Map Answer Score) -> m ()
 displayEval = displayMultipleChoiceEvaluationGraph' "Session Performance" "" answers

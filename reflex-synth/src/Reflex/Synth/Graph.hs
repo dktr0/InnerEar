@@ -12,7 +12,6 @@ module Reflex.Synth.Graph (
   synthSource,
   synthSourceSink,
   synthSink,
-  synthLegacy,
   getNodeId,
   audioParamSink,
   setParamValue,
@@ -25,8 +24,6 @@ import qualified Data.Map as Map
 import Control.Monad.Trans.Class
 import Control.Monad.Trans.State
 import Reflex.Synth.Spec
-import qualified Reflex.Synth.NodeSpec as L
-import qualified Reflex.Synth.Sound as L
 
 -- See https://wiki.haskell.org/New_monads/MonadUnique for a simple monad transformer to support
 -- generating unique values.
@@ -48,16 +45,15 @@ evalUniqueT (UniqueT s) = evalStateT s 0
 
 type AudioParam = String
 
-data Reference 
-  = RefToNode Integer 
-  | RefToParamOfNode Integer AudioParam 
+data Reference
+  = RefToNode Integer
+  | RefToParamOfNode Integer AudioParam
   deriving (Show)
 
-data NodeProps 
-  = SourceSpec SourceNodeSpec 
-  | SourceSinkSpec SourceSinkNodeSpec 
+data NodeProps
+  = SourceSpec SourceNodeSpec
+  | SourceSinkSpec SourceSinkNodeSpec
   | SinkSpec SinkNodeSpec
-  | Legacy L.Sound
   deriving (Show)
 
 type Env = Map.Map Integer NodeProps
@@ -108,8 +104,8 @@ connectGraphs' (x@(Sink _ _):tl, completed) y@(Sink _ _)
 connectGraphs' (hd:tl, completed) y
   | isComplete y = (hd:tl, y:completed)
   | hasSource y  = (y:hd:tl, completed)
-  | otherwise = 
-      if isComplete connected
+  | otherwise =
+      if isComplete connected 
         then (tl, connected:completed)
         else (connected:tl, completed)
       where connected = connectGraphs hd y
@@ -177,24 +173,6 @@ synthSink spec = do
   r <- fresh
   lift $ makeSynth r (Sink (RefToNode r) EmptyGraph) (SinkSpec spec)
 
--- Lift a legacy L.Sound into a SynthBuilder. This creates a trivial completed
--- graph while storing the sound specification in the env. This helper does not
--- return a reference to the graph because there should be no further interaction
--- with legacy nodes within the SynthBuilder context.
-synthLegacy :: L.Sound -> SynthBuilder ()
-synthLegacy sound = do
-  rSound <- fresh
-  rDest <- fresh
-  let source = Source (RefToNode rSound)
-  let sink = Sink (RefToNode rDest) source
-  lift $ Synth {
-    graphs = ([], [sink]),
-    env = Map.singleton rSound (Legacy sound),
-    changes = [],
-    deletionTime = fmap Sec $ L.getT sound,
-    supplement = ()
-  }
-
 makeSynth :: Integer -> Graph -> NodeProps -> Synth Graph
 makeSynth r g np = Synth {
   graphs = ([g],[]),
@@ -253,7 +231,7 @@ setDeletionTime t = lift $ Synth {
 test1 :: Synth ()
 test1 = buildSynth $ do
   r <- synthSource $ Oscillator Sine (Hz 440)
-  linearRampToParamValue r "freq" 880 (Sec 4.0)
+  linearRampToParamValue "freq" 880 (Sec 4.0) r
   synthSource $ Oscillator Sine (Hz 220)
   synthSink Destination
   synthSink Destination

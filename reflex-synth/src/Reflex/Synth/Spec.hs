@@ -1,16 +1,17 @@
-{-# LANGUAGE OverloadedStrings, StandaloneDeriving #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module Reflex.Synth.Spec where
 
 import GHCJS.Marshal.Pure
 import GHCJS.Types
-import Data.Semigroup
+import Data.Monoid
 import Reflex.Synth.AudioRoutingGraph(Float32Array)
 
 data SourceNodeSpec
   = Silent
   | Oscillator OscillatorType Frequency
-  | Buffer (Either Float32Array FloatArraySpec) Double Double Bool
+  -- | Buffer (Either Float32Array FloatArraySpec) Double Double Bool
+  | Buffer BufferSrc PlaybackParam
   deriving (Show)
 
 data SourceSinkNodeSpec
@@ -30,11 +31,15 @@ data SinkNodeSpec
   deriving (Show)
 
 data OscillatorType 
-  = Sine 
-  | Square 
-  | Sawtooth 
+  = Sine
+  | Square
+  | Sawtooth
   | Triangle 
   deriving (Show, Eq)
+
+data BufferSrc = Uploaded String | Local String deriving (Show, Eq) -- TODO is this the best way to handle loaded files?...
+
+data PlaybackParam = PlaybackParam Double Double Bool deriving (Show, Eq)
 
 instance PToJSVal OscillatorType where
   pToJSVal Sine = jsval ("sine" :: JSString)
@@ -49,14 +54,13 @@ data FloatArraySpec
   | Repeated Int [Double] FloatArraySpec
   deriving (Show)
 
-instance Semigroup FloatArraySpec where
-  EmptyArray <> x = x
-  x <> EmptyArray = x
-  (Const i x tl) <> y = Const i x $ tl <> y
-  (Segment xs tl) <> y = Segment xs $ tl <> y
-  (Repeated i xs tl) <> y = Repeated i xs $ tl <> y
-
-instance Monoid FloatArraySpec where mempty = EmptyArray
+instance Monoid FloatArraySpec where
+  mempty = EmptyArray
+  mappend EmptyArray x = x
+  mappend x EmptyArray = x
+  mappend (Const i x tl) y = Const i x $ mappend tl y
+  mappend (Segment xs tl) y = Segment xs $ mappend tl y
+  mappend (Repeated i xs tl) y = Repeated i xs $ mappend tl y
 
 arraySpecMap :: (Double -> Double) -> FloatArraySpec -> FloatArraySpec
 arraySpecMap f EmptyArray = EmptyArray
@@ -90,7 +94,7 @@ data OversampleAmount
   | Times2
   | Times4
   deriving (Show)
-  
+
 instance PToJSVal OversampleAmount where
   pToJSVal None = jsval ("none" :: JSString)
   pToJSVal Times2 = jsval ("x2" :: JSString)
@@ -149,8 +153,8 @@ instance Num Time where
   t1 * t2 = Millis $ (inMillis t1) * (inMillis t2)
   abs (Millis ms) = Millis $ abs ms
   abs (Sec s) = Sec $ abs s
-  signum x = 
-    case inMillis x of 
+  signum x =
+    case inMillis x of
       y | y < 0 -> -1
         | y == 0 -> 0
         | otherwise -> 1

@@ -26,7 +26,6 @@ instantiateNode :: WebAudioContext -> NodeProps -> IO Node
 instantiateNode ctx (SourceSpec x) = instantiateSourceNode x ctx
 instantiateNode ctx (SourceSinkSpec x) = instantiateSourceSinkNode x ctx
 instantiateNode ctx (SinkSpec x) = instantiateSinkNode x ctx
-instantiateNode _   (Legacy sound) = instantiateLegacyNode sound
 
 connectGraph :: Map Integer Node -> Graph -> IO ()
 connectGraph m (Source (RefToNode _)) = return ()

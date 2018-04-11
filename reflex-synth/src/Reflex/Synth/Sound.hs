@@ -1,6 +1,10 @@
 module Reflex.Synth.Sound where
 
 import Reflex.Synth.NodeSpec
+import GHCJS.Marshal.Pure (pToJSVal)
+import Reflex.Synth.Foreign as F
+
+import Control.Monad (liftM)
 
 
 data Sound =
@@ -12,12 +16,14 @@ data Sound =
   ProcessedSound Sound DSPEffect |
   WaveShapedSound Sound WaveShaper |
   ReverberatedSound Sound Buffer |
-  OverlappedSound String [Sound] |
+  OverlappedSound String [Sound] EndTime |
   DelayedSound Sound Double |
   TwoNotesSound Sound Double Sound deriving (Read,Show)
     -- String is sort of an unfortunately necessary identifier - so that if playing a sound of an indefinite length (such as a looped buffer) overlapped with other sounds, when you call 'stop' (Read,Show)
 
-soundTwo = OverlappedSound "Test" [Sound (NodeSource (OscillatorNode ( Oscillator Sine 440 (-10))) (Just 2)), Sound ( NodeSource (BufferNode ( File "pinknoise.wav")) (Just 2))]
+data EndTime = Max | Min | OnBufferEnd String deriving (Read, Show, Eq)
+
+
 
 -- soundOne = OverlappedSound "Test" [Sound $ NodeSource (OscillatorNode $ Oscillator Sine 440 (-10)) (Just 2)]
 
@@ -39,22 +45,27 @@ soundTwo = OverlappedSound "Test" [Sound (NodeSource (OscillatorNode ( Oscillato
 --   (NodeSource _ t) ->  t
 --   otherwise -> Nothing
 
-getT:: Sound -> Maybe Double
-getT (Sound (NodeSource _ t)) = t
+
+-- needs to be IO bc. need to get buffer duration for overlapped sounds that should end when buffer ends
+getT:: Sound -> IO (Maybe Double)
+getT (Sound (NodeSource _ t)) = return t
 getT (GainSound s _) = getT s
-getT (FilteredSound (NodeSource _ t) _) = t
+getT (FilteredSound (NodeSource _ t) _) = return  t
 getT (ProcessedSound s _) = getT s
-getT (NoSound) = Nothing
+getT (NoSound) = return  Nothing
 getT (WaveShapedSound s _) = getT s
 getT (ReverberatedSound s _) = getT s
 getT (CompressedSound s _) = getT s
-getT (DelayedSound s d) = fmap (+d) (getT s)
-getT (TwoNotesSound n1 t n2) = do
-  t1 <- getT n1
-  let m = max t t1
-  t2 <- getT n2
-  return $ m + t2
-getT (OverlappedSound _ xs) = maximum $ fmap getT xs
+getT (DelayedSound s d) = liftM (fmap (+d)) (getT s)
+getT (OverlappedSound _ xs Max) = liftM maximum $ sequence  $ fmap getT xs
+getT (OverlappedSound _ xs Min) = liftM  minimum $ sequence   $ fmap getT xs
+getT (OverlappedSound _ xs (OnBufferEnd s)) = do
+  buf <- getBufferByID (pToJSVal s)
+  t <- F.getBufferDuration buf
+  putStrLn ("Buffer duration time:   "++show t)
+  return (Just t)
+
+
 
 getSource:: Sound -> Source
 getSource (Sound s) = s
@@ -66,4 +77,4 @@ getSource (WaveShapedSound s _) = getSource s
 getSource (ReverberatedSound s _) = getSource s
 getSource (CompressedSound s _) = getSource s
 getSource (DelayedSound s _) = getSource s
-getSource (OverlappedSound _ _) = error "cannot get 'source' of an OverlappedSound"
+getSource (OverlappedSound _ _ _) = error "cannot get 'source' of an OverlappedSound"
