@@ -6,7 +6,8 @@ import Reflex.Synth.Spec
 oscillator :: OscillatorType -> Frequency -> SynthBuilder Graph
 oscillator oscType freq = synthSource $ Oscillator oscType freq
 
-audioBufferSource:: BufferSrc -> PlaybackParam -> SynthBuilder Graph
+
+audioBufferSource:: AudioBuffer -> PlaybackParam -> SynthBuilder Graph
 audioBufferSource b p = synthSource $ Buffer b p
 
 gain :: Amplitude -> SynthBuilder Graph
@@ -25,6 +26,13 @@ ampEnvelope a d s st r = do
   exponentialRampToParamValue g "gain" (inAmp s) $ a + d
   setParamValue g "gain" (inAmp s) $ a + d + st
   linearRampToParamValue g "gain" 0.0 $ a + d + st + r
+
+asr:: Time -> Time -> Time -> Amplitude -> SynthBuilder Graph
+asr a s r amp= do
+  g <- gain amp
+  linearRampToParamValue g "gain" amp a
+  setParamValue g "gain" amp $ a+s
+  linearRampToParamValue g "gain" 0 $ a+s+r
 
 test :: Synth ()
 test = buildSynth $ oscillator Sine (Hz 440) >> gain (Amp 0.5) >> destination >> return ()

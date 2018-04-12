@@ -9,8 +9,12 @@ import Control.Applicative
 data SourceNodeSpec
   = Silent
   | Oscillator OscillatorType Frequency
-  | Buffer BufferSrc PlaybackParam
+  | Buffer SoundFile PlaybackParam
   deriving (Show)
+
+data SoundFile = Ours String | Theirs String
+
+data Buffer = Buffer [Float32ArraySpec] Double
 
 data SourceSinkNodeSpec
   = Filter FilterSpec
@@ -29,7 +33,8 @@ data SinkNodeSpec
 
 data OscillatorType = Sine   | Square   | Sawtooth   | Triangle deriving (Show, Eq)
 
-data BufferSrc s = Uploaded String | Local String deriving (Show, Eq) -- TODO is this the best way to handle loaded files?...
+newtype AudioBuffer = AudioBuffer JSVal
+-- data BufferSrc s = Uploaded String | Local String deriving (Show, Eq) -- TODO is this the best way to handle loaded files?...
 
 data PlaybackParam = PlaybackParam {start::Double, end::Double, loop::Bool} deriving (Show, Eq)
 
