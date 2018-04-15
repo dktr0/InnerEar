@@ -7,7 +7,8 @@ import Data.Monoid(mconcat)
 oscillator :: OscillatorType -> Frequency -> SynthBuilder Graph
 oscillator oscType freq = synthSource $ Oscillator oscType freq
 
-audioBufferSource:: BufferSrc -> PlaybackParam -> SynthBuilder Graph
+
+audioBufferSource:: AudioBuffer -> PlaybackParam -> SynthBuilder Graph
 audioBufferSource b p = synthSource $ Buffer b p
 
 gain :: Amplitude -> SynthBuilder Graph
@@ -37,6 +38,13 @@ clipAt amp =
   let mid = listToArraySpec [(2.0 * fromIntegral i) / (fromIntegral $ nSamples - 1) | i <- [nConstSamples..(nSamples-nConstSamples)-1]] in
   let right = Const nConstSamples clip EmptyArray in
   synthSourceSink $ WaveShaper (Right $ mconcat [left, mid, right]) None
+
+asr:: Time -> Time -> Time -> Amplitude -> SynthBuilder Graph
+asr a s r amp= do
+  g <- gain amp
+  linearRampToParamValue g "gain" amp a
+  setParamValue g "gain" amp $ a+s
+  linearRampToParamValue g "gain" 0 $ a+s+r
 
 test :: Synth ()
 test = buildSynth $ oscillator Sine (Hz 440) >> gain (Amp 0.5) >> destination >> return ()

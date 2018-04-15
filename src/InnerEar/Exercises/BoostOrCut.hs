@@ -45,6 +45,10 @@ renderAnswer :: Config -> Source -> Maybe Answer -> Sound
 renderAnswer db s (Just (Answer True)) = GainSound (Sound s) (-10+db) -- 2.0 -- should be a source sound, attenuated by a standard amount (-10 dB) then boosted by dB
 renderAnswer _ s (Just (Answer False)) = GainSound (Sound s) (-10)-- 2.0 -- should be just a source sound attenuated by standard amount (-10 dB)
 renderAnswer db s Nothing = GainSound (Sound s) (-10)
+-- TODO finish this switch
+renderAnswer::Map String Buffer -> Config -> (SourceNodeSpec,Maybe Time)-> Maybe Answer -> Synth ()
+renderAnswer _ db (src, dur) (Just (Answer True)) = createSrc >> getEnv dur (Db (-10+db)) >> destination
+renderAnswer _ _ (src, dur) _ = createSrc >> getEnv dur (Db $ -10) >> destination
 
 displayEval :: MonadWidget t m => Dynamic t (Map Answer Score) -> m ()
 displayEval = displayVerticalMultipleChoiceEvaluationGraph "" "" answers

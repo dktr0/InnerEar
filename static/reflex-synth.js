@@ -3,13 +3,41 @@ var overlappedDictionary = {}
 var lastPlayingBufferNode;
 var userAudioNodes = {}
 
+
+function Buffer (url){
+  if (url==undefined) {throw new Error("Smart Buffer needs a url")}
+  this.buffer = null;
+  this.status = null;
+  this.url = url
+  this.loadFile()
+}
+
+Buffer.prototype.loadFile = function (){
+  var request = new XMLHttpRequest();
+  try {
+    request.open('GET',this.url, true);
+    request.responseType = "arrayBuffer";
+    var closure = this;
+    request.onload = function() {
+      ___ac.decodeAudioData(request.response, function(x){
+        closure.buffer = x;
+        closure.status = "loaded"
+      }, function (e){
+        closure.status = "error"
+        console.log("ERROR - could not decode audio buffer: " +closure.url);
+      });
+    };
+    request.send();
+  } catch(e){
+    console.log(e)
+  }
+}
+
 function showThings(a,b,c,d){
   console.log(a)
   console.log(b)
-
   console.log(c)
   console.log(d)
-
 }
 
 function startSilentNode () {

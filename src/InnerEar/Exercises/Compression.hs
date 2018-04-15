@@ -40,6 +40,15 @@ renderAnswer r b (Just (Answer True)) = GainSound (CompressedSound (Sound b) (Co
 renderAnswer _ b _ = GainSound (Sound b) (-10) -- should just be source (b) down -10 dB
 -- note also: the user MUST provide a sound file (or we might provide some standard ones) - synthetic sources won't work for this
 
+-- TODO implement this switch..
+renderAnswer::Map String Buffer -> Config -> (SourceNodeSpec,Maybe Time)-> Maybe Answer -> Synth ()
+renderAnswer _ ratio (src, dur) (Just (Answer True)) = do
+  createSrc src
+  getEnv dur (Db $ -10)
+  compressor (-20) r 0 0.003 0.1
+  destination
+renderAnswer _ _ (src, dur) _ = createSrc src >> getEnv dur (Db $ -10) >> destination
+
 displayEval :: MonadWidget t m => Dynamic t (Map Answer Score) -> m ()
 displayEval = displayMultipleChoiceEvaluationGraph' "Session Performance" "" answers
 
