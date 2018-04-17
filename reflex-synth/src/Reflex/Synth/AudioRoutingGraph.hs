@@ -1,9 +1,9 @@
 module Reflex.Synth.AudioRoutingGraph where
 
 import GHCJS.Types
+import GHCJS.Prim(toJSString)
 import GHCJS.Marshal.Pure
 import GHCJS.Foreign.Callback
-import qualified Data.Map as Map
 
 newtype WebAudioContext = WebAudioContext JSVal
 newtype AudioParam = AudioParam JSVal
@@ -35,7 +35,7 @@ foreign import javascript safe
   js_setGlobalAudioContext :: WebAudioContext -> IO () 
 
 foreign import javascript safe
-  "$r = window.__ac;"
+  "$r = window.___ac;"
   js_globalAudioContext :: IO WebAudioContext
 
 foreign import javascript safe
@@ -104,6 +104,9 @@ foreign import javascript safe
 foreign import javascript safe
   "$1[$2] = $3;"
   js_setField :: JSVal -> JSVal -> JSVal -> IO ()
+
+setJSField :: (PToJSVal o, PToJSVal v) => o -> String -> v -> IO ()
+setJSField o f v = js_setField (pToJSVal o) (toJSString f) (pToJSVal v)
 
 foreign import javascript safe
   "$1[$2]"
@@ -244,14 +247,20 @@ foreign import javascript safe
 -- SmartBuffer
 
 foreign import javascript safe
- "$r = new Buffer($1)"
- js_newBuffer:: String -> IO Buffer
+  "$r = new Buffer($1);"
+  js_newBuffer :: JSString -> IO Buffer
 
 foreign import javascript safe
- "$r = $1.status" js_getBufferStatus:: Buffer -> IO String
+  "$r = $1.status;" 
+  js_getBufferStatus :: Buffer -> IO JSString
 
 foreign import javascript safe
-  "$r = $1.buffer" js_getBuffer:: Buffer -> IO AudioBuffer
+  "$1.status === 'loaded'"
+  js_isBufferLoaded :: Buffer -> IO Bool
+
+foreign import javascript safe
+  "$r = $1.buffer;" 
+  js_getAudioBuffer :: Buffer -> IO AudioBuffer
 
 -- Utility
 

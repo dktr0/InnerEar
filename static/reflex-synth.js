@@ -4,32 +4,33 @@ var lastPlayingBufferNode;
 var userAudioNodes = {}
 
 
-function Buffer (url){
-  if (url==undefined) {throw new Error("Smart Buffer needs a url")}
+function Buffer (url) {
+  if (url == null) 
+    throw new Error("Smart Buffer needs a url");
   this.buffer = null;
   this.status = null;
-  this.url = url
-  this.loadFile()
+  this.url = url;
+  this.loadFile();
 }
 
-Buffer.prototype.loadFile = function (){
+Buffer.prototype.loadFile = function () {
   var request = new XMLHttpRequest();
   try {
     request.open('GET',this.url, true);
-    request.responseType = "arrayBuffer";
+    request.responseType = 'arrayBuffer';
     var closure = this;
     request.onload = function() {
-      ___ac.decodeAudioData(request.response, function(x){
+      ___ac.decodeAudioData(request.response, function(x) {
         closure.buffer = x;
-        closure.status = "loaded"
-      }, function (e){
-        closure.status = "error"
-        console.log("ERROR - could not decode audio buffer: " +closure.url);
+        closure.status = 'loaded';
+      }, function (e) {
+        closure.status = 'error';
+        console.log('ERROR - could not decode audio buffer: ' + closure.url);
       });
     };
     request.send();
-  } catch(e){
-    console.log(e)
+  } catch(e) {
+    console.log(e);
   }
 }
 

@@ -4,11 +4,12 @@ import Reflex.Synth.Graph
 import Reflex.Synth.Spec
 import Data.Monoid(mconcat)
 
+import qualified Reflex.Synth.AudioRoutingGraph as Js(Buffer)
+
 oscillator :: OscillatorType -> Frequency -> SynthBuilder Graph
 oscillator oscType freq = synthSource $ Oscillator oscType freq
 
-
-audioBufferSource:: AudioBuffer -> PlaybackParam -> SynthBuilder Graph
+audioBufferSource :: Js.Buffer -> BufferParams -> SynthBuilder Graph
 audioBufferSource b p = synthSource $ Buffer b p
 
 gain :: Amplitude -> SynthBuilder Graph
@@ -39,12 +40,12 @@ clipAt amp =
   let right = Const nConstSamples clip EmptyArray in
   synthSourceSink $ WaveShaper (Right $ mconcat [left, mid, right]) None
 
-asr:: Time -> Time -> Time -> Amplitude -> SynthBuilder Graph
-asr a s r amp= do
+asr :: Time -> Time -> Time -> Amplitude -> SynthBuilder Graph
+asr a s r amp = do
   g <- gain amp
-  linearRampToParamValue g "gain" amp a
-  setParamValue g "gain" amp $ a+s
-  linearRampToParamValue g "gain" 0 $ a+s+r
+  linearRampToParamValue "gain" (inAmp amp) a g
+  setParamValue "gain" (inAmp amp) (a+s) g
+  linearRampToParamValue "gain" 0 (a+s+r) g
 
 test :: Synth ()
 test = buildSynth $ oscillator Sine (Hz 440) >> gain (Amp 0.5) >> destination >> return ()
@@ -74,6 +75,6 @@ test5 = buildSynth $ do
   g <- gain (Db $ -20)
   do -- lfo gain modulation
     oscillator Sine (Hz 2) -- osc.connect(g.gain)
-    audioParamSink g "gain"
+    audioParamSink "gain" g
   destination
   return ()

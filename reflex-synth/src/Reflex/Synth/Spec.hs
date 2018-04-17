@@ -4,29 +4,24 @@ module Reflex.Synth.Spec where
 
 import GHCJS.Marshal.Pure
 import GHCJS.Types
-import Data.Monoid
-import Reflex.Synth.AudioRoutingGraph(Float32Array)
+
+import qualified Reflex.Synth.AudioRoutingGraph as Js(Float32Array,Buffer)
 
 data SourceNodeSpec
   = Silent
   | Oscillator OscillatorType Frequency
-  -- | Buffer (Either Float32Array FloatArraySpec) Double Double Bool
-  | Buffer SoundFile PlaybackParam
+  | Buffer Js.Buffer BufferParams
   deriving (Show)
-
-data SoundFile = Ours String | Theirs String
-
-data Buffer = Buffer [Float32ArraySpec] Double
 
 data SourceSinkNodeSpec
   = Filter FilterSpec
   -- Convolver buffer normalize
-  | Convolver (Either Float32Array FloatArraySpec) Bool
+  | Convolver (Either Js.Float32Array FloatArraySpec) Bool
   | Delay Time
   -- Compressor threshold knee ratio reduction attack release
   | Compressor Amplitude Amplitude Amplitude Gain Time Time
   | Gain Gain
-  | WaveShaper (Either Float32Array FloatArraySpec) OversampleAmount
+  | WaveShaper (Either Js.Float32Array FloatArraySpec) OversampleAmount
   | DistortAt Amplitude
   deriving (Show)
 
@@ -41,10 +36,7 @@ data OscillatorType
   | Triangle 
   deriving (Show, Eq)
 
-newtype AudioBuffer = AudioBuffer JSVal
--- data BufferSrc s = Uploaded String | Local String deriving (Show, Eq) -- TODO is this the best way to handle loaded files?...
-
-data PlaybackParam = PlaybackParam Double Double Bool deriving (Show, Eq)
+data BufferParams = BufferParams Double Double Bool deriving (Show, Eq)
 
 instance PToJSVal OscillatorType where
   pToJSVal Sine = jsval ("sine" :: JSString)
@@ -68,7 +60,7 @@ instance Monoid FloatArraySpec where
   mappend (Repeated i xs tl) y = Repeated i xs $ mappend tl y
 
 arraySpecMap :: (Double -> Double) -> FloatArraySpec -> FloatArraySpec
-arraySpecMap f EmptyArray = EmptyArray
+arraySpecMap _ EmptyArray = EmptyArray
 arraySpecMap f (Const i x tl)= Const i (f x) $ arraySpecMap f tl
 arraySpecMap f (Segment xs tl) = Segment (fmap f xs) $ arraySpecMap f tl
 arraySpecMap f (Repeated i xs tl) = Repeated i (fmap f xs) $ arraySpecMap f tl
@@ -164,5 +156,3 @@ instance Num Time where
         | y == 0 -> 0
         | otherwise -> 1
   fromInteger ms = Millis $ fromIntegral ms
-
--- TODO AudioBuffer spec with float32arrays and maybe a sample rate?

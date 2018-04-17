@@ -21,16 +21,17 @@ module Reflex.Synth.Node (
   setParamValueCurveAtTime
 ) where
 
-import Reflex.Synth.AudioRoutingGraph
+import Reflex.Synth.AudioRoutingGraph hiding (Buffer)
 import Reflex.Synth.Spec
 import GHCJS.Marshal.Pure
 import GHCJS.Foreign.Callback(asyncCallback1, releaseCallback)
 import GHCJS.Prim(JSVal, toJSArray, toJSString, fromJSInt, getProp)
+import GHCJS.Types(nullRef)
 import Control.Monad
 
 data Node
   -- Source nodes
-  = AudioBufferSourceNode { jsval :: JSVal , playbackParams:: PlaybackParam}  -- Also needs playbackParams b.c. some playback properties are only specified when you call 'start()' on that node
+  = AudioBufferSourceNode { jsval :: JSVal, bufferParams :: BufferParams}  -- Also needs playbackParams b.c. some playback properties are only specified when you call 'start()' on that node
   | OscillatorNode { jsval :: JSVal }
   -- SourceSink nodes
   | BiquadFilterNode { jsval :: JSVal }
@@ -55,6 +56,7 @@ instance Show Node where
   show (WaveShaperNode _) = "WaveShaperNode"
   show (ScriptProcessorNode _) = "ScriptProcessorNode"
   show (DestinationNode _) = "DestinationNode"
+  show (AudioParamNode _) = "AudioParamNode"
 
 isSourceNode :: Node -> Bool
 isSourceNode (AudioBufferSourceNode _ _) = True
@@ -91,41 +93,36 @@ instantiateSourceNode Silent ctx = do
   channelData <- js_channelData buffer 0
   js_typedArrayFill 0.0 channelData
   src <- js_createBufferSource ctx
-  js_setField src (toJSString "buffer") $ pToJSVal buffer
-  js_setField src (toJSString "loop") $ pToJSVal True
-  return $ AudioBufferSourceNode src (PlaybackParam 0 1 True)
+  setJSField src "buffer" buffer
+  setJSField src "loop" True
+  return $ AudioBufferSourceNode src (BufferParams 0 1 True)
 instantiateSourceNode (Oscillator t f) ctx = do
   osc <- js_createOscillator ctx
-  js_setField osc (toJSString "type") $ pToJSVal t
+  setJSField osc "type" t
   setFrequencyHz osc f ctx
   return $ OscillatorNode osc
--- instantiateSourceNode (Buffer bufSrc (PlaybackParam start end loop)) ctx = do
---   buf <- case bufSrc of
---     (Uploaded s) -> js_lookupUploadedBuffer s
---     (Local s) -> js_lookupLocalBuffer s
---   isNull <- js_isUndefined buf
---   src <- js_createBufferSource ctx
---   js_setField src (toJSString "loopstart") $ pToJSVal start
---   js_setField src (toJSString "loopend") $ pToJSVal end
---   js_setField src (toJSString "loop") $ pToJSVal loop
---   if (not isNull) then js_setField src (toJSString "buffer") (pToJSVal buf) else
---     do
---       js_Alert "Sound file is still loading..."
---       case bufSrc of
---         (Uploaded s) -> js_loadUploadedBuffer s
---         (Local s)-> js_loadLocalBuffer s
---       return ()
---   return $ AudioBufferSourceNode src param
+instantiateSourceNode (Buffer smartBuffer params@(BufferParams loopstart loopend loop)) ctx = do
+  src <- js_createBufferSource ctx
+  isLoaded <- js_isBufferLoaded smartBuffer
+  if isLoaded then do
+    buffer <- js_getAudioBuffer smartBuffer
+    setJSField src "buffer" buffer
+    setJSField src "loopstart" loopstart
+    setJSField src "loopend" loopend
+    setJSField src "loop" loop
+  else
+    setJSField src "buffer" nullRef
+  return $ AudioBufferSourceNode src params
 
 instantiateSourceSinkNode :: SourceSinkNodeSpec -> WebAudioContext -> IO Node
 instantiateSourceSinkNode (Filter spec) ctx = do
-  filter <- js_createBiquadFilter ctx
-  configureBiquadFilterNode spec filter ctx
-  return $ BiquadFilterNode filter
-instantiateSourceSinkNode (Convolver buffer normalize) ctx = do
+  biquadFilter <- js_createBiquadFilter ctx
+  configureBiquadFilterNode spec biquadFilter ctx
+  return $ BiquadFilterNode biquadFilter
+instantiateSourceSinkNode (Convolver bufferSpec normalize) ctx = do
   convolver <- js_createConvolver ctx
   sampleRate <- js_sampleRate ctx
-  bufferData <- instantiateArraySpec buffer
+  bufferData <- instantiateArraySpec bufferSpec
   nSamples <- js_typedArrayLength bufferData
   buffer <- js_createAudioBuffer 1 nSamples sampleRate ctx -- TODO use a buffer spec instead of array spec
   js_copyToChannel bufferData 1 buffer

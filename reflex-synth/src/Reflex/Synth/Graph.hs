@@ -182,8 +182,8 @@ makeSynth r g np = Synth {
   supplement = g
 }
 
-audioParamSink :: Graph -> AudioParam -> SynthBuilder Graph
-audioParamSink g p = lift $ Synth {
+audioParamSink :: AudioParam -> Graph -> SynthBuilder Graph
+audioParamSink p g = lift $ Synth {
     graphs = ([g'],[]),
     env = Map.empty,
     changes = [],
@@ -242,5 +242,5 @@ test1 = buildSynth $ do
 
 test2 :: Synth ()
 test2 = buildSynth $ do
-  g <- synthSource $ Oscillator Sine (Hz 440)
+  _ <- synthSource $ Oscillator Sine (Hz 440)
   return ()
