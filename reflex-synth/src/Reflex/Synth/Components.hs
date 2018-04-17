@@ -2,9 +2,16 @@ module Reflex.Synth.Components where
 
 import Reflex.Synth.Graph
 import Reflex.Synth.Spec
-import Data.Monoid(mconcat)
+import GHCJS.Prim(toJSString)
 
 import qualified Reflex.Synth.AudioRoutingGraph as Js(Buffer)
+import Reflex.Synth.AudioRoutingGraph hiding (Buffer)
+
+mkBuffer :: String -> IO Js.Buffer
+mkBuffer url = js_newBuffer $ toJSString url
+
+isBufferLoaded :: Js.Buffer -> IO Bool
+isBufferLoaded = js_isBufferLoaded
 
 oscillator :: OscillatorType -> Frequency -> SynthBuilder Graph
 oscillator oscType freq = synthSource $ Oscillator oscType freq
@@ -14,6 +21,9 @@ audioBufferSource b p = synthSource $ Buffer b p
 
 gain :: Amplitude -> SynthBuilder Graph
 gain amp = synthSourceSink $ Gain amp
+
+biquadFilfer :: FilterSpec -> SynthBuilder Graph
+biquadFilfer = synthSourceSink . Filter
 
 destination :: SynthBuilder Graph
 destination = synthSink Destination

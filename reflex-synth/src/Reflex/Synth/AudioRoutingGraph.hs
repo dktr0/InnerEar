@@ -248,7 +248,7 @@ foreign import javascript safe
 
 foreign import javascript safe
   "$r = new Buffer($1);"
-  js_newBuffer :: JSString -> IO Buffer
+  js_newBuffer :: JSVal -> IO Buffer
 
 foreign import javascript safe
   "$r = $1.status;" 
