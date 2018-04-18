@@ -67,18 +67,11 @@ g:: Maybe Time -> Amplitude -> SynthBuilder Graph
 g dur amp= maybe (gain amp) (\d-> do
   asr (Sec 0.001) d (Sec 0.001) amp) dur
 
-maybeSynth:: (a-> SynthBuilder b) -> Maybe a -> SynthBuilder ()
-maybeSynth f = maybe (return ()) (\x-> f x >> return ())
-
 
 maybeDelete:: Maybe Time -> SynthBuilder () -- move to where setDeletionTime
 maybeDelete = maybe (return ()) (setDeletionTime)
 
 renderAnswer::Map String Buffer -> Config -> Source -> Maybe Answer -> Synth ()
-
--- TODO move to reflex synth
-rectEnv:: Time -> Time -> SynthBuilder Graph
-rectEnv ar s = asr ar s ar
 
 getPath WhiteNoise
 ".reflexsynth/whitenoise.wav"

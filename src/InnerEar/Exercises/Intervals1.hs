@@ -40,17 +40,25 @@ instance Show Answer where
 
 answers = [P1,M2,M3,P4,P5]
 
+baseTone :: Frequency
+baseTone = Midi 60
+
 -- *** note: random pitches requires renderAnswer to return IO Sound instead of Sound
-renderAnswer :: Config -> Source -> Maybe Answer -> Sound
-
-renderAnswer _ _ (Just x) = GainSound (OverlappedSound "why?" [n1,n2] Max) (-20)
-  where
-    f1 = midicps 60
-    f2 = midicps (60 + answerToSemitones x)
-    n1 = Sound $ NodeSource (OscillatorNode $ Oscillator Triangle f1 0.0) (Just 0.8)
-    n2 = DelayedSound (Sound $ NodeSource (OscillatorNode $ Oscillator Triangle f2 0.0) (Just 1.0)) 1.0
-
-renderAnswer _ _ Nothing = NoSound
+renderAnswer :: Config -> (SourceNodeSpec, Maybe Time)-> Maybe Answer -> Synth ()
+renderAnswer _ _ Nothing = buildSynth $ silent >> destination
+renderAnswer _ _ (Just interval) = buildSynth $ do
+  osc <- oscillator Triangle baseTone
+  let amp = Db (-20)
+  g <- rectEnv (Millis 100) (Sec 1) amp
+  let firstDur = (Millis $ 2 * 100) + (Sec 1)
+  -- Change the frequency of the oscillator after the first playback.
+  setParamValue "frequency" (inHz $ fmap (+ answerToSemitones interval) baseTone) firstDur osc
+  -- Reset for second note and have another rectEnv at firstDur.
+  setParamValue "gain" 0 firstDur g
+  linearRampToParamValue "gain" (inAmp amp) (firstDur + Millis 100) g
+  setParamValue "gain" (inAmp amp) (firstDur + Millis 100 + Sec 1) g
+  linearRampToParamValue "gain" 0 (firstDur + Millis (2 * 100) + Sec 1) g
+  destination
 
 instructions :: MonadWidget t m => m ()
 instructions = el "div" $ do
