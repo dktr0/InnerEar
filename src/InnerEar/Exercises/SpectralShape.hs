@@ -55,43 +55,43 @@ getShape InverseSteep = fmap (ampdb . (\x -> 1/(x*x))) [1,2 .. 200]
 
 renderAnswer :: Config -> Source -> Maybe Answer -> Sound
 
-renderAnswer f0 _ (Just Steep) = GainSound (OverlappedSound "arbitrary" $ bunchOfOscillators) (-5)
+renderAnswer f0 _ (Just Steep) = GainSound (OverlappedSound "arbitrary" bunchOfOscillators Min) (-5)
   where
     fs = Prelude.filter (< 20000) $ take 200 $ fmap (* f0) [1,2 .. ] -- :: [Frequency]
     gs = getShape Steep
     bunchOfOscillators = fmap (\(x,y) -> Sound $ NodeSource (OscillatorNode $ Oscillator Sine (freqAsDouble x) y) (Just 2.0)) $ zip fs gs
 
-renderAnswer f0 _ (Just Linear) = GainSound (OverlappedSound "arbitrary" $ bunchOfOscillators) (-25)
+renderAnswer f0 _ (Just Linear) = GainSound (OverlappedSound "arbitrary" bunchOfOscillators Min) (-25)
   where
     fs = Prelude.filter (< 20000) $ take 200 $ fmap (* f0) [1,2 .. ] -- :: [Frequency]
     gs = getShape Linear
     bunchOfOscillators = fmap (\(x,y) -> Sound $ NodeSource (OscillatorNode $ Oscillator Sine (freqAsDouble x) y) (Just 2.0)) $ zip fs gs
 
-renderAnswer f0 _ (Just Gradual) = GainSound (OverlappedSound "arbitrary" $ bunchOfOscillators) (-30)
+renderAnswer f0 _ (Just Gradual) = GainSound (OverlappedSound "arbitrary" bunchOfOscillators Min) (-30)
   where
     fs = Prelude.filter (< 20000) $ take 200 $ fmap (* f0) [1,2 .. ] -- :: [Frequency]
     gs = getShape Gradual
     bunchOfOscillators = fmap (\(x,y) -> Sound $ NodeSource (OscillatorNode $ Oscillator Sine (freqAsDouble x) y) (Just 2.0)) $ zip fs gs
 
-renderAnswer f0 _ (Just Flat) = GainSound (OverlappedSound "arbitrary" $ bunchOfOscillators) (-50)
+renderAnswer f0 _ (Just Flat) = GainSound (OverlappedSound "arbitrary"  bunchOfOscillators Min) (-50)
   where
     fs = Prelude.filter (< 20000) $ take 200 $ fmap (* f0) [1,2 .. ] -- :: [Frequency]
     gs = getShape Flat
     bunchOfOscillators = fmap (\(x,y) -> Sound $ NodeSource (OscillatorNode $ Oscillator Sine (freqAsDouble x) y) (Just 2.0)) $ zip fs gs
 
-renderAnswer f0 _ (Just InverseGradual) = GainSound (OverlappedSound "arbitrary" $ bunchOfOscillators) (-30)
+renderAnswer f0 _ (Just InverseGradual) = GainSound (OverlappedSound "arbitrary" bunchOfOscillators Min) (-30)
   where
     fs = reverse $ Prelude.filter (< 20000) $ take 200 $ fmap (* f0) [1,2 .. ] -- :: [Frequency]
     gs = getShape InverseGradual
     bunchOfOscillators = fmap (\(x,y) -> Sound $ NodeSource (OscillatorNode $ Oscillator Sine (freqAsDouble x) y) (Just 2.0)) $ zip fs gs
 
-renderAnswer f0 _ (Just InverseLinear) = GainSound (OverlappedSound "arbitrary" $ bunchOfOscillators) (-25)
+renderAnswer f0 _ (Just InverseLinear) = GainSound (OverlappedSound "arbitrary" bunchOfOscillators Min) (-25)
   where
     fs = reverse $ Prelude.filter (< 20000) $ take 200 $ fmap (* f0) [1,2 .. ] -- :: [Frequency]
     gs = getShape InverseLinear
     bunchOfOscillators = fmap (\(x,y) -> Sound $ NodeSource (OscillatorNode $ Oscillator Sine (freqAsDouble x) y) (Just 2.0)) $ zip fs gs
 
-renderAnswer f0 _ (Just InverseSteep) = GainSound (OverlappedSound "arbitrary" $ bunchOfOscillators) (-5)
+renderAnswer f0 _ (Just InverseSteep) = GainSound (OverlappedSound "arbitrary" bunchOfOscillators Min) (-5)
   where
     fs = reverse $ Prelude.filter (< 20000) $ take 200 $ fmap (* f0) [1,2 .. ] -- :: [Frequency]
     gs = getShape InverseSteep

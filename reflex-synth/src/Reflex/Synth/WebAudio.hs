@@ -9,6 +9,7 @@ import Reflex.Synth.Sound
 import GHCJS.Prim (toJSString)
 import GHCJS.Prim (toJSArray)
 
+
 class WebAudio a where
   createGraph :: a -> IO WebAudioGraph
 
@@ -102,7 +103,7 @@ instance WebAudio Sound where
     conv <- createConvolverNode b
     let graph =  WebAudioGraph'' g $ WebAudioGraph conv
     connectGraph graph
-  createGraph (OverlappedSound identifier xs) = do
+  createGraph (OverlappedSound identifier xs endT) = do
     stopOverlappedSound identifier
     listOfGraphs <- mapM createGraph xs
     arrayOfSources <- toJSArray $ fmap (getJSVal . getFirstNode) listOfGraphs  -- getting all sources in JS array

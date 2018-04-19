@@ -1,5 +1,6 @@
 module Reflex.Synth.NodeSpec where
 
+
 data FilterType = Peaking | Lowpass | Highpass | Notch | Bandpass | Lowshelf | Highshelf | Allpass deriving (Show,Read,Eq)
 
 data NoiseType = White | Pink | Brownian

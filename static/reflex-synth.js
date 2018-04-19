@@ -1,16 +1,44 @@
 var bufferData
-var buffers = {}
 var overlappedDictionary = {}
 var lastPlayingBufferNode;
 var userAudioNodes = {}
 
+
+function Buffer (url) {
+  if (typeof url !== 'string') 
+    throw new Error("Smart Buffer needs a url as a string.");
+  this.buffer = null;
+  this.status = null;
+  this.url = url;
+  this.loadFile();
+}
+
+Buffer.prototype.loadFile = function () {
+  var request = new XMLHttpRequest();
+  try {
+    request.open('GET',this.url, true);
+    request.responseType = 'arrayBuffer';
+    var closure = this;
+    request.onload = function() {
+      ___ac.decodeAudioData(request.response, function(x) {
+        closure.buffer = x;
+        closure.status = 'loaded';
+      }, function (e) {
+        closure.status = 'error';
+        console.log('ERROR - could not decode audio buffer: ' + closure.url);
+      });
+    };
+    request.send();
+  } catch(e) {
+    console.log(e);
+  }
+}
+
 function showThings(a,b,c,d){
   console.log(a)
   console.log(b)
-
   console.log(c)
   console.log(d)
-
 }
 
 function startSilentNode () {
@@ -72,6 +100,16 @@ function connectAdditiveNode(listOfNodes, toNode){
   }
 }
 
+function disconnectAllAtTime (n,t){
+  setTimeout(function(){
+    try{
+      n.disconnect();
+    } catch(e){
+      //for buffernodes that complain if you try to reference them after they've played...
+    }
+  }, t*1000)
+}
+
 //Need to stop and disconnect all sources
 function stopOverlappedSound(id){
   if (overlappedDictionary[id] != undefined){
@@ -79,9 +117,15 @@ function stopOverlappedSound(id){
 
     for (var i=0; i<nodes.length; i=i+1){
       console.log("STOPING AN OVERLAPPED NODE NOW")
-      console.log(typeof(nodes[i]))
-      nodes[i].stop()
-      nodes[i].disconnect();
+      try {
+        console.log("gets here??????")
+        nodes[i].stop()
+        console.log("gets here2   ??????");
+        nodes[i].disconnect();
+        console.log("gets here3  ??????");
+      } catch(e){
+        console.log("hmm...")
+      }
     }
     overlappedDictionary[id] = undefined
   }
@@ -273,9 +317,7 @@ function loadAndDrawBuffer(inputId, canvas){
     if (files[0]){
       var file = files[0]
 
-      // See if the buffer has previously been loaded@
-      if (buffers[file.name]){
-      }
+
 
       var bufferReader = new FileReader ();
 

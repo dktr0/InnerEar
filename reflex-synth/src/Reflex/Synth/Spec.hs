@@ -1,21 +1,28 @@
-{-# LANGUAGE GADTs, StandaloneDeriving #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module Reflex.Synth.Spec where
 
-data SourceNodeSpec where
-  Silent :: SourceNodeSpec
-  Oscillator :: (FrequencyInHz f, Show f) => OscillatorType -> f -> SourceNodeSpec
-  -- TODO | Buffer BufferSrc
-deriving instance Show SourceNodeSpec
+import GHCJS.Marshal.Pure
+import GHCJS.Types
 
-data NodeSpec
+import qualified Reflex.Synth.AudioRoutingGraph as Js(Float32Array,Buffer)
+
+data SourceNodeSpec
+  = Silent
+  | Oscillator OscillatorType Frequency
+  | Buffer Js.Buffer BufferParams
+  deriving (Show)
+
+data SourceSinkNodeSpec
   = Filter FilterSpec
-  -- TODO | Convolver Buffer normalize :: Boolean
+  -- Convolver buffer normalize
+  | Convolver (Either Js.Float32Array FloatArraySpec) Bool
   | Delay Time
-  | Compressor CompressorSpec
-  | Gain Amplitude
-  | WaveShaper [Double] OversampleAmount
-  | DistortAt Amplitude -- TODO replace with an existing node to remove scriptnode dependency
+  -- Compressor threshold knee ratio reduction attack release
+  | Compressor Amplitude Amplitude Amplitude Gain Time Time
+  | Gain Gain
+  | WaveShaper (Either Js.Float32Array FloatArraySpec) OversampleAmount
+  | DistortAt Amplitude
   deriving (Show)
 
 data SinkNodeSpec
@@ -23,32 +30,61 @@ data SinkNodeSpec
   deriving (Show)
 
 data OscillatorType 
-  = Sine 
-  | Square 
-  | Sawtooth 
+  = Sine
+  | Square
+  | Sawtooth
   | Triangle 
-  deriving (Show, Read, Eq)
+  deriving (Show, Eq)
+
+data BufferParams = BufferParams Double Double Bool deriving (Show, Eq)
+
+instance PToJSVal OscillatorType where
+  pToJSVal Sine = jsval ("sine" :: JSString)
+  pToJSVal Square = jsval ("square" :: JSString)
+  pToJSVal Sawtooth = jsval ("sawtooth" :: JSString)
+  pToJSVal Triangle = jsval ("triangle" :: JSString)
+
+data FloatArraySpec
+  = EmptyArray
+  | Const Int Double FloatArraySpec
+  | Segment [Double] FloatArraySpec
+  | Repeated Int [Double] FloatArraySpec
+  deriving (Show)
+
+instance Monoid FloatArraySpec where
+  mempty = EmptyArray
+  mappend EmptyArray x = x
+  mappend x EmptyArray = x
+  mappend (Const i x tl) y = Const i x $ mappend tl y
+  mappend (Segment xs tl) y = Segment xs $ mappend tl y
+  mappend (Repeated i xs tl) y = Repeated i xs $ mappend tl y
+
+arraySpecMap :: (Double -> Double) -> FloatArraySpec -> FloatArraySpec
+arraySpecMap _ EmptyArray = EmptyArray
+arraySpecMap f (Const i x tl)= Const i (f x) $ arraySpecMap f tl
+arraySpecMap f (Segment xs tl) = Segment (fmap f xs) $ arraySpecMap f tl
+arraySpecMap f (Repeated i xs tl) = Repeated i (fmap f xs) $ arraySpecMap f tl
+
+arraySpecSize :: FloatArraySpec -> Int
+arraySpecSize EmptyArray = 0
+arraySpecSize (Const i _ tl) = i + arraySpecSize tl
+arraySpecSize (Segment xs tl) = (length xs) + arraySpecSize tl
+arraySpecSize (Repeated i xs tl) = (i * (length xs)) + arraySpecSize tl
+
+listToArraySpec :: [Double] -> FloatArraySpec
+listToArraySpec xs = Segment xs EmptyArray
 
 data FilterSpec
   = LowPass Frequency Double
   | HighPass Frequency Double
   | BandPass Frequency Double
-  | LowShelf Frequency Amplitude
-  | HighShelf Frequency Amplitude
-  | Peaking Frequency Double Amplitude
+  | LowShelf Frequency Gain
+  | HighShelf Frequency Gain
+  | Peaking Frequency Double Gain
   | Notch Frequency Double
   | AllPass Frequency Double
   -- | IIR [Double] [Double] feedforward feedback
   deriving (Show)
-
-data CompressorSpec = CompressorSpec { 
-  threshold :: Amplitude, 
-  knee :: Amplitude,
-  ratio :: Amplitude,
-  reduction :: Double,
-  attack :: Time, 
-  release :: Time
-} deriving (Show)
 
 data OversampleAmount
   = None
@@ -56,62 +92,57 @@ data OversampleAmount
   | Times4
   deriving (Show)
 
+instance PToJSVal OversampleAmount where
+  pToJSVal None = jsval ("none" :: JSString)
+  pToJSVal Times2 = jsval ("x2" :: JSString)
+  pToJSVal Times4 = jsval ("x4" :: JSString)
+
 data Amplitude
   = Amp Double
   | Db Double
-  deriving (Show, Eq, Ord)
+  deriving (Show)
 
-class AmplitudeInAmp a where
-  inAmp :: a -> Double
+type Gain = Amplitude
 
-instance AmplitudeInAmp Amplitude where
-  inAmp (Amp a) = a
-  inAmp (Db db) = 10.0 ** (db / 20.0)
+inAmp :: Amplitude -> Double
+inAmp (Amp a) = a
+inAmp (Db db) = 10.0 ** (db / 20.0)
 
-class AmplitudeInDb a where
-  inDb :: a -> Double
-
-instance AmplitudeInDb Amplitude where
-  inDb (Amp a) = 20.0 * (logBase 10 a)
-  inDb (Db db) = db
+inDb :: Amplitude -> Double
+inDb (Amp a) = 20.0 * (logBase 10 a)
+inDb (Db db) = db
 
 data Frequency
   = Hz Double
   | Midi Double
-  deriving (Show, Eq, Ord)
+  deriving (Show)
 
-class FrequencyInHz a where
-  inHz :: a -> Double
-  
-instance FrequencyInHz Frequency where
-  inHz (Hz hz) = hz
-  inHz (Midi n) = 440.0 * (2.0 ** ((n - 69.0) / 12.0))
+inHz :: Frequency -> Double
+inHz (Hz hz) = hz
+inHz (Midi n) = 440.0 * (2.0 ** ((n - 69.0) / 12.0))
 
-class FrequencyInMidi a where
-  inMidi :: a -> Double
-
-instance FrequencyInMidi Frequency where
-  inMidi (Hz hz) = 69.0 + 12.0 * (logBase 2 (hz / 440.0))
-  inMidi (Midi n) = n
+inMidi :: Frequency -> Double
+inMidi (Hz hz) = 69.0 + 12.0 * (logBase 2 (hz / 440.0))
+inMidi (Midi n) = n
 
 data Time
   = Sec Double
   | Millis Double
-  deriving (Show, Eq, Ord)
+  deriving (Show)
 
-class TimeInSeconds a where
-  inSec :: a -> Double
-  
-instance TimeInSeconds Time where
-  inSec (Sec s) = s
-  inSec (Millis ms) = ms / 1000.0
+inSec :: Time -> Double
+inSec (Sec s) = s
+inSec (Millis ms) = ms / 1000.0
 
-class TimeInMillis a where
-  inMillis :: a -> Double 
+inMillis :: Time -> Double
+inMillis (Sec s) = s * 1000.0
+inMillis (Millis ms) = ms
 
-instance TimeInMillis Time where
-  inMillis (Sec s) = s * 1000.0
-  inMillis (Millis ms) = ms
+instance Eq Time where
+  t1 == t2 = inMillis t1 == inMillis t2
+
+instance Ord Time where
+  t1 <= t2 = inMillis t1 <= inMillis t2
 
 instance Num Time where
   t1 + t2 = Millis $ (inMillis t1) + (inMillis t2)
@@ -119,23 +150,9 @@ instance Num Time where
   t1 * t2 = Millis $ (inMillis t1) * (inMillis t2)
   abs (Millis ms) = Millis $ abs ms
   abs (Sec s) = Sec $ abs s
-  signum x = 
-    case inMillis x of 
+  signum x =
+    case inMillis x of
       y | y < 0 -> -1
         | y == 0 -> 0
         | otherwise -> 1
   fromInteger ms = Millis $ fromIntegral ms
-
---data PlaybackParam = PlaybackParam{
---  start::Double,    -- portion through the buffer that playback starts
---  end::Double,
---  loop::Bool
---} deriving (Read, Show, Eq)
---
---getPlaybackParam :: Source -> Maybe PlaybackParam
---getPlaybackParam (NodeSource (BufferNode (LoadedFile _ x)) _) = Just x
---getPlaybackParam _ = Nothing
---
---isLoadedFile :: Source -> Bool
---isLoadedFile (NodeSource (BufferNode (LoadedFile _ _)) _) = True
---isLoadedFile _ = False

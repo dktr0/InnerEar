@@ -33,19 +33,19 @@ answers = [Odd,Even,All]
 
 renderAnswer :: Config -> Source -> Maybe Answer -> Sound
 
-renderAnswer f0 _ (Just Odd) = GainSound (OverlappedSound "arbitrary" $ bunchOfOscillators) (-20)
+renderAnswer f0 _ (Just Odd) = GainSound (OverlappedSound "arbitrary"  bunchOfOscillators Min) (-20)
   where
     fs = Prelude.filter (< 20000) $ take 200 $ fmap (* f0) [1,3 .. ] -- :: [Frequency]
     gs = [0,(-6) .. ]
     bunchOfOscillators = fmap (\(x,y) -> Sound $ NodeSource (OscillatorNode $ Oscillator Sine (freqAsDouble x) y) (Just 2.0)) $ zip fs gs
 
-renderAnswer f0 _ (Just Even) = GainSound (OverlappedSound "arbitrary" $ bunchOfOscillators) (-20)
+renderAnswer f0 _ (Just Even) = GainSound (OverlappedSound "arbitrary"  bunchOfOscillators Min) (-20)
   where
     fs = Prelude.filter (< 20000) $ take 200 $ fmap (* f0) (1:[2,4 .. ]) -- :: [Frequency]
     gs = [0,(-6) .. ]
     bunchOfOscillators = fmap (\(x,y) -> Sound $ NodeSource (OscillatorNode $ Oscillator Sine (freqAsDouble x) y) (Just 2.0)) $ zip fs gs
 
-renderAnswer f0 _ (Just All) = GainSound (OverlappedSound "arbitrary" $ bunchOfOscillators) (-20)
+renderAnswer f0 _ (Just All) = GainSound (OverlappedSound "arbitrary"  bunchOfOscillators Min) (-20)
   where
     fs = Prelude.filter (< 20000) $ take 200 $ fmap (* f0) [1,2 .. ] -- :: [Frequency]
     gs = [0,(-6) .. ]

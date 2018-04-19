@@ -74,10 +74,13 @@ answers = [
   Answer $ F 31 "31",Answer $ F 63 "63", Answer $ F 125 "125", Answer $ F 250 "250", Answer $ F 500 "500",
   Answer $ F 1000 "1k", Answer $ F 2000 "2k", Answer $ F 4000 "4k", Answer $ F 8000 "8k", Answer $ F 16000 "16k"]
 
-renderAnswer :: Config -> Source -> Maybe Answer -> Sound
-renderAnswer (_,boost) s f = case f of
-  (Just freq) -> GainSound (FilteredSound s $ Filter Peaking (freqAsDouble (frequency freq)) 1.4 boost) (-10)
-  Nothing -> GainSound (Sound s) (-10)
+renderAnswer :: Config -> (SourceNodeSpec, Maybe Time)-> Maybe Answer -> Synth ()
+renderAnswer (_, boost) (src, dur) ans = buildSynth $ do
+  synthSource src
+  gain $ Db $ -10
+  maybeSynth (\freq -> biquadFilter $ Peaking (Hz $ freqAsDouble freq) 1.4 boost) ans
+  maybeDelete (fmap (+ Millis 200) dur)
+  destination
 
 convertBands :: FrequencyBand -> [Answer]
 convertBands AllBands = answers

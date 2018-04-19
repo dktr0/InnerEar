@@ -50,7 +50,7 @@ data Navigation =
   TestPage |
   TestSoundPage
 
-navigationWidget :: MonadWidget t m => Event t [Response] -> Dynamic t (Maybe Role) -> m (Event t Request,Event t Sound)
+navigationWidget :: MonadWidget t m => Event t [Response] -> Dynamic t (Maybe Role) -> m (Event t Request,Event t (Synth s1))
 navigationWidget responses currentRole = elClass "div" "mainBody" $ mdo
   let initialPage = navigationPage responses currentRole SplashPage
   let rebuild = fmap (navigationPage responses currentRole) navEvents
@@ -79,7 +79,7 @@ buttonForExercise x = elClass "div" "navButton" $ do
   y <- button (showExerciseTitle x)
   return $ fmap (\_ -> ExercisePage x) y
 
-navigationPage :: MonadWidget t m => Event t [Response] -> Dynamic t (Maybe Role) -> Navigation -> m (Event t Request,Event t Sound,Event t Navigation)
+navigationPage :: MonadWidget t m => Event t [Response] -> Dynamic t (Maybe Role) -> Navigation -> m (Event t Request,Event t (Synth s1),Event t Navigation)
 
 navigationPage responses currentRole SplashPage = elClass "div" "nav" $ do
   elClass "div" "explanation" $

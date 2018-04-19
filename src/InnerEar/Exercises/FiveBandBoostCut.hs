@@ -51,6 +51,15 @@ renderAnswer db s f = case f of
   (Just freq) -> GainSound (FilteredSound s $ Filter Peaking (freqAsDouble (frequency freq)) 1.4 db) (-10)
   Nothing -> GainSound (Sound s) (-10)
 
+-- TODO implement this switch..
+renderAnswer::Map String Buffer -> Config -> (SourceNodeSpec,Maybe Time)-> Maybe Answer -> Synth ()
+renderAnswer _ db (src, dur) (Just freq) = do
+  createSrc src
+  getEnv dur (Db $ -10)
+  biquadFilter "peaking" (Hz freq) 1.4 (Db db)
+  destination
+renderAnswer _ db (src, dur) _= createSrc src >> getEnv dur (Db $ -10) >> destination
+
 instructions :: MonadWidget t m => m ()
 instructions = el "div" $ do
   elClass "div" "instructionsText" $ text "In this exercise, a filter is applied to a specific region of the spectrum, either boosting or cutting the energy in that part of the spectrum by a specified amount. Your task is to identify which part of the spectrum has been boosted or cut. Challenge yourself and explore additional possibilities by trying cuts (instead of boosts) to the spectrum, and by trying more subtle boosts/cuts (dB values progressively closer to 0)."

@@ -26,7 +26,7 @@ clientWidget = elClass "div" "innerEar" $ mdo
     elClass "div" "title" $ do
       text "Inner Ear"
     elClass "div" "login" $ loginWidget wsRcvd
-  (y,sounds) <- navigationWidget wsRcvd currentRole
+  (y, synthEv) <- navigationWidget wsRcvd currentRole
   let wsSend = leftmost [x,y]
-  performSound sounds
+  performSynth synthEv
   return ()
