@@ -34,20 +34,19 @@ instance Show Answer where
 answers = [Answer False,Answer True]
 
 
-renderAnswer :: Config -> Source -> Maybe Answer -> Sound
-renderAnswer r b (Just (Answer True)) = GainSound (CompressedSound (Sound b) (Compressor {threshold=(-20),ratio=r,knee=0,attack=0.003,release=0.1})) (-10)
--- should be source (b) compressed at threshold -20 dB with ratio r, then down -10 dB post-compression<
-renderAnswer _ b _ = GainSound (Sound b) (-10) -- should just be source (b) down -10 dB
--- note also: the user MUST provide a sound file (or we might provide some standard ones) - synthetic sources won't work for this
-
--- TODO implement this switch..
 renderAnswer::Map String Buffer -> Config -> (SourceNodeSpec,Maybe Time)-> Maybe Answer -> Synth ()
-renderAnswer _ ratio (src, dur) (Just (Answer True)) = do
-  createSrc src
-  getEnv dur (Db $ -10)
+renderAnswer _ ratio (src, dur) (Just (Answer True)) = buildSynth $ do
+  let env = maybe (return EmptyGraph) (rectEnv (Millis 1)) dur
+  synthSource src
+  gain $ Db  $ -10
   compressor (-20) r 0 0.003 0.1
+  env
   destination
-renderAnswer _ _ (src, dur) _ = createSrc src >> getEnv dur (Db $ -10) >> destination
+  maybeDelete (fmap (+Sec 0.2) dur)
+renderAnswer _ _ (src, dur) _ = buildSynth $ do
+  let env = maybe (return EmptyGraph) (rectEnv (Millis 1)) dur
+  synthSource src >> gain (Db $ -10) >> env >> destination
+  maybeDelete (fmap (+Sec 0.2) dur)
 
 displayEval :: MonadWidget t m => Dynamic t (Map Answer Score) -> m ()
 displayEval = displayMultipleChoiceEvaluationGraph' "Session Performance" "" answers

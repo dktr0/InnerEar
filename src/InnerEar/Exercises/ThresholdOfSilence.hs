@@ -37,13 +37,17 @@ instance Show Answer where
   show (Answer True) = "Attenuated Sound"
   show (Answer False) = "No sound at all"
 
-renderAnswer :: Config -> Source -> Maybe Answer -> Sound
-renderAnswer db s (Just (Answer True)) = GainSound (Sound s)  ((fromIntegral db)::Double) -- 2.0 -- should be a sound source attenuated by dB value
-renderAnswer db _ (Just (Answer False)) = NoSound -- 2.0
--- renderAnswer db _ Nothing = GainSound (OverlappedSound "test" oscs) (-20)
---   where oscs = fmap (\x -> DelayedSound (Sound $ NodeSource (OscillatorNode $ Oscillator Sine x 0) (Just 0.5)) (x/100) ) [100::Double,200,300,400,500,600,700,800]
--- renderAnswer db _ Nothing
-renderAnswer db s (Nothing) = GainSound (Sound s) ((fromIntegral db)::Double)
+renderAnswer::Map String Buffer -> Config -> (SourceNodeSpec,Maybe Time)-> Maybe Answer -> Synth ()
+renderAnswer _ db (src, dur) (Just (Answer True)) = buildSynth $ do
+  let env = maybe (return EmptyGraph) (rectEnv (Millis 1)) dur
+  synthSource src >> gain (Db db) >> env >> destination
+  maybeDelete (fmap (+ Sec 0.2) dur)
+renderAnswer _ db _ (Just (Answer False)) = return ()
+renderAnswer _ db (src, dur) Nothing = buildSynth $ do
+  let env = maybe (return EmptyGraph) (rectEnv (Millis 1)) dur
+  synthSource src >> gain (Db db) >> env >> destination
+  maybeDelete (fmap (+ Sec 0.2) dur)
+
 
 instructionsText = "In this exercise, the system either makes no sound at all \
     \or it plays a sound that has been reduced in level by some specific amount \

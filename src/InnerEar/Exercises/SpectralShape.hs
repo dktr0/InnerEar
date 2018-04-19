@@ -41,51 +41,18 @@ getShape InverseLinear = fmap (ampdb . (\x -> 1/x)) [1,2 ..]
 getShape InverseSteep = fmap (ampdb . (\x -> 1/(x*x))) [1,2 ..]
 
 
-renderAnswer :: Config -> Source -> Maybe Answer -> Sound
-
-renderAnswer f0 _ (Just Steep) = GainSound (OverlappedSound "arbitrary" bunchOfOscillators Min) (-5)
+renderAnswer::Map String Buffer -> Config -> (SourceNodeSpec,Maybe Time)-> Maybe Answer -> Synth ()
+renderAnswer _ f0 _ (Just a) = buildSynth $ do
+  let env = asr (Sec 0.01) (Sec 2) (Sec 0.01)
+  masterGain <- gain (Db $ -10)  -- Is this the right way to do this?
+  mapM (\(f,g) -> oscillator Sine f >> gain g >> env >> masterGain >> destination) oscSpecs
+  setDeletionTime (Sec 2.5)
   where
-    fs = Prelude.filter (< 20000) $ take 200 $ fmap (* f0) [1,2 .. ] -- :: [Frequency]
-    gs = getShape Steep
-    bunchOfOscillators = fmap (\(x,y) -> Sound $ NodeSource (OscillatorNode $ Oscillator Sine (freqAsDouble x) y) (Just 2.0)) $ zip fs gs
+    fs = Prelude.filter (< 20000) $ take 200 $ fmap (Hz . (* f0)) [1,2 .. ] -- :: [Frequency]
+    gs = getShape a
+    oscSpecs = zip fs gs
+renderAnswer _ f0 _ Nothing = return ()
 
-renderAnswer f0 _ (Just Linear) = GainSound (OverlappedSound "arbitrary" bunchOfOscillators Min) (-25)
-  where
-    fs = Prelude.filter (< 20000) $ take 200 $ fmap (* f0) [1,2 .. ] -- :: [Frequency]
-    gs = getShape Linear
-    bunchOfOscillators = fmap (\(x,y) -> Sound $ NodeSource (OscillatorNode $ Oscillator Sine (freqAsDouble x) y) (Just 2.0)) $ zip fs gs
-
-renderAnswer f0 _ (Just Gradual) = GainSound (OverlappedSound "arbitrary" bunchOfOscillators Min) (-30)
-  where
-    fs = Prelude.filter (< 20000) $ take 200 $ fmap (* f0) [1,2 .. ] -- :: [Frequency]
-    gs = getShape Gradual
-    bunchOfOscillators = fmap (\(x,y) -> Sound $ NodeSource (OscillatorNode $ Oscillator Sine (freqAsDouble x) y) (Just 2.0)) $ zip fs gs
-
-renderAnswer f0 _ (Just Flat) = GainSound (OverlappedSound "arbitrary"  bunchOfOscillators Min) (-50)
-  where
-    fs = Prelude.filter (< 20000) $ take 200 $ fmap (* f0) [1,2 .. ] -- :: [Frequency]
-    gs = getShape Flat
-    bunchOfOscillators = fmap (\(x,y) -> Sound $ NodeSource (OscillatorNode $ Oscillator Sine (freqAsDouble x) y) (Just 2.0)) $ zip fs gs
-
-renderAnswer f0 _ (Just InverseGradual) = GainSound (OverlappedSound "arbitrary" bunchOfOscillators Min) (-30)
-  where
-    fs = reverse $ Prelude.filter (< 20000) $ take 200 $ fmap (* f0) [1,2 .. ] -- :: [Frequency]
-    gs = getShape InverseGradual
-    bunchOfOscillators = fmap (\(x,y) -> Sound $ NodeSource (OscillatorNode $ Oscillator Sine (freqAsDouble x) y) (Just 2.0)) $ zip fs gs
-
-renderAnswer f0 _ (Just InverseLinear) = GainSound (OverlappedSound "arbitrary" bunchOfOscillators Min) (-25)
-  where
-    fs = reverse $ Prelude.filter (< 20000) $ take 200 $ fmap (* f0) [1,2 .. ] -- :: [Frequency]
-    gs = getShape InverseLinear
-    bunchOfOscillators = fmap (\(x,y) -> Sound $ NodeSource (OscillatorNode $ Oscillator Sine (freqAsDouble x) y) (Just 2.0)) $ zip fs gs
-
-renderAnswer f0 _ (Just InverseSteep) = GainSound (OverlappedSound "arbitrary" bunchOfOscillators Min) (-5)
-  where
-    fs = reverse $ Prelude.filter (< 20000) $ take 200 $ fmap (* f0) [1,2 .. ] -- :: [Frequency]
-    gs = getShape InverseSteep
-    bunchOfOscillators = fmap (\(x,y) -> Sound $ NodeSource (OscillatorNode $ Oscillator Sine (freqAsDouble x) y) (Just 2.0)) $ zip fs gs
-
-renderAnswer f0 _ Nothing = NoSound
 
 displayEval :: MonadWidget t m => Dynamic t (Map Answer Score) -> m ()
 displayEval _ = return ()

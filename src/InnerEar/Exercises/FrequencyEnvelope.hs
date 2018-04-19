@@ -70,15 +70,15 @@ actualEnvelope (s,d,o) a = scaleRange (lowPitch o) (highPitch o) $ scaleDomain 0
 sampleEnvelope :: Int -> (Double -> Double) -> Duration -> [Double]
 sampleEnvelope r f d = fmap (f . (\x -> x * fromIntegral(d)/1000.0/fromIntegral(r))) $ fmap fromIntegral [0, 1 .. (r-1)]
 
-renderAnswer :: Config -> (SourceNodeSpec, Maybe Time)-> Maybe Answer -> Synth ()
-renderAnswer c@(s, d, o) _ (Just ans) = buildSynth $ do
+renderAnswer :: Map String Buffer -> Config -> (SourceNodeSpec, Maybe Time)-> Maybe Answer -> Synth ()
+renderAnswer _ c@(s, d, o) _ (Just ans) = buildSynth $ do
   let dur = Millis d
   let curve = sampleEnvelope 200 (actualEnvelope c ans) dur
   setDeletionTime $ dur + Millis 200
   oscillator Triangle (Hz 0) >>= curveToParamValue "frequency" curve (Sec 0) dur
   gain (Db $ -20)
   destination
-renderAnswer _ _ Nothing = buildSynth $ silent >> destination
+renderAnswer _ _ _ Nothing = buildSynth $ silent >> destination -- could this just be 'return ()''?
 
 displayEval :: MonadWidget t m => Dynamic t (Map Answer Score) -> m ()
 displayEval _ = return ()

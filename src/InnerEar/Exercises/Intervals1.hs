@@ -44,21 +44,23 @@ baseTone :: Frequency
 baseTone = Midi 60
 
 -- *** note: random pitches requires renderAnswer to return IO Sound instead of Sound
-renderAnswer :: Config -> (SourceNodeSpec, Maybe Time)-> Maybe Answer -> Synth ()
-renderAnswer _ _ Nothing = buildSynth $ silent >> destination
-renderAnswer _ _ (Just interval) = buildSynth $ do
+renderAnswer :: Map String Buffer -> Config -> (SourceNodeSpec, Maybe Time)-> Maybe Answer -> Synth ()
+renderAnswer _ _ _ Nothing = buildSynth $ silent >> destination
+renderAnswer _ _ _ (Just interval) = buildSynth $ do
   osc <- oscillator Triangle baseTone
   let amp = Db (-20)
   g <- rectEnv (Millis 100) (Sec 1) amp
   let firstDur = (Millis $ 2 * 100) + (Sec 1)
+  let rest = Sec 0.5
   -- Change the frequency of the oscillator after the first playback.
   setParamValue "frequency" (inHz $ fmap (+ answerToSemitones interval) baseTone) firstDur osc
   -- Reset for second note and have another rectEnv at firstDur.
-  setParamValue "gain" 0 firstDur g
-  linearRampToParamValue "gain" (inAmp amp) (firstDur + Millis 100) g
-  setParamValue "gain" (inAmp amp) (firstDur + Millis 100 + Sec 1) g
-  linearRampToParamValue "gain" 0 (firstDur + Millis (2 * 100) + Sec 1) g
+  setParamValue "gain" 0 (firstDur + rest) g
+  linearRampToParamValue "gain" (inAmp amp) (firstDur + rest + Millis 100) g
+  setParamValue "gain" (inAmp amp) (firstDur + rest + Millis 100 + Sec 1) g
+  linearRampToParamValue "gain" 0 (firstDur + rest + Millis (2 * 100) + Sec 1) g
   destination
+  setDeletionTime (firstDur*2+rest +(Sec 0.5))
 
 instructions :: MonadWidget t m => m ()
 instructions = el "div" $ do

@@ -105,7 +105,7 @@ connectGraphs' (hd:tl, completed) y
   | isComplete y = (hd:tl, y:completed)
   | hasSource y  = (y:hd:tl, completed)
   | otherwise =
-      if isComplete connected 
+      if isComplete connected
         then (tl, connected:completed)
         else (connected:tl, completed)
       where connected = connectGraphs hd y
@@ -227,6 +227,10 @@ setDeletionTime t = lift $ Synth {
     deletionTime = Just t,
     supplement = ()
   }
+
+maybeDelete:: Maybe Time -> SynthBuilder () -- move to where setDeletionTime
+maybeDelete = maybe (return ()) (setDeletionTime)
+
 
 test1 :: Synth ()
 test1 = buildSynth $ do

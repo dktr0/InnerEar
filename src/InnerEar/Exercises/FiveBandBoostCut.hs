@@ -39,19 +39,21 @@ answers :: [Answer]
 answers = [F 155 "Bass (155 Hz)",F 1125 "Low Mids (1125 Hz)",F 3000 "High Mids (3 kHz)",
   F 5000 "Presence (5 kHz)",F 13000 "Brilliance (13 kHz)"]
 
-renderAnswer :: Config -> Source -> Maybe Answer -> Sound
-renderAnswer db s f = case f of
-  (Just freq) -> GainSound (FilteredSound s $ Filter Peaking (freqAsDouble freq) 1.4 db) (-10)
-  Nothing -> GainSound (Sound s) (-10)
 
--- TODO implement this switch..
+
 renderAnswer::Map String Buffer -> Config -> (SourceNodeSpec,Maybe Time)-> Maybe Answer -> Synth ()
-renderAnswer _ db (src, dur) (Just freq) = do
+renderAnswer _ db (src, dur) (Just freq) = buildSynth $ do
+  let env = maybe (return EmptyGraph) (rectEnv (Millis 1)) dur
   createSrc src
   getEnv dur (Db $ -10)
   biquadFilter "peaking" (Hz freq) 1.4 (Db db)
+  env
   destination
-renderAnswer _ db (src, dur) _= createSrc src >> getEnv dur (Db $ -10) >> destination
+  maybeDelete (fmap (+Sec 0.2) dur)
+renderAnswer _ db (src, dur) _= buildSynth $ do
+  let env = maybe (return EmptyGraph) (rectEnv (Millis 1)) dur
+  synthSource src >> gain (Db $ -10) >> env >> destination
+  maybeDelete (fmap (+Sec 0.2) dur)
 
 instructions :: MonadWidget t m => m ()
 instructions = el "div" $ do
