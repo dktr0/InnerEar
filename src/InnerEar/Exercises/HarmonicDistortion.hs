@@ -22,7 +22,7 @@ type Config = Double -- representing threshold of clipping, and inverse of post-
 configs :: [Config]
 configs = [-12,-6,-3,-2,-1,-0.75,-0.5,-0.25,-0.1,-0.05]
 
-configMap:: Map Int (String,Config)
+configMap:: Map Int (String, Config)
 configMap = fromList $ zip [0::Int,1..] $ fmap (\x-> (show x++" dB", x)) configs
 
 data Answer = Answer Bool deriving (Eq,Ord,Data,Typeable)
@@ -32,16 +32,12 @@ instance Show Answer where
   show (Answer False) = "Not Clipped"
 
 answers = [Answer False,Answer True]
---
--- renderAnswer :: Config -> b -> Maybe Answer -> Sound
--- renderAnswer db _ (Just (Answer True)) = GainSound (ProcessedSound (Sound $ NodeSource  (OscillatorNode $ Oscillator Sine 300 0) (Just 2)) (DistortAtDb db)) (-10) -- 2.0 -- should be a sine wave clipped and normalized by db, then attenuated a standard amount (-10 dB)
--- renderAnswer db _ (Just (Answer False)) =  GainSound (Sound $ NodeSource  (OscillatorNode $ Oscillator Sine 300 0) (Just 2)) (-10) -- 2.0 -- should be a clean sine wave, just attenuated a standard amount (-10 dB)
--- renderAnswer db _ Nothing =  GainSound (Sound $ NodeSource  (OscillatorNode $ Oscillator Sine 300 0) (Just 2)) (-10)
 
-renderAnswer :: Config -> b -> Maybe Answer -> Sound
-renderAnswer db _ (Just (Answer True)) = GainSound (WaveShapedSound (Sound $ NodeSource  (OscillatorNode $ Oscillator Sine 300 0) (Just 2)) (ClipAt db)) (-10) -- 2.0 -- should be a sine wave clipped and normalized by db, then attenuated a standard amount (-10 dB)
-renderAnswer db _ (Just (Answer False)) =  GainSound (Sound $ NodeSource  (OscillatorNode $ Oscillator Sine 300 0) (Just 2)) (-10) -- 2.0 -- should be a clean sine wave, just attenuated a standard amount (-10 dB)
-renderAnswer db _ Nothing =  GainSound (Sound $ NodeSource  (OscillatorNode $ Oscillator Sine 300 0) (Just 2)) (-10)
+renderAnswer :: Config -> (SourceNodeSpec, Maybe Time)-> Maybe Answer -> Synth ()
+renderAnswer clipDb _ (Just (Answer True)) = buildSynth $
+  oscillator Sine (Hz 300) >> clipAt (Db clipDb) >> gain (Db $ -10) >> destination
+renderAnswer clipDb _ _ = buildSynth $
+  oscillator Sine (Hz 300) >> gain (Db $ -10) >> destination
 
 displayEval :: MonadWidget t m => Dynamic t (Map Answer Score) -> m ()
 displayEval = displayMultipleChoiceEvaluationGraph' "Session Performance" "" answers
