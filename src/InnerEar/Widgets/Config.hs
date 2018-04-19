@@ -20,7 +20,11 @@ import Reflex.Synth.Types
 --    one div with the class "radioConfigWidget" -> wrapping the radio configuration widget
 --    one div with the class "sourceWidget" -> wrapping the sound source selection widget
 
-configWidget:: (MonadWidget t m, Eq c) => String -> Map Int (String,Source) -> Int -> String -> Map Int (String,c) -> c -> m(Dynamic t c, Dynamic t Source, Event t (Maybe a))
+-- sourceToSourceNodeSpec :: Source -> IO SourceNodeSpec
+-- sourceToSourceNodeSpec SineOscillator' = return $ OscillatorNode Sine (Hz 300)
+-- sourceToSourceNodeSpec UserSoundFile x = mkBuffer x
+
+configWidget:: (MonadWidget t m, Eq c) => String -> Map Int (String,Source) -> Int -> String -> Map Int (String,c) -> c -> m(Dynamic t c, Dynamic t SourceNodeSpec, Event t (Maybe a))
 configWidget inputID sourceMap iSource configLabel configMap iConfig = elClass "div" "configWidget" $ do
   config <- elClass "div" "exerciseConfigWidget" $ exerciseConfigWidget configLabel configMap iConfig
   (source,playReference) <- elClass "div" "sourceWidget" $ sourceWidget inputID sourceMap iSource
@@ -35,13 +39,14 @@ exerciseConfigWidget label configMap iConfig = do
   mapDyn (\x -> snd $ fromJust $ Data.Map.lookup x configMap) $ _dropdown_value dd
 
 
-sourceWidget:: MonadWidget t m => String -> Map Int (String, Source) -> Int -> m (Dynamic t Source, Event t ())
+sourceWidget:: MonadWidget t m => String -> Map Int (String, Source) -> Int -> m (Dynamic t SourceNodeSpec, Event t ())
+
 sourceWidget inputId sourceMap iSource = mdo
   (ddSource, loadEv) <- elClass "div" "sourceSelection" $ do
     text "Sound source: "
     dd <- dropdown iSource (constDyn $ fmap fst sourceMap) $ DropdownConfig never (constDyn empty)
-    s <- mapDyn (\x-> snd $ fromJust $ Data.Map.lookup x sourceMap) $ _dropdown_value dd  -- probably a better way to do this that doesn't use 'fromJust'
-    isUserFile <- mapDyn isLoadedFile s
+    s <- mapDyn (\x-> snd $ sourceMap!!x ) $ _dropdown_value dd -- Dynamic t Source
+    isUserFile <- mapDyn isLoadedFile s -- Dynamic t Bool
     let staticAttr = fromList [("accept","audio/*"),("id",inputId)]
     inputAttrs <- mapDyn (\x-> if (not x) then Data.Map.insert "hidden" "true" staticAttr else staticAttr) isUserFile
     input <- fileInput $ FileInputConfig inputAttrs
@@ -57,10 +62,12 @@ sourceWidget inputId sourceMap iSource = mdo
     return (play, stop, l)
   source' <- combineDyn (\s l -> case s of
     (NodeSource (BufferNode (LoadedFile a (PlaybackParam s e _))) dur) -> NodeSource (BufferNode $ LoadedFile a (PlaybackParam s e l)) dur
-    otherwise -> s) source l   -- If it's a loaded file, swap the loop parameter in (no other sounds use the 'loop' thing)
+    otherwise -> s
+    ) source l   -- If it's a loaded file, swap the loop parameter in (no other sounds use the 'loop' thing)
+  -- source'' <- mapDynIO' sourceToSourceNodeSpec source' -- Dynamic t SourceNodeSpec
+  source'' <- mapDynM (liftIO . sourceToSourceNodeSpec) source' -- if this works, we don't need mapDynIO...
   performEvent $ fmap liftIO $ fmap (const $ stopNodeByID inputId) stopEv
-  return (source', playReference)
-
+  return (source'', playReference)
 
 sourceCanvasWidget:: MonadWidget t m => Dynamic t Source -> Event t String -> Event t PlaybackParam -> m (Dynamic t Source)
 sourceCanvasWidget src loadEv paramChange = elClass "div" "sourceCanvasWrapper" $  do

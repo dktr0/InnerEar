@@ -117,7 +117,7 @@ multipleChoiceQuestionWidget maxTries answers exId exInstructions cWidget render
   let questionSound = fmapMaybe id $ tagDyn answer playQuestion
   let soundsToRender = leftmost [fmap Just questionSound, fmap Just exploreEvent, playReference]
   sourceAndConfig <- combineDyn (,) dynConfig dynSource
-  let playSounds = attachDynWith (\(c,s) r->render  c s r) sourceAndConfig soundsToRender
+  let playSounds = attachDynWith (\(c,(sns,mt)) r->render  c (sns,mt) r) sourceAndConfig soundsToRender
 
   let navEvents = leftmost [closeExercise,nextQuestionNav]
 
