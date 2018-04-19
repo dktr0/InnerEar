@@ -5,23 +5,23 @@ module Reflex.Synth.Spec where
 import GHCJS.Marshal.Pure
 import GHCJS.Types
 
-import qualified Reflex.Synth.AudioRoutingGraph as Js(Float32Array,Buffer)
+import Reflex.Synth.AudioRoutingGraph
 
 data SourceNodeSpec
   = Silent
-  | Oscillator OscillatorType Frequency
-  | Buffer Js.Buffer BufferParams
+  | OscillatorNode OscillatorType Frequency
+  | AudioBufferSourceNode Buffer BufferParams
   deriving (Show)
 
 data SourceSinkNodeSpec
   = Filter FilterSpec
   -- Convolver buffer normalize
-  | Convolver (Either Js.Float32Array FloatArraySpec) Bool
+  | Convolver (Either Float32Array FloatArraySpec) Bool
   | Delay Time
   -- Compressor threshold knee ratio reduction attack release
   | Compressor Amplitude Amplitude Amplitude Gain Time Time
   | Gain Gain
-  | WaveShaper (Either Js.Float32Array FloatArraySpec) OversampleAmount
+  | WaveShaper (Either Float32Array FloatArraySpec) OversampleAmount
   | DistortAt Amplitude
   deriving (Show)
 
@@ -29,11 +29,11 @@ data SinkNodeSpec
   = Destination
   deriving (Show)
 
-data OscillatorType 
+data OscillatorType
   = Sine
   | Square
   | Sawtooth
-  | Triangle 
+  | Triangle
   deriving (Show, Eq)
 
 data BufferParams = BufferParams Double Double Bool deriving (Show, Eq)

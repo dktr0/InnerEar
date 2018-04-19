@@ -37,12 +37,17 @@ instance Buttonable Answer where
 
 answers = [Answer False,Answer True]
 
-renderAnswer :: Config -> (SourceNodeSpec, Maybe Time)-> Maybe Answer -> Synth ()
-renderAnswer clipDb _ (Just (Answer True)) = buildSynth $
-  oscillator Sine (Hz 300) >> clipAt (Db clipDb) >> gain (Db $ -10) >> destination
-renderAnswer clipDb _ _ = buildSynth $
-  oscillator Sine (Hz 300) >> gain (Db $ -10) >> destination
+renderAnswer :: Map String Buffer -> Config -> (SourceNodeSpec, Maybe Time)-> Maybe Answer -> Synth ()
+renderAnswer _ clipDb (src,dur) (Just (Answer True)) = buildSynth $ do
+  let env = maybe (return EmptyGraph) (rectEnv (Millis 1)) dur
+  synthSource src >> clipAt (Db clipDb) >> gain (Db $ -10) >> env >> destination
+  maybeDelete (fmap (+Sec 0.2) dur)
+renderAnswer _ clipDb (src,dur) _ = buildSynth $ do
+  let env = maybe (return EmptyGraph) (rectEnv (Millis 1)) dur
+  synthSource src >> gain (Db $ -10) >> env >> destination
+  maybeDelete (fmap (+Sec 0.2) dur)
 
+  
 displayEval :: MonadWidget t m => Dynamic t (Map Answer Score) -> m ()
 displayEval = displayMultipleChoiceEvaluationGraph' "Session Performance" "" answers
 

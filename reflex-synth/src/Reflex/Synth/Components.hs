@@ -4,13 +4,12 @@ import Reflex.Synth.Graph
 import Reflex.Synth.Spec
 import GHCJS.Prim(toJSString)
 
-import qualified Reflex.Synth.AudioRoutingGraph as Js(Buffer)
-import Reflex.Synth.AudioRoutingGraph hiding (Buffer)
+import Reflex.Synth.AudioRoutingGraph
 
-mkBuffer :: String -> IO Js.Buffer
+mkBuffer :: String -> IO Buffer
 mkBuffer url = js_newBuffer $ toJSString url
 
-isBufferLoaded :: Js.Buffer -> IO Bool
+isBufferLoaded :: Buffer -> IO Bool
 isBufferLoaded = js_isBufferLoaded
 
 
@@ -22,8 +21,8 @@ silent = synthSource Silent
 oscillator :: OscillatorType -> Frequency -> SynthBuilder Graph
 oscillator oscType freq = synthSource $ Oscillator oscType freq
 
-audioBufferSource :: Js.Buffer -> BufferParams -> SynthBuilder Graph
-audioBufferSource b p = synthSource $ Buffer b p
+audioBufferSource :: Buffer -> BufferParams -> SynthBuilder Graph
+audioBufferSource b p = synthSource $ AudioBufferSourceNode b p
 
 
 biquadFilfer :: FilterSpec -> SynthBuilder Graph

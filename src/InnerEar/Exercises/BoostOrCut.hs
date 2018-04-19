@@ -45,14 +45,17 @@ instructions = el "div" $ do
   elClass "div" "instructionsText" $ text "In this exercise you are either played a sound at an original/reference level, or a version of the sound that has been increased (boosted) or decreased (cut/attenuated) in level by a certain amount of dB of gain (positive dB for boost, negative dB for cut). When the amount of boost or cut is great, it is easier to tell the difference between the boosted/cut and reference/unchanged sound. The object of the exercise is to see how small you can make the difference while still being able to tell the two conditions apart."
   elClass "div" "instructionsText" $ text "Hint: before or after pressing Listen to hear the question, press 'Listen to Reference Sound' to hear the sound to which you are comparing the question sound."
 
-renderAnswer :: Config -> Source -> Maybe Answer -> Sound
-renderAnswer db s (Just (Answer True)) = GainSound (Sound s) (-10+db) -- 2.0 -- should be a source sound, attenuated by a standard amount (-10 dB) then boosted by dB
-renderAnswer _ s (Just (Answer False)) = GainSound (Sound s) (-10)-- 2.0 -- should be just a source sound attenuated by standard amount (-10 dB)
-renderAnswer db s Nothing = GainSound (Sound s) (-10)
--- TODO finish this switch
+
 renderAnswer::Map String Buffer -> Config -> (SourceNodeSpec,Maybe Time)-> Maybe Answer -> Synth ()
-renderAnswer _ db (src, dur) (Just (Answer True)) = createSrc >> getEnv dur (Db (-10+db)) >> destination
-renderAnswer _ _ (src, dur) _ = createSrc >> getEnv dur (Db $ -10) >> destination
+renderAnswer _ db (src, dur) (Just (Answer True)) = buildSynth $ do
+  let env = maybe (return EmptyGraph) (rectEnv (Millis 1)) dur
+  synthSource src >> gain (Db (-10+db)) >> env >> destination
+  maybeDelete (fmap (+Sec 0.2) dur)
+renderAnswer _ _ (src, dur) _ = buildSynth $ do
+  let env = maybe (return EmptyGraph) (rectEnv (Millis 1)) dur
+  synthSource src >> gain (Db $ -10) >> env >> destination
+  maybeDelete (fmap (+Sec 0.2) dur)
+
 
 displayEval :: MonadWidget t m => Dynamic t (Map Answer Score) -> m ()
 displayEval = displayVerticalMultipleChoiceEvaluationGraph "" "" answers
