@@ -119,16 +119,104 @@ button {
   font-size: 100%;
 }
 
+.clickableDivWrapper {
+  display: inline-block;
+  text-align: center;
+}
+
+.notPossibleButtonClickableDiv {
+  background-color: transparent;
+  border: none;
+  color: lightgray;
+  padding: 15px 32px;
+  text-align: center;
+  text-decoration: none;
+  font-size: 14px;
+    margin: 4px 2px;
+    cursor: context-menu;
+      border-radius: 4px;
+      box-shadow: 0 0 5px -1px rgba(0,0,0,0.2);
+
+}
+
+.possibleButtonClickableDiv {
+  background-color: #e7e7e7;
+  border: none;
+  color: black;
+  padding: 15px 32px;
+  text-align: center;
+  text-decoration: none;
+  font-size: 14px;
+    margin: 4px 2px;
+    cursor: context-menu;
+      border-radius: 4px;
+      box-shadow: 0 0 5px -1px rgba(0,0,0,0.2);
+
+}
+
+.possibleButtonClickableDiv:active {
+  transform: translateY(10px);
+};
+
+.incorrectDisactivatedButtonClickableDiv{
+  background-color: red;
+  border: none;
+  color: black;
+  padding: 15px 32px;
+  text-align: center;
+  text-decoration: none;
+  font-size: 14px;
+  margin: 4px 2px;
+  cursor: not-allowed;
+  border-radius: 4px;
+  box-shadow: 0 0 5px -1px rgba(0,0,0,0.2)
+}
+
+
+
+.correctButtonClickableDiv {
+  background-color: green;
+  border: none;
+  color: lightgray;
+  padding: 15px 32px;
+  text-align: center;
+  text-decoration: none;
+  font-size: 14px;
+    margin: 4px 2px;
+    cursor: context-menu;
+      border-radius: 4px;
+      box-shadow: 0 0 5px -1px rgba(0,0,0,0.2);
+}
+
+.correctButtonClickableDiv:active {
+  transform: translateY(10px);
+}
+
+.incorrectActivatedButtonClickableDiv {
+  background-color: red;
+    border: none;
+  color: black;
+  padding: 15px 32px;
+  text-align: center;
+  text-decoration: none;
+  font-size: 14px;
+    margin: 4px 2px;
+    cursor: context-menu;
+      border-radius: 4px;
+      box-shadow: 0 0 5px -1px rgba(0,0,0,0.2);
+}
+
+.incorrectActivatedButtonClickableDiv:active {
+  transform: translateY(10px);
+}
 
 
 .buttonWrapper {
   display: inline-block;
   text-align: center;
 }
-
-
-
 button.notPossibleButton{
+
   border: none;
   background-color: black;
   color: darkgray;
@@ -223,9 +311,13 @@ button.correctButton{
   background-color: hsl(120,100%,80%);
 }
 
+.makeButtonContainer{
+  display: flex;
+  background:transparent;
+}
+
 .shapeContainer {
-  width: 50%;
-  height: 300px;
+  display: flex;
   transform: rotate(270deg);
   background-color: transparent;
   position: relative;
@@ -246,6 +338,8 @@ button.correctButton{
   fill: none;
   stroke:hsl(120,100%,80%);
   stroke-width:3;
+  position: relative;
+
 }
 
 .faintedLineToAdjustGraph {
