@@ -22,7 +22,7 @@ oscillator :: OscillatorType -> Frequency -> SynthBuilder Graph
 oscillator oscType freq = synthSource $ Oscillator oscType freq
 
 audioBufferSource :: Buffer -> BufferParams -> SynthBuilder Graph
-audioBufferSource b p = synthSource $ AudioBufferSourceNode b p
+audioBufferSource b p = synthSource $ AudioBufferSource b p
 
 
 biquadFilfer :: FilterSpec -> SynthBuilder Graph

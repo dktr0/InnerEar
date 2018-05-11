@@ -9,8 +9,8 @@ import Reflex.Synth.AudioRoutingGraph
 
 data SourceNodeSpec
   = Silent
-  | OscillatorNode OscillatorType Frequency
-  | AudioBufferSourceNode Buffer BufferParams
+  | Oscillator OscillatorType Frequency
+  | AudioBufferSource Buffer BufferParams
   deriving (Show)
 
 data SourceSinkNodeSpec

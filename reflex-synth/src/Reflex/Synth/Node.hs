@@ -101,7 +101,7 @@ instantiateSourceNode (Oscillator t f) ctx = do
   setJSField osc "type" t
   setFrequencyHz osc f ctx
   return $ OscillatorNode osc
-instantiateSourceNode (Buffer smartBuffer params@(BufferParams loopstart loopend loop)) ctx = do
+instantiateSourceNode (AudioBufferSource smartBuffer params@(BufferParams loopstart loopend loop)) ctx = do
   src <- js_createBufferSource ctx
   isLoaded <- js_isBufferLoaded smartBuffer
   if isLoaded then do
