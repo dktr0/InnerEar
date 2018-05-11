@@ -13,13 +13,11 @@ import InnerEar.Widgets.SpecEval
 import InnerEar.Types.Data
 import InnerEar.Types.Score
 import Reflex.Synth.Synth
-import Reflex.Synth.Types
 import InnerEar.Types.Exercise
 import InnerEar.Types.ExerciseId
 import InnerEar.Types.Frequency
 import InnerEar.Exercises.MultipleChoice
 import InnerEar.Widgets.Config
-import InnerEar.Widgets.UserMedia
 import InnerEar.Widgets.Utility (radioWidget, safeDropdown)
 import InnerEar.Widgets.AnswerButton
 
@@ -100,7 +98,7 @@ sourcesMap:: Map Int (String,Source)
 sourcesMap = fromList $ zip [0::Int,1..] [("Pink noise",NodeSource (BufferNode $ File "pinknoise.wav") (Just 2)), ("White noise", NodeSource (BufferNode $ File "whitenoise.wav") (Just 2)), ("Load a soundfile", NodeSource (BufferNode $ LoadedFile "tenBandBoostCutExercise" (PlaybackParam 0 1 False)) Nothing)]
 
 -- temporary until config widget is changed to take a list/map of config parameters that can be changed
-tenBandsConfigWidget::MonadWidget t m => Config -> m (Dynamic t Config,  Dynamic t Source,  Event t (Maybe a)) -- dyn config, source, and event maybe answer for playing reference sound (config widget
+tenBandsConfigWidget :: MonadWidget t m => Config -> m (Dynamic t Config,  Dynamic t Source,  Event t (Maybe a)) -- dyn config, source, and event maybe answer for playing reference sound (config widget
 tenBandsConfigWidget c =  elClass "div" "configWidget" $ do
   config <- elClass "div" "tenBandsConfigWidget" $ do
     text "Spectrum Range: "

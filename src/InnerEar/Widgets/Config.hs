@@ -11,9 +11,8 @@ import Reflex.Dom
 import Control.Monad (liftM)
 
 import InnerEar.Widgets.Canvas
-import InnerEar.Widgets.UserMedia
-import InnerEar.Widgets.Utility(radioWidget,elClass', hideableWidget)
-import Reflex.Synth.Types
+import InnerEar.Widgets.Utility(radioWidget, elClass', hideableWidget)
+import Reflex.Synth.Spec
 
 
 -- Verify this but for css styling, what goes in the config panel is 1 div with class "configWidget" and 2 internal divs:
@@ -24,13 +23,13 @@ import Reflex.Synth.Types
 -- sourceToSourceNodeSpec SineOscillator' = return $ OscillatorNode Sine (Hz 300)
 -- sourceToSourceNodeSpec UserSoundFile x = mkBuffer x
 
-configWidget:: (MonadWidget t m, Eq c) => String -> Map Int (String,Source) -> Int -> String -> Map Int (String,c) -> c -> m(Dynamic t c, Dynamic t SourceNodeSpec, Event t (Maybe a))
+configWidget :: (MonadWidget t m, Eq c) => String -> Map Int (String, Source) -> Int -> String -> Map Int (String,c) -> c -> m (Dynamic t c, Dynamic t SourceNodeSpec, Event t (Maybe a))
 configWidget inputID sourceMap iSource configLabel configMap iConfig = elClass "div" "configWidget" $ do
   config <- elClass "div" "exerciseConfigWidget" $ exerciseConfigWidget configLabel configMap iConfig
   (source,playReference) <- elClass "div" "sourceWidget" $ sourceWidget inputID sourceMap iSource
   return (config, source, Nothing <$ playReference)
 
-exerciseConfigWidget::(MonadWidget t m,Eq c)=> String -> Map Int (String,c) -> c -> m (Dynamic t c)
+exerciseConfigWidget :: (MonadWidget t m, Eq c) => String -> Map Int (String,c) -> c -> m (Dynamic t c)
 exerciseConfigWidget label configMap iConfig = do
   let index = maybe 0 id $ foldrWithKey (\k v b -> if (isJust b) then b else if (snd v == iConfig) then Just k else Nothing) Nothing configMap --uhg
   let ddConfig = DropdownConfig never (constDyn empty)
@@ -39,8 +38,7 @@ exerciseConfigWidget label configMap iConfig = do
   mapDyn (\x -> snd $ fromJust $ Data.Map.lookup x configMap) $ _dropdown_value dd
 
 
-sourceWidget:: MonadWidget t m => String -> Map Int (String, Source) -> Int -> m (Dynamic t SourceNodeSpec, Event t ())
-
+sourceWidget :: MonadWidget t m => String -> Map Int (String, Source) -> Int -> m (Dynamic t SourceNodeSpec, Event t ())
 sourceWidget inputId sourceMap iSource = mdo
   (ddSource, loadEv) <- elClass "div" "sourceSelection" $ do
     text "Sound source: "
@@ -69,7 +67,7 @@ sourceWidget inputId sourceMap iSource = mdo
   performEvent $ fmap liftIO $ fmap (const $ stopNodeByID inputId) stopEv
   return (source'', playReference)
 
-sourceCanvasWidget:: MonadWidget t m => Dynamic t Source -> Event t String -> Event t PlaybackParam -> m (Dynamic t Source)
+sourceCanvasWidget :: MonadWidget t m => Dynamic t Source -> Event t String -> Event t PlaybackParam -> m (Dynamic t Source)
 sourceCanvasWidget src loadEv paramChange = elClass "div" "sourceCanvasWrapper" $  do
   (canvas,_) <- elClass' "canvas" "waveformCanvas" (return ())
   let canvasElement = _el_element canvas
@@ -80,7 +78,7 @@ sourceCanvasWidget src loadEv paramChange = elClass "div" "sourceCanvasWrapper" 
   range <- rangeSelect isLF (0,1)
   combineDyn (\s (b,e) -> case s of (NodeSource (BufferNode (LoadedFile s (PlaybackParam _ _ l))) dur) -> NodeSource (BufferNode $ LoadedFile s (PlaybackParam b e l)) dur; otherwise -> s) src range
 
-sineSourceConfig::(MonadWidget t m) => String -> Map String Double -> Double -> m (Dynamic t Double, Dynamic t Source, Event t (Maybe a))
+sineSourceConfig :: (MonadWidget t m) => String -> Map String Double -> Double -> m (Dynamic t Double, Dynamic t Source, Event t (Maybe a))
 sineSourceConfig inputID configMap iConfig = elClass "div" "configWidget" $ do
   config <- elClass "div" "radioConfigWidget" $ do
     text "Exercise Configuration:  "

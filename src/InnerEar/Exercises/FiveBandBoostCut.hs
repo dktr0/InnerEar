@@ -15,12 +15,10 @@ import InnerEar.Widgets.SpecEval
 import InnerEar.Types.Data
 import InnerEar.Types.Score
 import Reflex.Synth.Synth
-import Reflex.Synth.Types
 import InnerEar.Types.Exercise
 import InnerEar.Types.ExerciseId
 import InnerEar.Types.Frequency
 import InnerEar.Exercises.MultipleChoice
-import InnerEar.Widgets.UserMedia
 import InnerEar.Widgets.AnswerButton
 
 type Config = Double

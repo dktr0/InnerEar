@@ -11,12 +11,9 @@ import InnerEar.Types.Data
 import InnerEar.Types.User
 import InnerEar.Types.Handle
 import InnerEar.Widgets.Utility
-import Reflex.Synth.Types
-import Reflex.Synth.Synth
-
 
 userPageWidget :: MonadWidget t m
-  => Handle -> Event t [Response] -> Dynamic t (Maybe Role) -> m (Event t Request,Event t ())
+  => Handle -> Event t [Response] -> Dynamic t (Maybe Role) -> m (Event t Request, Event t ())
 userPageWidget h responses currentRole = elClass "div" "excerciseWrapper" $ do
 
   backButton <- divClass "" $ do

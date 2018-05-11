@@ -6,7 +6,7 @@ import Reflex
 
 import InnerEar.Types.ExerciseId
 import InnerEar.Types.Data
-import Reflex.Synth.Types
+import Reflex.Synth.Synth
 import InnerEar.Types.ExerciseNavigation
 
 -- | An Exercise is a uniquely typed value representing all of the components of
@@ -20,6 +20,6 @@ data Exercise t m c q a e = Exercise {
   defaultConfig :: c,
   defaultEvaluation :: e,
   displayEvaluation :: Dynamic t e -> m (),
-  generateQuestion :: c -> [ExerciseDatum] -> IO (q,a),
-  questionWidget ::  c -> e -> Event t (q,a) -> m (Event t ExerciseDatum,Event t Sound, Event t c,Event t ExerciseNavigation)
+  generateQuestion :: c -> [ExerciseDatum] -> IO (q, a),
+  questionWidget :: c -> e -> Event t (q, a) -> m (Event t ExerciseDatum, Event t (Synth s), Event t c, Event t ExerciseNavigation)
 }

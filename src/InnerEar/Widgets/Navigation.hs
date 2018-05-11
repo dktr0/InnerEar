@@ -17,7 +17,6 @@ import InnerEar.Widgets.CreateUser
 import InnerEar.Widgets.Sound
 import InnerEar.Widgets.Test
 import Reflex.Synth.Synth
-import Reflex.Synth.Types
 import InnerEar.Types.Exercise
 import InnerEar.Types.ExerciseId
 import InnerEar.Widgets.Exercise
@@ -47,10 +46,9 @@ data Navigation =
   AdminPage |
   UserListPage |
   UserPage Handle |
-  TestPage |
-  TestSoundPage
+  TestPage
 
-navigationWidget :: MonadWidget t m => Event t [Response] -> Dynamic t (Maybe Role) -> m (Event t Request,Event t (Synth s1))
+navigationWidget :: MonadWidget t m => Event t [Response] -> Dynamic t (Maybe Role) -> m (Event t Request, Event t (Synth s1))
 navigationWidget responses currentRole = elClass "div" "mainBody" $ mdo
   let initialPage = navigationPage responses currentRole SplashPage
   let rebuild = fmap (navigationPage responses currentRole) navEvents
@@ -79,8 +77,7 @@ buttonForExercise x = elClass "div" "navButton" $ do
   y <- button (showExerciseTitle x)
   return $ fmap (\_ -> ExercisePage x) y
 
-navigationPage :: MonadWidget t m => Event t [Response] -> Dynamic t (Maybe Role) -> Navigation -> m (Event t Request,Event t (Synth s1),Event t Navigation)
-
+navigationPage :: MonadWidget t m => Event t [Response] -> Dynamic t (Maybe Role) -> Navigation -> m (Event t Request, Event t (Synth s1), Event t Navigation)
 navigationPage responses currentRole SplashPage = elClass "div" "nav" $ do
   elClass "div" "explanation" $
     text "Welcome to Inner Ear! Select an ear-training exercise from the list below. If you are doing this is part of a requirement for a class, please make sure you are logged in first (at the top right)."
@@ -129,10 +126,6 @@ navigationPage responses currentRole TestPage = do
   (requests,sounds,navUnit) <- testWidget responses
   return (requests,sounds,SplashPage <$ navUnit)
 
-navigationPage responses currentRole TestSoundPage = do
-  (requests,sounds,navUnit) <- testSoundWidget responses
-  return (requests,sounds,SplashPage <$ navUnit)
-
 navigationPage responses currentRole AdminPage = do
   goToUserList <- (UserListPage <$) <$> button "Users"
   goToSplashPage <- (SplashPage <$) <$> button "Back to homepage"
@@ -152,7 +145,7 @@ navigationPage responses currentRole (UserPage h) = do
 runExerciseForNavigationPage :: (MonadWidget t m, Data c, Data q, Data a, Data e, Show c, Show q, Show a, Show e)
   => Exercise t m c q a e
   -> Event t [Response] -> Dynamic t (Maybe Role)
-  -> m (Event t Request,Event t Sound,Event t Navigation)
+  -> m (Event t Request, Event t (Synth s), Event t Navigation)
 runExerciseForNavigationPage ex responses currentRole = do
   (newData,sounds,navUnit) <- runExercise ex responses
   currentRole' <- mapDyn isJust currentRole
