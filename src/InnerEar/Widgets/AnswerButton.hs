@@ -7,7 +7,6 @@ import Control.Monad
 import Data.Bool
 import GHCJS.DOM.EventM
 
-
 import InnerEar.Widgets.Utility
 import InnerEar.Widgets.Bars
 
@@ -26,9 +25,8 @@ class Buttonable a where
 showAnswerButton :: (MonadWidget t m, Show a) => a -> Dynamic t AnswerButtonMode -> m (Event t a)
 showAnswerButton a m = answerButton (show a) m a
 
-showAnswerButton' :: (MonadWidget t m, Show a) => a -> Dynamic t AnswerButtonMode -> m b -> m (Event t a)
-showAnswerButton' a m children = answerButtonWChild (show a) m a children
-
+answerButtonWChild :: (MonadWidget t m, Show a) => a -> Dynamic t AnswerButtonMode -> m b -> m (Event t a)
+answerButtonWChild a m children = answerButtonWChild' (show a) m a children
 
 revealableButton :: MonadWidget t m => String -> String -> Dynamic t Bool -> m (Event t ())
 revealableButton label classWhenVisible isVisible = do
@@ -59,8 +57,8 @@ answerButton buttonString buttonMode a = do
     f (IncorrectDisactivated) _ = Nothing
     f a b = Just b
 
-answerButtonWChild :: MonadWidget t m => String -> Dynamic t AnswerButtonMode -> a -> m b -> m (Event t a)
-answerButtonWChild buttonString buttonMode a children = elClass "div" "clickableDivWrapper" $ do
+answerButtonWChild' :: MonadWidget t m => String -> Dynamic t AnswerButtonMode -> a -> m b -> m (Event t a)
+answerButtonWChild' buttonString buttonMode a children = elClass "div" "clickableDivWrapper" $ do
   c <- mapDyn modeToClassClickableDivButton buttonMode
   ev <-  liftM (a <$) $ buttonDiv buttonString c children
   return $ attachWithMaybe f (current buttonMode) ev

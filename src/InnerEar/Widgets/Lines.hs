@@ -10,6 +10,7 @@ import Data.Maybe (isJust)
 import InnerEar.Widgets.Utility
 import InnerEar.Widgets.Labels
 import InnerEar.Types.Score
+import InnerEar.Widgets.AnswerButton
 
 --a helper function to take the parenthesis out
 replaceEach ::  String -> String
@@ -25,7 +26,6 @@ listToString :: [(Double,Double)] -> String
 -- listToString (x:xs) = concat [replaceEach $ show $ x, " ", listToString xs]
 
 listToString xs = concat $ Prelude.map (\(x,y) -> show x ++ "," ++ show y ++ " ") xs
-
 --a helper function to get "x,y x,y"
 listToString' :: [Double] -> String
 listToString' [] = []
@@ -41,13 +41,15 @@ shapeLine c listOfPoints = do
       attrs <- mconcatDyn [c', points]
       svgDynAttr "polyline" attrs $ return ()
 
-shapeLine' ::  MonadWidget t m => String -> [(Double, Double)] -> m ()
-shapeLine' c listOfPoints = do
+shapeLine' ::  MonadWidget t m => String -> Dynamic t AnswerButtonMode -> [(Double, Double)]  -> m ()
+shapeLine' c  buttonMode listOfPoints = do
+    dc <- mapDyn modeToClass buttonMode
+    dc' <- mapDyn (singleton "class") dc
+    --  svgDynAttr "svg" dc' $ do
     svgClass "svg" "shapeContainer" $ do
       let listOfPoints' = listToString listOfPoints
       let c' = singleton "class" c
       let points = singleton "points" listOfPoints'
       let attrs = mconcat [c',points]
       svgAttr "polyline" attrs $ return ()
-
 --instructions dynamic t c

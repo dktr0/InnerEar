@@ -29,34 +29,27 @@ type Config = Frequency -- represents fundamental frequency for sound generation
 configs :: [Config]
 configs = [F 100 "100 Hz",F 200 "200 Hz", F 400 "400 Hz", F 800 "800 Hz", F 1600 "1600Hz", F 3200 "3200Hz"]
 
-data Answer = Steep | Linear | Gradual | Flat | InverseGradual | InverseLinear | InverseSteep
+data Answer = Steep | Linear | Gradual | Flat | InvGradual | InvLinear | InvSteep
   deriving (Eq,Ord,Data,Typeable,Show)
 
   --ampdb :: Double -> Double
   --ampdb x = 20 * (logBase 10 x)
 
 instance Buttonable Answer where
-  makeButton a m = answerButtonWChild (show a) m a $ do
-    --  let xAndYPoints = zip (getShape' a) [1 .. 120]
-      let xAndYPoints = zip (fmap (*100) (fmap dbamp $ (getShape a))) [1, 2 .. 130]
-      elClass "div" "makeButtonContainer" $ shapeLine' "polyline" xAndYPoints
-      {--  makeButton a m = clickableDiv (constDyn "someClass") a $ do
-    elClass "div" "someClass" $ text (show a)
-    let xAndYPoints = zip (getShape' a) [1 .. 120]
-    elClass "div" "makeButtonContainer" $ shapeLine' "polyline" xAndYPoints
-    --elClass "div" "someClass" $ shapeLine' "polyline" [(0,0),(1,1),(2,2),(3,3),(4,4),(5,5),(6,6),(7,7),(8,8),(9,9),(10,10),(11,11),(12,12),(13,13),(14,14),(15,15),(16,16),(17,17),(18,18),(19,19),(20,20),(21,21),(22,22),(23,23),(24,24),(25,25)]
-    return ()
---}
-answers = [Steep,Linear,Gradual,Flat,InverseGradual,InverseLinear,InverseSteep]
+  makeButton a m = answerButtonWChild a m $
+      shapeLine' "polyline" m $ zip (fmap (*100) (fmap dbamp $ (getShape a))) [1, 2 .. 100]
+
+answers = [Steep,Linear,Gradual,Flat,InvGradual,InvLinear,InvSteep]
+
 
 getShape :: Answer -> [Double]
 getShape Steep = fmap (ampdb . (\x -> 1/(x*x))) [1,2 .. 200]
 getShape Linear = fmap (ampdb . (\x -> 1/x)) [1,2 .. 200]
 getShape Gradual = fmap (ampdb . (\x -> 1/sqrt x)) [1,2 .. 200]
 getShape Flat = fmap (ampdb . (\x -> 1)) [1,2 .. 200]
-getShape InverseGradual = reverse $ fmap (ampdb . (\x -> 1/sqrt x)) [1,2 .. 130]
-getShape InverseLinear =  reverse $ fmap (ampdb . (\x -> 1/x))  [1,2 .. 130]
-getShape InverseSteep =  reverse $ fmap (ampdb . (\x -> 1/(x*x))) [1,2 .. 130]
+getShape InvGradual =  reverse $ fmap (ampdb . (\x -> 1/sqrt x)) [1,2 .. 100]
+getShape InvLinear = reverse $ fmap (ampdb . (\x -> 1/x))  [1,2 .. 100]
+getShape InvSteep = reverse $ fmap (ampdb . (\x -> 1/(x*x))) [1,2 .. 100]
 
 
 renderAnswer :: Config -> Source -> Maybe Answer -> Sound
@@ -85,22 +78,22 @@ renderAnswer f0 _ (Just Flat) = GainSound (OverlappedSound "arbitrary" $ bunchOf
     gs = getShape Flat
     bunchOfOscillators = fmap (\(x,y) -> Sound $ NodeSource (OscillatorNode $ Oscillator Sine (freqAsDouble x) y) (Just 2.0)) $ zip fs gs
 
-renderAnswer f0 _ (Just InverseGradual) = GainSound (OverlappedSound "arbitrary" $ bunchOfOscillators) (-30)
+renderAnswer f0 _ (Just InvGradual) = GainSound (OverlappedSound "arbitrary" $ bunchOfOscillators) (-30)
   where
     fs = Prelude.filter (< 20000) $ take 200 $ fmap (* f0) [1,2 .. ] -- :: [Frequency]
-    gs = getShape InverseGradual
+    gs = getShape InvGradual
     bunchOfOscillators = fmap (\(x,y) -> Sound $ NodeSource (OscillatorNode $ Oscillator Sine (freqAsDouble x) y) (Just 2.0)) $ zip fs gs
 
-renderAnswer f0 _ (Just InverseLinear) = GainSound (OverlappedSound "arbitrary" $ bunchOfOscillators) (-25)
+renderAnswer f0 _ (Just InvLinear) = GainSound (OverlappedSound "arbitrary" $ bunchOfOscillators) (-25)
   where
     fs = Prelude.filter (< 20000) $ take 200 $ fmap (* f0) [1,2 .. ] -- :: [Frequency]
-    gs = getShape InverseLinear
+    gs = getShape InvLinear
     bunchOfOscillators = fmap (\(x,y) -> Sound $ NodeSource (OscillatorNode $ Oscillator Sine (freqAsDouble x) y) (Just 2.0)) $ zip fs gs
 
-renderAnswer f0 _ (Just InverseSteep) = GainSound (OverlappedSound "arbitrary" $ bunchOfOscillators) (-5)
+renderAnswer f0 _ (Just InvSteep) = GainSound (OverlappedSound "arbitrary" $ bunchOfOscillators) (-5)
   where
     fs = Prelude.filter (< 20000) $ take 200 $ fmap (* f0) [1,2 .. ] -- :: [Frequency]
-    gs = getShape InverseSteep
+    gs = getShape InvSteep
     bunchOfOscillators = fmap (\(x,y) -> Sound $ NodeSource (OscillatorNode $ Oscillator Sine (freqAsDouble x) y) (Just 2.0)) $ zip fs gs
 
 renderAnswer f0 _ Nothing = NoSound
