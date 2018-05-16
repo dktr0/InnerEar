@@ -25,8 +25,8 @@ class Buttonable a where
 showAnswerButton :: (MonadWidget t m, Show a) => a -> Dynamic t AnswerButtonMode -> m (Event t a)
 showAnswerButton a m = answerButton (show a) m a
 
-answerButtonWChild :: (MonadWidget t m, Show a) => a -> Dynamic t AnswerButtonMode -> m b -> m (Event t a)
-answerButtonWChild a m children = answerButtonWChild' (show a) m a children
+--answerButtonWChild :: MonadWidget t m => a -> Dynamic t AnswerButtonMode -> m b -> m (Event t a)
+--answerButtonWChild a m children = answerButtonWChild' (show a) m a children
 
 revealableButton :: MonadWidget t m => String -> String -> Dynamic t Bool -> m (Event t ())
 revealableButton label classWhenVisible isVisible = do
@@ -46,6 +46,11 @@ buttonDiv label cssClass children =  do
   children
   return $ domEvent Click element  -- domEvent :: EventName en -> a -> Event t (EventResultType en)
 
+buttonDiv' :: MonadWidget t m => Dynamic t String -> m b -> m(Event t ())
+buttonDiv' cssClass children =  do
+  cssClass' <- mapDyn (singleton "class") cssClass
+  (element, _) <- elDynAttr' "div" cssClass' $ children
+  return $ domEvent Click element  -- domEvent :: EventName en -> a -> Event t (EventResultType en)
 
 answerButton :: MonadWidget t m => String -> Dynamic t AnswerButtonMode -> a -> m (Event t a)
 answerButton buttonString buttonMode a = do
@@ -57,10 +62,10 @@ answerButton buttonString buttonMode a = do
     f (IncorrectDisactivated) _ = Nothing
     f a b = Just b
 
-answerButtonWChild' :: MonadWidget t m => String -> Dynamic t AnswerButtonMode -> a -> m b -> m (Event t a)
-answerButtonWChild' buttonString buttonMode a children = elClass "div" "clickableDivWrapper" $ do
+answerButtonWChild :: MonadWidget t m => a -> Dynamic t AnswerButtonMode ->  m b -> m (Event t a)
+answerButtonWChild a buttonMode children = elClass "div" "clickableDivWrapper" $ do
   c <- mapDyn modeToClassClickableDivButton buttonMode
-  ev <-  liftM (a <$) $ buttonDiv buttonString c children
+  ev <-  liftM (a <$) $ buttonDiv' c children
   return $ attachWithMaybe f (current buttonMode) ev
   where
     f (NotPossible) _ = Nothing

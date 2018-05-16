@@ -36,8 +36,9 @@ data Answer = Steep | Linear | Gradual | Flat | InvGradual | InvLinear | InvStee
   --ampdb x = 20 * (logBase 10 x)
 
 instance Buttonable Answer where
-  makeButton a m = answerButtonWChild a m $
-      shapeLine' "polyline" m $ zip (fmap (*100) (fmap dbamp $ (getShape a))) [1, 2 .. 100]
+  makeButton a m = answerButtonWChild a m $ do
+      text (show a)
+      shapeLine' "polyline" m $ zip (fmap (*50) (fmap dbamp $ (getShape a))) [1, 2 .. 100]
 
 answers = [Steep,Linear,Gradual,Flat,InvGradual,InvLinear,InvSteep]
 
