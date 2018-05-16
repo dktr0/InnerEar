@@ -10,19 +10,28 @@ newtype AudioParam = AudioParam JSVal
 newtype AudioBuffer = AudioBuffer JSVal
 newtype Float32Array = Float32Array JSVal
 newtype Buffer = Buffer JSVal
+newtype ArrayBuffer = ArrayBuffer JSVal
 
 instance Show WebAudioContext where show _ = "WebAudioContext"
 instance Show AudioParam where show _ = "AudioParam"
 instance Show AudioBuffer where show _ = "AudioBuffer"
 instance Show Float32Array where show _ = "Float32Array"
 instance Show Buffer where show _ = "Buffer"
+instance Show ArrayBuffer where show _ = "ArrayBuffer"
 
 instance PToJSVal WebAudioContext where pToJSVal (WebAudioContext val) = val
 instance PToJSVal AudioParam where pToJSVal (AudioParam val) = val
 instance PToJSVal AudioBuffer where pToJSVal (AudioBuffer val) = val
 instance PToJSVal Float32Array where pToJSVal (Float32Array val) = val
 instance PToJSVal Buffer where pToJSVal (Buffer val) = val
+instance PToJSVal ArrayBuffer where pToJSVal (ArrayBuffer val) = val
 
+instance PFromJSVal WebAudioContext where pFromJSVal = WebAudioContext
+instance PFromJSVal AudioParam where pFromJSVal = AudioParam
+instance PFromJSVal AudioBuffer where pFromJSVal = AudioBuffer
+instance PFromJSVal Float32Array where pFromJSVal = Float32Array
+instance PFromJSVal Buffer where pFromJSVal = Buffer
+instance PFromJSVal ArrayBuffer where pFromJSVal = ArrayBuffer
 
 -- WebAudioContext functions
 

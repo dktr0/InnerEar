@@ -31,7 +31,7 @@ import Control.Monad
 
 data Node
   -- Source nodes
-  = AudioBufferSourceNode { jsval :: JSVal, bufferParams :: BufferParams}  -- Also needs playbackParams b.c. some playback properties are only specified when you call 'start()' on that node
+  = AudioBufferSourceNode { jsval :: JSVal, bufferParams :: BufferParams }  -- Also needs playbackParams b.c. some playback properties are only specified when you call 'start()' on that node
   | OscillatorNode { jsval :: JSVal }
   -- SourceSink nodes
   | BiquadFilterNode { jsval :: JSVal }
