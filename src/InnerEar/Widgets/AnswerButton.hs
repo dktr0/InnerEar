@@ -89,7 +89,7 @@ modeToClass IncorrectActivated = "incorrectActivatedButton"
 modeToClassClickableDivButton :: AnswerButtonMode -> String
 modeToClassClickableDivButton NotPossible = "notPossibleButtonClickableDiv"
 modeToClassClickableDivButton Possible = "possibleButtonClickableDiv"
-modeToClassClickableDivButton IncorrectDisactivated = "incorrectDisactivatedButtonClickableDiv"
+modeToClassClickableDivButton IncorrectDisactivated = "incorrectDisButtonClickableDiv"
 modeToClassClickableDivButton Correct = "correctButtonClickableDiv"
-modeToClassClickableDivButton CorrectMissed = "correctButtonClickableDiv" -- placeholder: this needs to change to a unique style
+modeToClassClickableDivButton CorrectMissed = "correctMissedButtonClickableDiv" -- placeholder: this needs to change to a unique style
 modeToClassClickableDivButton IncorrectActivated = "incorrectActivatedButtonClickableDiv"
