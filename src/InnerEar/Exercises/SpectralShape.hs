@@ -123,7 +123,7 @@ instructions = el "div" $ do
 
 spectralShapeExercise :: MonadWidget t m => Exercise t m Config [Answer] Answer (Map Answer Score)
 spectralShapeExercise = multipleChoiceExercise
-  1
+  3
   answers
   instructions
   thisConfigWidget
