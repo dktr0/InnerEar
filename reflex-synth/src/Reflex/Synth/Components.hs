@@ -6,13 +6,6 @@ import GHCJS.Prim(toJSString)
 
 import Reflex.Synth.AudioRoutingGraph
 
-mkBuffer :: String -> IO Buffer
-mkBuffer url = js_newBuffer $ toJSString url
-
-isBufferLoaded :: Buffer -> IO Bool
-isBufferLoaded = js_isBufferLoaded
-
-
 -- Nodes
 
 silent :: SynthBuilder Graph
@@ -21,7 +14,7 @@ silent = synthSource Silent
 oscillator :: OscillatorType -> Frequency -> SynthBuilder Graph
 oscillator oscType freq = synthSource $ Oscillator oscType freq
 
-audioBufferSource :: Buffer -> BufferParams -> SynthBuilder Graph
+audioBufferSource :: AudioBuffer -> BufferParams -> SynthBuilder Graph
 audioBufferSource b p = synthSource $ AudioBufferSource b p
 
 

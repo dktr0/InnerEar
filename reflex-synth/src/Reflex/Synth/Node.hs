@@ -101,17 +101,12 @@ instantiateSourceNode (Oscillator t f) ctx = do
   setJSField osc "type" t
   setFrequencyHz osc f ctx
   return $ OscillatorNode osc
-instantiateSourceNode (AudioBufferSource smartBuffer params@(BufferParams loopstart loopend loop)) ctx = do
+instantiateSourceNode (AudioBufferSource buffer params@(BufferParams loopstart loopend loop)) ctx = do
   src <- js_createBufferSource ctx
-  isLoaded <- js_isBufferLoaded smartBuffer
-  if isLoaded then do
-    buffer <- js_getAudioBuffer smartBuffer
-    setJSField src "buffer" buffer
-    setJSField src "loopstart" loopstart
-    setJSField src "loopend" loopend
-    setJSField src "loop" loop
-  else
-    setJSField src "buffer" nullRef
+  setJSField src "buffer" buffer
+  setJSField src "loopstart" loopstart
+  setJSField src "loopend" loopend
+  setJSField src "loop" loop
   return $ AudioBufferSourceNode src params
 
 instantiateSourceSinkNode :: SourceSinkNodeSpec -> WebAudioContext -> IO Node

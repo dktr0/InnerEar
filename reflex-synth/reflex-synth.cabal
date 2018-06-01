@@ -26,5 +26,6 @@ Library
                    Reflex.Synth.Spec
                    Reflex.Synth.Synth
                    Reflex.Synth.Synthstance
+                   Reflex.Synth.Utils
   other-modules:
   default-language: Haskell2010
