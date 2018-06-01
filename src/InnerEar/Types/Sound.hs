@@ -1,11 +1,8 @@
 module InnerEar.Types.Sound where
 
-import InnerEar.Types.Utility
+import Reflex.Synth.Spec
 
-
-data Source = PinkNoise Duration
-
-data Sound = NoSynth | FilteredSound Source Filter
-
-
-
+data SoundSourceConfigOption
+  = Spec SourceNodeSpec
+  | Resource String
+  | UserProvidedResource

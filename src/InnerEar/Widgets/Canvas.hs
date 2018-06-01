@@ -1,6 +1,9 @@
 {-# LANGUAGE  OverloadedStrings, JavaScriptFFI #-}
 
-module InnerEar.Widgets.Canvas where
+module InnerEar.Widgets.Canvas (
+  rangeSelect,
+  drawSource,
+) where
 
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad (liftM)
@@ -8,17 +11,17 @@ import Data.Map
 import Data.Bool (bool)
 import Reflex
 import Reflex.Dom as D
-import  GHCJS.Types (JSString)
+import GHCJS.Types (JSString)
 import qualified GHCJS.DOM.Types as DT
 import GHCJS.Marshal.Pure (pToJSVal)
 import GHCJS.DOM.EventM
-
+import Reflex.Synth.Spec
 
 import InnerEar.Widgets.Utility
 
 data CanvasEvent = ClickEvent {value::Double} | DragEvent {value::Double} | ReleaseEvent {value::Double} deriving (Show)
 
-toPercent:: CanvasEvent -> Double -> CanvasEvent
+toPercent :: CanvasEvent -> Double -> CanvasEvent
 toPercent (ClickEvent a) b = ClickEvent (a/b)
 toPercent (DragEvent a) b = DragEvent (a/b)
 toPercent (ReleaseEvent a) b = ReleaseEvent (a/b)
@@ -29,7 +32,7 @@ data RangeState = RangeState {
     dragging :: Maybe (Either Double Double)
   } deriving (Show)
 
-updateRangeState::  CanvasEvent -> RangeState -> RangeState
+updateRangeState :: CanvasEvent -> RangeState -> RangeState
 updateRangeState (ClickEvent x) (RangeState l r Nothing)    -- catching when line has been clicked/ whether or not the click was in a 10% range
   | x>= l-0.05 && x <= l+0.05 = RangeState l r (Just $ Left x)
   | x>= r-0.05 && x <= r+0.05 = RangeState l r (Just $ Right x)
@@ -49,7 +52,7 @@ updateRangeState (ReleaseEvent x) (RangeState l r (Just (Right _)))
 
 --
 
-rangeSelect :: MonadWidget t m =>   Dynamic t Bool -> (Double,Double) ->  m (Dynamic t (Double,Double))
+rangeSelect :: MonadWidget t m => Dynamic t Bool -> (Double, Double) -> m (Dynamic t (Double, Double))
 rangeSelect visible (l,r) = do
   let initialRangeState = RangeState l r Nothing
   (canvasElement,canvasPostBuild) <- liftM (\(a,b)->(_el_element a,b)) $ elClass' "canvas" "startEndCanvas" $ getPostBuild
@@ -70,7 +73,7 @@ rangeSelect visible (l,r) = do
   performEvent_ $ fmap (\(r,visible)-> liftIO (if visible then drawRange htmlCanvasEl r else clearCanvas htmlCanvasEl)) $ attachDyn rangeState $ leftmost [updated visible, tagDyn visible canvasPostBuild]
   forDyn rangeState $ \x -> (leftRange x, rightRange x)
 
-drawRange:: DT.HTMLCanvasElement -> RangeState -> IO ()
+drawRange :: DT.HTMLCanvasElement -> RangeState -> IO ()
 drawRange canvas (RangeState l r drag)  = do
   clearCanvas canvas
   w <- getWidth canvas
@@ -81,6 +84,11 @@ drawRange canvas (RangeState l r drag)  = do
   fillStyle canvas "rgba(255,255,0,0.4)"
   fillRect canvas 0 0 (l*w) h
   fillRect canvas (r*w) 0 (w-r*w) h
+
+drawSource :: DT.HTMLCanvasElement -> SourceNodeSpec -> IO ()
+drawSource canvas Silent = error "Not yet implemented! drawSource canvas Silent" -- This probablly shouldn't ever be drawn but it is a SourceNodeSpec...
+drawSource canvas (Oscillator t f) = error "Not yet implemented! drawSource canvas (Oscillator t f)"
+drawSource canvas (AudioBufferSource buffer params) = error "drawSource canvas (AudioBufferSource buffer params)" -- This buffer is already loaded and decoded.
 
 
 foreign import javascript unsafe
