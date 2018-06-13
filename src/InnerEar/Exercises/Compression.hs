@@ -8,7 +8,7 @@ import Data.Map
 import Text.JSON
 import Text.JSON.Generic
 
-import Reflex.Synth.Types
+import Reflex.Synth.Synth
 import InnerEar.Exercises.MultipleChoice
 import InnerEar.Types.ExerciseId
 import InnerEar.Types.Exercise
@@ -16,6 +16,7 @@ import InnerEar.Types.Score
 import InnerEar.Widgets.Config
 import InnerEar.Widgets.SpecEval
 import InnerEar.Types.Data
+import InnerEar.Widgets.AnswerButton
 
 type Config = Double -- representing compression ratio, i.e. 2 = 2:1 compression ratio
 
@@ -30,6 +31,9 @@ data Answer = Answer Bool deriving (Eq,Ord,Data,Typeable)
 instance Show Answer where
   show (Answer True) = "Compressed"
   show (Answer False) = "Not Compressed"
+
+instance Buttonable Answer where
+  makeButton = showAnswerButton
 
 answers = [Answer False,Answer True]
 

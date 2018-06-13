@@ -8,11 +8,10 @@ import Text.Read (readMaybe)
 
 import InnerEar.Types.Request
 import InnerEar.Types.Response
-import Reflex.Synth.Types
 import Reflex.Synth.Synth
 
-
-testSoundWidget::MonadWidget t m => Event t [Response] -> m (Event t Request, Event t Sound, Event t ())
+-- TODO there is no nice way to do this for the new synth.
+testSoundWidget :: MonadWidget t m => Event t [Response] -> m (Event t Request, Event t Sound, Event t ())
 testSoundWidget _ = el "div" $ do
   let attrs = constDyn $ M.fromList $ zip ["cols"] ["80"]
   x <- textArea $ def & textAreaConfig_attributes .~ attrs

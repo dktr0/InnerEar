@@ -12,12 +12,35 @@ import Reflex
 import Reflex.Dom
 import Reflex.Dom.Contrib.Widgets.ButtonGroup (radioGroup)
 import Reflex.Dom.Contrib.Widgets.Common
-import Reflex.Synth.Types
-import Reflex.Synth.Synth
 import Control.Monad ((>=>))
 import Control.Monad.IO.Class (liftIO)
 import GHCJS.DOM.Types (castToHTMLCanvasElement)
 import GHCJS.DOM.EventM
+
+-- | like mapDyn but takes a -> IO b instead of a -> b
+-- You still have to provide a stupid initial value. Why????!!!!!??????
+-- mapDynIO :: MonadWidget t m => a -> (a -> IO b) -> Dynamic t a -> m (Dynamic t b)
+-- mapDynIO i f a = do
+--   i' <- liftIO f $ i -- m b
+--   x <- fmap (liftIO . f) $ updated a -- m (Event t b)
+--   holdDyn i' x -- Dynamic t b
+
+-- -- | Maybe this works? Seems like it should be possible anyway.
+-- mapDynIO' :: MonadWidget t m => (a -> IO b) -> Dynamic t a -> m (Dynamic t b)
+-- mapDynIO' f a = do
+--   i <- sample $ current a -- m a
+--   i' <- liftIO f $ i -- m b
+--   x <- fmap (liftIO . f) $ updated a -- m (Event t b)
+--   holdDyn i' x -- Dynamic t b
+
+-- | asapOrUpdated creates an event based on reflex's `updated` for the given Dynamic
+-- but also triggers at most once postBuild unless for some reason the dynamic is changed
+-- before that. 
+asapOrUpdated :: MonadWidget t m => Dynamic t a -> m (Event t a)
+asapOrUpdated src = do
+  postBuild <- getPostBuild >>= onceE
+  let srcChangedEv = updated src
+  switchPromptly (tagDyn src postBuild) (srcChangedEv <$ srcChangedEv)
 
 -- | dynE is like dyn from Reflex, specialized for widgets that return
 -- events. A dynamic argument updates the widget, and the return value is
@@ -25,10 +48,10 @@ import GHCJS.DOM.EventM
 dynE :: MonadWidget t m => Dynamic t (m (Event t a)) -> m (Event t a)
 dynE x = dyn x >>= switchPromptly never
 
-elClass'::MonadWidget t m => String -> String -> m a -> m (El t, a)
+elClass' :: MonadWidget t m => String -> String -> m a -> m (El t, a)
 elClass' e c f = elAttr' e (M.singleton "class" c) f
 
-elDynClass::MonadWidget t m => String -> Dynamic t String -> m a -> m a
+elDynClass :: MonadWidget t m => String -> Dynamic t String -> m a -> m a
 elDynClass s c b = mapDyn (singleton "class") c >>= (flip $ elDynAttr s) b
 
 flippableDyn :: MonadWidget t m => m () -> m () -> Dynamic t Bool -> m ()
@@ -53,18 +76,24 @@ buttonDynAttrs s val attrs = do
   let event = domEvent Click e
   return $ fmap (const val) event
 
-buttonClass::MonadWidget t m => String -> String -> m( Event t () )
+buttonClass :: MonadWidget t m => String -> String -> m (Event t ())
 buttonClass s c = do
   (e, _) <- elAttr' "button" (singleton "class" c) $ text s
   return $ domEvent Click e
 
--- with displayed text that can change
-clickableDivDynClass:: MonadWidget t m => Dynamic t String -> Dynamic t String -> a -> m (Event t a)
-clickableDivDynClass label c val = do
+
+clickableDiv :: MonadWidget t m => Dynamic t String -> a -> m b -> m (Event t a)
+clickableDiv c v children = do
   attrs <- mapDyn (singleton "class") c
-  (element, _) <- elDynAttr' "div" attrs $ dynText label
+  (element, _) <- elDynAttr' "div" attrs $ children
   clickEv <- wrapDomEvent (_el_element element) (onEventName Click) (mouseXY)
-  return $ (val <$) clickEv
+  return $ (v <$) clickEv
+
+
+-- with displayed text that can change
+clickableDivDynClass :: MonadWidget t m => Dynamic t String -> Dynamic t String -> a -> m (Event t a)
+clickableDivDynClass label c val = clickableDiv c val $ dynText label
+
 
 
 
@@ -79,12 +108,12 @@ dynButton :: MonadWidget t m => Dynamic t String -> m (Event t ())
 dynButton = (mapDyn button) >=> dynE
 
 
-hideableWidget::MonadWidget t m => Dynamic t Bool -> String -> m a -> m a
+hideableWidget :: MonadWidget t m => Dynamic t Bool -> String -> m a -> m a
 hideableWidget b c m = do
   attrs <- mapDyn (bool (fromList [("hidden","true"),("class",c)]) (singleton "class" c)) b
   elDynAttr "div" attrs  m
 
-radioWidget::( MonadWidget t m, Ord v, Eq v)=> M.Map String v -> Maybe v -> m (Dynamic t (Maybe v), Event t (Maybe v))
+radioWidget :: (MonadWidget t m, Ord v, Eq v)=> M.Map String v -> Maybe v -> m (Dynamic t (Maybe v), Event t (Maybe v))
 radioWidget radioMap iVal = el "table" $ do
   let checked = M.fromList $ zip ["checked","type"] ["checked","radio"]
   let invertedRadioMap = M.fromList $ zip (M.elems radioMap) (M.keys radioMap) -- Inverted so things are displayed in their natural ordering rather than string ordering. so -20db comes before -100db for instance
@@ -101,7 +130,7 @@ radioWidget radioMap iVal = el "table" $ do
 
 
 -- Alternative to just using dropdown that circumvents a glitch where choosing new dropdown items just resorts the default
-safeDropdown::(MonadWidget t m, Ord k)=> k -> Map k String -> Dynamic t (Map String String) -> Event t k -> m (Dynamic t k, Event t k)
+safeDropdown :: (MonadWidget t m, Ord k) => k -> Map k String -> Dynamic t (Map String String) -> Event t k -> m (Dynamic t k, Event t k)
 safeDropdown iVal ddMap attrs setEv = do
   let ddMapInt = fromList $ zip [0::Int,1..] (elems ddMap)
   let valuesMap = fromList $ zip [0::Int,1..] (keys ddMap)

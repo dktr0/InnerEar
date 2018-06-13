@@ -8,7 +8,7 @@ import Data.Map
 import Text.JSON
 import Text.JSON.Generic
 
-import Reflex.Synth.Types
+import Reflex.Synth.Synth
 import InnerEar.Exercises.MultipleChoice
 import InnerEar.Types.ExerciseId
 import InnerEar.Types.Exercise
@@ -18,6 +18,7 @@ import InnerEar.Widgets.SpecEval
 import InnerEar.Types.Data
 import InnerEar.Types.Frequency
 import InnerEar.Types.Utility
+import InnerEar.Widgets.AnswerButton
 
 type Config = ()
 
@@ -37,6 +38,9 @@ instance Show Answer where
   show M3 = "Major 3rd"
   show P4 = "Perfect 4th"
   show P5 = "Perfect 5th"
+
+instance Buttonable Answer where
+  makeButton = showAnswerButton
 
 answers = [P1,M2,M3,P4,P5]
 

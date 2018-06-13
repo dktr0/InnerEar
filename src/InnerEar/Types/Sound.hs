@@ -1,11 +1,25 @@
-module InnerEar.Types.Sound where
+module InnerEar.Types.Sound (
+  SoundSourceConfigOption(..),
+  SoundSource(..),
+  SoundSourceConfig(..),
+) where
 
-import InnerEar.Types.Utility
+import Reflex.Synth.Buffer
+import Reflex.Synth.Spec
 
+data SoundSourceConfigOption
+  = Spec SourceNodeSpec
+  | Resource String
+  | UserProvidedResource
 
-data Source = PinkNoise Duration
+data SoundSource
+  = SourceLoading
+  | SourceLoaded SourceNodeSpec
+  | SourceError String
+  | SourceUnderSpecified
 
-data Sound = NoSynth | FilteredSound Source Filter
-
-
-
+data SoundSourceConfig = SoundSourceConfig {
+  source :: SoundSource,
+  playbackRange :: (Double, Double),
+  shouldLoop :: Bool
+}

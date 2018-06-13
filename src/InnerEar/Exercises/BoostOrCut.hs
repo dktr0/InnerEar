@@ -8,17 +8,16 @@ import Data.Map
 import Text.JSON
 import Text.JSON.Generic
 
-import Reflex.Synth.Types
+import Reflex.Synth.Synth
 import InnerEar.Exercises.MultipleChoice
 import InnerEar.Types.ExerciseId
 import InnerEar.Types.Exercise
 import InnerEar.Types.Score
 import InnerEar.Widgets.Config
-import InnerEar.Widgets.UserMedia
 import InnerEar.Widgets.SpecEval
+import InnerEar.Widgets.AnswerButton
 
 import InnerEar.Types.Data
-import InnerEar.Widgets.UserMedia
 
 type Config = Double -- representing amount of gain that is applied (or not)
 
@@ -33,6 +32,9 @@ data Answer = Answer Bool deriving (Eq,Ord,Data,Typeable)
 instance Show Answer where
   show (Answer True) = "Boosted/Cut"
   show (Answer False) = "No Change"
+
+instance Buttonable Answer where
+  makeButton = showAnswerButton
 
 answers = [Answer False,Answer True]
 

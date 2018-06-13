@@ -13,14 +13,13 @@ import InnerEar.Widgets.SpecEval
 import InnerEar.Types.Data
 import InnerEar.Types.Score
 import Reflex.Synth.Synth
-import Reflex.Synth.Types
 import InnerEar.Types.Exercise
 import InnerEar.Types.ExerciseId
 import InnerEar.Types.Frequency
 import InnerEar.Exercises.MultipleChoice
 import InnerEar.Widgets.Config
-import InnerEar.Widgets.UserMedia
 import InnerEar.Widgets.Utility (radioWidget, safeDropdown)
+import InnerEar.Widgets.AnswerButton
 
 data FrequencyBand = AllBands | HighBands  | Mid8Bands | MidBands | LowBands deriving (Eq,Data,Typeable, Read)
 
@@ -63,12 +62,15 @@ boostAmounts = reverse [-10,-6,-3,-2,-1,1,2,3,6,10]
 
 type Config = (FrequencyBand, Double) -- FrequencyBand and Boost/Cut amount
 
-type Answer = Frequency
+newtype Answer = Answer { frequency :: Frequency } deriving (Show,Eq,Ord,Data,Typeable)
+
+instance Buttonable Answer where
+  makeButton = showAnswerButton
 
 answers :: [Answer]
 answers = [
-  F 31 "31", F 63 "63", F 125 "125", F 250 "250", F 500 "500",
-  F 1000 "1k", F 2000 "2k", F 4000 "4k", F 8000 "8k", F 16000 "16k"]
+  Answer $ F 31 "31",Answer $ F 63 "63", Answer $ F 125 "125", Answer $ F 250 "250", Answer $ F 500 "500",
+  Answer $ F 1000 "1k", Answer $ F 2000 "2k", Answer $ F 4000 "4k", Answer $ F 8000 "8k", Answer $ F 16000 "16k"]
 
 renderAnswer :: Map String Buffer -> Config -> (SourceNodeSpec, Maybe Time)-> Maybe Answer -> Synth ()
 renderAnswer _ (_, boost) (src, dur) ans = buildSynth $ do
@@ -96,7 +98,7 @@ sourcesMap:: Map Int (String,Source)
 sourcesMap = fromList $ zip [0::Int,1..] [("Pink noise",NodeSource (BufferNode $ File "pinknoise.wav") (Just 2)), ("White noise", NodeSource (BufferNode $ File "whitenoise.wav") (Just 2)), ("Load a soundfile", NodeSource (BufferNode $ LoadedFile "tenBandBoostCutExercise" (PlaybackParam 0 1 False)) Nothing)]
 
 -- temporary until config widget is changed to take a list/map of config parameters that can be changed
-tenBandsConfigWidget::MonadWidget t m => Config -> m (Dynamic t Config,  Dynamic t Source,  Event t (Maybe a)) -- dyn config, source, and event maybe answer for playing reference sound (config widget
+tenBandsConfigWidget :: MonadWidget t m => Config -> m (Dynamic t Config,  Dynamic t Source,  Event t (Maybe a)) -- dyn config, source, and event maybe answer for playing reference sound (config widget
 tenBandsConfigWidget c =  elClass "div" "configWidget" $ do
   config <- elClass "div" "tenBandsConfigWidget" $ do
     text "Spectrum Range: "

@@ -15,12 +15,11 @@ import InnerEar.Widgets.SpecEval
 import InnerEar.Types.Data
 import InnerEar.Types.Score
 import Reflex.Synth.Synth
-import Reflex.Synth.Types
 import InnerEar.Types.Exercise
 import InnerEar.Types.ExerciseId
 import InnerEar.Types.Frequency
 import InnerEar.Exercises.MultipleChoice
-import InnerEar.Widgets.UserMedia
+import InnerEar.Widgets.AnswerButton
 
 type Config = Double
 
@@ -33,15 +32,21 @@ configs = [10,6,3,2,1,-1,-2,-3,-6,-10]
 configMap::Map Int (String,Config)
 configMap = fromList $ zip [0::Int,1..] $ fmap (\x-> (show x ++ " dB",x)) configs
 
-type Answer = Frequency
+-- type Answer = Frequency
+newtype Answer = Answer { frequency :: Frequency } deriving (Show,Eq,Ord,Data,Typeable)
+-- data Answer = Answer Frequency
+
+instance Buttonable Answer where
+  makeButton = showAnswerButton
+
 
 answers :: [Answer]
-answers = [F 155 "Bass (155 Hz)",F 1125 "Low Mids (1125 Hz)",F 3000 "High Mids (3 kHz)",
-  F 5000 "Presence (5 kHz)",F 13000 "Brilliance (13 kHz)"]
+answers = [Answer $ F 155 "Bass (155 Hz)",Answer $ F 1125 "Low Mids (1125 Hz)",Answer $ F 3000 "High Mids (3 kHz)",
+  Answer $ F 5000 "Presence (5 kHz)",Answer $ F 13000 "Brilliance (13 kHz)"]
 
 
 
-renderAnswer::Map String Buffer -> Config -> (SourceNodeSpec,Maybe Time)-> Maybe Answer -> Synth ()
+renderAnswer :: Map String Buffer -> Config -> (SourceNodeSpec,Maybe Time)-> Maybe Answer -> Synth ()
 renderAnswer _ db (src, dur) (Just freq) = buildSynth $ do
   let env = maybe (return EmptyGraph) (rectEnv (Millis 1)) dur
   createSrc src

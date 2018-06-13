@@ -14,7 +14,7 @@ import Data.Either
 import InnerEar.Types.ExerciseId
 import InnerEar.Widgets.Utility
 import InnerEar.Types.Data
-import Reflex.Synth.Types
+import Reflex.Synth.Synth
 import InnerEar.Types.ExerciseNavigation
 import InnerEar.Types.Exercise
 import InnerEar.Types.Response
@@ -25,7 +25,7 @@ import Reflex.Synth.Synth
 -- exercise in the browser.
 
 runExercise :: forall t m c q a e. (MonadWidget t m, Data c, Data q, Data a, Data e, Show c, Show q, Show a, Show e)
-  => Exercise t m c q a e -> Event t [Response] -> m (Event t (ExerciseId,ExerciseDatum),Event t (Synth ()),Event t ())
+  => Exercise t m c q a e -> Event t [Response] -> m (Event t (ExerciseId, ExerciseDatum), Event t (Synth ()), Event t ())
 runExercise ex responses = mdo
 
   -- form databank for exercise by folding together pertinent database entries plus data transmitted up

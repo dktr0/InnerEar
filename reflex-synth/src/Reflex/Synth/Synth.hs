@@ -1,7 +1,7 @@
 module Reflex.Synth.Synth (module E) where
 
 -- New
-import Reflex.Synth.AudioRoutingGraph as Js.E(WebAudioContext,AudioParam,AudioBuffer,Float32Array,Buffer)
+import Reflex.Synth.AudioRoutingGraph as E(WebAudioContext,AudioParam,AudioBuffer,Float32Array)
 import Reflex.Synth.Components as E
 import Reflex.Synth.Graph as E
 import Reflex.Synth.Node as E

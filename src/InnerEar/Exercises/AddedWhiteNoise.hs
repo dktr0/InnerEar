@@ -8,7 +8,7 @@ import Data.Map
 import Text.JSON
 import Text.JSON.Generic
 
-import Reflex.Synth.Types
+import Reflex.Synth.Synth
 import InnerEar.Exercises.MultipleChoice
 import InnerEar.Types.ExerciseId
 import InnerEar.Types.Exercise
@@ -16,6 +16,7 @@ import InnerEar.Types.Score
 import InnerEar.Widgets.Config
 import InnerEar.Widgets.SpecEval
 import InnerEar.Types.Data
+import InnerEar.Widgets.AnswerButton
 
 type Config = Double -- representing level of attenuation for added white noise
 
@@ -31,9 +32,12 @@ instance Show Answer where
   show (Answer True) = "With Noise"
   show (Answer False) = "Clean"
 
+instance Buttonable Answer where
+  makeButton = showAnswerButton
+
 answers = [Answer False,Answer True]
 
-renderAnswer::Map String Buffer -> Config -> (SourceNodeSpec,Maybe Time)-> Maybe Answer -> Synth ()
+renderAnswer :: Map String Buffer -> Config -> (SourceNodeSpec,Maybe Time) -> Maybe Answer -> Synth ()
 renderAnswer bMap db (src, dur) (Just (Answer True)) = buildSynth $ do
   -- sticking an EmptyGraph somewhere won't break the stack structure of Synths right?
   let env = maybe (return EmptyGraph) (rectEnv (Millis 1)) dur
@@ -59,7 +63,7 @@ instructions = el "div" $ do
 
 
 
-sourcesMap:: Map Int (String,Source)
+sourcesMap :: Map Int (String,Source)
 sourcesMap = fromList $ [(0,("300hz sine wave", NodeSource (OscillatorNode $ Oscillator Sine 440 0) (Just 2))), (1,("Load a soundfile", NodeSource (BufferNode $ LoadedFile "addedWhiteNoiseExercise" (PlaybackParam 0 1 False)) Nothing))]
 
 addedWhiteNoiseExercise :: MonadWidget t m => Exercise t m Config [Answer] Answer (Map Answer Score)

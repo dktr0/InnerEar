@@ -18,6 +18,12 @@ data AnswerButtonMode =
   CorrectMissed -- (i.e. what correct answer becomes when tries run out)
   deriving (Eq,Show)
 
+class Buttonable a where
+  makeButton :: MonadWidget t m => a -> Dynamic t AnswerButtonMode -> m (Event t a)
+
+showAnswerButton :: (MonadWidget t m, Show a) => a -> Dynamic t AnswerButtonMode -> m (Event t a)
+showAnswerButton a m = answerButton (show a) m a
+
 revealableButton :: MonadWidget t m => String -> String -> Dynamic t Bool -> m (Event t ())
 revealableButton label classWhenVisible isVisible = do
   cssClass <- mapDyn (\x -> bool (classWhenVisible ++ " makeButtonInvisible") classWhenVisible x) isVisible
@@ -29,7 +35,7 @@ buttonDynCss label cssClass =  do
   (element, _) <- elDynAttr' "button" cssClass' $ text label -- m
   return $ domEvent Click element  -- domEvent :: EventName en -> a -> Event t (EventResultType en)
 
-answerButton:: MonadWidget t m => String -> Dynamic t AnswerButtonMode -> a -> m (Event t a)
+answerButton :: MonadWidget t m => String -> Dynamic t AnswerButtonMode -> a -> m (Event t a)
 answerButton buttonString buttonMode x = do
   c <- mapDyn modeToClass buttonMode
   ev <-  liftM (x <$) $ buttonDynCss buttonString c
@@ -39,10 +45,8 @@ answerButton buttonString buttonMode x = do
     f (IncorrectDisactivated) _ = Nothing
     f a b = Just b
 
---answerButton' :: MonadWidget t m => String -> Dynamic t AnswerButtonMode -> m (Event t ())
---answerButton' buttonString buttonMode = do
---  curClass <- mapDyn modeToClass buttonMode
---  buttonDynCss buttonString curClass
+-- looks and acts like our answerButton but contains arbitrary children...
+-- answerButton' :: MonadWidget t m => Dynamic t AnswerButtonMode -> a -> m b -> m (Event t a)
 
 modeToClass :: AnswerButtonMode -> String
 modeToClass NotPossible = "notPossibleButton"
