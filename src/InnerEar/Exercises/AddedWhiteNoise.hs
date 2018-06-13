@@ -45,7 +45,7 @@ renderAnswer db b Nothing = OverlappedSound "addedWhiteNoiseExercise" [GainSound
 -- pink or white noise should NOT be possible as selectable sound source types
 
 displayEval :: MonadWidget t m => Dynamic t (Map Answer Score) -> m ()
-displayEval = displayMultipleChoiceEvaluationGraph' "Session Performance" "" answers
+displayEval = displayMultipleChoiceEvaluationGraph ("scoreBarWrapper","svgBarContainer","svgFaintedLine", "xLabel") "Session Performance" "" answers
 
 generateQ :: Config -> [ExerciseDatum] -> IO ([Answer],Answer)
 generateQ _ _ = randomMultipleChoiceQuestion [Answer False,Answer True]

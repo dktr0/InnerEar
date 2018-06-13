@@ -48,7 +48,7 @@ renderAnswer db _ (Just (Answer False)) =  GainSound (Sound $ NodeSource  (Oscil
 renderAnswer db _ Nothing =  GainSound (Sound $ NodeSource  (OscillatorNode $ Oscillator Sine 300 0) (Just 2)) (-10)
 
 displayEval :: MonadWidget t m => Dynamic t (Map Answer Score) -> m ()
-displayEval = displayMultipleChoiceEvaluationGraph' "Session Performance" "" answers
+displayEval = displayMultipleChoiceEvaluationGraph ("scoreBarWrapper","svgBarContainer","svgFaintedLine", "xLabel") "Session Performance" "" answers
 
 generateQ :: Config -> [ExerciseDatum] -> IO ([Answer],Answer)
 generateQ _ _ = randomMultipleChoiceQuestion [Answer False,Answer True]

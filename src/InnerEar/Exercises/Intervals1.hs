@@ -60,6 +60,10 @@ instructions :: MonadWidget t m => m ()
 instructions = el "div" $ do
   elClass "div" "instructionsText" $ text "Instructions placeholder"
 
+
+displayEval :: MonadWidget t m => Dynamic t (Map Answer Score) -> m ()
+displayEval = displayMultipleChoiceEvaluationGraph ("scoreBarWrapperFiveBars","svgBarContainerFiveBars","svgFaintedLineFiveBars", "xLabelFiveBars") "Session performance" "Hz" answers
+
 generateQ :: Config -> [ExerciseDatum] -> IO ([Answer],Answer)
 generateQ _ _ = randomMultipleChoiceQuestion answers
 
@@ -72,5 +76,5 @@ intervals1Exercise = multipleChoiceExercise
   renderAnswer
   Intervals1
   ()
-  (displayMultipleChoiceEvaluationGraph'' "Session Performance" "" answers)
+  displayEval
   generateQ

@@ -54,7 +54,8 @@ renderAnswer f0 _ (Just All) = GainSound (OverlappedSound "arbitrary" $ bunchOfO
 renderAnswer f0 _ Nothing = NoSound
 
 displayEval :: MonadWidget t m => Dynamic t (Map Answer Score) -> m ()
-displayEval _ = return ()
+displayEval = displayMultipleChoiceEvaluationGraph  ("scoreBarWrapperThreeBars","svgBarContainerThreeBars","svgFaintedLineThreeBars","xLabelThreeBars") "Session Performance" "" answers
+
 
 generateQ :: Config -> [ExerciseDatum] -> IO ([Answer],Answer)
 generateQ _ _ = randomMultipleChoiceQuestion answers

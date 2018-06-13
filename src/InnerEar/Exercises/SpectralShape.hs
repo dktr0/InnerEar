@@ -32,13 +32,12 @@ configs = [F 100 "100 Hz",F 200 "200 Hz", F 400 "400 Hz", F 800 "800 Hz", F 1600
 data Answer = Steep | Linear | Gradual | Flat | InvGradual | InvLinear | InvSteep
   deriving (Eq,Ord,Data,Typeable,Show)
 
-  --ampdb :: Double -> Double
-  --ampdb x = 20 * (logBase 10 x)
 
 instance Buttonable Answer where
   makeButton a m = answerButtonWChild a m $ do
       text (show a)
-      shapeLine' "polyline" m $ zip (fmap (*50) (fmap dbamp $ (getShape a))) [1, 2 .. 100]
+      let x = if a == Flat then 50 else 80
+      shapeLine' "polyline" m $ zip (fmap (*x) (fmap dbamp $ (getShape a))) [1, 2 .. 100]
 
 answers = [Steep,Linear,Gradual,Flat,InvGradual,InvLinear,InvSteep]
 
@@ -47,10 +46,10 @@ getShape :: Answer -> [Double]
 getShape Steep = fmap (ampdb . (\x -> 1/(x*x))) [1,2 .. 200]
 getShape Linear = fmap (ampdb . (\x -> 1/x)) [1,2 .. 200]
 getShape Gradual = fmap (ampdb . (\x -> 1/sqrt x)) [1,2 .. 200]
-getShape Flat = fmap (ampdb . (\x -> 1)) [1,2 .. 200]
+getShape Flat = fmap (ampdb . (\x -> 1)) [1,2.. 200]
 getShape InvGradual =  reverse $ fmap (ampdb . (\x -> 1/sqrt x)) [1,2 .. 100]
 getShape InvLinear = reverse $ fmap (ampdb . (\x -> 1/x))  [1,2 .. 100]
-getShape InvSteep = reverse $ fmap (ampdb . (\x -> 1/(x*x))) [1,2 .. 100]
+getShape InvSteep = reverse $ fmap (ampdb . (\x -> 1/(x*x))) [1,2.. 100]
 
 
 renderAnswer :: Config -> Source -> Maybe Answer -> Sound
@@ -100,7 +99,7 @@ renderAnswer f0 _ (Just InvSteep) = GainSound (OverlappedSound "arbitrary" $ bun
 renderAnswer f0 _ Nothing = NoSound
 
 displayEval :: MonadWidget t m => Dynamic t (Map Answer Score) -> m ()
-displayEval _ = return ()
+displayEval = displayMultipleChoiceEvaluationGraph  ("scoreBarWrapperSevenBars","svgBarContainerSevenBars","svgFaintedLineSevenBars","xLabelSevenBars") "Session Performance" "" answers
 
 generateQ :: Config -> [ExerciseDatum] -> IO ([Answer],Answer)
 generateQ _ _ = randomMultipleChoiceQuestion answers

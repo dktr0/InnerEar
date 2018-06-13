@@ -180,6 +180,7 @@ button {
   border-radius: 8px;
   border: 4px solid green;
   box-shadow: 0 0 5px -1px rgba(0,0,0,0.2);
+     height: 131px;
 }
 
 .correctButtonClickableDiv:active {
@@ -195,6 +196,7 @@ button {
   border: 4px solid green;
   box-shadow: 0 0 5px -1px rgba(0,0,0,0.2);
   transform: translateY(10px);
+     height: 131px;
 }
 
 
@@ -210,8 +212,24 @@ button {
   border-radius: 8px;
   border: 4px solid green;
   box-shadow: 0 0 5px -1px rgba(0,0,0,0.2);
+     height: 131px;
 }
 
+.correctMissedButtonClickableDiv:active {
+  background-color: #e7e7e7;
+  padding: 15px 32px;
+  text-align: center;
+  text-decoration: none;
+  font-size: 14px;
+  color: black;
+  margin: 4px 2px;
+  cursor: context-menu;
+  border-radius: 4px;
+  border: 4px solid green;
+  box-shadow: 0 0 5px -1px rgba(0,0,0,0.2);
+  transform: translateY(10px);
+     height: 131px;
+}
 .incorrectDisButtonClickableDiv{
   background-color: #e7e7e7;
   padding: 15px 32px;
@@ -223,7 +241,8 @@ button {
   cursor: not-allowed;
   border-radius: 8px;
   border: 4px solid red;
-  box-shadow: 0 0 5px -1px rgba(0,0,0,0.2)
+  box-shadow: 0 0 5px -1px rgba(0,0,0,0.2);
+     height: 130px;
 }
 
 
@@ -239,11 +258,11 @@ button {
   border-radius: 8px;
   border: 4px solid red;
   box-shadow: 0 0 5px -1px rgba(0,0,0,0.2);
+  height: 131px;
 }
 
 .incorrectActivatedButtonClickableDiv:active {
   background-color: #e7e7e7;
-  width: 55%;
   padding: 15px 32px;
   text-align: center;
   text-decoration: none;
@@ -255,6 +274,7 @@ button {
   border: 4px solid red;
   box-shadow: 0 0 5px -1px rgba(0,0,0,0.2);
   transform: translateY(10px);
+     height: 130px;
 }
 
 
@@ -316,21 +336,10 @@ button.correctButton{
   background-color: hsl(120,100%,80%);
 }
 
-.svgBarContainerVertical {
-  width: 59%;
-  background-color: white;
-}
 
 .svgBarContainerCurrent{
   width: 30%;
   background-color: hsl(120,100%,80%);
-}
-
-.svgBarContainerCurrentMirror {
-  width: 30%;
-  background-color: hsl(120,100%,80%);
-  position: relative;
-  bottom: 84px;
 }
 
 .svgBarContainerHist{
@@ -338,25 +347,26 @@ button.correctButton{
   background-color: orange;
 }
 
-.svgBarContainerHistMirror{
-  width: 30%;
-   background-color: white;
-   position: relative;
-   /*top: 21px;
-   /*transform: rotate(40deg);*/
-   right: 90px;
+.svgBarContainerThreeBars{
+  width: 80%;
+  background-color: hsl(120,100%,80%);
 }
 
-.svgBarContainerFiveBand {
+.svgBarContainerFiveBars {
   width: 90%;
   background-color: hsl(120,100%,80%);
-
 }
 
-.svgBarContainerTenBand {
-  width: 50%;
+.svgBarContainerTenBars {
+  width: 90%;
   background-color: hsl(120,100%,80%);
 }
+
+.svgBarContainerSevenBars{
+  width: 80%;
+  background-color: hsl(120,100%,80%);
+}
+
 
 .makeButtonContainer{
   display: flex;
@@ -409,16 +419,6 @@ button.correctButton{
   top: 9%;
 }
 
-.svgFaintedLineVertical{
-
-  width: 1px;
-  height: 5px;
- background-color: #2F4F4F;
- position: relative;
- left: 24%;
- top: 9%;
-}
-
 
 .svgFaintedLineHist{
   width: 1px;
@@ -429,14 +429,6 @@ button.correctButton{
  top: 9%;
 }
 
-.svgFaintedLineHistMirror {
-  width: 1px;
-  height: 5px;
- background-color: #2F4F4F;
- position: relative;
- left: 40%;
- top: 9%;
-}
 
 .svgFaintedLineCurrent {
   width: 1px;
@@ -446,16 +438,16 @@ button.correctButton{
  left: 23%;
  top: 9%;
 }
-.svgFaintedLineCurrentMirror {
-  width: 1px;
-  height: 5px;
- background-color: #2F4F4F;
- position: relative;
- left: 23%;
- top: 9%;
-}
 
-.svgFaintedLineFiveBand {
+.svgFaintedLineThreeBars {
+   width: 1px;
+   height: 5px;
+  background-color: #2F4F4F;
+  position: relative;
+  left: 40%;
+  top: 9%;
+}
+.svgFaintedLineFiveBars {
    width: 1px;
    height: 5px;
   background-color: #2F4F4F;
@@ -464,7 +456,7 @@ button.correctButton{
   top: 9%;
 }
 
-.svgFaintedLineTenBand {
+.svgFaintedLineTenBars {
    width: 1px;
    height: 5px;
   background-color: #2F4F4F;
@@ -472,6 +464,16 @@ button.correctButton{
   left: 24%;
   top: 9%;
 }
+
+.svgFaintedLineSevenBars{
+   width: 1px;
+   height: 5px;
+  background-color: #2F4F4F;
+  position: relative;
+  left: 40%;
+  top: 9%;
+}
+
 
  .faintedXaxis {
    /*width : 5%;*/
@@ -559,38 +561,40 @@ right:80%;
    bottom: 8px;
 }
 
-.xLabelVertical{
-  color: white;
-  font-size:70%;
-  text-align: center;
-  position: relative;
-  top: 40px;
-  transform: rotate(-90deg);
+.xLabelThreeBars  {
+   color: hsl(120,100%,80%);
+   font-size:70%;
+   text-align: center;
+    position: relative;
+   bottom: 8px;
 }
 
-.xLabelFiveBand {
+
+.xLabelFiveBars {
    color: hsl(120,100%,80%);
    font-size:50%;
    text-align: center;
     position: relative;
    bottom: 8px;
 }
-.xLabelTenBand {
+
+
+.xLabelTenBars {
    color: hsl(120,100%,80%);
-   font-size:80%;
+   font-size:65%;
    text-align: center;
    position: relative;
    bottom: 8px;
-
 }
 
-.xLabelMirror {
+.xLabelSevenBars{
    color: hsl(120,100%,80%);
    font-size:70%;
    text-align: center;
    position: relative;
    bottom: 8px;
 }
+
 
 .countLabel {
   color: hsl(120,100%,80%);
@@ -628,7 +632,7 @@ right:80%;
   width: 15px;
   height: 10%;
   position: relative;
-  top: 13%;
+  top: 15%;
   left: 4%;
 }
 .countMainLabelV {
@@ -838,14 +842,6 @@ transform: rotate(-90deg);
   margin-right: -10%;
 }
 
-.scoreBarWrapperVertical {
-  display: inline-block;
-  position: relative;
-  bottom:55%;
-  width: 50%;
-  margin-left: -10%;
-  margin-right: -10%;
-}
 
 .scoreBarWrapperHist {
     display: inline-block;
@@ -856,31 +852,41 @@ transform: rotate(-90deg);
   margin-right: -10%;
 }
 
-.scoreBarWrapperHistMirror {
-  display: inline-block;
-position: relative;
-bottom:50%;
-width: 50%;
-margin-left: -10%;
-margin-right: -10%;
-
-}
-
-.scoreBarWrapperFiveBand {
+.scoreBarWrapperThreeBars{
   display: inline-block;
   position: relative;
   bottom:55%;
-  width: 15%;
+  width: 32%;
+  margin-left: -2.5%;
+  margin-right: -2.5%;
 }
 
-.scoreBarWrapperTenBand {
+.scoreBarWrapperFiveBars {
+  display: inline-block;
+  position: relative;
+  bottom:55%;
+  width: 17%;
+   margin-left: -0.5%;
+  margin-right: -0.5%;
+}
+
+.scoreBarWrapperSevenBars{
   display: inline-block;
   flex-grow: 1;
   position: relative;
   bottom:55%;
-  width:7%;
+  width:13%;
+     margin-left: -1%;
+  margin-right: -1%;
 }
 
+.scoreBarWrapperTenBars {
+  display: inline-block;
+  flex-grow: 1;
+  position: relative;
+  bottom:55%;
+  width:8%;
+}
 
 
 .explanation{

@@ -60,7 +60,7 @@ instructions :: MonadWidget t m => m ()
 instructions = elClass "div" "instructionsText" $ text instructionsText
 
 displayEval :: MonadWidget t m => Dynamic t (Map Answer Score) -> m ()
-displayEval = displayMultipleChoiceEvaluationGraph' "Session Performance" "" answers
+displayEval = displayMultipleChoiceEvaluationGraph ("scoreBarWrapper","svgBarContainer","svgFaintedLine", "xLabel") "Session Performance" "" answers
 
 generateQ :: Config -> [ExerciseDatum] -> IO ([Answer],Answer)
 generateQ _ _ = randomMultipleChoiceQuestion answers

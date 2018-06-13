@@ -56,15 +56,13 @@ instructions = el "div" $ do
   elClass "div" "instructionsText" $ text "In this exercise, a filter is applied to a specific region of the spectrum, either boosting or cutting the energy in that part of the spectrum by a specified amount. Your task is to identify which part of the spectrum has been boosted or cut. Challenge yourself and explore additional possibilities by trying cuts (instead of boosts) to the spectrum, and by trying more subtle boosts/cuts (dB values progressively closer to 0)."
 
 displayEval :: MonadWidget t m => Dynamic t (Map Answer Score) -> m ()
-displayEval = displayMultipleChoiceEvaluationGraph'' "Session performance" "Hz" answers
+displayEval = displayMultipleChoiceEvaluationGraph ("scoreBarWrapperFiveBars","svgBarContainerFiveBars","svgFaintedLineFiveBars", "xLabelFiveBars") "Session performance" "Hz" answers
 
 generateQ :: Config -> [ExerciseDatum] -> IO ([Answer],Answer)
 generateQ _ _ = randomMultipleChoiceQuestion answers
 
 sourcesMap:: Map Int (String,Source)
 sourcesMap = fromList $ zip [0::Int,1..] [("Pink noise",NodeSource (BufferNode $ File "pinknoise.wav") (Just 2)), ("White noise", NodeSource (BufferNode $ File "whitenoise.wav") (Just 2)), ("Load a soundfile", NodeSource (BufferNode $ LoadedFile "fiveBandBoostCutExercise" (PlaybackParam 0 1 False)) Nothing)]
-
-
 
 fiveBandBoostCutExercise :: MonadWidget t m => Exercise t m Config [Answer] Answer (Map Answer Score)
 fiveBandBoostCutExercise = multipleChoiceExercise
@@ -75,5 +73,5 @@ fiveBandBoostCutExercise = multipleChoiceExercise
   renderAnswer
   FiveBandBoostCut
   (configs!!0)
-  (displayMultipleChoiceEvaluationGraph'' "Session Performance" "" answers)
+  displayEval
   generateQ

@@ -83,7 +83,7 @@ renderAnswer c@(s,d,o) _ (Just a) = Sound $ NodeSource x (Just (fromIntegral d/1
 renderAnswer _ _ Nothing = NoSound
 
 displayEval :: MonadWidget t m => Dynamic t (Map Answer Score) -> m ()
-displayEval _ = return ()
+displayEval = displayMultipleChoiceEvaluationGraph  ("scoreBarWrapperThreeBars","svgBarContainerThreeBars","svgFaintedLineThreeBars","xLabelThreeBars") "Session Performance" "" answers
 
 generateQ :: Config -> [ExerciseDatum] -> IO ([Answer],Answer)
 generateQ _ _ = randomMultipleChoiceQuestion answers

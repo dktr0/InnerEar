@@ -45,7 +45,7 @@ renderAnswer _ b _ = GainSound (Sound b) (-10) -- should just be source (b) down
 -- note also: the user MUST provide a sound file (or we might provide some standard ones) - synthetic sources won't work for this
 
 displayEval :: MonadWidget t m => Dynamic t (Map Answer Score) -> m ()
-displayEval = displayMultipleChoiceEvaluationGraph' "Session Performance" "" answers
+displayEval = displayMultipleChoiceEvaluationGraph ("scoreBarWrapper","svgBarContainer","svgFaintedLine", "xLabel") "Session Performance" "" answers
 
 generateQ :: Config -> [ExerciseDatum] -> IO ([Answer],Answer)
 generateQ _ _ = randomMultipleChoiceQuestion [Answer False,Answer True]
