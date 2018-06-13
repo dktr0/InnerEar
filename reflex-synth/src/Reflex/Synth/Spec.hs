@@ -1,6 +1,9 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Reflex.Synth.Spec where
+module Reflex.Synth.Spec (
+  module Reflex.Synth.Spec,
+  AudioBuffer
+) where
 
 import GHCJS.Marshal.Pure
 import GHCJS.Types

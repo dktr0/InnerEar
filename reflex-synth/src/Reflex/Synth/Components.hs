@@ -63,9 +63,8 @@ asr a s r amp = do
   setParamValue "gain" (inAmp amp) (a+s) g
   linearRampToParamValue "gain" 0 (a+s+r) g
 
-rectEnv :: Time -> Time -> Amplitude -> SynthBuilder Graph
-rectEnv ar s amp = asr ar s ar amp
-
+rectEnv :: Time -> Time -> SynthBuilder Graph
+rectEnv ar s = asr ar s ar (Amp 1)
 
 -- Utilities
 

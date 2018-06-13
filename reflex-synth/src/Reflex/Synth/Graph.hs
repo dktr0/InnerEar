@@ -17,7 +17,9 @@ module Reflex.Synth.Graph (
   setParamValue,
   linearRampToParamValue,
   exponentialRampToParamValue,
-  curveToParamValue
+  curveToParamValue,
+  setDeletionTime,
+  maybeDelete
 ) where
 
 import qualified Data.Map as Map

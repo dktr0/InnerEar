@@ -11,7 +11,7 @@ import Data.Map
 import Data.Bool (bool)
 import Reflex
 import Reflex.Dom as D
-import GHCJS.Types (JSString)
+import Data.JSString(JSString, pack)
 import qualified GHCJS.DOM.Types as DT
 import GHCJS.Marshal.Pure (pToJSVal)
 import GHCJS.DOM.EventM
@@ -89,9 +89,9 @@ drawRange canvas (RangeState l r drag)  = do
 
 drawSource :: DT.HTMLCanvasElement -> SoundSource -> IO ()
 drawSource canvas (SourceLoading) = drawSourceLoadingOnCanvas canvas
-drawSource canvas (SourceError s) = drawSourceErrorOnCanvas canvas s
+drawSource canvas (SourceError s) = drawSourceErrorOnCanvas canvas (pack s)
 drawSource canvas (SourceUnderSpecified) = drawSourceUnderSpecifiedOnCanvas canvas
-drawSource canvas (SourceLoaded src) = drawSourceNodeSpecOnCanvas canvas src
+drawSource canvas (SourceLoaded src _) = drawSourceNodeSpecOnCanvas canvas src
 
 drawSourceNodeSpecOnCanvas :: DT.HTMLCanvasElement -> SourceNodeSpec -> IO ()
 drawSourceNodeSpecOnCanvas canvas Silent = do
@@ -101,7 +101,7 @@ drawSourceNodeSpecOnCanvas canvas Silent = do
   fillStyle canvas "rgb(180,180,180)"
 drawSourceNodeSpecOnCanvas canvas (Oscillator t f) = do
   clearCanvas canvas
-  drawOscOnCanvas (show t) (inHz f)
+  drawOscOnCanvas canvas (pack $ show t) (inHz f)
 drawSourceNodeSpecOnCanvas canvas (AudioBufferSource buf p) = do
   clearCanvas canvas
   drawBufferOnCanvas canvas buf
@@ -112,15 +112,18 @@ foreign import javascript unsafe
   "drawBufferOnCanvas($2, $1)" drawBufferOnCanvas:: DT.HTMLCanvasElement -> AudioBuffer ->   IO ()
 
 -- maybe implement this in haskell
-foreign import javascript
+foreign import javascript unsafe
   "drawOscOnCanvas($1, $2, $3)" drawOscOnCanvas:: DT.HTMLCanvasElement -> JSString -> Double -> IO ()
 
-foreign import javascript
-  "drawSourceLoadingOnCanvas($1)" drawSourceLoadingOnCanvas:: Canvas -> IO ()
+foreign import javascript unsafe
+  "drawSourceLoadingOnCanvas($1)" drawSourceLoadingOnCanvas:: DT.HTMLCanvasElement -> IO ()
 
-foreign import javascript
-  "drawSourceErrorOnCanvas($1, $2)" drawSourceErrorOnCanvas:: Canvas -> JSString ->  IO ()
+foreign import javascript unsafe
+  "drawSourceErrorOnCanvas($1, $2)" drawSourceErrorOnCanvas:: DT.HTMLCanvasElement -> JSString ->  IO ()
 
+foreign import javascript unsafe
+  "drawSourceUnderSpecifiedOnCanvas($1);"
+  drawSourceUnderSpecifiedOnCanvas :: DT.HTMLCanvasElement -> IO ()
 
 foreign import javascript unsafe
   "$1.getContext('2d').fillStyle = $2" fillStyle :: DT.HTMLCanvasElement -> JSString -> IO ()

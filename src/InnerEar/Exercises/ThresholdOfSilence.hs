@@ -13,12 +13,11 @@ import InnerEar.Exercises.MultipleChoice
 import InnerEar.Types.ExerciseId
 import InnerEar.Types.Exercise
 import InnerEar.Types.Score
-import InnerEar.Types.Data
+import InnerEar.Types.Data hiding (Time)
+import InnerEar.Types.Sound
 import InnerEar.Widgets.Config
 import InnerEar.Widgets.SpecEval
 import InnerEar.Widgets.AnswerButton
-
-
 
 type Config = Int -- gain value for attenuated sounds
 
@@ -40,15 +39,15 @@ instance Show Answer where
 instance Buttonable Answer where
   makeButton = showAnswerButton
 
-renderAnswer::Map String Buffer -> Config -> (SourceNodeSpec,Maybe Time)-> Maybe Answer -> Synth ()
+renderAnswer :: Map String AudioBuffer -> Config -> (SourceNodeSpec, Maybe Time) -> Maybe Answer -> Synth ()
 renderAnswer _ db (src, dur) (Just (Answer True)) = buildSynth $ do
   let env = maybe (return EmptyGraph) (rectEnv (Millis 1)) dur
-  synthSource src >> gain (Db db) >> env >> destination
+  synthSource src >> gain (Db $ fromIntegral db) >> env >> destination
   maybeDelete (fmap (+ Sec 0.2) dur)
 renderAnswer _ db _ (Just (Answer False)) = return ()
 renderAnswer _ db (src, dur) Nothing = buildSynth $ do
   let env = maybe (return EmptyGraph) (rectEnv (Millis 1)) dur
-  synthSource src >> gain (Db db) >> env >> destination
+  synthSource src >> gain (Db $ fromIntegral db) >> env >> destination
   maybeDelete (fmap (+ Sec 0.2) dur)
 
 instructionsText = "In this exercise, the system either makes no sound at all \
@@ -66,16 +65,12 @@ displayEval = displayMultipleChoiceEvaluationGraph' "Session Performance" "" ans
 generateQ :: Config -> [ExerciseDatum] -> IO ([Answer], Answer)
 generateQ _ _ = randomMultipleChoiceQuestion answers
 
-
 sourcesMap :: Map Int (String, SoundSourceConfigOption)
-sourcesMap = [
-  (0,("Pink noise", Resource "pinknoise.wav" (Just 2) )),
-  (0,("White noise", Resource "whitenoise.wav" (Just 2) )),
-  (2, ("Load a sound file", UserProvidedResource))
-]
-
-
-
+sourcesMap = fromList $ [
+    (0, ("Pink noise", Resource "pinknoise.wav" (Just 2))),
+    (1, ("White noise", Resource "whitenoise.wav" (Just 2))),
+    (2, ("Load a sound file", UserProvidedResource))
+  ]
 
 thresholdOfSilenceExercise :: MonadWidget t m => Exercise t m Int [Answer] Answer (Map Answer Score)
 thresholdOfSilenceExercise = multipleChoiceExercise
