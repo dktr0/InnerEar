@@ -11,4 +11,5 @@ main :: IO ()
 main = do
 	inst <- instnatiateSynth $ buildSynth $ silent >> destination
 	startSynth (Sec 0) inst
-	mainWidget clientWidget
+	globalBuffers <- loadGlobalResources
+	mainWidget $ clientWidget globalBuffers

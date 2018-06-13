@@ -159,6 +159,10 @@ foreign import javascript safe
   js_bufferLength :: AudioBuffer -> IO Int
 
 foreign import javascript safe
+  "$1.duration"
+  js_bufferDuration :: AudioBuffer -> IO Double
+
+foreign import javascript safe
   "$1.numberOfChannels"
   js_bufferNumChannels :: AudioBuffer -> IO Int
   
