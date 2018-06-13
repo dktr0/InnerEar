@@ -62,9 +62,10 @@ instructions = el "div" $ do
   elClass "div" "instructionsText" $ text "Note: the exercise will work right away with a sine wave as a reference tone (to which noise is or is not added), however it is strongly recommended that the exercise be undertaken with recorded material such as produced music, field recordings, etc. Click on the sound source menu to load a sound file from the local filesystem."
 
 
+-- Change to SoundSourceConfigOption instead of Source
+sourcesMap :: Map Int (String, SoundSourceConfigOption)
+sourcesMap = fromList $ [(0,("300hz sine wave", Spec $ Oscillator Sine (Hz 300) $ Just 2)), (1, ("Load a sound file", UserProvidedResource))]
 
-sourcesMap :: Map Int (String, Source)
-sourcesMap = fromList $ [(0,("300hz sine wave", NodeSource (OscillatorNode $ Oscillator Sine 440 0) (Just 2))), (1,("Load a soundfile", NodeSource (BufferNode $ LoadedFile "addedWhiteNoiseExercise" (PlaybackParam 0 1 False)) Nothing))]
 
 addedWhiteNoiseExercise :: MonadWidget t m => Exercise t m Config [Answer] Answer (Map Answer Score)
 addedWhiteNoiseExercise = multipleChoiceExercise

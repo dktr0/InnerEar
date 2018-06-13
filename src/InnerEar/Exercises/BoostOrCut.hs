@@ -63,8 +63,10 @@ displayEval = displayVerticalMultipleChoiceEvaluationGraph "" "" answers
 generateQ :: Config -> [ExerciseDatum] -> IO ([Answer],Answer)
 generateQ _ _ = randomMultipleChoiceQuestion answers
 
-sourcesMap:: Map Int (String,Source)
-sourcesMap = fromList $ [(0,("300hz sine wave", NodeSource (OscillatorNode $ Oscillator Sine 440 0) (Just 2))), (1,("Load a soundfile", NodeSource (BufferNode $ LoadedFile "boostOrCutExercise" (PlaybackParam 0 1 False)) Nothing))]
+sourcesMap:: Map Int (String,SoundSourceConfigOption)
+sourcesMap = fromList $ [(0,("300hz sine wave", Spec (Oscillator Sine (Hz 300)) (Just 2) )), (1, ("Load a sound file", UserProvidedResource))]
+
+
 
 boostOrCutExercise :: MonadWidget t m => Exercise t m Config [Answer] Answer (Map Answer Score)
 boostOrCutExercise = multipleChoiceExercise
