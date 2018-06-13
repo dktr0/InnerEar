@@ -18,6 +18,7 @@ import InnerEar.Widgets.Config
 import InnerEar.Widgets.UserMedia
 import InnerEar.Widgets.SpecEval
 import InnerEar.Widgets.AnswerButton
+import InnerEar.Widgets.Utility
 
 
 
@@ -56,8 +57,16 @@ instructionsText = "In this exercise, the system either makes no sound at all \
     \difficult to tell when the system is playing a sound versus when it is playing \
     \nothing."
 
+data MyTabs = Instructions | Other deriving (Eq,Show)
+
 instructions :: MonadWidget t m => m ()
-instructions = elClass "div" "instructionsText" $ text instructionsText
+-- instructions = elClass "div" "instructionsText" $ text instructionsText
+instructions = elClass "div" "instructionsText" $ do
+  tab <- simpleTabBar [Instructions,Other] Instructions
+  tabAVisible <- mapDyn (== Instructions) tab
+  visibleWhen tabAVisible $ text "This would be the text of the instructions."
+  tabBVisible <- mapDyn (== Other) tab
+  visibleWhen tabBVisible $ text "Now we are displaying some other text instead!"
 
 displayEval :: MonadWidget t m => Dynamic t (Map Answer Score) -> m ()
 displayEval = displayMultipleChoiceEvaluationGraph' "Session Performance" "" answers

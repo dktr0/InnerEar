@@ -888,3 +888,30 @@ textarea.journalItem {
 .instructionsText {
   text-align: left;
 }
+
+.simpleTabBar {
+  margin: 0px;
+  padding: 0px;
+}
+
+.inactiveTab {
+  display: inline;
+  margin-right: 1px;
+  padding: 1em;
+  background-color: black;
+  border-radius: 4px;
+  border-left: 1px solid grey;
+  border-right: 1px solid grey;
+  border-top: 1px solid grey;
+}
+
+.activeTab {
+  display: inline;
+  margin-right: 1px;
+  padding: 1em;
+  background-color: grey;
+  border-radius: 4px;
+  border-left: 1px solid grey;
+  border-right: 1px solid grey;
+  border-top: 1px solid grey;
+}

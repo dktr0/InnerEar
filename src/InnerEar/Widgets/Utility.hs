@@ -19,6 +19,27 @@ import Control.Monad.IO.Class (liftIO)
 import GHCJS.DOM.Types (castToHTMLCanvasElement)
 import GHCJS.DOM.EventM
 
+-- | simpleTabBar provides an implementation of a series of tabs. The active
+-- tab is rendered as a div with the style "activeTab" and all other tabs are
+-- rendered with the style "inactiveTab". This might be used together with
+-- visibleWhen (see below) in order to a series of tabbed pages.
+
+simpleTabBar :: (MonadWidget t m, Show a, Eq a) => [a] -> a -> m (Dynamic t a)
+simpleTabBar possibilities initial = divClass "simpleTabBar" $ mdo
+  a <- mapM (simpleTabBuilder r) possibilities
+  r <- holdDyn initial $ leftmost a
+  return r
+
+simpleTabBuilder :: (MonadWidget t m, Show a, Eq a) => Dynamic t a -> a -> m (Event t a)
+simpleTabBuilder currentTab label = do
+  isActive <- mapDyn (==label) currentTab
+  cssClass <- mapDyn (bool "inactiveTab" "activeTab") isActive
+  attrs <- mapDyn (M.singleton "class") cssClass
+  (e,_) <- elDynAttr' "div" attrs $ text (show label)
+  clickEv <- wrapDomEvent (_el_element e) (onEventName Click) (mouseXY)
+  return $ label <$ clickEv
+
+
 -- | dynE is like dyn from Reflex, specialized for widgets that return
 -- events. A dynamic argument updates the widget, and the return value is
 -- already flattened to just being the events returned by the child widget.
