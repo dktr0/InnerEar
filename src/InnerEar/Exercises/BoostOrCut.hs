@@ -48,11 +48,11 @@ instructions = el "div" $ do
 renderAnswer::Map String AudioBuffer -> Config -> (SourceNodeSpec,Maybe Time)-> Maybe Answer -> Synth ()
 renderAnswer _ db (src, dur) (Just (Answer True)) = buildSynth $ do
   let env = maybe (return EmptyGraph) (rectEnv (Millis 1)) dur
-  synthSource src >> gain (Db (-10+db)) >> env >> destination
+  synthSource src >> gain (Db $ fromIntegral (-10+db)) >> env >> destination
   maybeDelete (fmap (+Sec 0.2) dur)
 renderAnswer _ _ (src, dur) _ = buildSynth $ do
   let env = maybe (return EmptyGraph) (rectEnv (Millis 1)) dur
-  synthSource src >> gain (Db $ -10) >> env >> destination
+  synthSource src >> gain (Db $ fromIntegral $ -10) >> env >> destination
   maybeDelete (fmap (+Sec 0.2) dur)
 
 

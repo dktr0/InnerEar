@@ -42,12 +42,12 @@ renderAnswer :: Map String AudioBuffer -> Config -> (SourceNodeSpec, Maybe Time)
 renderAnswer sysResources db (src, dur) (Just (Answer True)) = buildSynth $ do
   -- sticking an EmptyGraph somewhere won't break the stack structure of Synths right?
   let env = maybe (return EmptyGraph) (rectEnv (Millis 1)) dur
-  synthSource src >> gain (Db $ -10) >> env >> destination
+  synthSource src >> gain (Db $ fromIntegral $ -10) >> env >> destination
   audioBufferSource (sysResources!!"whitenoise") (BufferParams 0 1 (isJust dur)) >> env >> destination
   maybeDelete (fmap (+Sec 0.2) dur)
 renderAnswer _ db (src, dur) _ = buildSynth $ do
   let env = maybe (return EmptyGraph) (rectEnv (Millis 1)) dur
-  synthSource src >> gain (Db $ -10) >> env >> destination
+  synthSource src >> gain (Db $ fromIntegral $ -10) >> env >> destination
   maybeDelete (fmap (+Sec 0.2) dur)
 
 
@@ -65,7 +65,7 @@ instructions = el "div" $ do
 
 -- Change to SoundSourceConfigOption instead of Source
 sourcesMap :: Map Int (String, SoundSourceConfigOption)
-sourcesMap = fromList $ [(0,("300hz sine wave", Spec $ Oscillator Sine (Hz 300) $ Just 2)), (1, ("Load a sound file", UserProvidedResource))]
+sourcesMap = fromList $ [(0,("300hz sine wave", Spec (Oscillator Sine (Hz 300) ) (Just 2))), (1, ("Load a sound file", UserProvidedResource))]
 
 
 addedWhiteNoiseExercise :: MonadWidget t m => Exercise t m Config [Answer] Answer (Map Answer Score)

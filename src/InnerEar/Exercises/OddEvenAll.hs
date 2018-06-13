@@ -37,7 +37,7 @@ answers = [Odd,Even,All]
 renderAnswer :: Map String AudioBuffer -> Config -> (SourceNodeSpec,Maybe Time) -> Maybe Answer -> Synth ()
 renderAnswer _ f0 _ (Just a) = buildSynth $ do
   let env = asr (Sec 0.01) (Sec 2) (Sec 0.01)
-  masterGain <- gain (Db $ -10)  -- Is this the right way to do this?
+  masterGain <- gain (Db $ fromIntegral (-10))  -- Is this the right way to do this?
   mapM (\(f,g) -> oscillator Sine f >> gain g >> env >> masterGain >> destination) oscSpecs
   setDeletionTime (Sec 2.5)
   where
@@ -45,7 +45,7 @@ renderAnswer _ f0 _ (Just a) = buildSynth $ do
       Odd -> Prelude.filter (< 20000) $ take 200 $ fmap (Hz . (* f0)) [1,3 .. ]
       Even -> Prelude.filter (< 20000) $ take 200 $ fmap (Hz . (*f0)) (1:[2,4..])
       All -> Prelude.filter (< 20000) $ take 200 $ fmap (Hz . (* f0)) [1,2 .. ]
-    gs = fmap Db [0,(-6) .. ]
+    gs = fmap (Db . fromIntegral) [0,(-6) .. ]
     oscSpecs = zip fs gs
 renderAnswer _ f0 _ Nothing = return ()
 

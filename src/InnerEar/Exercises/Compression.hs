@@ -43,14 +43,14 @@ renderAnswer::Map String AudioBuffer -> Config -> (SourceNodeSpec,Maybe Time)-> 
 renderAnswer _ ratio (src, dur) (Just (Answer True)) = buildSynth $ do
   let env = maybe (return EmptyGraph) (rectEnv (Millis 1)) dur
   synthSource src
-  gain $ Db  $ -10
+  gain $ Db $ fromIntegral $ -10
   compressor (-20) r 0 0.003 0.1
   env
   destination
   maybeDelete (fmap (+Sec 0.2) dur)
 renderAnswer _ _ (src, dur) _ = buildSynth $ do
   let env = maybe (return EmptyGraph) (rectEnv (Millis 1)) dur
-  synthSource src >> gain (Db $ -10) >> env >> destination
+  synthSource src >> gain (Db $ fromIntegral $ -10) >> env >> destination
   maybeDelete (fmap (+Sec 0.2) dur)
 
 displayEval :: MonadWidget t m => Dynamic t (Map Answer Score) -> m ()
