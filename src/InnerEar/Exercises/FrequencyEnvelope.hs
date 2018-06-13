@@ -15,7 +15,8 @@ import InnerEar.Types.Exercise
 import InnerEar.Types.Score
 import InnerEar.Widgets.Config
 import InnerEar.Widgets.SpecEval
-import InnerEar.Types.Data
+import InnerEar.Types.Data hiding (Time)
+
 import InnerEar.Types.Frequency
 import InnerEar.Types.Utility
 import InnerEar.Widgets.AnswerButton
@@ -74,7 +75,7 @@ actualEnvelope (s,d,o) a = scaleRange (lowPitch o) (highPitch o) $ scaleDomain 0
 sampleEnvelope :: Int -> (Double -> Double) -> Duration -> [Double]
 sampleEnvelope r f d = fmap (f . (\x -> x * fromIntegral(d)/1000.0/fromIntegral(r))) $ fmap fromIntegral [0, 1 .. (r-1)]
 
-renderAnswer :: Map String Buffer -> Config -> (SourceNodeSpec, Maybe Time)-> Maybe Answer -> Synth ()
+renderAnswer :: Map String AudioBuffer -> Config -> (SourceNodeSpec, Maybe Time)-> Maybe Answer -> Synth ()
 renderAnswer _ c@(s, d, o) _ (Just ans) = buildSynth $ do
   let dur = Millis d
   let curve = sampleEnvelope 200 (actualEnvelope c ans) dur

@@ -15,7 +15,8 @@ import InnerEar.Types.Exercise
 import InnerEar.Types.Score
 import InnerEar.Widgets.Config
 import InnerEar.Widgets.SpecEval
-import InnerEar.Types.Data
+import InnerEar.Types.Data hiding (Time)
+import InnerEar.Types.Sound
 import InnerEar.Widgets.AnswerButton
 
 type Config = Double -- representing level of attenuation for added white noise

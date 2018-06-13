@@ -15,7 +15,8 @@ import InnerEar.Types.Exercise
 import InnerEar.Types.Score
 import InnerEar.Widgets.Config
 import InnerEar.Widgets.SpecEval
-import InnerEar.Types.Data
+import InnerEar.Types.Data hiding (Time)
+import InnerEar.Types.Sound
 import InnerEar.Widgets.AnswerButton
 
 type Config = Double -- representing threshold of clipping, and inverse of post-clip normalization
@@ -37,7 +38,7 @@ instance Buttonable Answer where
 
 answers = [Answer False,Answer True]
 
-renderAnswer :: Map String Buffer -> Config -> (SourceNodeSpec, Maybe Time)-> Maybe Answer -> Synth ()
+renderAnswer :: Map String AudioBuffer -> Config -> (SourceNodeSpec, Maybe Time)-> Maybe Answer -> Synth ()
 renderAnswer _ clipDb (src,dur) (Just (Answer True)) = buildSynth $ do
   let env = maybe (return EmptyGraph) (rectEnv (Millis 1)) dur
   synthSource src >> clipAt (Db clipDb) >> gain (Db $ -10) >> env >> destination

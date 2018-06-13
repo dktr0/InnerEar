@@ -15,7 +15,8 @@ import InnerEar.Types.Exercise
 import InnerEar.Types.Score
 import InnerEar.Widgets.Config
 import InnerEar.Widgets.SpecEval
-import InnerEar.Types.Data
+import InnerEar.Types.Data hiding (Time)
+import InnerEar.Types.Sound
 import InnerEar.Widgets.AnswerButton
 
 type Config = Double -- representing compression ratio, i.e. 2 = 2:1 compression ratio
@@ -38,7 +39,7 @@ instance Buttonable Answer where
 answers = [Answer False,Answer True]
 
 
-renderAnswer::Map String Buffer -> Config -> (SourceNodeSpec,Maybe Time)-> Maybe Answer -> Synth ()
+renderAnswer::Map String AudioBuffer -> Config -> (SourceNodeSpec,Maybe Time)-> Maybe Answer -> Synth ()
 renderAnswer _ ratio (src, dur) (Just (Answer True)) = buildSynth $ do
   let env = maybe (return EmptyGraph) (rectEnv (Millis 1)) dur
   synthSource src

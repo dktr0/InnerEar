@@ -15,7 +15,10 @@ import InnerEar.Types.Exercise
 import InnerEar.Types.Score
 import InnerEar.Widgets.Config
 import InnerEar.Widgets.SpecEval
-import InnerEar.Types.Data
+
+import InnerEar.Types.Data hiding (Time)
+
+
 import InnerEar.Types.Frequency
 import InnerEar.Widgets.AnswerButton
 
@@ -31,7 +34,7 @@ instance Buttonable Answer where
 
 answers = [Odd,Even,All]
 
-renderAnswer :: Map String Buffer -> Config -> (SourceNodeSpec,Maybe Time) -> Maybe Answer -> Synth ()
+renderAnswer :: Map String AudioBuffer -> Config -> (SourceNodeSpec,Maybe Time) -> Maybe Answer -> Synth ()
 renderAnswer _ f0 _ (Just a) = buildSynth $ do
   let env = asr (Sec 0.01) (Sec 2) (Sec 0.01)
   masterGain <- gain (Db $ -10)  -- Is this the right way to do this?
