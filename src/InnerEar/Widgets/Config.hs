@@ -26,7 +26,7 @@ import Reflex.Synth.Buffer
 -- sourceToSourceNodeSpec SineOscillator' = return $ OscillatorNode Sine (Hz 300)
 -- sourceToSourceNodeSpec UserSoundFile x = mkBuffer x
 
-configWidget :: (MonadWidget t m, Eq c) => String -> Map Int (String, SoundSourceConfigOption) -> Int -> String -> Map Int (String, c) -> c -> m (Dynamic t c, Dynamic t (Maybe SourceNodeSpec), Event t (), Event t ())
+configWidget :: (MonadWidget t m, Eq c) => String -> Map Int (String, SoundSourceConfigOption) -> Int -> String -> Map Int (String, c) -> c -> m (Dynamic t c, Dynamic t (Maybe (SourceNodeSpec, Maybe Time)), Event t (), Event t ())
 configWidget inputID sourceMap iSource configLabel configMap iConfig = elClass "div" "configWidget" $ do
   config <- elClass "div" "exerciseConfigWidget" $ exerciseConfigWidget configLabel configMap iConfig
   (dynSrcSpec, playEv, stopEv) <- elClass "div" "sourceWidget" $ sourceSelectionWidget inputID sourceMap iSource
@@ -40,7 +40,7 @@ exerciseConfigWidget label configMap iConfig = do
   dd <- dropdown index (constDyn $ fmap fst configMap) ddConfig -- & dropdownConfig_attributes .~ (constDyn $ M.singleton "class" "soundSourceDropdown")
   mapDyn (\x -> snd $ fromJust $ Data.Map.lookup x configMap) $ _dropdown_value dd
 
-sourceSelectionWidget :: MonadWidget t m => String -> Map Int (String, SoundSourceConfigOption) -> Int -> m (Dynamic t (Maybe SourceNodeSpec), Event t (), Event t ())
+sourceSelectionWidget :: MonadWidget t m => String -> Map Int (String, SoundSourceConfigOption) -> Int -> m (Dynamic t (Maybe (SourceNodeSpec, Maybe Time)), Event t (), Event t ())
 sourceSelectionWidget inputID choices defChoiceIdx =
   elClass "div" "sourceSelection" $ do
     text "Sound source: "

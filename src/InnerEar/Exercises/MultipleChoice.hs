@@ -37,7 +37,7 @@ import Reflex.Synth.Synth
 type AnswerRenderer c a = Map String AudioBuffer -> c -> (SourceNodeSpec, Maybe Time) -> Maybe a -> Synth ()
 
 -- | ConfigWidgetBuilder constructs a configuration widget with a given default configuration.
-type ConfigWidgetBuilder m t c a = c -> m (Dynamic t c, Dynamic t (Maybe SourceNodeSpec), Event t (), Event t ())
+type ConfigWidgetBuilder m t c a = c -> m (Dynamic t c, Dynamic t (Maybe (SourceNodeSpec, Time)), Event t (), Event t ())
 
 multipleChoiceExercise :: (MonadWidget t m, Show a, Eq a, Ord a, Data c, Data a, Ord c, Buttonable a)
   => Int -- maximum number of tries to allow
