@@ -1,6 +1,8 @@
 module Reflex.Synth.Buffer (
-  Buffer,
-  mapToBuffer
+  Buffer(..),
+  BufferStatus(..),
+  mapToBuffer,
+  buffer,
 ) where
 
 import Control.Monad.IO.Class
@@ -25,7 +27,8 @@ instance Show Buffer where show _ = "Buffer"
 instance PToJSVal Buffer where pToJSVal (Buffer val) = val
 
 data BufferStatus 
-  = BufferNotLoaded 
+  = BufferUnderspecified
+  | BufferLoading
   | BufferError String
   | BufferLoaded AudioBuffer
 
@@ -33,18 +36,19 @@ bufferStatus :: Buffer -> IO (Maybe BufferStatus)
 bufferStatus buffer = do
   rawStatus <- js_getBufferStatus buffer
   case unpack rawStatus of
-    "created" -> return $ Just BufferNotLoaded
+    "loading" -> return $ Just BufferLoading
+    "decoding" -> return $ Just BufferLoading
     "error" -> do
       err <- js_getBufferError buffer
       return $ Just $ BufferError $ unpack err
     "decoded" -> do
       audioBuffer <- js_getAudioBuffer buffer
       return $ Just $ BufferLoaded audioBuffer
-    _ -> return Nothing
+    otherwise -> return Nothing
+
 
 mapToBuffer :: MonadWidget t m => Event t File -> m (Event t Buffer, Event t BufferStatus)
 mapToBuffer fileEv = do
-
   -- bufferEv :: Event t Buffer - a buffer ready to start loading it's file
   bufferEv <- performEvent $ ffor fileEv $ \file -> liftIO $ do
     ctx <- js_setupGlobalAudioContext
@@ -62,11 +66,15 @@ mapToBuffer fileEv = do
 
   return (stateChangeEv, statusEv')
 
-buffer :: MonadWidget t m => Event t (Maybe File) -> m (Dynamic t (Maybe (Buffer, BufferStatus)))
-buffer fileEv = do
-  error "Not yet implemented"
-  -- (bufferEv, statusEv) <- mapToBuffer fileEv
-  -- holdDyn
+-- | buffer creates a smart buffer for asynchronous loading of the most recent `Just` file fired
+-- from the `Event t (Maybe File)`. Until the first occurance of the event, the buffer is `Nothing`.
+-- The returned buffer status monitors the current state of the buffer. 
+buffer :: MonadWidget t m => Event t (Maybe File) -> m (Dynamic t (Maybe Buffer), Dynamic t BufferStatus)
+buffer maybeFileEv = do
+  (bufferEv, statusEv) <- mapToBuffer (fmapMaybe id maybeFileEv)
+  dynBuffer <- holdDyn Nothing $ fmap Just bufferEv
+  dynStatus <- holdDyn BufferUnderspecified statusEv
+  return (dynBuffer, dynStatus)
 
 foreign import javascript safe
   "new Buffer($1, $2)"

@@ -15,8 +15,10 @@ import GHCJS.Types (JSString)
 import qualified GHCJS.DOM.Types as DT
 import GHCJS.Marshal.Pure (pToJSVal)
 import GHCJS.DOM.EventM
+
 import Reflex.Synth.Spec
 
+import InnerEar.Types.Sound
 import InnerEar.Widgets.Utility
 
 data CanvasEvent = ClickEvent {value::Double} | DragEvent {value::Double} | ReleaseEvent {value::Double} deriving (Show)
@@ -85,11 +87,8 @@ drawRange canvas (RangeState l r drag)  = do
   fillRect canvas 0 0 (l*w) h
   fillRect canvas (r*w) 0 (w-r*w) h
 
-drawSource :: DT.HTMLCanvasElement -> SourceNodeSpec -> IO ()
-drawSource canvas Silent = error "Not yet implemented! drawSource canvas Silent" -- This probablly shouldn't ever be drawn but it is a SourceNodeSpec...
-drawSource canvas (Oscillator t f) = error "Not yet implemented! drawSource canvas (Oscillator t f)"
-drawSource canvas (AudioBufferSource buffer params) = error "drawSource canvas (AudioBufferSource buffer params)" -- This buffer is already loaded and decoded.
-
+drawSource :: DT.HTMLCanvasElement -> SoundSource -> IO ()
+drawSource canvas src = error "Not yet implemented! drawSource"
 
 foreign import javascript unsafe
   "$1.getContext('2d').fillStyle = $2" fillStyle :: DT.HTMLCanvasElement -> JSString -> IO ()

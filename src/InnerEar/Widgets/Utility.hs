@@ -33,6 +33,14 @@ import GHCJS.DOM.EventM
 --   x <- fmap (liftIO . f) $ updated a -- m (Event t b)
 --   holdDyn i' x -- Dynamic t b
 
+-- | asapOrUpdated creates an event based on reflex's `updated` for the given Dynamic
+-- but also triggers at most once postBuild unless for some reason the dynamic is changed
+-- before that. 
+asapOrUpdated :: MonadWidget t m => Dynamic t a -> m (Event t a)
+asapOrUpdated src = do
+  postBuild <- getPostBuild >>= onceE
+  let srcChangedEv = updated src
+  switchPromptly (tagDyn src postBuild) (srcChangedEv <$ srcChangedEv)
 
 -- | dynE is like dyn from Reflex, specialized for widgets that return
 -- events. A dynamic argument updates the widget, and the return value is

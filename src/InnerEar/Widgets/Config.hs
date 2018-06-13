@@ -12,10 +12,10 @@ import Reflex.Class
 import Control.Monad(liftM)
 
 import InnerEar.Widgets.Canvas
-import InnerEar.Widgets.Utility(radioWidget, elClass', hideableWidget)
+import InnerEar.Widgets.Utility(radioWidget, elClass', hideableWidget, asapOrUpdated)
 import InnerEar.Types.Sound
 import Reflex.Synth.Spec
-import Reflex.Synth.Utils
+import Reflex.Synth.Buffer
 
 
 -- Verify this but for css styling, what goes in the config panel is 1 div with class "configWidget" and 2 internal divs:
@@ -41,13 +41,13 @@ exerciseConfigWidget label configMap iConfig = do
   dd <- dropdown index (constDyn $ fmap fst configMap) ddConfig -- & dropdownConfig_attributes .~ (constDyn $ M.singleton "class" "soundSourceDropdown")
   mapDyn (\x -> snd $ fromJust $ Data.Map.lookup x configMap) $ _dropdown_value dd
 
-sourceSelectionWidget :: MonadWidget t m => String -> Map Int (String, SoundSourceConfigOption) -> Int -> m (Dynamic t (Maybe SourceNodeSpec))
-sourceSelectionWidget inputID choices defChoiceIdx = do
-  (dynSelOpt, dynSelFile) <- elClass "div" "sourceSelection" $ do
+sourceSelectionWidget :: MonadWidget t m => String -> Map Int (String, SoundSourceConfigOption) -> Int -> m (Dynamic t (Maybe SourceNodeSpec), Event t (), Event t ())
+sourceSelectionWidget inputID choices defChoiceIdx =
+  elClass "div" "sourceSelection" $ do
     text "Sound source: "
     dd <- dropdown defChoiceIdx (constDyn $ fmap fst choices) def
 
-    dynSelOpt <- forDyn (value dd) $ \choiceIdx -> snd $ choices!!choiceIdx
+    dynSelOpt <- forDyn (value dd) $ \choiceIdx -> snd $ choices!choiceIdx
     inputAttrs <- forDyn dynSelOpt $ \opt -> 
       let staticAttr = fromList [("accept", "audio/*"), ("id", inputID)] in
         case opt of
@@ -59,75 +59,77 @@ sourceSelectionWidget inputID choices defChoiceIdx = do
     -- value userResourceInput :: Dynamic t [File] **but** because `multiple` is not specified
     -- as an attribute this list will never have more than 1. So we can map that to a `Maybe File`
     -- to make this more clear.
-    -- (Dynamic t SoundSourceConfig, Dynamic t (Maybe File))
-    return (dynSelOpt, fmap listToMaybe $ value userResourceInput)
+    dynSelFile <- mapDyn listToMaybe $ value userResourceInput
 
-  -- TODO this pattern is really nice where there could be any arbitrary source
-  -- configuration widgets between the loaded and playback. This should be abstracted
-  -- a bit more to better support new source options.
-  return $ loadOption dynSelOpt dynSelFile 
-    >>= sourceRangeConfigurationWidget
-    >>= sourcePlaybackControlsWidget
+    selFileEv <- asapOrUpdated dynSelFile
+    -- (Dynamic t (Maybe Buffer), Dynamic t BufferStatus)
+    (dynBuffer, dynBufferStatus) <- buffer selFileEv
 
-loadOption :: MonadWidget t m => Dynamic t SoundSourceConfigOption -> Dynamic t (Maybe G.File) -> m (Dynamic t (Maybe SourceNodeSpec))
-loadOption (Spec spec) _ = return $ constDyn $ Just spec
-loadOption (Resource resourceId) _ = undefined -- TODO needs implementation, grab local resource
-loadOption UserProvidedResource Nothing = return $ constDyn $ Nothing -- No spec until file is specified
-loadOption UserProvidedResource (Just src) = do
-  -- loadedEv :: Event t (Either String AudioBuffer)
-  loadedEv <- loadAudioBufferFromFile src
-  -- loadedSpecEv :: Event t (Maybe SourceNodeSpec)
-  loadedSpecEv <- ffor loadedEv $ \res -> case res of
-    Left errMsg -> Nothing -- TODO present this error somehow.
-    Right buffer -> Just $ AudioBufferSource buffer $ BufferParams 0 1 False
-  dynSpec <- holdDyn Nothing loadedSpecEv
-  return $ holdDyn Nothing 
+    -- Dynamic t SoundSource
+    dynSoundSrc <- combineDyn constructSoundSource dynSelOpt dynBufferStatus
+    dynConfig <- forDyn dynSoundSrc $ \src -> SoundSourceConfig {
+        source = src,
+        playbackRange = (0, 1),
+        shouldLoop = False
+      }
+    
+    (dynSrcCfg, playEv, stopEv) <- return dynConfig 
+      >>= sourceRangeConfigurationWidget 
+      >>= sourcePlaybackControlsWidget
+
+    -- Take all of the configuration options and compile them import a configured spec
+    dynSpec <- forDyn dynSrcCfg $ \cfg -> case source cfg of
+      SourceLoading -> Nothing
+      SourceUnderSpecified -> Nothing
+      SourceError msg -> Nothing -- TODO display this error somewhere visible to the user
+      SourceLoaded (AudioBufferSource d _) -> 
+        let params = BufferParams (fst $ playbackRange cfg) (snd $ playbackRange cfg) (shouldLoop cfg) in
+          Just $ AudioBufferSource d params
+      SourceLoaded spec -> Just spec
+
+    return (dynSpec, playEv, stopEv)
+
+constructSoundSource :: SoundSourceConfigOption -> BufferStatus -> SoundSource
+constructSoundSource (Spec spec) _ = SourceLoaded spec
+constructSoundSource (Resource resourceId) _ = error "Not yet implemented: loadOption (Resource resourceId)" -- TODO needs implementation, grab local resource
+constructSoundSource UserProvidedResource BufferUnderspecified = SourceUnderSpecified
+constructSoundSource UserProvidedResource BufferLoading = SourceLoading
+constructSoundSource UserProvidedResource (BufferError msg) = SourceError msg
+constructSoundSource UserProvidedResource (BufferLoaded bufData) = SourceLoaded $ AudioBufferSource bufData $ BufferParams 0 1 False
 
 -- | sourceSelectionConfigWidget configures a selected source.
-sourceRangeConfigurationWidget :: MonadWidget t m => Dynamic t (Maybe SourceNodeSpec) -> m (Dynamic t (Maybe SourceNodeSpec))
-sourceRangeConfigurationWidget dynLoadedSpec =
+sourceRangeConfigurationWidget :: MonadWidget t m => Dynamic t SoundSourceConfig -> m (Dynamic t SoundSourceConfig)
+sourceRangeConfigurationWidget dynSrc =
   elClass "div" "sourceCanvasWrapper" $ do
-    canvasElement <- G.castToHTMLCanvasElement <$> _el_element <$> elClass' "canvas" "waveformCanvas" blank
+    canvasElement <- G.castToHTMLCanvasElement <$> _el_element <$> fst <$> elClass' "canvas" "waveformCanvas" blank
     
-    dynPlaybackRange <- forDyn dynLoadedSpec $ \s -> case s of
-      Nothing -> rangeSelect False (0, 1)
-      Just Silent -> rangeSelect False (0, 1)
-      Just (Oscillator _ _) -> rangeSelect False (0, 1)
-      Just (AudioBufferSource _ (BufferParams start end _)) -> rangeSelect True (start, end)
+    initialRange <- playbackRange <$> sample (current dynSrc)
+    dynRangeSelectVisible <- forDyn dynSrc $ \s -> case source s of
+      SourceLoaded (AudioBufferSource _ _) -> True
+      otherwise -> False
 
-    -- Try to redraw the source (no-op if Nothing) when the spec is loaded and when the canvas is ready to draw on
-    postBuild <- getPostBuild
-    performEvent_ $ fmap (maybe (return ()) (drawSource canvasElement)) $ leftmost [updated dynLoadedSpec, tagDyn dynLoadedSpec postBuild]
+    dynPlaybackRange <- rangeSelect dynRangeSelectVisible initialRange
 
-    return $ combineDyn configureSpecRange dynPlaybackRange dynLoadedSpec
-  where
-    configureSpecRange :: (Double, Double) -> Maybe SourceNodeSpec -> Maybe SourceNodeSpec
-    configureSpecRange (start, end) (Just (AudioBufferSource buf (BufferParams _ _ loop))) = 
-      Just $ AudioBufferSource buf $ BufferParams start end loop
-    configureSpec _ = id
+    -- Draw the source asap and then redraw any time the source is updated
+    dynLoadedSpec <- mapDyn source dynSrc
+    specChangedEv <- asapOrUpdated dynLoadedSpec
+    performEvent_ $ fmap (liftIO . drawSource canvasElement) specChangedEv
 
-sourcePlaybackControlsWidget :: MonadWidget t m => Dynamic t (Maybe SourceNodeSpec) -> m (Dynamic t (Maybe SourceNodeSpec), Event t (), Event t ())
-sourcePlaybackControlsWidget dynLoadedSpec =
+    combineDyn (\r cfg -> cfg { playbackRange = r }) dynPlaybackRange dynSrc
+
+sourcePlaybackControlsWidget :: MonadWidget t m => Dynamic t SoundSourceConfig -> m (Dynamic t SoundSourceConfig, Event t (), Event t ())
+sourcePlaybackControlsWidget dynSrc =
   elClass "div" "bufferControls" $ do
     playEv <- button "►"
     stopEv <- button "◼"
     
     text "Loop:"
-    isLoopingSetNow <- isLoopingSet <$> sample <$> current dynLoadedSpec
-    loopCheckbox <- checkbox isLoopingSetNow $ CheckboxConfig (fmap isLoopingSet $ updated dynLoadedSpec) (constDyn empty)
-    dynIsLoopChecked <- value loopCheckbox
+    isLoopingSetNow <- shouldLoop <$> sample (current dynSrc)
+    shouldLoopCheckbox <- checkbox isLoopingSetNow $ CheckboxConfig (fmap shouldLoop $ updated dynSrc) (constDyn empty)
+    let dynIsLoopChecked = value shouldLoopCheckbox
 
-    dynConfiguredSpec <- combineDyn configureSpecLooping dynIsLoopChecked dynLoadedSpec
-    return (dynConfiguredSpec, playEv, stopEv)
-  where 
-    isLoopingSet :: Maybe SourceNodeSpec -> Bool
-    isLoopingSet (Just (AudioBufferSource _ (BufferParams _ _ loop))) = loop
-    isLoopingSet _ = False
-    
-    configureSpecLooping :: Bool -> Maybe SourceNodeSpec -> Maybe SourceNodeSpec
-    configureSpecLooping looping (Just (AudioBufferSource buf (BufferParams s e _))) =
-      Just $ AudioBufferSource buf $ BufferParams s e looping
-    configureSpecLooping _ = id
+    dynConfiguredSrc <- combineDyn (\l cfg -> cfg { shouldLoop = l }) dynIsLoopChecked dynSrc
+    return (dynConfiguredSrc, playEv, stopEv)
 
 -- sineSourceConfig :: (MonadWidget t m) => String -> Map String Double -> Double -> m (Dynamic t Double, Dynamic t Source, Event t (Maybe a))
 -- sineSourceConfig inputID configMap iConfig = elClass "div" "configWidget" $ do
