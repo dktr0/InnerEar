@@ -15,7 +15,7 @@ import InnerEar.Widgets.SpecEval
 import InnerEar.Types.Data hiding (Time)
 import InnerEar.Types.Sound
 import InnerEar.Types.Score
-import Reflex.Synth.Synth
+import Reflex.Synth.Synth hiding(Frequency)
 import InnerEar.Types.Exercise
 import InnerEar.Types.ExerciseId
 import InnerEar.Types.Frequency
@@ -46,13 +46,24 @@ answers = [Answer $ F 155 "Bass (155 Hz)",Answer $ F 1125 "Low Mids (1125 Hz)",A
   Answer $ F 5000 "Presence (5 kHz)",Answer $ F 13000 "Brilliance (13 kHz)"]
 
 
+  -- data FilterSpec
+  --   = LowPass Frequency Double
+  --   | HighPass Frequency Double
+  --   | BandPass Frequency Double
+  --   | LowShelf Frequency Gain
+  --   | HighShelf Frequency Gain
+  --   | Peaking Frequency Double Gain
+  --   | Notch Frequency Double
+  --   | AllPass Frequency Double
+  --   -- | IIR [Double] [Double] feedforward feedback
+  --   deriving (Show)
 
 renderAnswer :: Map String AudioBuffer -> Config -> (SourceNodeSpec,Maybe Time)-> Maybe Answer -> Synth ()
 renderAnswer _ db (src, dur) (Just freq) = buildSynth $ do
   let env = maybe (return EmptyGraph) (rectEnv (Millis 1)) dur
-  createSrc src
-  getEnv dur (Db $ fromIntegral $ -10)
-  biquadFilter "peaking" (Hz freq) 1.4 (Db $ fromIntegral db)
+  synthSource src
+  biquadFilter $ Peaking (frequency freq) 1.4 (Db $ fromIntegral db)
+  gain (Db $ -10.0)
   env
   destination
   maybeDelete (fmap (+Sec 0.2) dur)

@@ -18,8 +18,8 @@ audioBufferSource :: AudioBuffer -> BufferParams -> SynthBuilder Graph
 audioBufferSource b p = synthSource $ AudioBufferSource b p
 
 
-biquadFilfer :: FilterSpec -> SynthBuilder Graph
-biquadFilfer = synthSourceSink . Filter
+biquadFilter :: FilterSpec -> SynthBuilder Graph
+biquadFilter = synthSourceSink . Filter
 
 gain :: Amplitude -> SynthBuilder Graph
 gain amp = synthSourceSink $ Gain amp
