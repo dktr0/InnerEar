@@ -37,7 +37,7 @@ import Reflex.Synth.Synth
 type AnswerRenderer c a = Map String AudioBuffer -> c -> (SourceNodeSpec, Maybe Time) -> Maybe a -> Synth ()
 
 -- | ConfigWidgetBuilder constructs a configuration widget with a given default configuration.
-type ConfigWidgetBuilder m t c a = c -> m (Dynamic t c, Dynamic t (Maybe (SourceNodeSpec, Time)), Event t (), Event t ())
+type ConfigWidgetBuilder m t c a = c -> m (Dynamic t c, Dynamic t (Maybe (SourceNodeSpec, Maybe Time)), Event t (), Event t ())
 
 multipleChoiceExercise :: (MonadWidget t m, Show a, Eq a, Ord a, Data c, Data a, Ord c, Buttonable a)
   => Int -- maximum number of tries to allow
@@ -155,26 +155,24 @@ connectPlaybackControls :: MonadWidget t m
   -> Event t () 
   -> Event t () 
   -> Dynamic t c 
-  -> Dynamic t (Maybe SourceNodeSpec) 
+  -> Dynamic t (Maybe (SourceNodeSpec, Maybe Time)) 
   -> (c -> (SourceNodeSpec, Maybe Time) -> Maybe a -> Synth ()) -- ^ AnswerRenderer c a with the resources already applied
   -> m (Event t (Maybe (Synth ())))
 connectPlaybackControls playQuestion exploreAnswer playReference stop dynConfig dynSrc render = do
   let triggerPlay = leftmost [Just <$> playQuestion, Just <$> exploreAnswer, Nothing <$ playReference]
   let triggerStop = Nothing <$ stop
 
-  -- Dynamic t (c, Maybe SourceNodeSpec)
+  -- Dynamic t (c, Maybe (SourceNodeSpec, Maybe Time))
   dynRenderSrc <- combineDyn (,) dynConfig dynSrc
-  -- Event t ((c, Maybe SourceNodeSpec), Maybe a)
+  -- Event t ((c, Maybe (SourceNodeSpec, Maybe Time)), Maybe a)
   let triggerPlay' = attachDyn dynRenderSrc triggerPlay
-  triggerPlay'' <- performEvent $ fmap (liftIO . uncurry renderAnswerSound) triggerPlay'
+  let triggerPlay'' = fmap (uncurry renderAnswerSound) triggerPlay'
 
   return $ leftmost [triggerStop, triggerPlay'']
   where
-    renderAnswerSound (_, Nothing) _ = return Nothing
-    renderAnswerSound (cfg, Just src@(AudioBufferSource buf _)) ans = do
-      dur <- bufferDuration buf
-      return $ Just $ render cfg (src, Just dur) ans
-    renderAnswerSound (cfg, Just src) ans = return $ Just $ render cfg (src, Nothing) ans
+    -- (c, Maybe (SourceNodeSpec, Maybe Time)) -> Maybe a -> Maybe (Synth ())
+    renderAnswerSound (_, Nothing) _ = Nothing
+    renderAnswerSound (cfg, Just srcAndDur) ans = Just $ render cfg srcAndDur ans
 
 journalWidget :: MonadWidget t m => m (Event t (Datum c q a e))
 journalWidget = elClass "div" "journalItem" $ mdo

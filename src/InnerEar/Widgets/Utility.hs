@@ -27,6 +27,11 @@ mapDynIO f a = do
 forDynIO :: MonadWidget t m => Dynamic t a -> (a -> IO b) -> m (Dynamic t b)
 forDynIO = flip mapDynIO
 
+combineDynIO :: MonadWidget t m => (a -> b -> IO c) -> Dynamic t a -> Dynamic t b -> m (Dynamic t c)
+combineDynIO f a b = do
+  combined <- combineDyn (,) a b
+  mapDynIO (uncurry f) combined
+
 -- | asapOrUpdated creates an event based on reflex's `updated` for the given Dynamic
 -- but also triggers at most once postBuild unless for some reason the dynamic is changed
 -- before that. 

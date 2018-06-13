@@ -12,7 +12,7 @@ import Reflex.Class
 import Control.Monad(liftM)
 
 import InnerEar.Widgets.Canvas
-import InnerEar.Widgets.Utility(radioWidget, elClass', hideableWidget, asapOrUpdated)
+import InnerEar.Widgets.Utility(radioWidget, elClass', hideableWidget, asapOrUpdated, combineDynIO)
 import InnerEar.Types.Sound
 import Reflex.Synth.Spec
 import Reflex.Synth.Buffer
@@ -65,7 +65,7 @@ sourceSelectionWidget inputID choices defChoiceIdx =
     (dynBuffer, dynBufferStatus) <- buffer selFileEv
 
     -- Dynamic t SoundSource
-    dynSoundSrc <- combineDyn constructSoundSource dynSelOpt dynBufferStatus
+    dynSoundSrc <- combineDynIO constructSoundSource dynSelOpt dynBufferStatus
     dynConfig <- forDyn dynSoundSrc $ \src -> SoundSourceConfig {
         source = src,
         playbackRange = (0, 1),
@@ -81,20 +81,22 @@ sourceSelectionWidget inputID choices defChoiceIdx =
       SourceLoading -> Nothing
       SourceUnderSpecified -> Nothing
       SourceError msg -> Nothing -- TODO display this error somewhere visible to the user
-      SourceLoaded (AudioBufferSource d _) -> 
+      SourceLoaded (AudioBufferSource d _) dur -> 
         let params = BufferParams (fst $ playbackRange cfg) (snd $ playbackRange cfg) (shouldLoop cfg) in
-          Just $ AudioBufferSource d params
-      SourceLoaded spec -> Just spec
+          Just (AudioBufferSource d params, dur)
+      SourceLoaded spec dur -> Just (spec, dur)
 
     return (dynSpec, playEv, stopEv)
 
-constructSoundSource :: SoundSourceConfigOption -> BufferStatus -> SoundSource
-constructSoundSource (Spec spec) _ = SourceLoaded spec
-constructSoundSource (Resource resourceId) _ = error "Not yet implemented: loadOption (Resource resourceId)" -- TODO needs implementation, grab local resource
-constructSoundSource UserProvidedResource BufferUnderspecified = SourceUnderSpecified
-constructSoundSource UserProvidedResource BufferLoading = SourceLoading
-constructSoundSource UserProvidedResource (BufferError msg) = SourceError msg
-constructSoundSource UserProvidedResource (BufferLoaded bufData) = SourceLoaded $ AudioBufferSource bufData $ BufferParams 0 1 False
+constructSoundSource :: SoundSourceConfigOption -> BufferStatus -> IO SoundSource
+constructSoundSource (Spec spec dur) _ = return $ SourceLoaded spec dur
+constructSoundSource (Resource resourceId dur) _ = error "Not yet implemented: loadOption (Resource resourceId)" -- TODO needs implementation, grab local resource
+constructSoundSource UserProvidedResource BufferUnderspecified = return SourceUnderSpecified
+constructSoundSource UserProvidedResource BufferLoading = return SourceLoading
+constructSoundSource UserProvidedResource (BufferError msg) = return $ SourceError msg
+constructSoundSource UserProvidedResource (BufferLoaded bufData) = do
+  dur <- bufferDuration bufData
+  return $ SourceLoaded (AudioBufferSource bufData $ BufferParams 0 1 False) (Just dur)
 
 -- | sourceSelectionConfigWidget configures a selected source.
 sourceRangeConfigurationWidget :: MonadWidget t m => Dynamic t SoundSourceConfig -> m (Dynamic t SoundSourceConfig)
@@ -104,7 +106,7 @@ sourceRangeConfigurationWidget dynSrc =
     
     initialRange <- playbackRange <$> sample (current dynSrc)
     dynRangeSelectVisible <- forDyn dynSrc $ \s -> case source s of
-      SourceLoaded (AudioBufferSource _ _) -> True
+      SourceLoaded (AudioBufferSource _ _) _ -> True
       otherwise -> False
 
     dynPlaybackRange <- rangeSelect dynRangeSelectVisible initialRange
