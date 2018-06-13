@@ -88,7 +88,39 @@ drawRange canvas (RangeState l r drag)  = do
   fillRect canvas (r*w) 0 (w-r*w) h
 
 drawSource :: DT.HTMLCanvasElement -> SoundSource -> IO ()
-drawSource canvas src = error "Not yet implemented! drawSource"
+drawSource canvas (SourceLoading) = drawSourceLoadingOnCanvas canvas
+drawSource canvas (SourceError s) = drawSourceErrorOnCanvas canvas s
+drawSource canvas (SourceUnderSpecified) = drawSourceUnderSpecifiedOnCanvas canvas
+drawSource canvas (SourceLoaded src) = drawSourceNodeSpecOnCanvas canvas src
+
+drawSourceNodeSpecOnCanvas :: DT.HTMLCanvasElement -> SourceNodeSpec -> IO ()
+drawSourceNodeSpecOnCanvas canvas Silent = do
+  clearCanvas canvas
+  w <- getWidth canvas
+  h <- getHeight canvas
+  fillStyle canvas "rgb(180,180,180)"
+drawSourceNodeSpecOnCanvas canvas (Oscillator t f) = do
+  clearCanvas canvas
+  drawOscOnCanvas (show t) (inHz f)
+drawSourceNodeSpecOnCanvas canvas (AudioBufferSource buf p) = do
+  clearCanvas canvas
+  drawBufferOnCanvas canvas buf
+
+
+
+foreign import javascript unsafe
+  "drawBufferOnCanvas($2, $1)" drawBufferOnCanvas:: DT.HTMLCanvasElement -> AudioBuffer ->   IO ()
+
+-- maybe implement this in haskell
+foreign import javascript
+  "drawOscOnCanvas($1, $2, $3)" drawOscOnCanvas:: DT.HTMLCanvasElement -> JSString -> Double -> IO ()
+
+foreign import javascript
+  "drawSourceLoadingOnCanvas($1)" drawSourceLoadingOnCanvas:: Canvas -> IO ()
+
+foreign import javascript
+  "drawSourceErrorOnCanvas($1, $2)" drawSourceErrorOnCanvas:: Canvas -> JSString ->  IO ()
+
 
 foreign import javascript unsafe
   "$1.getContext('2d').fillStyle = $2" fillStyle :: DT.HTMLCanvasElement -> JSString -> IO ()

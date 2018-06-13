@@ -459,6 +459,60 @@ function drawSineWave (canvas){
 
 }
 
+
+function drawSourceErrorOnCanvas(canvas, errormsg){
+  var width = canvas.width;
+  var height = canvas.height;
+  var ctx = canvas.getContext('2d');
+  ctx.fillStyle = "rgb(255,20,20)"
+  ctx.fillRect(0,0,width,height);
+  console.log("Error with buffer"+errormsg)
+}
+
+function drawSourceLoadingOnCanvas(canvas){
+  var width = canvas.width;
+  var height = canvas.height;
+  var ctx = canvas.getContext('2d');
+  ctx.fillStyle = "rgb(50,50,50)"
+  ctx.fillRect(0,0,width,height);
+  ctx.lineWidth = 1;
+  for (var i = 1; i<4; i++){
+    ctx.beginPath();
+    ctx.arc(width*i/3,height/2, height/4,0,2*Math.PI);
+    ctx.fillStyle = "rgb(100,170,200)";
+    ctx.stroke()
+  }
+}
+
+
+// TODO finish this for other osc types
+function drawOscOnCanvas(canvas, oscType, oscFreq){
+  var width = canvas.width;
+  var height = canvas.height;
+  var ctx = canvas.getContext('2d');
+  ctx.fillStyle = "rgb(50,50,50)"
+  ctx.fillRect(0,0,width,height);
+  ctx.lineWidth = 1;
+  ctx.fillStyle = "rgb(100,170,200)"
+  var oscFunc;
+  if (oscType.toLowerCase() =="sine"){
+    oscFunc = Math.sin
+  } else  {
+    console.log('osc type not yet implemented...')
+    oscFunc = Math.sin
+  }
+
+  for (var i =0; i < canvas.width; i=i+1){
+    var x = i;
+    var y = oscFunc(i*(Math.PI*2)/width)*(-1)*height/2+(height/2);
+    ctx.fillRect(x, y, 1, 1);
+  }
+}
+
+
+
+
+
 function drawBufferOnCanvas (buff, canvas) {
   if (buff){
 
@@ -493,7 +547,7 @@ function drawBufferOnCanvas (buff, canvas) {
     }
     console.log('done')
   } else{
-    console.log("WARNING - canvas drawn before buffer loaded")
+    console.log("WARNING - tried to draw buffer before buffer loaded")
   }
 }
 
