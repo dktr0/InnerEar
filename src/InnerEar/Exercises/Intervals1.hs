@@ -15,7 +15,7 @@ import InnerEar.Types.Exercise
 import InnerEar.Types.Score
 import InnerEar.Widgets.Config
 import InnerEar.Widgets.SpecEval
-import InnerEar.Types.Data
+import InnerEar.Types.Data hiding (Time)
 import InnerEar.Types.Frequency
 import InnerEar.Types.Utility
 import InnerEar.Widgets.AnswerButton
@@ -48,7 +48,7 @@ baseTone :: Frequency
 baseTone = Midi 60
 
 -- *** note: random pitches requires renderAnswer to return IO Sound instead of Sound
-renderAnswer :: Map String Buffer -> Config -> (SourceNodeSpec, Maybe Time)-> Maybe Answer -> Synth ()
+renderAnswer :: Map String AudioBuffer -> Config -> (SourceNodeSpec, Maybe Time)-> Maybe Answer -> Synth ()
 renderAnswer _ _ _ Nothing = buildSynth $ silent >> destination
 renderAnswer _ _ _ (Just interval) = buildSynth $ do
   osc <- oscillator Triangle baseTone

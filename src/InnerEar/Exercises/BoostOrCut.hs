@@ -17,7 +17,8 @@ import InnerEar.Widgets.Config
 import InnerEar.Widgets.SpecEval
 import InnerEar.Widgets.AnswerButton
 
-import InnerEar.Types.Data
+import InnerEar.Types.Data hiding (Time)
+import InnerEar.Types.Sound
 
 type Config = Double -- representing amount of gain that is applied (or not)
 
@@ -44,7 +45,7 @@ instructions = el "div" $ do
   elClass "div" "instructionsText" $ text "Hint: before or after pressing Listen to hear the question, press 'Listen to Reference Sound' to hear the sound to which you are comparing the question sound."
 
 
-renderAnswer::Map String Buffer -> Config -> (SourceNodeSpec,Maybe Time)-> Maybe Answer -> Synth ()
+renderAnswer::Map String AudioBuffer -> Config -> (SourceNodeSpec,Maybe Time)-> Maybe Answer -> Synth ()
 renderAnswer _ db (src, dur) (Just (Answer True)) = buildSynth $ do
   let env = maybe (return EmptyGraph) (rectEnv (Millis 1)) dur
   synthSource src >> gain (Db (-10+db)) >> env >> destination
