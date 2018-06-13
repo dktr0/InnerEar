@@ -8,13 +8,13 @@ import Reflex.Synth.Buffer
 import Reflex.Synth.Spec
 
 data SoundSourceConfigOption
-  = Spec SourceNodeSpec
-  | Resource String
+  = Spec SourceNodeSpec (Maybe Time)
+  | Resource String (Maybe Time)
   | UserProvidedResource
 
 data SoundSource
   = SourceLoading
-  | SourceLoaded SourceNodeSpec
+  | SourceLoaded SourceNodeSpec (Maybe Time)
   | SourceError String
   | SourceUnderSpecified
 
