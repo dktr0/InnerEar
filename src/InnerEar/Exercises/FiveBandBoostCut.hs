@@ -70,9 +70,8 @@ displayEval = displayMultipleChoiceEvaluationGraph'' "Session performance" "Hz" 
 generateQ :: Config -> [ExerciseDatum] -> IO ([Answer],Answer)
 generateQ _ _ = randomMultipleChoiceQuestion answers
 
-sourcesMap:: Map Int (String,Source)
-sourcesMap = fromList $ zip [0::Int,1..] [("Pink noise",NodeSource (BufferNode $ File "pinknoise.wav") (Just 2)), ("White noise", NodeSource (BufferNode $ File "whitenoise.wav") (Just 2)), ("Load a soundfile", NodeSource (BufferNode $ LoadedFile "fiveBandBoostCutExercise" (PlaybackParam 0 1 False)) Nothing)]
-
+sourcesMap:: Map Int (String,SoundSourceConfigOption)
+sourcesMap = [(0,("Pink noise", Resource "pinknoise.wav" (Just 2) )), (0,("White noise", Resource "whitenoise.wav" (Just 2) )) , (2, ("Load a sound file", UserProvidedResource))]
 
 
 fiveBandBoostCutExercise :: MonadWidget t m => Exercise t m Config [Answer] Answer (Map Answer Score)

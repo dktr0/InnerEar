@@ -47,7 +47,7 @@ renderAnswer _ clipDb (src,dur) _ = buildSynth $ do
   synthSource src >> gain (Db $ -10) >> env >> destination
   maybeDelete (fmap (+Sec 0.2) dur)
 
-  
+
 displayEval :: MonadWidget t m => Dynamic t (Map Answer Score) -> m ()
 displayEval = displayMultipleChoiceEvaluationGraph' "Session Performance" "" answers
 
@@ -60,9 +60,8 @@ instructions = el "div" $ do
   elClass "div" "instructionsText" $ text "You can configure the exercise to have different levels of clipping. For example, at the -10 dB setting any clipped sound will be clipped 10 dB below its peak (extreme clipping) resulting in a markedly brighter, buzzier sound. At the -0.5 dB setting, the signal will be clipped just 0.5 dB below its peak, resulting in a more subtle difference from the unclipped alternative."
 
 
-
-sourcesMap:: Map Int (String,Source)
-sourcesMap = fromList $ [(0,("300hz sine wave", NodeSource (OscillatorNode $ Oscillator Sine 440 0) (Just 2)))]
+sourcesMap:: Map Int (String,SoundSourceConfigOption)
+sourcesMap = fromList $ [(0,("300hz sine wave", Spec $ Oscillator Sine (Hz 300) $ Just 2))]
 
 harmonicDistortionExercise :: MonadWidget t m => Exercise t m Config [Answer] Answer (Map Answer Score)
 harmonicDistortionExercise = multipleChoiceExercise

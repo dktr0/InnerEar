@@ -94,8 +94,9 @@ instructions = el "div" $ do
 generateQ :: Config -> [ExerciseDatum] -> IO ([Answer],Answer)
 generateQ config _ = randomMultipleChoiceQuestion (convertBands $ fst config)
 
-sourcesMap:: Map Int (String,Source)
-sourcesMap = fromList $ zip [0::Int,1..] [("Pink noise",NodeSource (BufferNode $ File "pinknoise.wav") (Just 2)), ("White noise", NodeSource (BufferNode $ File "whitenoise.wav") (Just 2)), ("Load a soundfile", NodeSource (BufferNode $ LoadedFile "tenBandBoostCutExercise" (PlaybackParam 0 1 False)) Nothing)]
+sourcesMap:: Map Int (String,SoundSourceConfigOption)
+sourcesMap = [(0,("Pink noise", Resource "pinknoise.wav" (Just 2) )), (0,("White noise", Resource "whitenoise.wav" (Just 2) )) , (2, ("Load a sound file", UserProvidedResource))]
+
 
 -- temporary until config widget is changed to take a list/map of config parameters that can be changed
 tenBandsConfigWidget :: MonadWidget t m => Config -> m (Dynamic t Config,  Dynamic t Source,  Event t (Maybe a)) -- dyn config, source, and event maybe answer for playing reference sound (config widget

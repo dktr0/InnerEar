@@ -63,9 +63,8 @@ instructions = el "div" $ do
   elClass "div" "instructionsText" $ text "In this exercise, a reference sound is either compressed or not and your task is to tell whether or not it has been compressed. The threshold of the compressor is set at -20 dBFS, and you can configure the exercise to work with smaller and smaller ratios for increased difficulty. Note that you must provide a source sound to use for the exercise (click on Browse to the right). Short musical excerpts that consistently have strong levels are recommended."
 
 
-sourcesMap:: Map Int (String,Source)
-sourcesMap = singleton 0 ("Load a soundfile", NodeSource (BufferNode $ LoadedFile "compressionExercise" (PlaybackParam 0 1 False)) Nothing)
-
+sourcesMap:: Map Int (String,SoundSourceConfigOption)
+sourcesMap = singleton 0 ("Load a soundfile", UserProvidedResource)
 
 compressionExercise :: MonadWidget t m => Exercise t m Config [Answer] Answer (Map Answer Score)
 compressionExercise = multipleChoiceExercise
