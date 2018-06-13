@@ -4,34 +4,61 @@ var lastPlayingBufferNode;
 var userAudioNodes = {}
 
 
-function Buffer (url) {
-  if (typeof url !== 'string') 
-    throw new Error("Smart Buffer needs a url as a string.");
+/**
+ * @class
+ * @property {File | Blob} this.source
+ * @property {('created' | 'loading' | 'decoding' | 'decoded' | 'error')} this.status
+ * @property {?string} this.error
+ * @property {?AudioBuffer} this.buffer
+ *
+ * @param {File} source - the source to load the audio buffer from
+ * @param {WebAudioContext} ctx - the web audio context to use for decoding
+ */
+function Buffer(source, ctx) {
+  this.source = source;
+  this.ctx = ctx;
+
+  this.status = 'created';
+  this.error = null;
   this.buffer = null;
-  this.status = null;
-  this.url = url;
-  this.loadFile();
 }
 
-Buffer.prototype.loadFile = function () {
-  var request = new XMLHttpRequest();
-  try {
-    request.open('GET',this.url, true);
-    request.responseType = 'arrayBuffer';
-    var closure = this;
-    request.onload = function() {
-      ___ac.decodeAudioData(request.response, function(x) {
-        closure.buffer = x;
-        closure.status = 'loaded';
-      }, function (e) {
-        closure.status = 'error';
-        console.log('ERROR - could not decode audio buffer: ' + closure.url);
-      });
-    };
-    request.send();
-  } catch(e) {
-    console.log(e);
+Buffer.prototype._changeStatus(onStatusChange, status, error, buffer) {
+  this.status = status;
+  this.error = error != null ? error : null; // If undefined set to null (not undefined)
+  this.buffer = buffer != null ? buffer : null;
+  onStatusChange(this);
+}
+
+/**
+ * @param {function(buffer: Buffer): void} onStatusChange
+ */
+Buffer.prototype.startLoadingAndDecoding = function(onStatusChange) {
+  var closure = this;
+
+  this._changeStatus(onStatusChange, 'loading');
+
+  var reader = new FileReader();
+
+  reader.onerror = this._changeStatus.bind(this, onStatusChange, 'error', reader.error.message, null);
+  reader.onabort = this._changeStatus.bind(this, onStatusChange, 'abort', 'Read aborted', null);
+
+  reader.onload = function() {
+    closure._changeStatus(onStatusChange, 'decoding');
+
+    var arrayBuffer = reader.result;
+    closure.ctx.decodeAudioData(arraybuffer, 
+      function success(audioBuffer) {
+        closure._changeStatus(onStatusChange, 'decoded', null, audioBuffer);
+      },
+      function failure(error) {
+        closure._changeStatus(onStatusChange, 'error', error.err);
+      }
+    );
   }
+
+  // Start reading.
+  reader.readAsArrayBuffer(this.source);
 }
 
 function showThings(a,b,c,d){

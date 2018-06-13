@@ -20,6 +20,7 @@ Library
                    json, bytestring
   GHC-Options:     -Wall -fwarn-tabs
   Exposed-modules: Reflex.Synth.AudioRoutingGraph
+                   Reflex.Synth.Buffer
                    Reflex.Synth.Components
                    Reflex.Synth.Graph
                    Reflex.Synth.Node
