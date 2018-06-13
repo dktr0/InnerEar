@@ -5,7 +5,7 @@ var userAudioNodes = {}
 
 
 function Buffer (url) {
-  if (typeof url !== 'string') 
+  if (typeof url !== 'string')
     throw new Error("Smart Buffer needs a url as a string.");
   this.buffer = null;
   this.status = null;
