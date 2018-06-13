@@ -2,6 +2,8 @@
 
 module InnerEar.Types.Exercise where
 
+import Data.Map(Map)
+
 import Reflex
 
 import InnerEar.Types.ExerciseId
@@ -21,5 +23,5 @@ data Exercise t m c q a e = Exercise {
   defaultEvaluation :: e,
   displayEvaluation :: Dynamic t e -> m (),
   generateQuestion :: c -> [ExerciseDatum] -> IO (q, a),
-  questionWidget :: c -> e -> Event t (q, a) -> m (Event t ExerciseDatum, Event t (Synth s), Event t c, Event t ExerciseNavigation)
+  questionWidget :: Map String AudioBuffer -> c -> e -> Event t (q, a) -> m (Event t ExerciseDatum, Event t (Maybe (Synth ())), Event t c, Event t ExerciseNavigation)
 }

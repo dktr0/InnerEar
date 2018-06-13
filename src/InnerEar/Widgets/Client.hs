@@ -1,6 +1,8 @@
 {-# LANGUAGE RecursiveDo, OverloadedStrings, DeriveDataTypeable #-}
 module InnerEar.Widgets.Client where
 
+import Data.Map(Map)
+
 import Reflex
 import Reflex.Dom
 
@@ -18,14 +20,14 @@ import Reflex.Synth.Synth
 -- If the user is logged in as an authenticated user, it displays that.
 -- If the user is not logged in, it displays fields to enter login values.
 
-clientWidget :: MonadWidget t m => m ()
-clientWidget = elClass "div" "innerEar" $ mdo
+clientWidget :: MonadWidget t m => Map String AudioBuffer -> m ()
+clientWidget sysResources = elClass "div" "innerEar" $ mdo
   (wsRcvd,wsStatus) <- WS.reflexWebSocket wsSend
   (x,currentRole) <- elClass "div" "header" $ do
     elClass "div" "title" $ do
       text "Inner Ear"
     elClass "div" "login" $ loginWidget wsRcvd
-  (y, synthEv) <- navigationWidget wsRcvd currentRole
+  (y, synthEv) <- navigationWidget sysResources wsRcvd currentRole
   let wsSend = leftmost [x,y]
   performSynth synthEv
   return ()

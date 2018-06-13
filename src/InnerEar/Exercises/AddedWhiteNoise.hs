@@ -37,14 +37,14 @@ instance Buttonable Answer where
 
 answers = [Answer False,Answer True]
 
-renderAnswer :: Map String Buffer -> Config -> (SourceNodeSpec,Maybe Time) -> Maybe Answer -> Synth ()
-renderAnswer bMap db (src, dur) (Just (Answer True)) = buildSynth $ do
+renderAnswer :: Map String AudioBuffer -> Config -> (SourceNodeSpec, Maybe Time) -> Maybe Answer -> Synth ()
+renderAnswer sysResources db (src, dur) (Just (Answer True)) = buildSynth $ do
   -- sticking an EmptyGraph somewhere won't break the stack structure of Synths right?
   let env = maybe (return EmptyGraph) (rectEnv (Millis 1)) dur
   synthSource src >> gain (Db $ -10) >> env >> destination
-  synthSource (Buffer (bMap!!"whitenoise") (PlaybackParam 0 1 (isJust dur))) >> env >> destination
+  audioBufferSource (sysResources!!"whitenoise") (BufferParams 0 1 (isJust dur)) >> env >> destination
   maybeDelete (fmap (+Sec 0.2) dur)
-renderAnswer bMap db (src, dur) _ = buildSynth $ do
+renderAnswer _ db (src, dur) _ = buildSynth $ do
   let env = maybe (return EmptyGraph) (rectEnv (Millis 1)) dur
   synthSource src >> gain (Db $ -10) >> env >> destination
   maybeDelete (fmap (+Sec 0.2) dur)
@@ -63,7 +63,7 @@ instructions = el "div" $ do
 
 
 
-sourcesMap :: Map Int (String,Source)
+sourcesMap :: Map Int (String, Source)
 sourcesMap = fromList $ [(0,("300hz sine wave", NodeSource (OscillatorNode $ Oscillator Sine 440 0) (Just 2))), (1,("Load a soundfile", NodeSource (BufferNode $ LoadedFile "addedWhiteNoiseExercise" (PlaybackParam 0 1 False)) Nothing))]
 
 addedWhiteNoiseExercise :: MonadWidget t m => Exercise t m Config [Answer] Answer (Map Answer Score)

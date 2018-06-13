@@ -228,7 +228,7 @@ setDeletionTime t = lift $ Synth {
     supplement = ()
   }
 
-maybeDelete:: Maybe Time -> SynthBuilder () -- move to where setDeletionTime
+maybeDelete :: Maybe Time -> SynthBuilder () -- move to where setDeletionTime
 maybeDelete = maybe (return ()) (setDeletionTime)
 
 

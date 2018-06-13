@@ -26,12 +26,11 @@ import Reflex.Synth.Buffer
 -- sourceToSourceNodeSpec SineOscillator' = return $ OscillatorNode Sine (Hz 300)
 -- sourceToSourceNodeSpec UserSoundFile x = mkBuffer x
 
-configWidget :: (MonadWidget t m, Eq c) => String -> Map Int (String, SoundSourceConfigOption) -> Int -> String -> Map Int (String, c) -> c -> m (Dynamic t c, Dynamic t (Maybe SourceNodeSpec), Event t (Maybe a))
+configWidget :: (MonadWidget t m, Eq c) => String -> Map Int (String, SoundSourceConfigOption) -> Int -> String -> Map Int (String, c) -> c -> m (Dynamic t c, Dynamic t (Maybe SourceNodeSpec), Event t (), Event t ())
 configWidget inputID sourceMap iSource configLabel configMap iConfig = elClass "div" "configWidget" $ do
   config <- elClass "div" "exerciseConfigWidget" $ exerciseConfigWidget configLabel configMap iConfig
   (dynSrcSpec, playEv, stopEv) <- elClass "div" "sourceWidget" $ sourceSelectionWidget inputID sourceMap iSource
-  return (config, dynSrcSpec, Nothing <$ playEv) 
-  -- TODO return the stopEv as well. Also why is the playEv a `Maybe a`?
+  return (config, dynSrcSpec, playEv, stopEv)
 
 exerciseConfigWidget :: (MonadWidget t m, Eq c) => String -> Map Int (String, c) -> c -> m (Dynamic t c)
 exerciseConfigWidget label configMap iConfig = do

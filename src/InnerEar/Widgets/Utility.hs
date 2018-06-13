@@ -17,21 +17,15 @@ import Control.Monad.IO.Class (liftIO)
 import GHCJS.DOM.Types (castToHTMLCanvasElement)
 import GHCJS.DOM.EventM
 
--- | like mapDyn but takes a -> IO b instead of a -> b
--- You still have to provide a stupid initial value. Why????!!!!!??????
--- mapDynIO :: MonadWidget t m => a -> (a -> IO b) -> Dynamic t a -> m (Dynamic t b)
--- mapDynIO i f a = do
---   i' <- liftIO f $ i -- m b
---   x <- fmap (liftIO . f) $ updated a -- m (Event t b)
---   holdDyn i' x -- Dynamic t b
+mapDynIO :: MonadWidget t m => (a -> IO b) -> Dynamic t a -> m (Dynamic t b)
+mapDynIO f a = do
+  init <- sample $ current a
+  initMapped <- liftIO $ f init
+  mappedEv <- performEvent $ fmap (liftIO . f) $ updated a
+  holdDyn initMapped mappedEv
 
--- -- | Maybe this works? Seems like it should be possible anyway.
--- mapDynIO' :: MonadWidget t m => (a -> IO b) -> Dynamic t a -> m (Dynamic t b)
--- mapDynIO' f a = do
---   i <- sample $ current a -- m a
---   i' <- liftIO f $ i -- m b
---   x <- fmap (liftIO . f) $ updated a -- m (Event t b)
---   holdDyn i' x -- Dynamic t b
+forDynIO :: MonadWidget t m => Dynamic t a -> (a -> IO b) -> m (Dynamic t b)
+forDynIO = flip mapDynIO
 
 -- | asapOrUpdated creates an event based on reflex's `updated` for the given Dynamic
 -- but also triggers at most once postBuild unless for some reason the dynamic is changed

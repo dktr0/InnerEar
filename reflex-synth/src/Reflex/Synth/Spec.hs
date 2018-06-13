@@ -156,3 +156,6 @@ instance Num Time where
         | y == 0 -> 0
         | otherwise -> 1
   fromInteger ms = Millis $ fromIntegral ms
+
+bufferDuration :: AudioBuffer -> IO Time
+bufferDuration buffer = Sec <$> js_bufferDuration buffer
