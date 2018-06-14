@@ -32,6 +32,7 @@ connectGraph :: Map Integer Node -> Graph -> IO ()
 connectGraph m (Source (RefToNode _)) = return ()
 connectGraph m (SourceSink (RefToNode to) from) = do
   connect (m!getNodeId from) $ m!to
+  connectGraph m from
 connectGraph m (Sink (RefToNode to) from) = do
   connect (m!getNodeId from) $ m!to
   connectGraph m from
