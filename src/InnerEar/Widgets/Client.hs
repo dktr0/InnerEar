@@ -20,6 +20,20 @@ import Reflex.Synth.Synth
 -- If the user is logged in as an authenticated user, it displays that.
 -- If the user is not logged in, it displays fields to enter login values.
 
+performSynth :: MonadWidget t m => Event t (Maybe (Synth ())) -> m ()
+performSynth selectedSynth = mdo
+  -- Behaviour t (Maybe Synthstance) - the previously instantiated synth
+  prevSynthstance <- hold Nothing newSynthstances
+
+  -- Event t (Maybe Synthstance, Maybe Synthstance) - prev and current
+  synthstnacePair <- attach lastSynthstance $ updated selectedSynth
+
+  newSynthstances <- performEvent $ ffor synthstnacePair $ \(prev, curr) -> liftIO $ do
+    -- Stop the old one if it existed
+    maybe (return ()) stopSynthNow prev
+    -- Start the new one if given
+    maybe (return ()) (\s -> instantiateSynth s >>= startSynth (Millis 0)) curr
+
 clientWidget :: MonadWidget t m => Map String AudioBuffer -> m ()
 clientWidget sysResources = elClass "div" "innerEar" $ mdo
   (wsRcvd,wsStatus) <- WS.reflexWebSocket wsSend

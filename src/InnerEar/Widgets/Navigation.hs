@@ -48,7 +48,7 @@ data Navigation =
   UserPage Handle |
   TestPage
 
-navigationWidget :: MonadWidget t m => Map String AudioBuffer -> Event t [Response] -> Dynamic t (Maybe Role) -> m (Event t Request, Event t (Synth s1))
+navigationWidget :: MonadWidget t m => Map String AudioBuffer -> Event t [Response] -> Dynamic t (Maybe Role) -> m (Event t Request, Event t (Maybe (Synth ())))
 navigationWidget sysResources responses currentRole = elClass "div" "mainBody" $ mdo
   let initialPage = navigationPage sysResources responses currentRole SplashPage
   let rebuild = fmap (navigationPage sysResources responses currentRole) navEvents
@@ -77,7 +77,7 @@ buttonForExercise x = elClass "div" "navButton" $ do
   y <- button (showExerciseTitle x)
   return $ fmap (\_ -> ExercisePage x) y
 
-navigationPage :: MonadWidget t m => Map String AudioBuffer -> Event t [Response] -> Dynamic t (Maybe Role) -> Navigation -> m (Event t Request, Event t (Synth s1), Event t Navigation)
+navigationPage :: MonadWidget t m => Map String AudioBuffer -> Event t [Response] -> Dynamic t (Maybe Role) -> Navigation -> m (Event t Request, Event t (Maybe (Synth ())), Event t Navigation)
 navigationPage sysResources responses currentRole SplashPage = elClass "div" "nav" $ do
   elClass "div" "explanation" $
     text "Welcome to Inner Ear! Select an ear-training exercise from the list below. If you are doing this is part of a requirement for a class, please make sure you are logged in first (at the top right)."
@@ -146,7 +146,7 @@ runExerciseForNavigationPage :: (MonadWidget t m, Data c, Data q, Data a, Data e
   => Map String AudioBuffer
   -> Exercise t m c q a e
   -> Event t [Response] -> Dynamic t (Maybe Role)
-  -> m (Event t Request, Event t (Synth s), Event t Navigation)
+  -> m (Event t Request, Event t (Maybe (Synth ())), Event t Navigation)
 runExerciseForNavigationPage sysResources ex responses currentRole = do
   (newData,sounds,navUnit) <- runExercise sysResources ex responses
   currentRole' <- mapDyn isJust currentRole
