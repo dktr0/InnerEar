@@ -91,8 +91,8 @@ displayEval _ = return ()
 generateQ :: Config -> [ExerciseDatum] -> IO ([Answer],Answer)
 generateQ _ _ = randomMultipleChoiceQuestion answers
 
-thisConfigWidget:: MonadWidget t m => Config -> m (Dynamic t Config, Dynamic t (Maybe (SourceNodeSpec, Maybe Time)), Event t (), Event t ())
-thisConfigWidget c@(s,d,o) = do
+thisConfigWidget:: MonadWidget t m => Map String AudioBuffer -> Config -> m (Dynamic t Config, Dynamic t (Maybe (SourceNodeSpec, Maybe Time)), Event t (), Event t ())
+thisConfigWidget _ c@(s,d,o) = do
   text "Similarity: "
   simDropDown <- dropdown (head similarities) (constDyn $ fromList [ (x,show x) | x <- similarities ]) (DropdownConfig never (constDyn empty))
   text "Duration: "

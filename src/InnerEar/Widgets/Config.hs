@@ -28,10 +28,10 @@ import Reflex.Synth.Buffer
 
 -- TODO inputID can be dropped anywhere it is used in here
 
-configWidget :: (MonadWidget t m, Eq c) => String -> Map Int (String, SoundSourceConfigOption) -> Int -> String -> Map Int (String, c) -> c -> m (Dynamic t c, Dynamic t (Maybe (SourceNodeSpec, Maybe Time)), Event t (), Event t ())
-configWidget inputID sourceMap iSource configLabel configMap iConfig = elClass "div" "configWidget" $ do
+configWidget :: (MonadWidget t m, Eq c) => String -> Map Int (String, SoundSourceConfigOption) -> Int -> String -> Map Int (String, c) -> Map String AudioBuffer -> c -> m (Dynamic t c, Dynamic t (Maybe (SourceNodeSpec, Maybe Time)), Event t (), Event t ())
+configWidget inputID sourceMap iSource configLabel configMap sysResources iConfig = elClass "div" "configWidget" $ do
   config <- elClass "div" "exerciseConfigWidget" $ exerciseConfigWidget configLabel configMap iConfig
-  (dynSrcSpec, playEv, stopEv) <- elClass "div" "sourceWidget" $ sourceSelectionWidget inputID sourceMap iSource
+  (dynSrcSpec, playEv, stopEv) <- elClass "div" "sourceWidget" $ sourceSelectionWidget sysResources inputID sourceMap iSource
   return (config, dynSrcSpec, playEv, stopEv)
 
 exerciseConfigWidget :: (MonadWidget t m, Eq c) => String -> Map Int (String, c) -> c -> m (Dynamic t c)
@@ -42,8 +42,8 @@ exerciseConfigWidget label configMap iConfig = do
   dd <- dropdown index (constDyn $ fmap fst configMap) ddConfig -- & dropdownConfig_attributes .~ (constDyn $ M.singleton "class" "soundSourceDropdown")
   mapDyn (\x -> snd $ fromJust $ Data.Map.lookup x configMap) $ _dropdown_value dd
 
-sourceSelectionWidget :: MonadWidget t m => String -> Map Int (String, SoundSourceConfigOption) -> Int -> m (Dynamic t (Maybe (SourceNodeSpec, Maybe Time)), Event t (), Event t ())
-sourceSelectionWidget inputID choices defChoiceIdx =
+sourceSelectionWidget :: MonadWidget t m => Map String AudioBuffer -> String -> Map Int (String, SoundSourceConfigOption) -> Int -> m (Dynamic t (Maybe (SourceNodeSpec, Maybe Time)), Event t (), Event t ())
+sourceSelectionWidget sysResources inputID choices defChoiceIdx =
   elClass "div" "sourceSelection" $ do
     text "Sound source: "
     dd <- dropdown defChoiceIdx (constDyn $ fmap fst choices) def
@@ -67,7 +67,7 @@ sourceSelectionWidget inputID choices defChoiceIdx =
     (dynBuffer, dynBufferStatus) <- buffer selFileEv
 
     -- Dynamic t SoundSource
-    dynSoundSrc <- combineDynIO constructSoundSource dynSelOpt dynBufferStatus
+    dynSoundSrc <- combineDynIO (constructSoundSource sysResources) dynSelOpt dynBufferStatus
     dynConfig <- forDyn dynSoundSrc $ \src -> SoundSourceConfig {
         source = src,
         playbackRange = (0, 1),
@@ -90,13 +90,14 @@ sourceSelectionWidget inputID choices defChoiceIdx =
 
     return (dynSpec, playEv, stopEv)
 
-constructSoundSource :: SoundSourceConfigOption -> BufferStatus -> IO SoundSource
-constructSoundSource (Spec spec dur) _ = return $ SourceLoaded spec dur
-constructSoundSource (Resource resourceId dur) _ = error "Not yet implemented: loadOption (Resource resourceId)" -- TODO needs implementation, grab local resource
-constructSoundSource UserProvidedResource BufferUnderspecified = return SourceUnderSpecified
-constructSoundSource UserProvidedResource BufferLoading = return SourceLoading
-constructSoundSource UserProvidedResource (BufferError msg) = return $ SourceError msg
-constructSoundSource UserProvidedResource (BufferLoaded bufData) = do
+constructSoundSource :: Map String AudioBuffer -> SoundSourceConfigOption -> BufferStatus -> IO SoundSource
+constructSoundSource _ (Spec spec dur) _ = return $ SourceLoaded spec dur
+constructSoundSource sysResources (Resource resourceId dur) _ = 
+  return $ SourceLoaded (AudioBufferSource (sysResources!resourceId) $ BufferParams 0 1 False) dur
+constructSoundSource _ UserProvidedResource BufferUnderspecified = return SourceUnderSpecified
+constructSoundSource _ UserProvidedResource BufferLoading = return SourceLoading
+constructSoundSource _ UserProvidedResource (BufferError msg) = return $ SourceError msg
+constructSoundSource _ UserProvidedResource (BufferLoaded bufData) = do
   dur <- bufferDuration bufData
   return $ SourceLoaded (AudioBufferSource bufData $ BufferParams 0 1 False) (Just dur)
 

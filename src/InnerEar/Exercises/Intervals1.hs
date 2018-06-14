@@ -81,7 +81,7 @@ intervals1Exercise = multipleChoiceExercise
   3
   answers
   instructions
-  (\x-> return (constDyn (), constDyn (Just (Silent, Nothing)), never, never))
+  (\_ _-> return (constDyn (), constDyn (Just (Silent, Nothing)), never, never))
   renderAnswer
   Intervals1
   ()
