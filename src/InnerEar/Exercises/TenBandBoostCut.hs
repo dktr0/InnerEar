@@ -113,7 +113,7 @@ tenBandsConfigWidget c =  elClass "div" "configWidget" $ do
   return (config, source, Nothing <$ playReference)
 
 
-tenBandBoostCutExercise :: MonadWidget t m => Exercise t m Config [Answer] Answer (Map Answer Score)
+tenBandBoostCutExercise :: MonadWidget t m => Exercise t m Config [Answer] Answer (Map Answer Score) s
 tenBandBoostCutExercise = multipleChoiceExercise
   3
   answers

@@ -61,7 +61,7 @@ generateQ _ _ = randomMultipleChoiceQuestion answers
 sourcesMap:: Map Int (String,Source)
 sourcesMap = fromList $ [(0,("300hz sine wave", NodeSource (OscillatorNode $ Oscillator Sine 440 0) (Just 2))), (1,("Load a soundfile", NodeSource (BufferNode $ LoadedFile "boostOrCutExercise" (PlaybackParam 0 1 False)) Nothing))]
 
-boostOrCutExercise :: MonadWidget t m => Exercise t m Config [Answer] Answer (Map Answer Score)
+boostOrCutExercise :: MonadWidget t m => Exercise t m Config [Answer] Answer (Map Answer Score) s
 boostOrCutExercise = multipleChoiceExercise
   1
   answers

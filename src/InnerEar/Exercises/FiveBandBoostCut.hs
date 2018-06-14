@@ -66,7 +66,7 @@ sourcesMap = fromList $ zip [0::Int,1..] [("Pink noise",NodeSource (BufferNode $
 
 
 
-fiveBandBoostCutExercise :: MonadWidget t m => Exercise t m Config [Answer] Answer (Map Answer Score)
+fiveBandBoostCutExercise :: MonadWidget t m => Exercise t m Config [Answer] Answer (Map Answer Score) s
 fiveBandBoostCutExercise = multipleChoiceExercise
   3
   answers

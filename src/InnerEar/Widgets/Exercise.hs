@@ -22,8 +22,8 @@ import InnerEar.Types.Response
 -- | runExercise takes a completely defined Exercise value and uses it to run an ear-training
 -- exercise in the browser.
 
-runExercise :: forall t m c q a e. (MonadWidget t m, Data c, Data q, Data a, Data e, Show c, Show q, Show a, Show e)
-  => Exercise t m c q a e -> Event t [Response] -> m (Event t (ExerciseId,ExerciseDatum),Event t Sound,Event t ())
+runExercise :: forall t m c q a e s. (MonadWidget t m, Data c, Data q, Data a, Data e, Show c, Show q, Show a, Show e)
+  => Exercise t m c q a e s -> Event t [Response] -> m (Event t (ExerciseId,ExerciseDatum),Event t Sound,Event t ())
 runExercise ex responses = mdo
 
   -- form databank for exercise by folding together pertinent database entries plus data transmitted up
@@ -56,7 +56,7 @@ runExercise ex responses = mdo
   let newQuestionData = attachDynWith (\c (q,a) -> NewQuestion c q a) config question
 
   let endedData = Ended <$ closeExercise
-  let allData = (leftmost [startedData,configData,newQuestionData,endedData]) :: Event t (Datum c q a e)
+  let allData = (leftmost [startedData,configData,newQuestionData,endedData]) :: Event t (Datum c q a e s)
   let exerciseData = leftmost [questionWidgetData,toExerciseDatum <$> allData]
   let dataPairedWithId = (\x -> (exerciseId ex,x)) <$> exerciseData
   return (dataPairedWithId,sounds,closeExercise)

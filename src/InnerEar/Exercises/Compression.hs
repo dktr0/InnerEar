@@ -59,7 +59,7 @@ sourcesMap:: Map Int (String,Source)
 sourcesMap = singleton 0 ("Load a soundfile", NodeSource (BufferNode $ LoadedFile "compressionExercise" (PlaybackParam 0 1 False)) Nothing)
 
 
-compressionExercise :: MonadWidget t m => Exercise t m Config [Answer] Answer (Map Answer Score)
+compressionExercise :: MonadWidget t m => Exercise t m Config [Answer] Answer (Map Answer Score) s
 compressionExercise = multipleChoiceExercise
   1
   answers

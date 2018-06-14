@@ -73,7 +73,7 @@ instructions :: MonadWidget t m => m ()
 instructions = el "div" $ do
   elClass "div" "instructionsText" $ text "Instructions placeholder"
 
-oddEvenAllExercise :: MonadWidget t m => Exercise t m Config [Answer] Answer (Map Answer Score)
+oddEvenAllExercise :: MonadWidget t m => Exercise t m Config [Answer] Answer (Map Answer Score) s
 oddEvenAllExercise = multipleChoiceExercise
   2
   answers

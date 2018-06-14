@@ -60,7 +60,7 @@ instructions = el "div" $ do
 sourcesMap:: Map Int (String,Source)
 sourcesMap = fromList $ [(0,("300hz sine wave", NodeSource (OscillatorNode $ Oscillator Sine 440 0) (Just 2))), (1,("Load a soundfile", NodeSource (BufferNode $ LoadedFile "addedWhiteNoiseExercise" (PlaybackParam 0 1 False)) Nothing))]
 
-addedWhiteNoiseExercise :: MonadWidget t m => Exercise t m Config [Answer] Answer (Map Answer Score)
+addedWhiteNoiseExercise :: MonadWidget t m => Exercise t m Config [Answer] Answer (Map Answer Score) s
 addedWhiteNoiseExercise = multipleChoiceExercise
   1
   [Answer False,Answer True]

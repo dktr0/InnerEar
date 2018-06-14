@@ -18,7 +18,7 @@ data Request =
   PostPoint Point |
   GetUserList |
   GetAllRecords Handle |
-  GetAllExerciseEvents Handle ExerciseId -- 
+  GetAllExerciseEvents Handle ExerciseId
   deriving (Eq,Show,Data,Typeable)
 
 

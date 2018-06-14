@@ -14,7 +14,7 @@ import InnerEar.Types.ExerciseNavigation
 -- c represents the type of an exercise' configuration. q represents the type of a question.
 -- a represents the type of an answer, and e represents the type of an evaluation (i.e. running score, etc).
 
-data Exercise t m c q a e = Exercise {
+data Exercise t m c q a e s = Exercise {
   exerciseId :: ExerciseId,
   instructionsWidget :: m (),
   defaultConfig :: c,

@@ -109,7 +109,7 @@ instructions :: MonadWidget t m => m ()
 instructions = el "div" $ do
   elClass "div" "instructionsText" $ text "Instructions placeholder"
 
-frequencyEnvelopeExercise :: MonadWidget t m => Exercise t m Config [Answer] Answer (Map Answer Score)
+frequencyEnvelopeExercise :: MonadWidget t m => Exercise t m Config [Answer] Answer (Map Answer Score) s
 frequencyEnvelopeExercise = multipleChoiceExercise
   2
   answers

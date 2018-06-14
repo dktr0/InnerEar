@@ -150,7 +150,7 @@ navigationPage responses currentRole (UserPage h) = do
   return (requests,never,SplashPage <$ nav)
 
 runExerciseForNavigationPage :: (MonadWidget t m, Data c, Data q, Data a, Data e, Show c, Show q, Show a, Show e)
-  => Exercise t m c q a e
+  => Exercise t m c q a e s
   -> Event t [Response] -> Dynamic t (Maybe Role)
   -> m (Event t Request,Event t Sound,Event t Navigation)
 runExerciseForNavigationPage ex responses currentRole = do

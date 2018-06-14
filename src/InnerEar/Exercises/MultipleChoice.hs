@@ -41,7 +41,7 @@ multipleChoiceExercise :: (MonadWidget t m, Show a, Eq a, Ord a, Data c, Data a,
   -> c
   -> (Dynamic t (Map a Score) -> m ())
   -> (c -> [ExerciseDatum] -> IO ([a],a))
-  -> Exercise t m c [a] a (Map a Score)
+  -> Exercise t m c [a] a (Map a Score) s
 
 multipleChoiceExercise maxTries answers iWidget cWidget render i c de g = Exercise {
   exerciseId = i,
@@ -137,7 +137,7 @@ multipleChoiceQuestionWidget maxTries answers exId exInstructions cWidget render
   let datums' = fmap toExerciseDatum datums
   return (datums', playSounds,updated dynConfig,navEvents)
 
-journalWidget :: MonadWidget t m => m (Event t (Datum c q a e))
+journalWidget :: MonadWidget t m => m (Event t (Datum c q a e s))
 journalWidget = elClass "div" "journalItem" $ mdo
   let attrs = constDyn $ fromList $ zip ["class"] ["journalItem"]
   let resetText = "" <$ b

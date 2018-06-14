@@ -63,7 +63,7 @@ instructions = el "div" $ do
 generateQ :: Config -> [ExerciseDatum] -> IO ([Answer],Answer)
 generateQ _ _ = randomMultipleChoiceQuestion answers
 
-intervals1Exercise :: MonadWidget t m => Exercise t m Config [Answer] Answer (Map Answer Score)
+intervals1Exercise :: MonadWidget t m => Exercise t m Config [Answer] Answer (Map Answer Score) s
 intervals1Exercise = multipleChoiceExercise
   3
   answers

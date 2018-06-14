@@ -121,7 +121,7 @@ instructions = el "div" $ do
   --shapeLine (constDyn "polyline") [(10,10), (20,20), (30,30), (40,40), (50,50), (60,60)]
   graphGen xPoints linearGraphYPoints
 
-spectralShapeExercise :: MonadWidget t m => Exercise t m Config [Answer] Answer (Map Answer Score)
+spectralShapeExercise :: MonadWidget t m => Exercise t m Config [Answer] Answer (Map Answer Score) s
 spectralShapeExercise = multipleChoiceExercise
   3
   answers

@@ -10,12 +10,14 @@ import InnerEar.Types.Utility
 import InnerEar.Types.Handle
 import InnerEar.Types.Data
 import InnerEar.Types.User
+import InnerEar.Types.ExerciseId
 
 data Response =
   NotAuthenticated | -- signals that client is not authenticated as any handle
   Authenticated Handle Role | -- signals that client is successfully authenticated as the indicated handle and role
   UserNotCreated | -- signals a failure to create a new user for some reason
   RecordResponse Record |
+  NoExerciseState Handle ExerciseId | -- signals no stored state for this exercise
   UserData User
   deriving (Show,Eq,Data,Typeable)
 
