@@ -56,7 +56,7 @@ getShape InverseSteep = fmap (ampdb . (\x -> 1/(x*x))) [1,2 .. 200]
 renderAnswer::Map String AudioBuffer -> Config -> (SourceNodeSpec,Maybe Time)-> Maybe Answer -> Synth ()
 renderAnswer _ f0 _ (Just a) = buildSynth $ do
   let env = asr (Sec 0.01) (Sec 2) (Sec 0.01)
-  masterGain <- gain (Db $ -10)  -- Is this the right way to do this?
+  masterGain <- gain (Db $ fromIntegral $ -10)  -- Is this the right way to do this?
   mapM (\(f,g) -> oscillator Sine f >> gain g >> env >> masterGain >> destination) oscSpecs
   setDeletionTime (Sec 2.5)
   where

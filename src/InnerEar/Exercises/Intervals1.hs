@@ -52,7 +52,7 @@ renderAnswer :: Map String AudioBuffer -> Config -> (SourceNodeSpec, Maybe Time)
 renderAnswer _ _ _ Nothing = buildSynth $ silent >> destination
 renderAnswer _ _ _ (Just interval) = buildSynth $ do
   osc <- oscillator Triangle baseTone
-  let amp = Db (-20)
+  let amp = Db $ fromIntegral (-20)
   g <- rectEnv (Millis 100) (Sec 1) amp
   let firstDur = (Millis $ 2 * 100) + (Sec 1)
   let rest = Sec 0.5

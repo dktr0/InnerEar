@@ -76,7 +76,7 @@ answers = [
 renderAnswer :: Map String AudioBuffer -> Config -> (SourceNodeSpec, Maybe Time)-> Maybe Answer -> Synth ()
 renderAnswer _ (_, boost) (src, dur) ans = buildSynth $ do
   synthSource src
-  gain $ Db $ -10
+  gain $ Db $ fromIntegral $ -10
   maybeSynth (\freq -> biquadFilter $ Peaking (Hz $ freqAsDouble freq) 1.4 boost) ans
   maybeDelete (fmap (+ Millis 200) dur)
   destination

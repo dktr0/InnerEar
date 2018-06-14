@@ -51,14 +51,14 @@ renderAnswer :: Map String AudioBuffer -> Config -> (SourceNodeSpec,Maybe Time)-
 renderAnswer _ db (src, dur) (Just freq) = buildSynth $ do
   let env = maybe (return EmptyGraph) (rectEnv (Millis 1)) dur
   createSrc src
-  getEnv dur (Db $ -10)
-  biquadFilter "peaking" (Hz freq) 1.4 (Db db)
+  getEnv dur (Db $ fromIntegral $ -10)
+  biquadFilter "peaking" (Hz freq) 1.4 (Db $ fromIntegral db)
   env
   destination
   maybeDelete (fmap (+Sec 0.2) dur)
 renderAnswer _ db (src, dur) _= buildSynth $ do
   let env = maybe (return EmptyGraph) (rectEnv (Millis 1)) dur
-  synthSource src >> gain (Db $ -10) >> env >> destination
+  synthSource src >> gain (Db $ fromIntegral $ -10) >> env >> destination
   maybeDelete (fmap (+Sec 0.2) dur)
 
 instructions :: MonadWidget t m => m ()

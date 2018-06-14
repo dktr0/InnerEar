@@ -41,11 +41,11 @@ answers = [Answer False,Answer True]
 renderAnswer :: Map String AudioBuffer -> Config -> (SourceNodeSpec, Maybe Time)-> Maybe Answer -> Synth ()
 renderAnswer _ clipDb (src,dur) (Just (Answer True)) = buildSynth $ do
   let env = maybe (return EmptyGraph) (rectEnv (Millis 1)) dur
-  synthSource src >> clipAt (Db clipDb) >> gain (Db $ -10) >> env >> destination
+  synthSource src >> clipAt (Db clipDb) >> gain (Db $ fromIntegral $ -10) >> env >> destination
   maybeDelete (fmap (+Sec 0.2) dur)
 renderAnswer _ clipDb (src,dur) _ = buildSynth $ do
   let env = maybe (return EmptyGraph) (rectEnv (Millis 1)) dur
-  synthSource src >> gain (Db $ -10) >> env >> destination
+  synthSource src >> gain (Db $ fromIntegral $ -10) >> env >> destination
   maybeDelete (fmap (+Sec 0.2) dur)
 
 
@@ -62,7 +62,7 @@ instructions = el "div" $ do
 
 
 sourcesMap:: Map Int (String,SoundSourceConfigOption)
-sourcesMap = fromList $ [(0,("300hz sine wave", Spec $ Oscillator Sine (Hz 300) $ Just 2))]
+sourcesMap = fromList $ [(0,("300hz sine wave", Spec (Oscillator Sine (Hz 300)) (Just 2) ))]
 
 harmonicDistortionExercise :: MonadWidget t m => Exercise t m Config [Answer] Answer (Map Answer Score)
 harmonicDistortionExercise = multipleChoiceExercise

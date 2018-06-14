@@ -81,7 +81,7 @@ renderAnswer _ c@(s, d, o) _ (Just ans) = buildSynth $ do
   let curve = sampleEnvelope 200 (actualEnvelope c ans) dur
   setDeletionTime $ dur + Millis 200
   oscillator Triangle (Hz 0) >>= curveToParamValue "frequency" curve (Sec 0) dur
-  gain (Db $ -20)
+  gain (Db $ fromIntegral $ -20)
   destination
 renderAnswer _ _ _ Nothing = buildSynth $ silent >> destination -- could this just be 'return ()''?
 
