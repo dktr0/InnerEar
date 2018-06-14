@@ -64,7 +64,10 @@ boostAmounts = reverse [-10,-6,-3,-2,-1,1,2,3,6,10]
 
 type Config = (FrequencyBand, Double) -- FrequencyBand and Boost/Cut amount
 
-newtype Answer = Answer { frequency :: Frequency } deriving (Show, Eq,Ord,Data,Typeable)
+newtype Answer = Answer { frequency :: Frequency } deriving (Eq,Ord,Data,Typeable)
+
+instance Show Answer where
+  show a = freqAsString $frequency a
 
 instance Buttonable Answer where
   makeButton = showAnswerButton

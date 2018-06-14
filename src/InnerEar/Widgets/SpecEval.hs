@@ -52,7 +52,7 @@ displayMultipleChoiceEvaluationGraph (scoreBarWrapperClass, svgBarContainerClass
       evalGraphFrame qLabel graphLabel
       listWithKey scoreMap' f
       return ()
-      where f k d = scoreBar (scoreBarWrapperClass, svgBarContainerClass, svgFaintedLineClass, xLabelClass) (answerCases k) d
+      where f k d = scoreBar (scoreBarWrapperClass, svgBarContainerClass, svgFaintedLineClass, xLabelClass) (show k) d
 
 
 displayHistoricalEvaluationGraph :: (MonadWidget t m, Show a, Ord a) => String -> String -> [a] -> Dynamic t (Map a Score) -> m ()

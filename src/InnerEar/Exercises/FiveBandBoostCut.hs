@@ -34,14 +34,14 @@ configs = [10,6,3,2,1,-1,-2,-3,-6,-10]
 configMap::Map Int (String,Config)
 configMap = fromList $ zip [0::Int,1..] $ fmap (\x-> (show x ++ " dB",x)) configs
 
--- type Answer = Frequency
-newtype Answer = Answer { frequency :: Frequency } deriving (Show,Eq,Ord,Data,Typeable)
--- data Answer = Answer Frequency
+newtype Answer = Answer { frequency :: Frequency } deriving (Eq,Ord,Data,Typeable)
 
 instance Buttonable Answer where
   makeButton = showAnswerButton
 
-
+instance Show Answer where
+  show a = freqAsString $ frequency a
+  
 answers :: [Answer]
 answers = [Answer $ F 155 "Bass (155 Hz)",Answer $ F 1125 "Low Mids (1125 Hz)",Answer $ F 3000 "High Mids (3 kHz)",
   Answer $ F 5000 "Presence (5 kHz)",Answer $ F 13000 "Brilliance (13 kHz)"]
