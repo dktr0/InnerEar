@@ -4,20 +4,22 @@ module InnerEar.Exercises.SpectralShape (spectralShapeExercise) where
 
 import Reflex
 import Reflex.Dom
+import Reflex.Synth.Synth hiding (Frequency)
+
 import Data.Map
+
 import Text.JSON
 import Text.JSON.Generic
 
-import Reflex.Synth.Synth
 import InnerEar.Exercises.MultipleChoice
 import InnerEar.Types.ExerciseId
 import InnerEar.Types.Exercise
 import InnerEar.Types.Score
-import InnerEar.Widgets.Config
-import InnerEar.Widgets.SpecEval
 import InnerEar.Types.Data hiding (Time)
 import InnerEar.Types.Frequency
 import InnerEar.Types.Utility
+import InnerEar.Widgets.SpecEval
+import InnerEar.Widgets.Config
 import InnerEar.Widgets.SpecGraph
 import InnerEar.Widgets.Lines
 import InnerEar.Widgets.AnswerButton
@@ -53,15 +55,15 @@ getShape InverseLinear = fmap (ampdb . (\x -> 1/x)) [1,2 .. 200]
 getShape InverseSteep = fmap (ampdb . (\x -> 1/(x*x))) [1,2 .. 200]
 
 
-renderAnswer::Map String AudioBuffer -> Config -> (SourceNodeSpec,Maybe Time)-> Maybe Answer -> Synth ()
+renderAnswer :: Map String AudioBuffer -> Config -> (SourceNodeSpec,Maybe Time) -> Maybe Answer -> Synth ()
 renderAnswer _ f0 _ (Just a) = buildSynth $ do
-  let env = asr (Sec 0.01) (Sec 2) (Sec 0.01)
-  masterGain <- gain (Db $ fromIntegral $ -10)  -- Is this the right way to do this?
-  mapM (\(f,g) -> oscillator Sine f >> gain g >> env >> masterGain >> destination) oscSpecs
+  let env = asr (Sec 0.01) (Sec 2) (Sec 0.01) (Amp 1)
+  let masterGain = gain (Db $ fromIntegral $ -10)
+  mapM_ (\(f,g) -> oscillator Sine f >> gain g >> env >> masterGain >> destination) oscSpecs
   setDeletionTime (Sec 2.5)
   where
-    fs = Prelude.filter (< 20000) $ take 200 $ fmap (Hz . (* f0)) [1,2 .. ] -- :: [Frequency]
-    gs = getShape a
+    fs = fmap Hz $ Prelude.filter (< 20000) $ take 200 $ fmap (* (freqAsDouble f0)) [1,2 .. ]
+    gs = fmap Db $ getShape a
     oscSpecs = zip fs gs
 renderAnswer _ f0 _ Nothing = return ()
 
@@ -72,15 +74,14 @@ displayEval _ = return ()
 generateQ :: Config -> [ExerciseDatum] -> IO ([Answer],Answer)
 generateQ _ _ = randomMultipleChoiceQuestion answers
 
-thisConfigWidget:: MonadWidget t m => Config -> m (Dynamic t Config, Dynamic t Source, Event t (Maybe a))
+thisConfigWidget :: MonadWidget t m => Config -> m (Dynamic t Config, Dynamic t (Maybe (SourceNodeSpec, Maybe Time)), Event t (), Event t ())
 thisConfigWidget c = do
   text "Fundamental Frequency: "
   dd <- dropdown (freqAsDouble $ head configs) (constDyn $ fromList $ fmap (\x-> (freqAsDouble x, freqAsString x)) configs) (DropdownConfig never (constDyn empty))
   let ddVal = _dropdown_value dd -- Dynamic Double
   conf <- mapDyn (\x -> F x (show x++" Hz")) ddVal
-  source <- mapDyn (\x -> NodeSource (OscillatorNode $ Oscillator Sine x (-20)) (Just 2)) ddVal
-  -- playRef <- liftM (<$ Nothing) $ button "Play reference sound"
-  return (conf, source, never)
+  source <- mapDyn (\x -> Just (Oscillator Sine (Hz x), (Just $ Sec 2))) ddVal
+  return (conf, source, never, never)
 
 instructions :: MonadWidget t m => m ()
 instructions = el "div" $ do

@@ -13,7 +13,7 @@ import InnerEar.Widgets.SpecEval
 import InnerEar.Types.Data hiding (Time)
 import InnerEar.Types.Sound
 import InnerEar.Types.Score
-import Reflex.Synth.Synth
+import Reflex.Synth.Synth hiding (Frequency)
 import InnerEar.Types.Exercise
 import InnerEar.Types.ExerciseId
 import InnerEar.Types.Frequency
@@ -73,13 +73,15 @@ answers = [
   Answer $ F 31 "31",Answer $ F 63 "63", Answer $ F 125 "125", Answer $ F 250 "250", Answer $ F 500 "500",
   Answer $ F 1000 "1k", Answer $ F 2000 "2k", Answer $ F 4000 "4k", Answer $ F 8000 "8k", Answer $ F 16000 "16k"]
 
+-- TODO why is the frequency band not used?
+
 renderAnswer :: Map String AudioBuffer -> Config -> (SourceNodeSpec, Maybe Time)-> Maybe Answer -> Synth ()
 renderAnswer _ (_, boost) (src, dur) ans = buildSynth $ do
   synthSource src
-  gain $ Db $ fromIntegral $ -10
-  maybeSynth (\freq -> biquadFilter $ Peaking (Hz $ freqAsDouble freq) 1.4 boost) ans
-  maybeDelete (fmap (+ Millis 200) dur)
+  gain $ Db $ -10
+  maybeSynth (\freq -> biquadFilter $ Peaking (Hz $ freqAsDouble $ frequency freq) 1.4 (Db boost)) ans
   destination
+  maybeDelete (fmap (+ Millis 200) dur)
 
 convertBands :: FrequencyBand -> [Answer]
 convertBands AllBands = answers
@@ -95,12 +97,15 @@ instructions = el "div" $ do
 generateQ :: Config -> [ExerciseDatum] -> IO ([Answer],Answer)
 generateQ config _ = randomMultipleChoiceQuestion (convertBands $ fst config)
 
-sourcesMap:: Map Int (String,SoundSourceConfigOption)
-sourcesMap = [(0,("Pink noise", Resource "pinknoise.wav" (Just 2) )), (0,("White noise", Resource "whitenoise.wav" (Just 2) )) , (2, ("Load a sound file", UserProvidedResource))]
-
+sourcesMap :: Map Int (String,SoundSourceConfigOption)
+sourcesMap = fromList $ [
+    (0, ("Pink noise", Resource "pinknoise.wav" (Just 2))),
+    (1, ("White noise", Resource "whitenoise.wav" (Just 2))),
+    (2, ("Load a sound file", UserProvidedResource))
+  ]
 
 -- temporary until config widget is changed to take a list/map of config parameters that can be changed
-tenBandsConfigWidget :: MonadWidget t m => Config -> m (Dynamic t Config,  Dynamic t Source,  Event t (Maybe a)) -- dyn config, source, and event maybe answer for playing reference sound (config widget
+tenBandsConfigWidget :: MonadWidget t m => Config -> m (Dynamic t Config, Dynamic t (Maybe (SourceNodeSpec, Maybe Time)), Event t (), Event t ())
 tenBandsConfigWidget c =  elClass "div" "configWidget" $ do
   config <- elClass "div" "tenBandsConfigWidget" $ do
     text "Spectrum Range: "
@@ -111,9 +116,9 @@ tenBandsConfigWidget c =  elClass "div" "configWidget" $ do
     text "Boost/Cut amount: "
     boost <- liftM  _dropdown_value $ dropdown initialVal (constDyn $ fmap show boostMap) def
     boost' <- mapDyn (maybe 10 id . (flip Data.Map.lookup) boostMap) boost
-    combineDyn (, ) bands  boost'
-  (source,playReference) <- sourceWidget "tenBandBoostCutExercise" sourcesMap 0
-  return (config, source, Nothing <$ playReference)
+    combineDyn (,) bands  boost'
+  (source, playEv, stopEv) <- sourceSelectionWidget "tenBandBoostCutExercise" sourcesMap 0
+  return (config, source, playEv, stopEv)
 
 
 tenBandBoostCutExercise :: MonadWidget t m => Exercise t m Config [Answer] Answer (Map Answer Score)

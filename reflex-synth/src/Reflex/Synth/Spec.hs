@@ -21,8 +21,8 @@ data SourceSinkNodeSpec
   -- Convolver buffer normalize
   | Convolver (Either Float32Array FloatArraySpec) Bool
   | Delay Time
-  -- Compressor threshold knee ratio reduction attack release
-  | Compressor Amplitude Amplitude Amplitude Gain Time Time
+  -- Compressor threshold knee ratio attack release
+  | Compressor Amplitude Amplitude Amplitude Time Time
   | Gain Gain
   | WaveShaper (Either Float32Array FloatArraySpec) OversampleAmount
   | DistortAt Amplitude

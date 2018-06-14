@@ -45,31 +45,17 @@ answers :: [Answer]
 answers = [Answer $ F 155 "Bass (155 Hz)",Answer $ F 1125 "Low Mids (1125 Hz)",Answer $ F 3000 "High Mids (3 kHz)",
   Answer $ F 5000 "Presence (5 kHz)",Answer $ F 13000 "Brilliance (13 kHz)"]
 
-
-  -- data FilterSpec
-  --   = LowPass Frequency Double
-  --   | HighPass Frequency Double
-  --   | BandPass Frequency Double
-  --   | LowShelf Frequency Gain
-  --   | HighShelf Frequency Gain
-  --   | Peaking Frequency Double Gain
-  --   | Notch Frequency Double
-  --   | AllPass Frequency Double
-  --   -- | IIR [Double] [Double] feedforward feedback
-  --   deriving (Show)
-
-renderAnswer :: Map String AudioBuffer -> Config -> (SourceNodeSpec,Maybe Time)-> Maybe Answer -> Synth ()
+renderAnswer :: Map String AudioBuffer -> Config -> (SourceNodeSpec,Maybe Time) -> Maybe Answer -> Synth ()
 renderAnswer _ db (src, dur) (Just freq) = buildSynth $ do
-  let env = maybe (return EmptyGraph) (rectEnv (Millis 1)) dur
-  synthSource src
-  biquadFilter $ Peaking (frequency freq) 1.4 (Db $ fromIntegral db)
-  gain (Db $ -10.0)
+  let env = maybe (return EmptyGraph) (unitRectEnv (Millis 1)) dur
+  synthSource src >> gain (Db $ -10)
+  biquadFilter $ Peaking (Hz $ freqAsDouble $ frequency freq) 1.4 (Db db)
   env
   destination
   maybeDelete (fmap (+Sec 0.2) dur)
-renderAnswer _ db (src, dur) _= buildSynth $ do
-  let env = maybe (return EmptyGraph) (rectEnv (Millis 1)) dur
-  synthSource src >> gain (Db $ fromIntegral $ -10) >> env >> destination
+renderAnswer _ db (src, dur) _ = buildSynth $ do
+  let env = maybe (return EmptyGraph) (unitRectEnv (Millis 1)) dur
+  synthSource src >> gain (Db $ -10) >> env >> destination
   maybeDelete (fmap (+Sec 0.2) dur)
 
 instructions :: MonadWidget t m => m ()
@@ -83,7 +69,11 @@ generateQ :: Config -> [ExerciseDatum] -> IO ([Answer],Answer)
 generateQ _ _ = randomMultipleChoiceQuestion answers
 
 sourcesMap:: Map Int (String,SoundSourceConfigOption)
-sourcesMap = [(0,("Pink noise", Resource "pinknoise.wav" (Just 2) )), (0,("White noise", Resource "whitenoise.wav" (Just 2) )) , (2, ("Load a sound file", UserProvidedResource))]
+sourcesMap = fromList $ [
+    (0, ("Pink noise", Resource "pinknoise.wav" (Just $ Sec 2))),
+    (1, ("White noise", Resource "whitenoise.wav" (Just $ Sec 2))),
+    (2, ("Load a sound file", UserProvidedResource))
+  ]
 
 
 fiveBandBoostCutExercise :: MonadWidget t m => Exercise t m Config [Answer] Answer (Map Answer Score)

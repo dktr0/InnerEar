@@ -128,13 +128,12 @@ instantiateSourceSinkNode (Delay t) ctx = do
   delay <- js_createDelay ctx $ inSec t -- createDelay needs a maxDelayTime
   js_setParamValue (js_audioParam delay (toJSString "delayTime")) (inSec t) ctx
   return $ DelayNode delay
-instantiateSourceSinkNode (Compressor thr kne rat red att rel) ctx = do
+instantiateSourceSinkNode (Compressor thr kne rat att rel) ctx = do
   comp <- js_createDynamicsCompressor ctx
   let setProp n v = js_setParamValue (js_audioParam comp (toJSString n)) v ctx
   setProp "threshold" $ inDb thr
   setProp "knee" $ inDb kne
   setProp "ratio" $ inDb rat
-  js_setField comp (toJSString "reduction") $ pToJSVal $ inDb red
   setProp "attack" $ inSec att
   setProp "release" $ inSec rel
   return $ DynamicsCompressorNode comp

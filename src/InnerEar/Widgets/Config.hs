@@ -26,6 +26,8 @@ import Reflex.Synth.Buffer
 -- sourceToSourceNodeSpec SineOscillator' = return $ OscillatorNode Sine (Hz 300)
 -- sourceToSourceNodeSpec UserSoundFile x = mkBuffer x
 
+-- TODO inputID can be dropped anywhere it is used in here
+
 configWidget :: (MonadWidget t m, Eq c) => String -> Map Int (String, SoundSourceConfigOption) -> Int -> String -> Map Int (String, c) -> c -> m (Dynamic t c, Dynamic t (Maybe (SourceNodeSpec, Maybe Time)), Event t (), Event t ())
 configWidget inputID sourceMap iSource configLabel configMap iConfig = elClass "div" "configWidget" $ do
   config <- elClass "div" "exerciseConfigWidget" $ exerciseConfigWidget configLabel configMap iConfig

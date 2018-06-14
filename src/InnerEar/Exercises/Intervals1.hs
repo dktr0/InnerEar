@@ -4,20 +4,21 @@ module InnerEar.Exercises.Intervals1 (intervals1Exercise) where
 
 import Reflex
 import Reflex.Dom
+import Reflex.Synth.Synth
+
 import Data.Map
+
 import Text.JSON
 import Text.JSON.Generic
 
-import Reflex.Synth.Synth
 import InnerEar.Exercises.MultipleChoice
 import InnerEar.Types.ExerciseId
 import InnerEar.Types.Exercise
 import InnerEar.Types.Score
-import InnerEar.Widgets.Config
-import InnerEar.Widgets.SpecEval
 import InnerEar.Types.Data hiding (Time)
-import InnerEar.Types.Frequency
 import InnerEar.Types.Utility
+import InnerEar.Widgets.SpecEval
+import InnerEar.Widgets.Config
 import InnerEar.Widgets.AnswerButton
 
 type Config = ()
@@ -48,16 +49,18 @@ baseTone :: Frequency
 baseTone = Midi 60
 
 -- *** note: random pitches requires renderAnswer to return IO Sound instead of Sound
-renderAnswer :: Map String AudioBuffer -> Config -> (SourceNodeSpec, Maybe Time)-> Maybe Answer -> Synth ()
-renderAnswer _ _ _ Nothing = buildSynth $ silent >> destination
-renderAnswer _ _ _ (Just interval) = buildSynth $ do
+--     ^ then the pitch generation belongs in the Config where the config widget can perform the IO
+
+renderAnswer :: Map String AudioBuffer -> Config -> (SourceNodeSpec, Maybe Time) -> Maybe Answer -> Synth ()
+renderAnswer _ _ _ Nothing = buildSynth_ $ silent >> destination
+renderAnswer _ _ _ (Just interval) = buildSynth_ $ do
   osc <- oscillator Triangle baseTone
   let amp = Db $ fromIntegral (-20)
   g <- rectEnv (Millis 100) (Sec 1) amp
   let firstDur = (Millis $ 2 * 100) + (Sec 1)
   let rest = Sec 0.5
   -- Change the frequency of the oscillator after the first playback.
-  setParamValue "frequency" (inHz $ fmap (+ answerToSemitones interval) baseTone) firstDur osc
+  setParamValue "frequency" (answerToSemitones interval + inHz baseTone) firstDur osc
   -- Reset for second note and have another rectEnv at firstDur.
   setParamValue "gain" 0 (firstDur + rest) g
   linearRampToParamValue "gain" (inAmp amp) (firstDur + rest + Millis 100) g
@@ -78,7 +81,7 @@ intervals1Exercise = multipleChoiceExercise
   3
   answers
   instructions
-  (\x-> return (constDyn (), constDyn (NodeSource (SilentNode) $ Just 1), never))
+  (\x-> return (constDyn (), constDyn (Just (Silent, Nothing)), never, never))
   renderAnswer
   Intervals1
   ()

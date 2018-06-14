@@ -5,6 +5,7 @@ module InnerEar.Exercises.AddedWhiteNoise (addedWhiteNoiseExercise) where
 import Reflex
 import Reflex.Dom
 import Data.Map
+import Data.Maybe
 import Text.JSON
 import Text.JSON.Generic
 
@@ -41,12 +42,12 @@ answers = [Answer False,Answer True]
 renderAnswer :: Map String AudioBuffer -> Config -> (SourceNodeSpec, Maybe Time) -> Maybe Answer -> Synth ()
 renderAnswer sysResources db (src, dur) (Just (Answer True)) = buildSynth $ do
   -- sticking an EmptyGraph somewhere won't break the stack structure of Synths right?
-  let env = maybe (return EmptyGraph) (rectEnv (Millis 1)) dur
+  let env = maybe (return EmptyGraph) (unitRectEnv (Millis 1)) dur
   synthSource src >> gain (Db $ fromIntegral $ -10) >> env >> destination
-  audioBufferSource (sysResources!!"whitenoise") (BufferParams 0 1 (isJust dur)) >> env >> destination
+  audioBufferSource (sysResources!"whitenoise") (BufferParams 0 1 (isJust dur)) >> env >> destination
   maybeDelete (fmap (+Sec 0.2) dur)
 renderAnswer _ db (src, dur) _ = buildSynth $ do
-  let env = maybe (return EmptyGraph) (rectEnv (Millis 1)) dur
+  let env = maybe (return EmptyGraph) (unitRectEnv (Millis 1)) dur
   synthSource src >> gain (Db $ fromIntegral $ -10) >> env >> destination
   maybeDelete (fmap (+Sec 0.2) dur)
 
@@ -65,7 +66,10 @@ instructions = el "div" $ do
 
 -- Change to SoundSourceConfigOption instead of Source
 sourcesMap :: Map Int (String, SoundSourceConfigOption)
-sourcesMap = fromList $ [(0,("300hz sine wave", Spec (Oscillator Sine (Hz 300) ) (Just 2))), (1, ("Load a sound file", UserProvidedResource))]
+sourcesMap = fromList $ [
+    (0, ("300hz sine wave", Spec (Oscillator Sine (Hz 300)) (Just $ Sec 2))), 
+    (1, ("Load a sound file", UserProvidedResource))
+  ]
 
 
 addedWhiteNoiseExercise :: MonadWidget t m => Exercise t m Config [Answer] Answer (Map Answer Score)
