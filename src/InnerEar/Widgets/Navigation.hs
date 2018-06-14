@@ -85,8 +85,8 @@ navigationPage sysResources responses currentRole SplashPage = elClass "div" "na
   isAdmin <- mapDyn (==Just Administrator) currentRole
   a <- (AdminPage <$) <$> (visibleWhen isAdmin $ elClass "div" "navButton" $ button "Administration")
   c <- (TestPage <$) <$> (visibleWhen isAdmin $ elClass "div" "navButton" $ button "Test")
-  d <- (TestSoundPage <$) <$> (visibleWhen isAdmin $ elClass "div" "navButton" $ button "Test Sound")
-  let navEvents = leftmost (a:c:d:b)
+  --d <- (TestSoundPage <$) <$> (visibleWhen isAdmin $ elClass "div" "navButton" $ button "Test Sound")
+  let navEvents = leftmost (a:c:{-d:-}b)
   return (never,never,navEvents)
 
 navigationPage sysResources responses currentRole CreateUserPage = el "div" $ do

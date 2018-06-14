@@ -38,18 +38,17 @@ instance Buttonable Answer where
 
 answers = [Answer False,Answer True]
 
-
 renderAnswer::Map String AudioBuffer -> Config -> (SourceNodeSpec,Maybe Time)-> Maybe Answer -> Synth ()
 renderAnswer _ ratio (src, dur) (Just (Answer True)) = buildSynth $ do
-  let env = maybe (return EmptyGraph) (rectEnv (Millis 1)) dur
+  let env = maybe (return EmptyGraph) (unitRectEnv (Millis 1)) dur
   synthSource src
   gain $ Db $ fromIntegral $ -10
-  compressor (-20) r 0 0.003 0.1
+  compressor (Db $ -20) (Db 0) (Db ratio) (Sec 0.003) (Sec 0.1)
   env
   destination
   maybeDelete (fmap (+Sec 0.2) dur)
 renderAnswer _ _ (src, dur) _ = buildSynth $ do
-  let env = maybe (return EmptyGraph) (rectEnv (Millis 1)) dur
+  let env = maybe (return EmptyGraph) (unitRectEnv (Millis 1)) dur
   synthSource src >> gain (Db $ fromIntegral $ -10) >> env >> destination
   maybeDelete (fmap (+Sec 0.2) dur)
 

@@ -40,11 +40,11 @@ answers = [Answer False,Answer True]
 
 renderAnswer :: Map String AudioBuffer -> Config -> (SourceNodeSpec, Maybe Time)-> Maybe Answer -> Synth ()
 renderAnswer _ clipDb (src,dur) (Just (Answer True)) = buildSynth $ do
-  let env = maybe (return EmptyGraph) (rectEnv (Millis 1)) dur
+  let env = maybe (return EmptyGraph) (unitRectEnv (Millis 1)) dur
   synthSource src >> clipAt (Db clipDb) >> gain (Db $ fromIntegral $ -10) >> env >> destination
   maybeDelete (fmap (+Sec 0.2) dur)
 renderAnswer _ clipDb (src,dur) _ = buildSynth $ do
-  let env = maybe (return EmptyGraph) (rectEnv (Millis 1)) dur
+  let env = maybe (return EmptyGraph) (unitRectEnv (Millis 1)) dur
   synthSource src >> gain (Db $ fromIntegral $ -10) >> env >> destination
   maybeDelete (fmap (+Sec 0.2) dur)
 

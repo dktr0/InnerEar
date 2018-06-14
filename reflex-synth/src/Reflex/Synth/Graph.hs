@@ -9,6 +9,7 @@ module Reflex.Synth.Graph (
   NodeProps(..),
   Env,
   buildSynth,
+  buildSynth_,
   synthSource,
   synthSourceSink,
   synthSink,
@@ -23,8 +24,11 @@ module Reflex.Synth.Graph (
 ) where
 
 import qualified Data.Map as Map
+
+import Control.Monad (void)
 import Control.Monad.Trans.Class
 import Control.Monad.Trans.State
+
 import Reflex.Synth.Spec
 
 -- See https://wiki.haskell.org/New_monads/MonadUnique for a simple monad transformer to support
@@ -87,6 +91,9 @@ type SynthBuilder = UniqueT Synth
 
 buildSynth :: SynthBuilder a -> Synth a
 buildSynth = evalUniqueT
+
+buildSynth_ :: SynthBuilder a -> Synth ()
+buildSynth_ = void . buildSynth
 
 connectGraphs :: Graph -> Graph -> Graph
 connectGraphs EmptyGraph y = y

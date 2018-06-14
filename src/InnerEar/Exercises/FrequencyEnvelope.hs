@@ -76,14 +76,14 @@ sampleEnvelope :: Int -> (Double -> Double) -> Duration -> [Double]
 sampleEnvelope r f d = fmap (f . (\x -> x * fromIntegral(d)/1000.0/fromIntegral(r))) $ fmap fromIntegral [0, 1 .. (r-1)]
 
 renderAnswer :: Map String AudioBuffer -> Config -> (SourceNodeSpec, Maybe Time)-> Maybe Answer -> Synth ()
-renderAnswer _ c@(s, d, o) _ (Just ans) = buildSynth $ do
-  let dur = Millis d
-  let curve = sampleEnvelope 200 (actualEnvelope c ans) dur
+renderAnswer _ c@(s, d, o) _ (Just ans) = buildSynth_ $ do
+  let dur = Millis $ fromIntegral d
+  let curve = sampleEnvelope 200 (actualEnvelope c ans) d
   setDeletionTime $ dur + Millis 200
   oscillator Triangle (Hz 0) >>= curveToParamValue "frequency" curve (Sec 0) dur
   gain (Db $ fromIntegral $ -20)
   destination
-renderAnswer _ _ _ Nothing = buildSynth $ silent >> destination -- could this just be 'return ()''?
+renderAnswer _ _ _ Nothing = buildSynth_ $ silent >> destination
 
 displayEval :: MonadWidget t m => Dynamic t (Map Answer Score) -> m ()
 displayEval _ = return ()
@@ -91,7 +91,7 @@ displayEval _ = return ()
 generateQ :: Config -> [ExerciseDatum] -> IO ([Answer],Answer)
 generateQ _ _ = randomMultipleChoiceQuestion answers
 
-thisConfigWidget:: MonadWidget t m => Config -> m (Dynamic t Config, Dynamic t Source, Event t (Maybe a))
+thisConfigWidget:: MonadWidget t m => Config -> m (Dynamic t Config, Dynamic t (Maybe (SourceNodeSpec, Maybe Time)), Event t (), Event t ())
 thisConfigWidget c@(s,d,o) = do
   text "Similarity: "
   simDropDown <- dropdown (head similarities) (constDyn $ fromList [ (x,show x) | x <- similarities ]) (DropdownConfig never (constDyn empty))
@@ -105,8 +105,8 @@ thisConfigWidget c@(s,d,o) = do
   simDur <- combineDyn (,) sim dur
   simDurOct <- combineDyn (,) simDur oct
   conf <- mapDyn (\((x,y),z) -> (x,y,z)) simDurOct
-  let source = constDyn $ NodeSource (SilentNode) (Just 1.0)
-  return (conf, source, never)
+  let source = constDyn $ Just (Silent, Nothing)
+  return (conf, source, never, never)
 
 instructions :: MonadWidget t m => m ()
 instructions = el "div" $ do

@@ -41,12 +41,12 @@ instance Buttonable Answer where
 
 renderAnswer :: Map String AudioBuffer -> Config -> (SourceNodeSpec, Maybe Time) -> Maybe Answer -> Synth ()
 renderAnswer _ db (src, dur) (Just (Answer True)) = buildSynth $ do
-  let env = maybe (return EmptyGraph) (rectEnv (Millis 1)) dur
+  let env = maybe (return EmptyGraph) (unitRectEnv (Millis 1)) dur
   synthSource src >> gain (Db $ fromIntegral db) >> env >> destination
   maybeDelete (fmap (+ Sec 0.2) dur)
 renderAnswer _ db _ (Just (Answer False)) = return ()
 renderAnswer _ db (src, dur) Nothing = buildSynth $ do
-  let env = maybe (return EmptyGraph) (rectEnv (Millis 1)) dur
+  let env = maybe (return EmptyGraph) (unitRectEnv (Millis 1)) dur
   synthSource src >> gain (Db $ fromIntegral db) >> env >> destination
   maybeDelete (fmap (+ Sec 0.2) dur)
 
@@ -67,8 +67,8 @@ generateQ _ _ = randomMultipleChoiceQuestion answers
 
 sourcesMap :: Map Int (String, SoundSourceConfigOption)
 sourcesMap = fromList $ [
-    (0, ("Pink noise", Resource "pinknoise.wav" (Just 2))),
-    (1, ("White noise", Resource "whitenoise.wav" (Just 2))),
+    (0, ("Pink noise", Resource "pinknoise.wav" (Just $ Sec 2))),
+    (1, ("White noise", Resource "whitenoise.wav" (Just $ Sec 2))),
     (2, ("Load a sound file", UserProvidedResource))
   ]
 
