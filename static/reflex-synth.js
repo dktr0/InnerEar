@@ -469,8 +469,8 @@ function drawSourceErrorOnCanvas(canvas, errormsg){
   console.log("Error with buffer"+errormsg)
 }
 
-drawSourceUnderSpecifiedOnCanvas(canvas){
-  drawSourceUnderSpecifiedOnCanvas(canvas, "Source under specified")
+function drawSourceUnderSpecifiedOnCanvas(canvas) {
+  drawSourceErrorOnCanvas(canvas, "Source under specified")
 }
 
 function drawSourceLoadingOnCanvas(canvas){

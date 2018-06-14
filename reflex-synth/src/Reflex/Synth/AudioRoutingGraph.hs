@@ -226,11 +226,11 @@ foreign import javascript safe
   js_disconnectAll :: JSVal -> IO ()
 
 foreign import javascript safe
-  "$1.start($2);"
+  "console.log('starting', $1, 'at', $2); $1.start($2);"
   js_start :: JSVal -> Double -> IO ()
 
 foreign import javascript safe
-  "$1.stop($2);"
+  "console.log('stoping', $1, 'at', $2); $1.stop($2);"
   js_stop :: JSVal -> Double -> IO ()
 
 

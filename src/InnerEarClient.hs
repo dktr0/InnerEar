@@ -15,4 +15,4 @@ main = do
 	mainWidget $ clientWidget globalBuffers
 
 loadGlobalResources :: IO (Map String AudioBuffer)
-loadGlobalResources = error "Not yet implemented: loadGlobalResources"
+loadGlobalResources = return empty

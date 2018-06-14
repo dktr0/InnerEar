@@ -35,7 +35,7 @@ performSynth selectedSynth = mdo
     -- Stop the old one if it existed
     maybe (return ()) stopSynthNow prev
     -- Start the new one if given
-    maybe (return Nothing) (\s -> instantiateSynth s >>= startSynth (Millis 0) >>= return . Just) curr
+    maybe (return Nothing) (\s -> instantiateSynth s >>= startSynthNow >>= return . Just) curr
 
   return ()
 

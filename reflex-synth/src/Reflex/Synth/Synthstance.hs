@@ -1,6 +1,7 @@
 module Reflex.Synth.Synthstance (
   instantiateSynth,
   startSynth,
+  startSynthNow,
   stopSynth,
   stopSynthNow
 ) where
@@ -82,6 +83,11 @@ startSynth time inst = do
   let cs = nodeChanges inst
   mapM_ (\(id, scheduleChange) -> scheduleChange time $ ns!id) cs
   return $ inst { started = True }
+
+startSynthNow :: Synthstance -> IO Synthstance
+startSynthNow inst = do
+  time <- getCurrentTime $ audioContext inst
+  startSynth (time + Millis 50) inst
 
 stopSynth :: Time -> Synthstance -> IO ()
 stopSynth time inst = mapM_ (stop time) $ nodes inst

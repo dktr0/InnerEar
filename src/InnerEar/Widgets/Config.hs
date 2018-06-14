@@ -52,8 +52,8 @@ sourceSelectionWidget inputID choices defChoiceIdx =
     inputAttrs <- forDyn dynSelOpt $ \opt -> 
       let staticAttr = fromList [("accept", "audio/*"), ("id", inputID)] in
         case opt of
-          UserProvidedResource -> Data.Map.insert "hidden" "true" staticAttr
-          _ -> staticAttr
+          UserProvidedResource -> staticAttr
+          _ -> Data.Map.insert "hidden" "true" staticAttr
 
     userResourceInput <- fileInput $ FileInputConfig inputAttrs
 
