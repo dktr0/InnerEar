@@ -27,7 +27,7 @@ clientWidget :: MonadWidget t m => m ()
 clientWidget = elClass "div" "innerEar" $ mdo
   (wsRcvd,wsStatus) <- WS.reflexWebSocket wsSend
   elClass "div" "title" $ text "Inner Ear"
-  loginVisible <- holdDyn True $ leftmost [False <$ loggedIn, False <$ noLogin, True <$ loggedOut]
+  loginVisible <- holdDyn True $ leftmost [True <$ loggedIn, False <$ noLogin, True <$ loggedOut]
   navVisible <- mapDyn not loginVisible
   (loginRequests,currentRole) <- visibleWhen loginVisible $ elClass "div" "login" $ loginWidget wsRcvd
   let loggedIn = ffilter isJust $ updated currentRole
