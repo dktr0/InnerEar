@@ -15,7 +15,7 @@ extra-source-files:
 
 Library
   hs-source-dirs:  src
-  Build-Depends:   base, reflex, reflex-dom, containers, safe, ghcjs-base, ghcjs-dom, text,
+  Build-Depends:   base, containers, safe, ghcjs-base, ghcjs-dom, text,
                    array, ghcjs-prim, data-default, transformers, file-embed, time, monad-loops,
                    json, bytestring
   GHC-Options:     -Wall -fwarn-tabs

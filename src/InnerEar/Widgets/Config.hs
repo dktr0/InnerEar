@@ -1,21 +1,25 @@
 {-# LANGUAGE RecursiveDo #-}
 module InnerEar.Widgets.Config where
 
+import Control.Monad(liftM)
 import Control.Monad.IO.Class (liftIO)
+
 import Data.Map
 import Data.Maybe(fromJust, isJust, listToMaybe)
-import Text.Read(readMaybe)
-import qualified GHCJS.DOM.Types as G
-import Reflex
-import Reflex.Dom
-import Reflex.Class
-import Control.Monad(liftM)
 
+import qualified GHCJS.DOM.Types as G
+
+import Text.Read(readMaybe)
+
+import InnerEar.Types.Sound
 import InnerEar.Widgets.Canvas
 import InnerEar.Widgets.Utility(radioWidget, elClass', hideableWidget, asapOrUpdated, combineDynIO)
-import InnerEar.Types.Sound
-import Reflex.Synth.Spec
+
+import Reflex
+import Reflex.Class
+import Reflex.Dom
 import Reflex.Synth.Buffer
+import Reflex.Synth.Spec
 
 
 -- Verify this but for css styling, what goes in the config panel is 1 div with class "configWidget" and 2 internal divs:
@@ -64,7 +68,7 @@ sourceSelectionWidget sysResources inputID choices defChoiceIdx =
 
     selFileEv <- asapOrUpdated dynSelFile
     -- (Dynamic t (Maybe Buffer), Dynamic t BufferStatus)
-    (dynBuffer, dynBufferStatus) <- buffer selFileEv
+    (dynBuffer, dynBufferStatus) <- mkBuffer selFileEv
 
     -- Dynamic t SoundSource
     dynSoundSrc <- combineDynIO (constructSoundSource sysResources) dynSelOpt dynBufferStatus
@@ -134,6 +138,34 @@ sourcePlaybackControlsWidget dynSrc =
 
     dynConfiguredSrc <- combineDyn (\l cfg -> cfg { shouldLoop = l }) dynIsLoopChecked dynSrc
     return (dynConfiguredSrc, playEv, stopEv)
+
+
+-- Utilities to wrap buffer loading in reflex components
+
+startLoadingBuffer :: MonadWidget t m => Event t G.File -> m (Event t Buffer, Event t BufferStatus)
+startLoadingBuffer fileEv = do
+  -- bufferEv :: Event t Buffer - a buffer ready to start loading it's file
+  bufferEv <- performEvent $ ffor fileEv $ liftIO . createBuffer
+
+  -- stateChangeEv :: Event t Buffer - tiggered on a status change
+  stateChangeEv <- performEventAsync $ ffor bufferEv $ \buffer evTrigger -> 
+    liftIO $ startLoadingAndDecodingWithCallback buffer evTrigger
+
+  -- statusEv' :: Event t BufferStatus - triggered on **relevant** status changes, hence the fmapMaybe
+  statusEv <- performEvent $ fmap (liftIO . bufferStatus) stateChangeEv
+  let statusEv' = fmapMaybe id statusEv
+
+  return (stateChangeEv, statusEv')
+
+-- | buffer creates a smart buffer for asynchronous loading of the most recent `Just` file fired
+-- from the `Event t (Maybe File)`. Until the first occurance of the event, the buffer is `Nothing`.
+-- The returned buffer status monitors the current state of the buffer. 
+mkBuffer :: MonadWidget t m => Event t (Maybe G.File) -> m (Dynamic t (Maybe Buffer), Dynamic t BufferStatus)
+mkBuffer maybeFileEv = do
+  (bufferEv, statusEv) <- startLoadingBuffer (fmapMaybe id maybeFileEv)
+  dynBuffer <- holdDyn Nothing $ fmap Just bufferEv
+  dynStatus <- holdDyn BufferUnderspecified statusEv
+  return (dynBuffer, dynStatus)
 
 -- sineSourceConfig :: (MonadWidget t m) => String -> Map String Double -> Double -> m (Dynamic t Double, Dynamic t Source, Event t (Maybe a))
 -- sineSourceConfig inputID configMap iConfig = elClass "div" "configWidget" $ do
