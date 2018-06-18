@@ -19,21 +19,15 @@ import InnerEar.Types.ExerciseNavigation
 import InnerEar.Types.Exercise
 import InnerEar.Types.Response
 
--- | runExercise takes a completely defined Exercise value and uses it to run an ear-training
--- exercise in the browser.
+runExercise :: forall t m c q a e s. (MonadWidget t m, Data c, Data q, Data a, Data e, Show c, Show q, Show a, Show e) =>
+  ExerciseId -> -- exerciseId
+  ... -> -- questionWidget
+  ... ->
+  s ->
+  m (Event t (ExerciseId,ExerciseDatum),Event t Sound,Event t ())
 
-runExercise :: forall t m c q a e s. (MonadWidget t m, Data c, Data q, Data a, Data e, Show c, Show q, Show a, Show e)
-  => Exercise t m c q a e s -> Event t [Response] -> m (Event t (ExerciseId,ExerciseDatum),Event t Sound,Event t ())
-runExercise ex responses = mdo
+runExercise exerciseId store = mdo
 
-  -- form databank for exercise by folding together pertinent database entries plus data transmitted up
-  let records = ffilter (\x -> length x > 0) $ fmap (catMaybes . (fmap justRecordResponses)) responses -- Event t [Record]
-  let points = fmap (fmap point) records -- Event t [Point], *** note: we probably shouldn't assume user handle matches...
-  let datums = fmap (fmap datum) points -- Event t [Datum]
-  let noSessionDatums = fmap lefts datums -- Event t [(ExerciseId,ExerciseDatum)]
-  let datadown = fmap (fmap snd  . filter (\(i,_) -> i == exerciseId ex)) noSessionDatums -- Event t [ExerciseDatum]
-  let questionWidgetData' = fmap (:[]) questionWidgetData
-  currentData <- foldDyn (++) [] $ leftmost [datadown, questionWidgetData']
 
   -- Question Widget
   (questionWidgetData,sounds,configUpdate,questionNav) <- elClass "div" "exerciseQuestion" $ do

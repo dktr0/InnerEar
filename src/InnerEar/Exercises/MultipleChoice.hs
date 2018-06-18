@@ -25,50 +25,25 @@ import InnerEar.Widgets.UserMedia
 import InnerEar.Widgets.AnswerButton
 import Reflex.Synth.Types
 
--- | This module introduces a function to generate multiple choice exercises.
--- Most specifically, it abstracts over the requirement to provide a widget
--- to present questions, requiring instead that a fixed list of possible
--- answers be provided, together with a pure function that converts an answer
--- value to a sound.
-
 multipleChoiceExercise :: (MonadWidget t m, Show a, Eq a, Ord a, Data c, Data a, Ord c,Buttonable a)
-  => Int -- maximum number of tries to allow
-  -> [a]
-  -> m ()
-  -> (c->m (Dynamic t c,  Dynamic t Source,  Event t (Maybe a))) -- dyn config, source, and event maybe answer for playing reference sound (config widget)
-  -> (c -> Source -> Maybe a -> Sound) -- function to produce a sound from an answer, where a Nothing answer is to be interpreted as a reference sound (or
-  -> ExerciseId
-  -> c
+
+  -- Non-widget parameters that define a multiple-choice exercise:
+  => ExerciseId
+  -> [a] -- list of possible answers
+  -> (c -> s -> IO ([a],a)) -- function to generate a new question
+  -> (c -> Source -> Maybe a -> Sound) -- function to render answer or reference as sound
+  -> Int -- maximum number of tries to allow
+  -> c -- default value for configuration
+
+  -- Widgets:
+  -> m () -- instructions widget
+  -> (c -> m (Dynamic t c,  Dynamic t Source,  Event t (Maybe a))) -- dyn config, source, and event maybe answer for playing reference sound (config widget)
   -> (Dynamic t (Map a Score) -> m ())
-  -> (c -> [ExerciseDatum] -> IO ([a],a))
-  -> Exercise t m c [a] a (Map a Score) s
+  -> Exercise t m s
 
-multipleChoiceExercise maxTries answers iWidget cWidget render i c de g = Exercise {
-  exerciseId = i,
-  instructionsWidget = iWidget,
-  defaultConfig = c,
-  defaultEvaluation = empty,
-  displayEvaluation = de,
-  generateQuestion = g,
-  questionWidget = multipleChoiceQuestionWidget maxTries answers i iWidget cWidget render de
-  }
+multipleChoiceExercise exId answers generate render maxTries defaultConfig iWidget cWidget eWidget = elClass "div" "exerciseWrapper" $ mdo
 
-multipleChoiceQuestionWidget :: (MonadWidget t m, Show a, Eq a, Ord a,Data a,Data c,Ord c, Buttonable a)
-  => Int -- maximum number of tries
-  -> [a] -- fixed list of potential answers
-  -> ExerciseId
-  -> m ()
-  -> (c->m (Dynamic t c,  Dynamic t Source,  Event t (Maybe a))) -- dyn config, source, and event maybe answer for playing reference sound (config widget)
-  -> (c -> Source -> Maybe a -> Sound) -- function to produce a sound from an answer, where a Nothing answer is to be interpreted as a reference sound (or some other sound not a question)
-  -> (Dynamic t (Map a Score) -> m ())
-  -> c
-  -> Map a Score
-  -> Event t ([a],a)
-  -> m (Event t ExerciseDatum,Event t Sound,Event t c,Event t ExerciseNavigation)
-
-multipleChoiceQuestionWidget maxTries answers exId exInstructions cWidget render eWidget config initialEval newQuestion = elClass "div" "exerciseWrapper" $ mdo
-
-  let initialState = initialMultipleChoiceState config answers maxTries
+  let initialState = initialMultipleChoiceState defaultConfig answers maxTries
   let newQuestionAndConfig = attachDyn dynConfig newQuestion
   let newQuestion' = fmap (\(c,q) -> newQuestionMultipleChoiceState c q) newQuestionAndConfig
   questionHeard0 <- holdDyn False $ leftmost [False <$ newQuestion,True <$ playQuestion]

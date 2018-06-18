@@ -9,11 +9,8 @@ import InnerEar.Types.Data
 import Reflex.Synth.Types
 import InnerEar.Types.ExerciseNavigation
 
--- | An Exercise is a uniquely typed value representing all of the components of
--- a functioning Inner Ear ear-training exercise. The types t and m are required by Reflex.
--- c represents the type of an exercise' configuration. q represents the type of a question.
--- a represents the type of an answer, and e represents the type of an evaluation (i.e. running score, etc).
 
+{- old model:
 data Exercise t m c q a e s = Exercise {
   exerciseId :: ExerciseId,
   instructionsWidget :: m (),
@@ -23,3 +20,10 @@ data Exercise t m c q a e s = Exercise {
   generateQuestion :: c -> [ExerciseDatum] -> IO (q,a),
   questionWidget ::  c -> e -> Event t (q,a) -> m (Event t ExerciseDatum,Event t Sound, Event t c,Event t ExerciseNavigation)
 }
+-}
+
+-- | An exercise is something that, given some initial store s (from the store map)
+-- produces a widget that generates exercise data (including store updates and close events),
+-- and sound events.
+
+type Exercise t m s = s -> m (Event t (ExerciseId,ExerciseDatum),Event t Sound)
