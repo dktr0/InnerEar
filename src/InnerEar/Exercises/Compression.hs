@@ -13,6 +13,7 @@ import InnerEar.Exercises.MultipleChoice
 import InnerEar.Types.ExerciseId
 import InnerEar.Types.Exercise
 import InnerEar.Types.Score
+import InnerEar.Types.MultipleChoiceStore
 import InnerEar.Widgets.Config
 import InnerEar.Widgets.SpecEval
 import InnerEar.Types.Data
@@ -44,8 +45,9 @@ renderAnswer r b (Just (Answer True)) = GainSound (CompressedSound (Sound b) (Co
 renderAnswer _ b _ = GainSound (Sound b) (-10) -- should just be source (b) down -10 dB
 -- note also: the user MUST provide a sound file (or we might provide some standard ones) - synthetic sources won't work for this
 
-displayEval :: MonadWidget t m => Dynamic t (Map Answer Score) -> m ()
-displayEval = displayMultipleChoiceEvaluationGraph' "Session Performance" "" answers
+displayEval :: MonadWidget t m => Dynamic t (Map Answer Score) -> Dynamic t (MultipleChoiceStore Config Answer) -> m ()
+displayEval e _ = displayMultipleChoiceEvaluationGraph' "Session Performance" "" answers e
+
 
 generateQ :: Config -> [ExerciseDatum] -> IO ([Answer],Answer)
 generateQ _ _ = randomMultipleChoiceQuestion [Answer False,Answer True]
@@ -59,7 +61,7 @@ sourcesMap:: Map Int (String,Source)
 sourcesMap = singleton 0 ("Load a soundfile", NodeSource (BufferNode $ LoadedFile "compressionExercise" (PlaybackParam 0 1 False)) Nothing)
 
 
-compressionExercise :: MonadWidget t m => Exercise t m Config [Answer] Answer (Map Answer Score) s
+compressionExercise :: MonadWidget t m => Exercise t m Config [Answer] Answer (Map Answer Score) (MultipleChoiceStore Config Answer)
 compressionExercise = multipleChoiceExercise
   1
   answers
@@ -70,3 +72,4 @@ compressionExercise = multipleChoiceExercise
   (20)
   displayEval
   generateQ
+  (const (0,2))

@@ -12,6 +12,7 @@ import Text.JSON.Generic
 import InnerEar.Widgets.SpecEval
 import InnerEar.Types.Data
 import InnerEar.Types.Score
+import InnerEar.Types.MultipleChoiceStore
 import Reflex.Synth.Synth
 import Reflex.Synth.Types
 import InnerEar.Types.Exercise
@@ -93,6 +94,9 @@ instructions = el "div" $ do
 generateQ :: Config -> [ExerciseDatum] -> IO ([Answer],Answer)
 generateQ config _ = randomMultipleChoiceQuestion (convertBands $ fst config)
 
+displayEval :: MonadWidget t m => Dynamic t (Map Answer Score) -> Dynamic t (MultipleChoiceStore Config Answer) -> m ()
+displayEval e _ = displayMultipleChoiceEvaluationGraph''' "Session Performance" "Hz" answers e
+
 sourcesMap:: Map Int (String,Source)
 sourcesMap = fromList $ zip [0::Int,1..] [("Pink noise",NodeSource (BufferNode $ File "pinknoise.wav") (Just 2)), ("White noise", NodeSource (BufferNode $ File "whitenoise.wav") (Just 2)), ("Load a soundfile", NodeSource (BufferNode $ LoadedFile "tenBandBoostCutExercise" (PlaybackParam 0 1 False)) Nothing)]
 
@@ -113,7 +117,7 @@ tenBandsConfigWidget c =  elClass "div" "configWidget" $ do
   return (config, source, Nothing <$ playReference)
 
 
-tenBandBoostCutExercise :: MonadWidget t m => Exercise t m Config [Answer] Answer (Map Answer Score) s
+tenBandBoostCutExercise :: MonadWidget t m => Exercise t m Config [Answer] Answer (Map Answer Score) (MultipleChoiceStore Config Answer)
 tenBandBoostCutExercise = multipleChoiceExercise
   3
   answers
@@ -122,5 +126,6 @@ tenBandBoostCutExercise = multipleChoiceExercise
   renderAnswer
   TenBandBoostCut
   (AllBands, 10)
-  (displayMultipleChoiceEvaluationGraph''' "Session Performance" "Hz" answers)
+  displayEval
   generateQ
+  (const (0,2))

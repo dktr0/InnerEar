@@ -13,6 +13,7 @@ import InnerEar.Exercises.MultipleChoice
 import InnerEar.Types.ExerciseId
 import InnerEar.Types.Exercise
 import InnerEar.Types.Score
+import InnerEar.Types.MultipleChoiceStore
 import InnerEar.Widgets.Config
 import InnerEar.Widgets.UserMedia
 import InnerEar.Widgets.SpecEval
@@ -50,8 +51,8 @@ renderAnswer db s (Just (Answer True)) = GainSound (Sound s) (-10+db) -- 2.0 -- 
 renderAnswer _ s (Just (Answer False)) = GainSound (Sound s) (-10)-- 2.0 -- should be just a source sound attenuated by standard amount (-10 dB)
 renderAnswer db s Nothing = GainSound (Sound s) (-10)
 
-displayEval :: MonadWidget t m => Dynamic t (Map Answer Score) -> m ()
-displayEval = displayVerticalMultipleChoiceEvaluationGraph "" "" answers
+displayEval :: MonadWidget t m => Dynamic t (Map Answer Score) -> Dynamic t (MultipleChoiceStore Config Answer) -> m ()
+displayEval e _ = displayVerticalMultipleChoiceEvaluationGraph "" "" answers e
 --displayHistoricalEvaluationGraph "Historical Performance" "" answers
 --displayMultipleChoiceEvaluationGraph' "Session Performance" "" answers
 
@@ -61,7 +62,7 @@ generateQ _ _ = randomMultipleChoiceQuestion answers
 sourcesMap:: Map Int (String,Source)
 sourcesMap = fromList $ [(0,("300hz sine wave", NodeSource (OscillatorNode $ Oscillator Sine 440 0) (Just 2))), (1,("Load a soundfile", NodeSource (BufferNode $ LoadedFile "boostOrCutExercise" (PlaybackParam 0 1 False)) Nothing))]
 
-boostOrCutExercise :: MonadWidget t m => Exercise t m Config [Answer] Answer (Map Answer Score) s
+boostOrCutExercise :: MonadWidget t m => Exercise t m Config [Answer] Answer (Map Answer Score) (MultipleChoiceStore Config Answer)
 boostOrCutExercise = multipleChoiceExercise
   1
   answers
@@ -72,3 +73,4 @@ boostOrCutExercise = multipleChoiceExercise
   10
   displayEval
   generateQ
+  (const (0,2))

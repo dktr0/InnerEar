@@ -13,6 +13,7 @@ import InnerEar.Exercises.MultipleChoice
 import InnerEar.Types.ExerciseId
 import InnerEar.Types.Exercise
 import InnerEar.Types.Score
+import InnerEar.Types.MultipleChoiceStore
 import InnerEar.Widgets.Config
 import InnerEar.Widgets.SpecEval
 import InnerEar.Types.Data
@@ -82,8 +83,8 @@ renderAnswer c@(s,d,o) _ (Just a) = Sound $ NodeSource x (Just (fromIntegral d/1
     x = OscillatorNode $ Oscillator' Triangle e' (-20.0)
 renderAnswer _ _ Nothing = NoSound
 
-displayEval :: MonadWidget t m => Dynamic t (Map Answer Score) -> m ()
-displayEval _ = return ()
+displayEval :: MonadWidget t m => Dynamic t (Map Answer Score) -> Dynamic t (MultipleChoiceStore Config Answer) -> m ()
+displayEval e _ = displayMultipleChoiceEvaluationGraph' "Session Performance" "" answers e
 
 generateQ :: Config -> [ExerciseDatum] -> IO ([Answer],Answer)
 generateQ _ _ = randomMultipleChoiceQuestion answers
@@ -109,7 +110,7 @@ instructions :: MonadWidget t m => m ()
 instructions = el "div" $ do
   elClass "div" "instructionsText" $ text "Instructions placeholder"
 
-frequencyEnvelopeExercise :: MonadWidget t m => Exercise t m Config [Answer] Answer (Map Answer Score) s
+frequencyEnvelopeExercise :: MonadWidget t m => Exercise t m Config [Answer] Answer (Map Answer Score) (MultipleChoiceStore Config Answer)
 frequencyEnvelopeExercise = multipleChoiceExercise
   2
   answers
@@ -120,3 +121,4 @@ frequencyEnvelopeExercise = multipleChoiceExercise
   (1,1000,8.0)
   displayEval
   generateQ
+  (const (0,2))

@@ -13,6 +13,7 @@ import InnerEar.Exercises.MultipleChoice
 import InnerEar.Types.ExerciseId
 import InnerEar.Types.Exercise
 import InnerEar.Types.Score
+import InnerEar.Types.MultipleChoiceStore
 import InnerEar.Widgets.Config
 import InnerEar.Widgets.SpecEval
 import InnerEar.Types.Data
@@ -99,8 +100,8 @@ renderAnswer f0 _ (Just InverseSteep) = GainSound (OverlappedSound "arbitrary" $
 
 renderAnswer f0 _ Nothing = NoSound
 
-displayEval :: MonadWidget t m => Dynamic t (Map Answer Score) -> m ()
-displayEval _ = return ()
+displayEval :: MonadWidget t m => Dynamic t (Map Answer Score) -> Dynamic t (MultipleChoiceStore Config Answer) -> m ()
+displayEval e _ = displayMultipleChoiceEvaluationGraph' "Session Performance" "" answers e
 
 generateQ :: Config -> [ExerciseDatum] -> IO ([Answer],Answer)
 generateQ _ _ = randomMultipleChoiceQuestion answers
@@ -121,7 +122,7 @@ instructions = el "div" $ do
   --shapeLine (constDyn "polyline") [(10,10), (20,20), (30,30), (40,40), (50,50), (60,60)]
   graphGen xPoints linearGraphYPoints
 
-spectralShapeExercise :: MonadWidget t m => Exercise t m Config [Answer] Answer (Map Answer Score) s
+spectralShapeExercise :: MonadWidget t m => Exercise t m Config [Answer] Answer (Map Answer Score) (MultipleChoiceStore Config Answer)
 spectralShapeExercise = multipleChoiceExercise
   3
   answers
@@ -132,3 +133,4 @@ spectralShapeExercise = multipleChoiceExercise
   (-10)
   displayEval
   generateQ
+  (const (0,2))

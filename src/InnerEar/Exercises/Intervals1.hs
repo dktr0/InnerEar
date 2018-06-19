@@ -13,6 +13,7 @@ import InnerEar.Exercises.MultipleChoice
 import InnerEar.Types.ExerciseId
 import InnerEar.Types.Exercise
 import InnerEar.Types.Score
+import InnerEar.Types.MultipleChoiceStore
 import InnerEar.Widgets.Config
 import InnerEar.Widgets.SpecEval
 import InnerEar.Types.Data
@@ -63,7 +64,10 @@ instructions = el "div" $ do
 generateQ :: Config -> [ExerciseDatum] -> IO ([Answer],Answer)
 generateQ _ _ = randomMultipleChoiceQuestion answers
 
-intervals1Exercise :: MonadWidget t m => Exercise t m Config [Answer] Answer (Map Answer Score) s
+displayEval :: MonadWidget t m => Dynamic t (Map Answer Score) -> Dynamic t (MultipleChoiceStore Config Answer) -> m ()
+displayEval e _ = displayMultipleChoiceEvaluationGraph' "Session Performance" "" answers e
+
+intervals1Exercise :: MonadWidget t m => Exercise t m Config [Answer] Answer (Map Answer Score) (MultipleChoiceStore Config Answer)
 intervals1Exercise = multipleChoiceExercise
   3
   answers
@@ -72,5 +76,6 @@ intervals1Exercise = multipleChoiceExercise
   renderAnswer
   Intervals1
   ()
-  (displayMultipleChoiceEvaluationGraph'' "Session Performance" "" answers)
+  displayEval
   generateQ
+  (const (0,2))

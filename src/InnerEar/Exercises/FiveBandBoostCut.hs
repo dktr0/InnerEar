@@ -14,6 +14,7 @@ import InnerEar.Widgets.Config
 import InnerEar.Widgets.SpecEval
 import InnerEar.Types.Data
 import InnerEar.Types.Score
+import InnerEar.Types.MultipleChoiceStore
 import Reflex.Synth.Synth
 import Reflex.Synth.Types
 import InnerEar.Types.Exercise
@@ -55,8 +56,8 @@ instructions :: MonadWidget t m => m ()
 instructions = el "div" $ do
   elClass "div" "instructionsText" $ text "In this exercise, a filter is applied to a specific region of the spectrum, either boosting or cutting the energy in that part of the spectrum by a specified amount. Your task is to identify which part of the spectrum has been boosted or cut. Challenge yourself and explore additional possibilities by trying cuts (instead of boosts) to the spectrum, and by trying more subtle boosts/cuts (dB values progressively closer to 0)."
 
-displayEval :: MonadWidget t m => Dynamic t (Map Answer Score) -> m ()
-displayEval = displayMultipleChoiceEvaluationGraph'' "Session performance" "Hz" answers
+displayEval :: MonadWidget t m => Dynamic t (Map Answer Score) -> Dynamic t (MultipleChoiceStore Config Answer) -> m ()
+displayEval e _ = displayMultipleChoiceEvaluationGraph' "Session Performance" "" answers e
 
 generateQ :: Config -> [ExerciseDatum] -> IO ([Answer],Answer)
 generateQ _ _ = randomMultipleChoiceQuestion answers
@@ -66,7 +67,7 @@ sourcesMap = fromList $ zip [0::Int,1..] [("Pink noise",NodeSource (BufferNode $
 
 
 
-fiveBandBoostCutExercise :: MonadWidget t m => Exercise t m Config [Answer] Answer (Map Answer Score) s
+fiveBandBoostCutExercise :: MonadWidget t m => Exercise t m Config [Answer] Answer (Map Answer Score) (MultipleChoiceStore Config Answer)
 fiveBandBoostCutExercise = multipleChoiceExercise
   3
   answers
@@ -75,5 +76,6 @@ fiveBandBoostCutExercise = multipleChoiceExercise
   renderAnswer
   FiveBandBoostCut
   (configs!!0)
-  (displayMultipleChoiceEvaluationGraph'' "Session Performance" "" answers)
+  displayEval
   generateQ
+  (const (0,2))

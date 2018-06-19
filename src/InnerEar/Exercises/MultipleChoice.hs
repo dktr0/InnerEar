@@ -19,6 +19,7 @@ import InnerEar.Types.Data
 import InnerEar.Types.Exercise
 import InnerEar.Types.ExerciseNavigation
 import InnerEar.Types.Score
+import InnerEar.Types.MultipleChoiceStore
 import InnerEar.Types.Utility
 import InnerEar.Widgets.Utility
 import InnerEar.Widgets.UserMedia
@@ -39,18 +40,19 @@ multipleChoiceExercise :: (MonadWidget t m, Show a, Eq a, Ord a, Data c, Data a,
   -> (c -> Source -> Maybe a -> Sound) -- function to produce a sound from an answer, where a Nothing answer is to be interpreted as a reference sound (or
   -> ExerciseId
   -> c
-  -> (Dynamic t (Map a Score) -> m ())
+  -> (Dynamic t (Map a Score) -> Dynamic t (MultipleChoiceStore c a) -> m ())
   -> (c -> [ExerciseDatum] -> IO ([a],a))
-  -> Exercise t m c [a] a (Map a Score) s
+  -> (Map c (Map a Score) -> (Int,Int)) -- function to calculate Xp from a map of performance over all configurations
+  -> Exercise t m c [a] a (Map a Score) (MultipleChoiceStore c a)
 
-multipleChoiceExercise maxTries answers iWidget cWidget render i c de g = Exercise {
+multipleChoiceExercise maxTries answers iWidget cWidget render i c de g calculateXp = Exercise {
   exerciseId = i,
   instructionsWidget = iWidget,
   defaultConfig = c,
   defaultEvaluation = empty,
   displayEvaluation = de,
   generateQuestion = g,
-  questionWidget = multipleChoiceQuestionWidget maxTries answers i iWidget cWidget render de
+  questionWidget = multipleChoiceQuestionWidget maxTries answers i iWidget cWidget render de calculateXp
   }
 
 multipleChoiceQuestionWidget :: (MonadWidget t m, Show a, Eq a, Ord a,Data a,Data c,Ord c, Buttonable a)
@@ -60,13 +62,19 @@ multipleChoiceQuestionWidget :: (MonadWidget t m, Show a, Eq a, Ord a,Data a,Dat
   -> m ()
   -> (c->m (Dynamic t c,  Dynamic t Source,  Event t (Maybe a))) -- dyn config, source, and event maybe answer for playing reference sound (config widget)
   -> (c -> Source -> Maybe a -> Sound) -- function to produce a sound from an answer, where a Nothing answer is to be interpreted as a reference sound (or some other sound not a question)
-  -> (Dynamic t (Map a Score) -> m ())
+  -> (Dynamic t (Map a Score) -> Dynamic t (MultipleChoiceStore c a) -> m ())
+  -> (Map c (Map a Score) -> (Int,Int))
   -> c
   -> Map a Score
   -> Event t ([a],a)
   -> m (Event t ExerciseDatum,Event t Sound,Event t c,Event t ExerciseNavigation)
 
-multipleChoiceQuestionWidget maxTries answers exId exInstructions cWidget render eWidget config initialEval newQuestion = elClass "div" "exerciseWrapper" $ mdo
+multipleChoiceQuestionWidget maxTries answers exId exInstructions cWidget render eWidget calculateXp config initialEval newQuestion = elClass "div" "exerciseWrapper" $ mdo
+
+  let initialStore = MultipleChoiceStore { scores = empty, xp = (0,1) } -- normally this would come as an argument, then reset session specific elements of store
+  let newScoreMaps = fmap (newScores calculateXp) $ updated evaluations
+  let storeUpdates = newScoreMaps 
+  currentStore <- foldDyn ($) initialStore storeUpdates
 
   let initialState = initialMultipleChoiceState config answers maxTries
   let newQuestionAndConfig = attachDyn dynConfig newQuestion
@@ -105,7 +113,7 @@ multipleChoiceQuestionWidget maxTries answers exId exInstructions cWidget render
 
   journalData <- elClass "div" "bottomRow" $ do
     elClass "div" "evaluation" $ do
-      eWidget scores
+      eWidget scores currentStore
     elClass "div" "journal" $ journalWidget
 
   let answerEvent = gate (fmap (==AnswerMode) . fmap mode . current $ multipleChoiceState) answerPressed

@@ -19,7 +19,7 @@ data Exercise t m c q a e s = Exercise {
   instructionsWidget :: m (),
   defaultConfig :: c,
   defaultEvaluation :: e,
-  displayEvaluation :: Dynamic t e -> m (),
+  displayEvaluation :: Dynamic t e -> Dynamic t s -> m (),
   generateQuestion :: c -> [ExerciseDatum] -> IO (q,a),
   questionWidget ::  c -> e -> Event t (q,a) -> m (Event t ExerciseDatum,Event t Sound, Event t c,Event t ExerciseNavigation)
 }

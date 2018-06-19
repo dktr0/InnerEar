@@ -13,6 +13,7 @@ import InnerEar.Exercises.MultipleChoice
 import InnerEar.Types.ExerciseId
 import InnerEar.Types.Exercise
 import InnerEar.Types.Score
+import InnerEar.Types.MultipleChoiceStore
 import InnerEar.Types.Data
 import InnerEar.Widgets.Config
 import InnerEar.Widgets.UserMedia
@@ -68,8 +69,8 @@ instructions = elClass "div" "instructionsText" $ do
   tabBVisible <- mapDyn (== Other) tab
   visibleWhen tabBVisible $ text "Now we are displaying some other text instead!"
 
-displayEval :: MonadWidget t m => Dynamic t (Map Answer Score) -> m ()
-displayEval = displayMultipleChoiceEvaluationGraph' "Session Performance" "" answers
+displayEval :: MonadWidget t m => Dynamic t (Map Answer Score) -> Dynamic t (MultipleChoiceStore Config Answer) -> m ()
+displayEval e _ = displayMultipleChoiceEvaluationGraph' "Session Performance" "" answers e
 
 generateQ :: Config -> [ExerciseDatum] -> IO ([Answer],Answer)
 generateQ _ _ = randomMultipleChoiceQuestion answers
@@ -78,7 +79,7 @@ generateQ _ _ = randomMultipleChoiceQuestion answers
 sourcesMap:: Map Int (String,Source)
 sourcesMap = fromList $ zip [0::Int,1..] [("Pink noise",NodeSource (BufferNode $ File "pinknoise.wav") (Just 2)), ("White noise", NodeSource (BufferNode $ File "whitenoise.wav") (Just 2)), ("Load a soundfile", NodeSource (BufferNode $ LoadedFile "thresholdOfSilenceExercise" (PlaybackParam 0 1 False)) Nothing)]
 
-thresholdOfSilenceExercise :: MonadWidget t m => Exercise t m Int [Answer] Answer (Map Answer Score) s
+thresholdOfSilenceExercise :: MonadWidget t m => Exercise t m Int [Answer] Answer (Map Answer Score) (MultipleChoiceStore Config Answer)
 thresholdOfSilenceExercise = multipleChoiceExercise
   1
   answers
@@ -89,3 +90,5 @@ thresholdOfSilenceExercise = multipleChoiceExercise
   (-20)
   displayEval
   generateQ
+  (const (0,2))
+
