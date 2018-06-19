@@ -32,142 +32,133 @@ function startLoadingAndDecodingMultiple(list, cb){
 
 
 
+// // Necessary to have a single function that first loads and then draws the buffer
+// // because if tried to first load the buffer with reflex/haskell then draw the canvas,
+// // wouldn't have the callback function
+// // ie.:     <-  loadbuffer ....
+// //           <- drawBuffer .....
+// // won't work bc. can't get decode audio data callback from file loadBuffer...
+// function loadAndDrawBuffer(inputId, canvas){
+//
+//   canvas.getContext('2d').clearRect(0,0,canvas.width, canvas.height)
+//   var inputElement = document.getElementById(inputId)
+//
+//   if (inputElement){
+//
+//     var files = inputElement.files
+//     if (files[0]){
+//       var file = files[0]
+//       var bufferReader = new FileReader ();
+//       // Decode and store the buffer in userAudioNodes
+//       bufferReader.readAsArrayBuffer(file)
+//       bufferReader.addEventListener('loadend',function(e){
+//         console.log('file loaded')
+//         ___ac.decodeAudioData(bufferReader.result,
+//           function(buffer){
+//             // Set object of id's buffer to the decoded buffer
+//             if(userAudioNodes[inputId]){
+//               userAudioNodes[inputId].buffer = buffer
+//             } else {
+//               userAudioNodes[inputId] = {buffer:buffer}
+//             }
+//
+//             // If the user hasn't changed the loopend, set loopend to the end of the soundfile
+//             if (userAudioNodes[inputId].loopEnd==undefined){
+//               userAudioNodes[inputId].loopEnd = buffer.duration
+//             }
+//             console.log("Buffer "+inputId+" successfully decoded.")
+//             drawBufferOnCanvas(buffer,canvas)
+//           },function(e){alert("Error decoding audio data, please try to load another file.")})
+//       })
+//
+//     } else {
+//       // alert('Please select a sound file to load')
+//     }
+//   } else {  // no element 'inputId'
+//     console.log('Could not find dom element with id: '+inputId)
+//     alert('An error occurred, you may need to reload the page')
+//   }
+// }
+
+//
+// function drawFile (filePath, canvas){
+//   var request = new XMLHttpRequest();
+//   request.open('GET', filePath, true);
+//   request.responseType = 'arraybuffer';
+//   request.onload = function() {
+//     var audioData = request.response;
+//     ___ac.decodeAudioData(audioData, function(buffer) {
+//         drawBufferOnCanvas(buffer, canvas)
+//       },
+//       function(e){ console.log("Error with decoding audio data " + e); });
+//   } //request onload
+//   request.send();
+// }
+//
+// function drawStartEnd(s, e, canvas){
+//
+//   var ctx = canvas.getContext("2d")
+//   start = Math.round(Math.max(Math.min(s,1),0)*canvas.width);
+//   end = Math.round (Math.max(Math.min(e,1),0)*canvas.width);
+//
+//   ctx.clearRect(0,0, canvas.width, canvas.height)
+//   ctx.strokeStyle = "#FF0000"
+//   ctx.beginPath()
+//   ctx.moveTo(start, 0)
+//   ctx.lineTo(start, canvas.height)
+//   ctx.stroke();
+//
+//   ctx.moveTo(end, 0)
+//   ctx.lineTo(end, canvas.height)
+//   ctx.stroke();
+// }
 
 
 
+// function startNode(node){
+//   console.log(node)
+//   node.start()
+// }
 
+// // for starting an additive node - calls start on a list of nodes
+// function startNodes(l){
+//   for (var i=0; i<l.length; i=i+1){
+//     l[i].start();
+//   }
+// }
 
-// Necessary to have a single function that first loads and then draws the buffer
-// because if tried to first load the buffer with reflex/haskell then draw the canvas,
-// wouldn't have the callback function
-// ie.:     <-  loadbuffer ....
-//           <- drawBuffer .....
-// won't work bc. can't get decode audio data callback from file loadBuffer...
-function loadAndDrawBuffer(inputId, canvas){
+// function stopNodeByID(id){
+//   var obj = userAudioNodes[id]
+//   if(obj){
+//     if (obj.source){
+//       obj.source.stop()
+//     }else {
+//       console.log("WARNING - tried to stop a node that does not exist")
+//     }
+//   }else{
+//     console.log("WARNING - stopNodeByID called on node with id: "+id+" which does not exist. Ignore this message if not trying to stop a loaded file source");
+//     console.log(userAudioNodes[id])
+//   }
+// }
 
-  canvas.getContext('2d').clearRect(0,0,canvas.width, canvas.height)
-  var inputElement = document.getElementById(inputId)
-
-  if (inputElement){
-
-    var files = inputElement.files
-    if (files[0]){
-      var file = files[0]
-
-
-
-      var bufferReader = new FileReader ();
-
-      // Decode and store the buffer in userAudioNodes
-      bufferReader.readAsArrayBuffer(file)
-      bufferReader.addEventListener('loadend',function(e){
-        console.log('file loaded')
-        ___ac.decodeAudioData(bufferReader.result,
-          function(buffer){
-            // Set object of id's buffer to the decoded buffer
-            if(userAudioNodes[inputId]){
-              userAudioNodes[inputId].buffer = buffer
-            } else {
-              userAudioNodes[inputId] = {buffer:buffer}
-            }
-
-            // If the user hasn't changed the loopend, set loopend to the end of the soundfile
-            if (userAudioNodes[inputId].loopEnd==undefined){
-              userAudioNodes[inputId].loopEnd = buffer.duration
-            }
-            console.log("Buffer "+inputId+" successfully decoded.")
-            drawBufferOnCanvas(buffer,canvas)
-          },function(e){alert("Error decoding audio data, please try to load another file.")})
-      })
-
-    } else {
-      // alert('Please select a sound file to load')
-    }
-  } else {  // no element 'inputId'
-    console.log('Could not find dom element with id: '+inputId)
-    alert('An error occurred, you may need to reload the page')
-  }
-}
-
-
-function drawFile (filePath, canvas){
-  var request = new XMLHttpRequest();
-  request.open('GET', filePath, true);
-  request.responseType = 'arraybuffer';
-  request.onload = function() {
-    var audioData = request.response;
-    ___ac.decodeAudioData(audioData, function(buffer) {
-        drawBufferOnCanvas(buffer, canvas)
-      },
-      function(e){ console.log("Error with decoding audio data " + e); });
-  } //request onload
-  request.send();
-}
-
-function drawStartEnd(s, e, canvas){
-
-  var ctx = canvas.getContext("2d")
-  start = Math.round(Math.max(Math.min(s,1),0)*canvas.width);
-  end = Math.round (Math.max(Math.min(e,1),0)*canvas.width);
-
-  ctx.clearRect(0,0, canvas.width, canvas.height)
-  ctx.strokeStyle = "#FF0000"
-  ctx.beginPath()
-  ctx.moveTo(start, 0)
-  ctx.lineTo(start, canvas.height)
-  ctx.stroke();
-
-  ctx.moveTo(end, 0)
-  ctx.lineTo(end, canvas.height)
-  ctx.stroke();
-}
-
-
-
-function startNode(node){
-  console.log(node)
-  node.start()
-}
-
-// for starting an additive node - calls start on a list of nodes
-function startNodes(l){
-  for (var i=0; i<l.length; i=i+1){
-    l[i].start();
-  }
-}
-
-function stopNodeByID(id){
-  var obj = userAudioNodes[id]
-  if(obj){
-    if (obj.source){
-      obj.source.stop()
-    }else {
-      console.log("WARNING - tried to stop a node that does not exist")
-    }
-  }else{
-    console.log("WARNING - stopNodeByID called on node with id: "+id+" which does not exist. Ignore this message if not trying to stop a loaded file source");
-    console.log(userAudioNodes[id])
-  }
-}
-
-function drawSineWave (canvas){
-  console.log('drawing sine wave')
-  var width = canvas.width;
-  var height = canvas.height;
-  var ctx = canvas.getContext("2d");
-  ctx.fillStyle = "rgb(50,50,50)";
-  ctx.fillRect(0,0,width,height)
-  ctx.lineWidth=1;
-  ctx.fillStyle = "rgb(100,170,200)";
-
-
-  for (var i =0; i < canvas.width; i=i+1){
-    var x = i;
-    var y = (Math.sin(i*(Math.PI*2)/width)*(-1)*height/2+(height/2));
-    ctx.fillRect(x, y, 1, 1);
-  }
-
-}
+// function drawSineWave (canvas){
+//   console.log('drawing sine wave')
+//   var width = canvas.width;
+//   var height = canvas.height;
+//   var ctx = canvas.getContext("2d");
+//   ctx.fillStyle = "rgb(50,50,50)";
+//   ctx.fillRect(0,0,width,height)
+//   ctx.lineWidth=1;
+//   ctx.fillStyle = "rgb(100,170,200)";
+//
+//
+//   for (var i =0; i < canvas.width; i=i+1){
+//     var x = i;
+//     var y = (Math.sin(i*(Math.PI*2)/width)*(-1)*height/2+(height/2));
+//     ctx.fillRect(x, y, 1, 1);
+//   }
+//
+// }
 
 
 function drawSourceErrorOnCanvas(canvas, errormsg){
@@ -265,10 +256,10 @@ function drawBufferOnCanvas (buff, canvas) {
   }
 }
 
-function dbToAmp (db){
-  return Math.pow (10, db/20)
-}
+// function dbToAmp (db){
+//   return Math.pow (10, db/20)
+// }
 
-function ampToDb (amp){
-  return 20*Math.log(amp)
-}
+// function ampToDb (amp){
+//   return 20*Math.log(amp)
+// }
