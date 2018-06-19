@@ -34,6 +34,7 @@ import InnerEar.Types.User
 import qualified InnerEar.Database.SQLite as DB
 import qualified InnerEar.Database.Users as DB
 import qualified InnerEar.Database.Events as DB
+import qualified InnerEar.Database.Stores as DB
 
 
 main = do

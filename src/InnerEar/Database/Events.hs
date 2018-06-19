@@ -18,22 +18,13 @@ import InnerEar.Types.ExerciseId
 import InnerEar.Types.Handle
 import InnerEar.Types.Data
 import InnerEar.Types.ExerciseId
+import InnerEar.Database.ExerciseId
 
 -- definitions pertaining to "events", ie. the type Record and all of its dependencies
 
 createEventsTable :: Connection -> IO ()
 createEventsTable c =
   execute_ c "CREATE TABLE IF NOT EXISTS events (handle TEXT, time TEXT, event TEXT, exerciseId TEXT, config TEXT, question TEXT, answer TEXT, selection TEXT, shortTermEval TEXT, longTermEval TEXT, reflection TEXT)"
-
-instance FromField ExerciseId where
-  fromField = f . readMaybe . g . fieldData
-    where g (SQLText t) = unpack t
-          g _ = ""
-          f (Just x) = Ok x
-    -- *** incomplete pattern matching here is a bad bad bad temporary idea...
-
-instance ToField ExerciseId where
-  toField = SQLText . pack . show
 
 instance FromRow Record where
   fromRow = do

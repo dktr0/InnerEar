@@ -18,14 +18,14 @@ import InnerEar.Types.ExerciseId
 import InnerEar.Types.Handle
 
 data StoreDB = StoreDB {
-  storeId :: ExerciseId,
   storeHandle :: Handle,
+  storeId :: ExerciseId,
   storeValue :: String,
   storeTime :: Time
   } deriving (Eq,Data,Typeable)
 
 instance Show StoreDB where
-  show x = show (storeId x) ++ " " ++ show (storeHandle x) ++ " " ++ show (storeValue x)
+  show x = show (storeHandle x) ++ " " ++ show (storeId x) ++ " " ++ show (storeValue x)
 
 -- | Each exercise has unique strictly typed representations so there must be a type for the data
 -- specific to each exercise. (And this type, Datum c q a e, like all of the types in this module, is
