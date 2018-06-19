@@ -37,7 +37,7 @@ foreign import javascript safe
 
 foreign import javascript safe
   "window.___ac = $1;"
-  js_setGlobalAudioContext :: WebAudioContext -> IO () 
+  js_setGlobalAudioContext :: WebAudioContext -> IO ()
 
 foreign import javascript safe
   "$r = window.___ac;"
@@ -77,7 +77,7 @@ foreign import javascript safe
 foreign import javascript safe
   "$1.createConvolver()"
   js_createConvolver :: WebAudioContext -> IO JSVal
-  
+
 foreign import javascript safe
   "$1.createDelay($2)"
   js_createDelay :: WebAudioContext -> Double -> IO JSVal
@@ -165,7 +165,7 @@ foreign import javascript safe
 foreign import javascript safe
   "$1.numberOfChannels"
   js_bufferNumChannels :: AudioBuffer -> IO Int
-  
+
 foreign import javascript safe
   "if (Float32Array.prototype.fill !== void 0) { \
   \  $2.fill($1); \
@@ -179,15 +179,15 @@ foreign import javascript safe
   "if (Float32Array.prototype.fill !== void 0) { \
   \  $4.fill($3, $1, $2); \
   \} else { \
-  \  for (var i = $1, len = Math.min($2, a.length); i < len; i++) \
+  \  for (var i = $1; i < Math.min($2, $4.length); i++) \
   \    $4[i] = $3; \
   \}"
   js_typedArraySetConst :: Int -> Int -> Double -> Float32Array -> IO ()
-  -- fromIdx -> toIdx (exclusive) -> value -> array -> IO () 
+  -- fromIdx -> toIdx (exclusive) -> value -> array -> IO ()
 
 foreign import javascript safe
   "$3.set($2, $1);"
-  js_typedArraySet :: Int -> JSVal -> Float32Array -> IO () 
+  js_typedArraySet :: Int -> JSVal -> Float32Array -> IO ()
   -- startIdx -> fillFromJSArray -> array -> IO ()
 
 foreign import javascript safe

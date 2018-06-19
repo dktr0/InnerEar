@@ -42,10 +42,11 @@ clipAt amp =
   let clip = inAmp amp in
   let portion = (1.0 - clip) / 2.0 in
   let nConstSamples = floor $ portion * fromIntegral nSamples in
-  let left = Const nConstSamples (-clip) EmptyArray in
-  let mid = listToArraySpec [(2.0 * fromIntegral i) / (fromIntegral $ nSamples - 1) | i <- [nConstSamples..(nSamples-nConstSamples)-1]] in
-  let right = Const nConstSamples clip EmptyArray in
+  let left = Const (nConstSamples-1) (-clip) EmptyArray in
+  let mid = listToArraySpec [((2.0 * fromIntegral i) / (fromIntegral  nSamples)) - 1 | i <- [nConstSamples..(nSamples-nConstSamples)-1]] in
+  let right = Const (nConstSamples-1) clip EmptyArray in
   synthSourceSink $ WaveShaper (Right $ mconcat [left, mid, right]) None
+  -- synthSourceSink $ WaveShaper (Right $ listToArraySpec $ fmap fromIntegral [0..nSamples]) None
 
 
 -- Envelopes
