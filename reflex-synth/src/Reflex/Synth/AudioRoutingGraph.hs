@@ -141,7 +141,7 @@ foreign import javascript safe
 -- Audio buffer/float32 array functions
 
 foreign import javascript safe
-  "$4.createAudioBuffer($1, $2, $3)"
+  "$4.createBuffer($1, $2, $3)"
   js_createAudioBuffer :: Int -> Int -> Double -> WebAudioContext -> IO AudioBuffer
   -- numChannels -> length (in samples) -> sampleRate (frames/sec) -> ctx -> buffer
 
