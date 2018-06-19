@@ -9,22 +9,16 @@ var userAudioNodes = {}
 
 /*
  * @class
- * @property {File | Blob} this.source
+ * @property {string | File | Blob} this.source
  * @property {('created' | 'loading' | 'decoding' | 'decoded' | 'error')} this.status
  * @property {?string} this.error
  * @property {?AudioBuffer} this.buffer
  *
- * @param {File} source - the source to load the audio buffer from
+ * @param {string | File | Blob} source - the source to load the audio buffer from
  * @param {WebAudioContext} ctx - the web audio context to use for decoding
  */
 function Buffer(source, ctx) {
-  if (typeof(source) == "object"){
-    this.source = source;
-  } else if (typeof(source) == "string") {
-    this.url = source
-  } else{
-    console.log("ERROR buffer instantiated without a url or file")
-  }
+  this.source = source;
   this.ctx = ctx;
 
   this.status = 'created';
@@ -44,51 +38,39 @@ Buffer.prototype._changeStatus = function (onStatusChange, status, error, buffer
  */
 Buffer.prototype.startLoadingAndDecoding = function(onStatusChange) {
   var closure = this;
+  var sourceIsUrl = typeof this.source === 'string';
 
   this._changeStatus(onStatusChange, 'loading');
 
-  if(this.source){
-    var reader = new FileReader();
-    reader.onerror = this._changeStatus.bind(this, onStatusChange, 'error', reader.error.message, null);
-    reader.onabort = this._changeStatus.bind(this, onStatusChange, 'abort', 'Read aborted', null);
+  var loader = sourceIsUrl ? new XMLHttpRequest() : new FileReader();
 
-    reader.onload = function() {
-      closure._changeStatus(onStatusChange, 'decoding');
+  loader.onerror = function () {
+    var message = 'Error loading buffer: ' + (sourceIsUrl ? loader.statusText : loader.error.message);
+    closure._changeStatus(onStatusChange, 'error', message);
+  }
+  loader.onabort = this._changeStatus.bind(this, onStatusChange, 'abort', 'Read aborted', null);
 
-      var arrayBuffer = reader.result;
-      closure.ctx.decodeAudioData(arraybuffer,
-        function success(audioBuffer) {
-          closure._changeStatus(onStatusChange, 'decoded', null, audioBuffer);
-        },
-        function failure(error) {
-          closure._changeStatus(onStatusChange, 'error', error.err);
-        }
-      );
-    }
-    // Start reading.
-    reader.readAsArrayBuffer(this.source);
+  loader.onload = function() {
+    closure._changeStatus(onStatusChange, 'decoding');
 
-  } else if (this.url){
-    var request = new XMLHttpRequest();
-    request.onerror = this._changeStatus.bind(this, onStatusChange,'error', "XMLHttpRequest error" ,null)
-    request.onabort = this._changeStatus.bind(this, onStatusChange,'abort', 'Request aborted', null)
+    var arrayBuffer = sourceIsUrl ? loader.response : loader.result;
+    closure.ctx.decodeAudioData(arrayBuffer,
+      function success(audioBuffer) {
+        closure._changeStatus(onStatusChange, 'decoded', null, audioBuffer);
+      },
+      function failure(error) {
+        closure._changeStatus(onStatusChange, 'error', 'Error decoding buffer: ' + error.message);
+      }
+    );
+  }
 
-    request.open('GET', this.url, true);
-    request.responseType = 'arraybuffer';
-
-    request.onload = function() {
-      closure._changeStatus(onStatusChange, 'decoding')
-      var arrayBuffer = request.response;
-      closure.ctx.decodeAudioData(arrayBuffer, function success(audioBuffer) {
-        closure._changeStatus(onStatusChange,'decoded',null,audioBuffer)
-      },function failure (error){
-        closure._changeStatus(onStatusChange,'error',error.err)
-      });
-    } //request onload
-    request.send();
+  // Start reading.
+  if (sourceIsUrl) {
+    loader.responseType = 'arraybuffer';
+    loader.open('GET', this.source, true);
+    loader.send();
   } else {
-
-    console.log("ERROR: tried to load buffer that didn't have a source (File object) or URL to resource")
+    loader.readAsArrayBuffer(this.source);
   }
 }
 
