@@ -60,7 +60,7 @@ renderAnswer _ _ _ (Just interval) = buildSynth_ $ do
   let firstDur = (Millis $ 2 * 100) + (Sec 1)
   let rest = Sec 0.5
   -- Change the frequency of the oscillator after the first playback.
-  setParamValue "frequency" (answerToSemitones interval + inHz baseTone) firstDur osc
+  setParamValue "frequency" (inHz $ Midi $ answerToSemitones interval + inMidi baseTone) firstDur osc
   -- Reset for second note and have another rectEnv at firstDur.
   setParamValue "gain" 0 (firstDur + rest) g
   linearRampToParamValue "gain" (inAmp amp) (firstDur + rest + Millis 100) g

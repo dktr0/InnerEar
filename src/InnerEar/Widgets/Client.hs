@@ -69,7 +69,7 @@ loadGlobalResources = do
 loadResources:: MonadWidget t m => Event t [String] -> m (Event t (Map String Buffer))
 loadResources ev = do
   bufferEv <- performEvent $ ffor ev $ \fileNames -> liftIO $ do                     -- Ev t [(String,Buffer)]
-    ctx <- js_setupGlobalAudioContext -- really just get global ac
+    ctx <- globalAudioContext -- really just get global ac
     forM fileNames $ \s -> do
       buf <- js_createBufferFromURL (pack s) ctx
       return (s,buf)

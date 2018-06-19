@@ -19,13 +19,13 @@ Library
                    array, ghcjs-prim, data-default, transformers, file-embed, time, monad-loops,
                    json, bytestring
   GHC-Options:     -Wall -fwarn-tabs
-  Exposed-modules: Reflex.Synth.AudioRoutingGraph
-                   Reflex.Synth.Buffer
-                   Reflex.Synth.Components
-                   Reflex.Synth.Graph
-                   Reflex.Synth.Node
-                   Reflex.Synth.Spec
-                   Reflex.Synth.Synth
-                   Reflex.Synth.Synthstance
+  Exposed-modules: Sound.MusicW
+                   Sound.MusicW.AudioRoutingGraph
+                   Sound.MusicW.Buffer
+                   Sound.MusicW.Components
+                   Sound.MusicW.Graph
+                   Sound.MusicW.Node
+                   Sound.MusicW.Spec
+                   Sound.MusicW.Synthstance
   other-modules:
   default-language: Haskell2010

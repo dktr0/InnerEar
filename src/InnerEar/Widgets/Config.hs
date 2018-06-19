@@ -18,8 +18,7 @@ import InnerEar.Widgets.Utility(radioWidget, elClass', hideableWidget, asapOrUpd
 import Reflex
 import Reflex.Class
 import Reflex.Dom
-import Reflex.Synth.Synth
-
+import Sound.MusicW hiding (value)
 
 -- Verify this but for css styling, what goes in the config panel is 1 div with class "configWidget" and 2 internal divs:
 --    one div with the class "radioConfigWidget" -> wrapping the radio configuration widget

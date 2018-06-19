@@ -1,4 +1,4 @@
-module Reflex.Synth.Buffer (
+module Sound.MusicW.Buffer (
   Buffer(..),
   BufferStatus(..),
   bufferStatus,
@@ -10,13 +10,10 @@ module Reflex.Synth.Buffer (
   isBufferLoaded
 ) where
 
-
-
 import Control.Monad.IO.Class
 import Control.Monad (forM,liftM)
 import Data.Map
 import Data.JSString(JSString, unpack)
-
 
 import GHCJS.DOM.File
 import GHCJS.Types
@@ -24,7 +21,7 @@ import GHCJS.Marshal.Pure
 import GHCJS.Marshal.Internal
 import GHCJS.Foreign.Callback
 
-import Reflex.Synth.AudioRoutingGraph
+import Sound.MusicW.AudioRoutingGraph
 
 newtype Buffer = Buffer JSVal
 

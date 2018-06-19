@@ -1,4 +1,4 @@
-module Reflex.Synth.Node (
+module Sound.MusicW.Node (
   WebAudioContext,
   Node(..),
   isSourceNode,
@@ -21,8 +21,8 @@ module Reflex.Synth.Node (
   setParamValueCurveAtTime
 ) where
 
-import Reflex.Synth.AudioRoutingGraph hiding (Buffer)
-import Reflex.Synth.Spec
+import Sound.MusicW.AudioRoutingGraph hiding (Buffer)
+import Sound.MusicW.Spec
 import GHCJS.Marshal.Pure
 import GHCJS.Foreign.Callback(asyncCallback1, releaseCallback)
 import GHCJS.Prim(JSVal, toJSArray, toJSString, fromJSInt, getProp)

@@ -1,4 +1,4 @@
-module Reflex.Synth.AudioRoutingGraph where
+module Sound.MusicW.AudioRoutingGraph where
 
 import GHCJS.Types
 import GHCJS.Prim(toJSString)

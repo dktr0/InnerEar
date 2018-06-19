@@ -1,6 +1,6 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
-module Reflex.Synth.Graph (
+module Sound.MusicW.Graph (
   Graph(..),
   Change(..),
   Synth(..),
@@ -29,7 +29,7 @@ import Control.Monad (void)
 import Control.Monad.Trans.Class
 import Control.Monad.Trans.State
 
-import Reflex.Synth.Spec
+import Sound.MusicW.Spec
 
 -- See https://wiki.haskell.org/New_monads/MonadUnique for a simple monad transformer to support
 -- generating unique values.
