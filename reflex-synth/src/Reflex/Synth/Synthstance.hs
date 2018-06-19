@@ -1,6 +1,7 @@
 module Reflex.Synth.Synthstance (
   instantiateSynth,
   startSynth,
+  startSynthNow,
   stopSynth,
   stopSynthNow
 ) where
@@ -31,6 +32,7 @@ connectGraph :: Map Integer Node -> Graph -> IO ()
 connectGraph m (Source (RefToNode _)) = return ()
 connectGraph m (SourceSink (RefToNode to) from) = do
   connect (m!getNodeId from) $ m!to
+  connectGraph m from
 connectGraph m (Sink (RefToNode to) from) = do
   connect (m!getNodeId from) $ m!to
   connectGraph m from
@@ -82,6 +84,11 @@ startSynth time inst = do
   let cs = nodeChanges inst
   mapM_ (\(id, scheduleChange) -> scheduleChange time $ ns!id) cs
   return $ inst { started = True }
+
+startSynthNow :: Synthstance -> IO Synthstance
+startSynthNow inst = do
+  time <- getCurrentTime $ audioContext inst
+  startSynth (time + Millis 50) inst
 
 stopSynth :: Time -> Synthstance -> IO ()
 stopSynth time inst = mapM_ (stop time) $ nodes inst

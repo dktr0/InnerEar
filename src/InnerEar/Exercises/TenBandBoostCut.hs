@@ -105,8 +105,8 @@ sourcesMap = fromList $ [
   ]
 
 -- temporary until config widget is changed to take a list/map of config parameters that can be changed
-tenBandsConfigWidget :: MonadWidget t m => Config -> m (Dynamic t Config, Dynamic t (Maybe (SourceNodeSpec, Maybe Time)), Event t (), Event t ())
-tenBandsConfigWidget c =  elClass "div" "configWidget" $ do
+tenBandsConfigWidget :: MonadWidget t m => Map String AudioBuffer -> Config -> m (Dynamic t Config, Dynamic t (Maybe (SourceNodeSpec, Maybe Time)), Event t (), Event t ())
+tenBandsConfigWidget sysResources c =  elClass "div" "configWidget" $ do
   config <- elClass "div" "tenBandsConfigWidget" $ do
     text "Spectrum Range: "
     (bands,_) <- safeDropdown (fst c) (fromList $ fmap (\x->(x,show x)) frequencyBands) (constDyn empty) never
@@ -117,7 +117,7 @@ tenBandsConfigWidget c =  elClass "div" "configWidget" $ do
     boost <- liftM  _dropdown_value $ dropdown initialVal (constDyn $ fmap show boostMap) def
     boost' <- mapDyn (maybe 10 id . (flip Data.Map.lookup) boostMap) boost
     combineDyn (,) bands  boost'
-  (source, playEv, stopEv) <- sourceSelectionWidget "tenBandBoostCutExercise" sourcesMap 0
+  (source, playEv, stopEv) <- sourceSelectionWidget sysResources "tenBandBoostCutExercise" sourcesMap 0
   return (config, source, playEv, stopEv)
 
 

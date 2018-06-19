@@ -1,6 +1,7 @@
 module Reflex.Synth.Buffer (
   Buffer(..),
   BufferStatus(..),
+<<<<<<< HEAD
   mapToBuffer,
   buffer,
   loadGlobalResources
@@ -10,6 +11,14 @@ import Control.Monad.IO.Class
 import Control.Monad (forM,liftM)
 import Data.Map
 import Data.JSString(JSString, unpack, pack)
+=======
+  bufferStatus,
+  createBuffer,
+  startLoadingAndDecodingWithCallback,
+) where
+
+import Data.JSString(unpack)
+>>>>>>> 5aea6419105b66b4b1be5738978928691c8d9f26
 
 import GHCJS.DOM.File
 import GHCJS.Types
@@ -17,10 +26,6 @@ import GHCJS.Marshal.Pure
 import GHCJS.Marshal.Internal
 import GHCJS.Foreign.Callback
 
-import JavaScript.Cast
-
-import Reflex
-import Reflex.Dom.Class
 import Reflex.Synth.AudioRoutingGraph
 
 newtype Buffer = Buffer JSVal
@@ -58,22 +63,6 @@ bufferStatus buffer = do
       return $ Just $ BufferLoaded audioBuffer
     otherwise -> return Nothing
 
---
---
---   asyncCallback1 :: ([Buffers] -> IO ())            -- ^ the function that the callback calls
--- -> IO (Callback ([Buffers]-> IO ())) -- ^ the calback
---
--- cb <- asyncCallback1 $ \bufs -> evTrigger (fmap Buffer bufs)
--- evTrigger::[Buffer] -> IO
-
--- performEventAsync :: forall t m a. MonadWidget t m => Event t ((a -> IO ()) -> WidgetHost m ()) -> m (Event t a)
--- --
--- performEventAsync :: forall t m a. MonadWidget t m => Event t (([buffers] -> IO ()) -> WidgetHost m ()) -> m (Event t a)
---
---     asyncCallback1 :: (JSVal -> IO ())            -- ^ the function that the callback calls
---   -> IO (Callback (JSVal -> IO ())) -- ^ the calback
-
- -- fromJSValListOf :: JSVal -> IO (Maybe [a])
 
 loadGlobalResources :: MonadWidget t m => m ( Event t  (Map String AudioBuffer))
 loadGlobalResources = do
@@ -119,12 +108,18 @@ mapToBuffer fileEv = do
     js_startLoadingAndDecoding buffer cb
     releaseCallback cb
 
-  -- statusEv' :: Event t BufferStatus - triggered on **relevant** status changes, hence the fmapMaybe
-  statusEv <- performEvent $ fmap (liftIO . bufferStatus) stateChangeEv
-  let statusEv' = fmapMaybe id statusEv
+createBuffer :: File -> IO Buffer
+createBuffer file = do
+  ctx <- js_setupGlobalAudioContext
+  js_createBuffer file ctx
 
-  return (stateChangeEv, statusEv')
+startLoadingAndDecodingWithCallback :: Buffer -> (Buffer -> IO ()) -> IO ()
+startLoadingAndDecodingWithCallback buffer evTrigger = do
+  cb <- asyncCallback1 $ \buf -> evTrigger (Buffer buf)
+  js_startLoadingAndDecoding buffer cb
+  releaseCallback cb
 
+<<<<<<< HEAD
 -- | buffer creates a smart buffer for asynchronous loading of the most recent `Just` file fired
 -- from the `Event t (Maybe File)`. Until the first occurance of the event, the buffer is `Nothing`.
 -- The returned buffer status monitors the current state of the buffer.
@@ -134,6 +129,8 @@ buffer maybeFileEv = do
   dynBuffer <- holdDyn Nothing $ fmap Just bufferEv
   dynStatus <- holdDyn BufferUnderspecified statusEv
   return (dynBuffer, dynStatus)
+=======
+>>>>>>> 5aea6419105b66b4b1be5738978928691c8d9f26
 
 foreign import javascript safe
   "new Buffer($1, $2)"

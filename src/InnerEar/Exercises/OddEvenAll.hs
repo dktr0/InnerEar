@@ -55,8 +55,8 @@ displayEval _ = return ()
 generateQ :: Config -> [ExerciseDatum] -> IO ([Answer],Answer)
 generateQ _ _ = randomMultipleChoiceQuestion answers
 
-oddEvenAllConfigWidget :: MonadWidget t m => Config -> m (Dynamic t Config, Dynamic t (Maybe (SourceNodeSpec, Maybe Time)), Event t (), Event t ())
-oddEvenAllConfigWidget c = do
+oddEvenAllConfigWidget :: MonadWidget t m => Map String AudioBuffer -> Config -> m (Dynamic t Config, Dynamic t (Maybe (SourceNodeSpec, Maybe Time)), Event t (), Event t ())
+oddEvenAllConfigWidget _ c = do
   text "Fundamental Frequency: "
   dd <- dropdown (freqAsDouble $ head configs) (constDyn $ fromList $ fmap (\x-> (freqAsDouble x, freqAsString x)) configs) (DropdownConfig never (constDyn empty))
   let ddVal = _dropdown_value dd -- Dynamic Double

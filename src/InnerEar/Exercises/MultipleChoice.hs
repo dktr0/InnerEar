@@ -37,7 +37,7 @@ import Reflex.Synth.Synth
 type AnswerRenderer c a = Map String AudioBuffer -> c -> (SourceNodeSpec, Maybe Time) -> Maybe a -> Synth ()
 
 -- | ConfigWidgetBuilder constructs a configuration widget with a given default configuration.
-type ConfigWidgetBuilder m t c a = c -> m (Dynamic t c, Dynamic t (Maybe (SourceNodeSpec, Maybe Time)), Event t (), Event t ())
+type ConfigWidgetBuilder m t c a = Map String AudioBuffer -> c -> m (Dynamic t c, Dynamic t (Maybe (SourceNodeSpec, Maybe Time)), Event t (), Event t ())
 
 multipleChoiceExercise :: (MonadWidget t m, Show a, Eq a, Ord a, Data c, Data a, Ord c, Buttonable a)
   => Int -- maximum number of tries to allow
@@ -111,7 +111,7 @@ multipleChoiceQuestionWidget maxTries answers exId exInstructions cWidget render
     elClass "div" "evaluation" $ exInstructions
     elClass "div" "journal" $ do
       text "Configuration"
-      elClass "div"  "configWidgetWrapper" $ cWidget config
+      elClass "div"  "configWidgetWrapper" $ cWidget sysResources config
 
   journalData <- elClass "div" "bottomRow" $ do
     elClass "div" "evaluation" $ do
