@@ -15,7 +15,7 @@ allow-newer: true
 
 packages:
 - '.'
-- '../reflex-synth'
+- '../MusicW'
 
 extra-deps:
 - ghcjs-dom-0.2.3.1
