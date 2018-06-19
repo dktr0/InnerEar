@@ -22,7 +22,7 @@ import InnerEar.Types.Response
 -- | runExercise takes a completely defined Exercise value and uses it to run an ear-training
 -- exercise in the browser.
 
-runExercise :: forall t m c q a e s. (MonadWidget t m, Data c, Data q, Data a, Data e, Show c, Show q, Show a, Show e)
+runExercise :: forall t m c q a e s. (MonadWidget t m, Data c, Data q, Data a, Data e, Data s, Show c, Show q, Show a, Show e)
   => Exercise t m c q a e s -> Event t [Response] -> m (Event t (ExerciseId,ExerciseDatum),Event t Sound,Event t ())
 runExercise ex responses = mdo
 

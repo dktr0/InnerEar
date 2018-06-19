@@ -21,7 +21,7 @@ import InnerEar.Types.Handle
 -- specific to each exercise. (And this type, Datum c q a e, like all of the types in this module, is
 -- an automatically-derived instance of JSON, to facilitate communication back and forth with a server.)
 
-data Datum c q a e s = -- c is configuration type, q is question type, a is answer type, e is evaluation type, s is exercise state type
+data Datum c q a e s = -- c is configuration type, q is question type, a is answer type, e is evaluation type, s is exercise store type
   Started |
   Configured c |
   NewQuestion c q a |
@@ -30,7 +30,7 @@ data Datum c q a e s = -- c is configuration type, q is question type, a is answ
   Answered a e e c q a | -- their choice, new short- and long-term evaluation plus context
   ListenedExplore a c q a | -- for exploratory listening to possible answers
   Reflection String |
-  State s |
+  Store s |
   Ended
   deriving (Show,Eq,Data,Typeable)
 
@@ -47,11 +47,11 @@ data ExerciseDatum =
   ExerciseAnswered String String String String String String |
   ExerciseListenedExplore String String String String |
   ExerciseReflection String |
-  ExerciseState String |
+  ExerciseStore String |
   ExerciseEnded
   deriving (Show,Eq,Data,Typeable)
 
-toExerciseDatum :: (Data c,Data q,Data a,Data e) => Datum c q a e s -> ExerciseDatum
+toExerciseDatum :: (Data c,Data q,Data a,Data e,Data s) => Datum c q a e s -> ExerciseDatum
 toExerciseDatum Started = ExerciseStarted
 toExerciseDatum (Configured c) = ExerciseConfigured $ encodeJSON c
 toExerciseDatum (NewQuestion c q a) = ExerciseNewQuestion (encodeJSON c) (encodeJSON q) (encodeJSON a)
@@ -60,7 +60,7 @@ toExerciseDatum (ListenedReference c q a) = ExerciseListenedReference (encodeJSO
 toExerciseDatum (Answered ia e1 e2 c q a) = ExerciseAnswered (encodeJSON ia) (encodeJSON e1) (encodeJSON e2) (encodeJSON c) (encodeJSON q) (encodeJSON a)
 toExerciseDatum (ListenedExplore a1 c q a2) = ExerciseListenedExplore (encodeJSON a1) (encodeJSON c) (encodeJSON q) (encodeJSON a2)
 toExerciseDatum (Reflection r) = ExerciseReflection r
--- toExerciseDatum (State s) = ExerciseState (encodeJSON s)
+toExerciseDatum (Store s) = ExerciseStore (encodeJSON s)
 toExerciseDatum Ended = ExerciseEnded
 
 toDatum :: (JSON c, JSON q, JSON a, JSON e, JSON s) => ExerciseDatum -> Result (Datum c q a e s)
@@ -72,7 +72,7 @@ toDatum (ExerciseListenedReference c q a) = ListenedReference <$> decode c <*> d
 toDatum (ExerciseAnswered ia e1 e2 c q a) = Answered <$> decode ia <*> decode e1 <*> decode e2 <*> decode c <*> decode q <*> decode a
 toDatum (ExerciseListenedExplore a1 c q a2) = ListenedExplore <$> decode a1 <*> decode c <*> decode q <*> decode a2
 toDatum (ExerciseReflection r) = return $ Reflection r
-toDatum (ExerciseState s) = State <$> decode s
+toDatum (ExerciseStore s) = Store <$> decode s
 toDatum ExerciseEnded = return Ended
 
 toDatum' :: (JSON c, JSON q, JSON a, JSON e, JSON s) => ExerciseDatum -> Maybe (Datum c q a e s)

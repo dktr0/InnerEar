@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveDataTypeable, RecursiveDo #-}
+{-# LANGUAGE DeriveDataTypeable, RecursiveDo, ScopedTypeVariables #-}
 
 module InnerEar.Exercises.MultipleChoice where
 
@@ -32,7 +32,7 @@ import Reflex.Synth.Types
 -- answers be provided, together with a pure function that converts an answer
 -- value to a sound.
 
-multipleChoiceExercise :: (MonadWidget t m, Show a, Eq a, Ord a, Data c, Data a, Ord c,Buttonable a)
+multipleChoiceExercise :: forall t m c q a e s. (MonadWidget t m, Show a, Eq a, Ord a, Data a, Data c, Ord c,Buttonable a)
   => Int -- maximum number of tries to allow
   -> [a]
   -> m ()
@@ -55,7 +55,7 @@ multipleChoiceExercise maxTries answers iWidget cWidget render i c de g calculat
   questionWidget = multipleChoiceQuestionWidget maxTries answers i iWidget cWidget render de calculateXp
   }
 
-multipleChoiceQuestionWidget :: (MonadWidget t m, Show a, Eq a, Ord a,Data a,Data c,Ord c, Buttonable a)
+multipleChoiceQuestionWidget :: forall t m c q a e s. (MonadWidget t m, Show a, Eq a, Ord a,Data a,Data c,Ord c, Buttonable a)
   => Int -- maximum number of tries
   -> [a] -- fixed list of potential answers
   -> ExerciseId
@@ -136,12 +136,14 @@ multipleChoiceQuestionWidget maxTries answers exId exInstructions cWidget render
   let questionWhileReference = (\x -> (possibleAnswers x,correctAnswer x)) <$> tagDyn multipleChoiceState playReference
   let listenedReferenceData = attachDynWith (\c (q,a) -> ListenedReference c q a) dynConfig questionWhileReference
   evaluations <- mapDyn scoreMap multipleChoiceState
+ 
   mcsAndConfig <- combineDyn (,) dynConfig multipleChoiceState
   let answerWithContext = attachDynWith (\(c,mcs) s -> (s, c, possibleAnswers mcs, correctAnswer mcs)) mcsAndConfig answerEvent
-  let answerData = attachDynWith (\e (s,c,q,a) -> Answered s e e c q a) evaluations answerWithContext
+  let tempHack k m = findWithDefault empty k m
+  let answerData = attachDynWith (\e (s,c,q,a) -> Answered s (tempHack c e) (tempHack c e) c q a) evaluations answerWithContext
   let questionWhileExplore = attachDynWith (\x y -> (possibleAnswers x,correctAnswer x,y)) multipleChoiceState answerPressed
   let listenedExploreData = attachDynWith (\c (q,a,s) -> ListenedExplore s c q a) dynConfig questionWhileExplore
-  let datums = leftmost [listenedQuestionData,listenedReferenceData, answerData,listenedExploreData,journalData]
+  let datums = leftmost [listenedQuestionData,listenedReferenceData, answerData,listenedExploreData,journalData] :: Event t (Datum c [a] a (Map a Score) (MultipleChoiceStore c a))
   let datums' = fmap toExerciseDatum datums
   return (datums', playSounds,updated dynConfig,navEvents)
 
@@ -191,6 +193,7 @@ data MultipleChoiceState a c = MultipleChoiceState {
   attemptsRemaining :: Int,
   scoreMap :: Map c (Map a Score)
   }
+
 
 -- initialMultipleChoiceState provides a useful initial configuration of
 -- the MultipleChoiceState for the time before a new question has been
