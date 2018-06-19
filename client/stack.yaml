@@ -15,7 +15,11 @@ allow-newer: true
 
 packages:
 - '.'
-- '../MusicW'
+
+- location:
+    git: https://github.com/d0kt0r0/MusicW.git
+    commit: 125a42f6c998aaafe60868d0b804a1776a0598af
+  extra-dep: true
 
 extra-deps:
 - ghcjs-dom-0.2.3.1
