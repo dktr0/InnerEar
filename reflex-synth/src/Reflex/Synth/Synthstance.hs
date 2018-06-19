@@ -52,10 +52,17 @@ instantiateChange (ExponentialRampToValue _ paramName val endTime) startTime nod
 instantiateChange (CurveToValue _ paramName curve curveStartTime duration) startTime node =
   setParamValueCurveAtTime node paramName curve (startTime + curveStartTime) duration
 
--- Attach an 'onended' callback to the first sourcenode
-disconnectOnStop :: (Foldable t) => t Node -> IO ()
-disconnectOnStop ns = let (Just src) = find isSourceNode ns in
-  onended src $ \_ -> mapM_ disconnectAll $ ns
+-- -- Attach an 'onended' callback to the first sourcenode
+-- disconnectOnStop :: (Foldable t) => t Node -> IO ()
+-- disconnectOnStop ns = let (Just src) = find isSourceNode ns in
+--   onended src $ \_ -> mapM_ disconnectAll $ ns
+
+disconnectOnStop ::(Foldable t) => t Node -> IO ()
+disconnectOnStop ns = case (find isSourceNode ns) of
+  (Just src) -> onended src $ \_ -> mapM_ disconnectAll $ ns
+  (Nothing) -> do
+    putStrLn "Warning: synthstance played with no source"
+    return ()
 
 instantiateSynth :: Synth a -> IO Synthstance
 instantiateSynth x = do
@@ -72,7 +79,7 @@ instantiateSynth x = do
   }
 
 -- Start the inst at the scheduled time. If the inst has a duration then it's stop
--- is also scheduled. 
+-- is also scheduled.
 startSynth :: Time -> Synthstance -> IO Synthstance
 startSynth time inst = do
   let ns = nodes inst
@@ -103,5 +110,3 @@ restartSynth time inst = do
   stopSynth time inst
   inst' <- instantiateSynth $ synth inst
   startSynth time inst'
-
-
