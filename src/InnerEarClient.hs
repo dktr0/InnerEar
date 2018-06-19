@@ -5,14 +5,13 @@ import Data.Map
 import Reflex
 import Reflex.Dom
 import Reflex.Synth.Synth
+-- module Reflex.Synth.Buffer -- maybe get rid of this import if possible
 import InnerEar.Widgets.Client
 
 import InnerEar.Exercises.MultipleChoice
 
 main :: IO ()
-main = do
-	globalBuffers <- loadGlobalResources
-	mainWidget $ clientWidget globalBuffers
-
-loadGlobalResources :: IO (Map String AudioBuffer)
-loadGlobalResources = error "Not yet implemented: loadGlobalResources"
+main =	mainWidget $ do
+		globalBuffers <- loadGlobalResources
+		widgetHold (return ()) $ fmap clientWidget globalBuffers
+		return ()

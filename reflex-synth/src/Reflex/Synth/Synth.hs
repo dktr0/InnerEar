@@ -7,6 +7,7 @@ import Reflex.Synth.Graph as E
 import Reflex.Synth.Node as E
 import Reflex.Synth.Spec as E
 import Reflex.Synth.Synthstance as E
+import Reflex.Synth.Buffer as E
 import Reflex.Dom
 import Reflex
 
@@ -18,4 +19,3 @@ import Reflex
 -- import Reflex.Synth.Sound as E
 -- import Reflex.Synth.NodeSpec as E
 -- import Reflex.Synth.Foreign as E
-

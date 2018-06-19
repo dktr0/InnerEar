@@ -1,5 +1,7 @@
 
 
+
+
 var bufferData
 var overlappedDictionary = {}
 var lastPlayingBufferNode;
@@ -16,7 +18,13 @@ var userAudioNodes = {}
  * @param {WebAudioContext} ctx - the web audio context to use for decoding
  */
 function Buffer(source, ctx) {
-  this.source = source;
+  if (typeof(source) == "object"){
+    this.source = source;
+  } else if (typeof(source) == "string") {
+    this.url = source
+  } else{
+    console.log("ERROR buffer instantiated without a url or file")
+  }
   this.ctx = ctx;
 
   this.status = 'created';
@@ -39,28 +47,81 @@ Buffer.prototype.startLoadingAndDecoding = function(onStatusChange) {
 
   this._changeStatus(onStatusChange, 'loading');
 
-  var reader = new FileReader();
+  if(this.source){
+    var reader = new FileReader();
+    reader.onerror = this._changeStatus.bind(this, onStatusChange, 'error', reader.error.message, null);
+    reader.onabort = this._changeStatus.bind(this, onStatusChange, 'abort', 'Read aborted', null);
 
-  reader.onerror = this._changeStatus.bind(this, onStatusChange, 'error', reader.error.message, null);
-  reader.onabort = this._changeStatus.bind(this, onStatusChange, 'abort', 'Read aborted', null);
+    reader.onload = function() {
+      closure._changeStatus(onStatusChange, 'decoding');
 
-  reader.onload = function() {
-    closure._changeStatus(onStatusChange, 'decoding');
+      var arrayBuffer = reader.result;
+      closure.ctx.decodeAudioData(arraybuffer,
+        function success(audioBuffer) {
+          closure._changeStatus(onStatusChange, 'decoded', null, audioBuffer);
+        },
+        function failure(error) {
+          closure._changeStatus(onStatusChange, 'error', error.err);
+        }
+      );
+    }
+    // Start reading.
+    reader.readAsArrayBuffer(this.source);
 
-    var arrayBuffer = reader.result;
-    closure.ctx.decodeAudioData(arraybuffer,
-      function success(audioBuffer) {
-        closure._changeStatus(onStatusChange, 'decoded', null, audioBuffer);
-      },
-      function failure(error) {
-        closure._changeStatus(onStatusChange, 'error', error.err);
-      }
-    );
+  } else if (this.url){
+    var request = new XMLHttpRequest();
+    request.onerror = this._changeStatus.bind(this, onStatusChange,'error', "XMLHttpRequest error" ,null)
+    request.onabort = this._changeStatus.bind(this, onStatusChange,'abort', 'Request aborted', null)
+
+    request.open('GET', this.url, true);
+    request.responseType = 'arraybuffer';
+
+    request.onload = function() {
+      closure._changeStatus(onStatusChange, 'decoding')
+      var arrayBuffer = request.response;
+      closure.ctx.decodeAudioData(arrayBuffer, function success(audioBuffer) {
+        closure._changeStatus(onStatusChange,'decoded',null,audioBuffer)
+      },function failure (error){
+        closure._changeStatus(onStatusChange,'error',error.err)
+      });
+    } //request onload
+    request.send();
+  } else {
+
+    console.log("ERROR: tried to load buffer that didn't have a source (File object) or URL to resource")
   }
-
-  // Start reading.
-  reader.readAsArrayBuffer(this.source);
 }
+
+function startLoadingAndDecodingMultiple(list, cb){
+  var closure = []
+  var loaded = []
+  for (i in list){
+
+    console.log(i)
+    console.log(list[i])
+    console.log(loaded)
+    list[i].startLoadingAndDecoding((x)=>{
+      console.log("x is : " + x)
+      console.log("x.status is : " + x.status)
+
+      closure.push(x)
+      var haveLoaded = true
+      for (j in closure){
+        haveLoaded = (closure[j].status == "error" || closure[j].status == "abort" || closure[j].status == "decoded")&&haveLoaded;
+        if(haveLoaded){
+          loaded.push(closure[j])
+        }
+      }
+      console.log("cb test case:  haveloaded - "+(haveLoaded) +"  loadedlength - "+loaded.length);
+      if (haveLoaded && loaded.length >= list.length  ){
+        console.log("cb being called...")
+        cb(closure)
+      }
+    });
+  }
+  console.log("closure:  "+closure)
+}
+
 
 function showThings(a,b,c,d){
   console.log(a)
