@@ -1,9 +1,9 @@
 module Sound.MusicW.Components where
 
-import Reflex.Synth.Graph
-import Reflex.Synth.Spec
 import GHCJS.Prim(toJSString)
 
+import Sound.MusicW.Graph
+import Sound.MusicW.Spec
 import Sound.MusicW.AudioRoutingGraph
 
 -- Nodes
