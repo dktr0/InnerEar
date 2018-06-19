@@ -40,3 +40,7 @@ showExerciseTitle Intervals1 = "Intervals 1: P1 M2 M3 P4 P5"
 showExerciseTitle FrequencyEnvelope = "Frequency Envelope"
 showExerciseTitle AmplitudeEnvelope = "Amplitude Envelope"
 showExerciseTitle _ = "Error: unknown exercise"
+
+
+
+
