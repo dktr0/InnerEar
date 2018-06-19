@@ -95,6 +95,12 @@ recordFromRow h t (Just "Reflection") i c q a s e1 e2 r = do
   z <- Point y <$> t
   (flip Record) z <$> h
 
+recordFromRow h t (Just "Store") i c q a s e1 e2 r = do
+  x <- ExerciseStore <$> c -- Note: somewhat arbitrarily/temporarily we are placing Store data in the config column of the database table...
+  y <- (Left . (,x)) <$> i
+  z <- Point y <$> t
+  (flip Record) z <$> h
+
 recordFromRow h t (Just "Ended") i c q a s e1 e2 r = do
   y <- (Left . (,ExerciseEnded)) <$> i
   z <- Point y <$> t
@@ -145,6 +151,8 @@ instance ToRow Record where
     toRow (h,t,"ListenedExplore"::Text,i,c,q,a,s,nil,nil,nil)
   toRow (Record h (Point (Left (i,ExerciseReflection r)) t)) =
     toRow (h,t,"Reflection"::Text,i,nil,nil,nil,nil,nil,nil,r)
+  toRow (Record h (Point (Left (i,ExerciseStore s)) t)) =
+    toRow (h,t,"Store"::Text,i,s,nil,nil,nil,nil,nil,nil)
   toRow (Record h (Point (Left (i,ExerciseEnded)) t)) =
     toRow (h,t,"Ended"::Text,i,nil,nil,nil,nil,nil,nil,nil)
   toRow (Record h (Point (Right SessionStart) t)) =
