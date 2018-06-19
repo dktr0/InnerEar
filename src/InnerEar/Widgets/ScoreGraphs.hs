@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module InnerEar.Widgets.SpecGraph where
+module InnerEar.Widgets.ScoreGraphs where
 
 import Reflex
 import Reflex.Dom
@@ -14,8 +14,10 @@ import InnerEar.Types.Frequency
 import InnerEar.Widgets.Utility
 import InnerEar.Widgets.Lines
 import InnerEar.Types.Score
+import InnerEar.Types.GScore
 import InnerEar.Widgets.Labels
 import InnerEar.Widgets.Bars
+import InnerEar.Widgets.Circles
 
 --a list of frequencies (a list for the x axis)
 xPoints :: [Double]
@@ -35,16 +37,23 @@ gradualGrapYpoints = fmap (\x -> sqrt x) xPoints
 flatGraphYpoints :: [Double]
 flatGraphYpoints = fmap (\x -> 100) xPoints
 
+--a graph generator for spectral shapes
 graphGen :: MonadWidget t m => [Double] -> [Double] -> m ()
 graphGen xPoints yPoints= do
       let xAndYPoints = zip xPoints yPoints
       shapeLine (constDyn "polyline") xAndYPoints
       return ()
 
-{--linearGraph :: MonadWidget t m =>  m ()
-linearGraph = elClass "div" "specGraphWrapper" $ do
-       let listOfPoints = zip (fList) linearGraphList
-       shapeLine (constDyn "polyline") listOfPoints
-       return ()
---}
---shapeLine [20,20, 40,25, 60,40, 80,120, 120,140, 200,180]
+--an oval graph generator
+graphGenOval :: MonadWidget t m => Dynamic t (Maybe GScore) -> m ()
+graphGenOval score = do
+  gamifiedGraphLabel (constDyn "ovalGraphLabel") score
+  ovalScoreBar score
+  return ()
+
+--a cirular graph generator
+graphGenCircular :: MonadWidget t m => Dynamic t (Maybe GScore) -> m ()
+graphGenCircular score = do 
+  gamifiedGraphLabel (constDyn "circularGrapLabel") score
+  percentageCircleGraph score
+  return ()

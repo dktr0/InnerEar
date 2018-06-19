@@ -119,16 +119,171 @@ button {
   font-size: 100%;
 }
 
+.clickableDivWrapper {
+  display: inline-block;
+  text-align: center;
+}
+
+.notPossibleButtonClickableDiv {
+  cursor:not-allowed;
+  width:60%;
+  background-color: transparent;
+  padding: 15px 32px;
+  text-align: center;
+  text-decoration: none;
+  font-size: 14px;
+  margin: 4px 2px;
+  cursor: context-menu;
+  border-radius: 4px;
+  box-shadow: 0 0 5px -1px rgba(0,0,0,0.2);
+
+}
+
+.possibleButtonClickableDiv {
+  background-color: #e7e7e7;
+  padding: 15px 32px;
+  text-align: center;
+  text-decoration: none;
+  font-size: 14px;
+  color: black;
+  margin: 4px 2px;
+  cursor: context-menu;
+  border-radius: 8px;
+  box-shadow: 0 0 5px -1px rgba(0,0,0,0.2);
+
+}
+
+.possibleButtonClickableDiv:active {
+  background-color: #e7e7e7;
+  padding: 15px 32px;
+  text-align: center;
+  text-decoration: none;
+  font-size: 14px;
+  color: black;
+  margin: 4px 2px;
+  cursor: context-menu;
+  border-radius: 4px;
+  box-shadow: 0 0 5px -1px rgba(0,0,0,0.2);
+  transform: translateY(10px);
+}
+
+
+.correctButtonClickableDiv {
+  background-color: #e7e7e7;
+  padding: 15px 32px;
+  text-align: center;
+  text-decoration: none;
+  font-size: 14px;
+  color: black;
+  margin: 4px 2px;
+  cursor: context-menu;
+  border-radius: 8px;
+  border: 4px solid green;
+  box-shadow: 0 0 5px -1px rgba(0,0,0,0.2);
+     height: 131px;
+}
+
+.correctButtonClickableDiv:active {
+  background-color: #e7e7e7;
+  padding: 15px 32px;
+  text-align: center;
+  text-decoration: none;
+  font-size: 14px;
+  color: black;
+  margin: 4px 2px;
+  cursor: context-menu;
+  border-radius: 4px;
+  border: 4px solid green;
+  box-shadow: 0 0 5px -1px rgba(0,0,0,0.2);
+  transform: translateY(10px);
+     height: 131px;
+}
+
+
+.correctMissedButtonClickableDiv {
+  background-color: #e7e7e7;
+  padding: 15px 32px;
+  text-align: center;
+  text-decoration: none;
+  font-size: 14px;
+  color: black;
+  margin: 4px 2px;
+  cursor: context-menu;
+  border-radius: 8px;
+  border: 4px solid green;
+  box-shadow: 0 0 5px -1px rgba(0,0,0,0.2);
+     height: 131px;
+}
+
+.correctMissedButtonClickableDiv:active {
+  background-color: #e7e7e7;
+  padding: 15px 32px;
+  text-align: center;
+  text-decoration: none;
+  font-size: 14px;
+  color: black;
+  margin: 4px 2px;
+  cursor: context-menu;
+  border-radius: 4px;
+  border: 4px solid green;
+  box-shadow: 0 0 5px -1px rgba(0,0,0,0.2);
+  transform: translateY(10px);
+     height: 131px;
+}
+.incorrectDisButtonClickableDiv{
+  background-color: #e7e7e7;
+  padding: 15px 32px;
+  text-align: center;
+  text-decoration: none;
+  font-size: 14px;
+  color: black;
+  margin: 4px 2px;
+  cursor: not-allowed;
+  border-radius: 8px;
+  border: 4px solid red;
+  box-shadow: 0 0 5px -1px rgba(0,0,0,0.2);
+     height: 130px;
+}
+
+
+.incorrectActivatedButtonClickableDiv {
+  background-color: #e7e7e7;
+  padding: 15px 32px;
+  text-align: center;
+  text-decoration: none;
+  font-size: 14px;
+  color: black;
+  margin: 4px 2px;
+  cursor: context-menu;
+  border-radius: 8px;
+  border: 4px solid red;
+  box-shadow: 0 0 5px -1px rgba(0,0,0,0.2);
+  height: 131px;
+}
+
+.incorrectActivatedButtonClickableDiv:active {
+  background-color: #e7e7e7;
+  padding: 15px 32px;
+  text-align: center;
+  text-decoration: none;
+  font-size: 14px;
+  color: black;
+  margin: 4px 2px;
+  cursor: context-menu;
+  border-radius: 4px;
+  border: 4px solid red;
+  box-shadow: 0 0 5px -1px rgba(0,0,0,0.2);
+  transform: translateY(10px);
+     height: 130px;
+}
 
 
 .buttonWrapper {
   display: inline-block;
   text-align: center;
 }
-
-
-
 button.notPossibleButton{
+
   border: none;
   background-color: black;
   color: darkgray;
@@ -178,24 +333,13 @@ button.correctButton{
 
 .svgBarContainer {
   width: 50%;
-  background-color: hsl(120,100%,80%);
+  background :linear-gradient(to top, hsl(120,100%,90%), hsl(120,100%,70%));
 }
 
-.svgBarContainerVertical {
-  width: 59%;
-  background-color: white;
-}
 
 .svgBarContainerCurrent{
   width: 30%;
   background-color: hsl(120,100%,80%);
-}
-
-.svgBarContainerCurrentMirror {
-  width: 30%;
-  background-color: hsl(120,100%,80%);
-  position: relative;
-  bottom: 84px;
 }
 
 .svgBarContainerHist{
@@ -203,35 +347,66 @@ button.correctButton{
   background-color: orange;
 }
 
-.svgBarContainerHistMirror{
-  width: 30%;
-   background-color: white;
-   position: relative;
-   /*top: 21px;
-   /*transform: rotate(40deg);*/
-   right: 90px;
+.svgBarContainerThreeBars{
+  width: 80%;
+  background :linear-gradient(to top, hsl(120,100%,90%), hsl(120,100%,70%));
 }
 
-.svgBarContainerFiveBand {
+.svgBarContainerFiveBars {
   width: 90%;
-  background-color: hsl(120,100%,80%);
+  background :linear-gradient(to top, hsl(120,100%,90%), hsl(120,100%,70%));
+}
+
+.svgBarContainerTenBars {
+  width: 90%;
+  background :linear-gradient(to top, hsl(120,100%,90%), hsl(120,100%,70%));
+}
+
+.svgBarContainerSevenBars{
+  width: 80%;
+  background :linear-gradient(to top, hsl(120,100%,90%), hsl(120,100%,70%));
+}
+
+.pathContainer {
+  viewBox: 0 0 360 360;
+  margin-top: 20px;
+  margin-left: 60px;
+  max-width: 80%;
+  height: 300px;
+  background: transparent;
+}
+
+.percentageCircle {
+  fill:none;
+  stroke-width:15;
+  stroke-linecap: round;
 
 }
 
-.svgBarContainerTenBand {
-  width: 50%;
-  background-color: hsl(120,100%,80%);
+.ovalScoreBar{
+  border-radius: 15px;
+  stroke-linecap: round;
+
+/*  background: linear-gradient(to top right, orange,yellow);*/
+}
+
+.makeButtonContainer{
+  display: flex;
+  background:transparent;
 }
 
 .shapeContainer {
-  width: 50%;
-  height: 300px;
+  display: flex;
+  width: 100%;
+  height: 120px;
   transform: rotate(270deg);
   background-color: transparent;
   position: relative;
+  right: 2px;
+  top: 10px;
   border-top: 2px solid #2F4F4F;
   border-left: 2px solid #2F4F4F;
-  padding-bottom: 10%;
+  padding-bottom: 0%;
 }
 
 .bars {
@@ -244,8 +419,9 @@ button.correctButton{
 
 .polyline {
   fill: none;
-  stroke:hsl(120,100%,80%);
+  stroke:black;
   stroke-width:3;
+  position: relative;
 }
 
 .faintedLineToAdjustGraph {
@@ -265,16 +441,6 @@ button.correctButton{
   top: 9%;
 }
 
-.svgFaintedLineVertical{
-
-  width: 1px;
-  height: 5px;
- background-color: #2F4F4F;
- position: relative;
- left: 24%;
- top: 9%;
-}
-
 
 .svgFaintedLineHist{
   width: 1px;
@@ -285,14 +451,6 @@ button.correctButton{
  top: 9%;
 }
 
-.svgFaintedLineHistMirror {
-  width: 1px;
-  height: 5px;
- background-color: #2F4F4F;
- position: relative;
- left: 40%;
- top: 9%;
-}
 
 .svgFaintedLineCurrent {
   width: 1px;
@@ -302,16 +460,16 @@ button.correctButton{
  left: 23%;
  top: 9%;
 }
-.svgFaintedLineCurrentMirror {
-  width: 1px;
-  height: 5px;
- background-color: #2F4F4F;
- position: relative;
- left: 23%;
- top: 9%;
-}
 
-.svgFaintedLineFiveBand {
+.svgFaintedLineThreeBars {
+   width: 1px;
+   height: 5px;
+  background-color: #2F4F4F;
+  position: relative;
+  left: 40%;
+  top: 9%;
+}
+.svgFaintedLineFiveBars {
    width: 1px;
    height: 5px;
   background-color: #2F4F4F;
@@ -320,7 +478,7 @@ button.correctButton{
   top: 9%;
 }
 
-.svgFaintedLineTenBand {
+.svgFaintedLineTenBars {
    width: 1px;
    height: 5px;
   background-color: #2F4F4F;
@@ -328,6 +486,16 @@ button.correctButton{
   left: 24%;
   top: 9%;
 }
+
+.svgFaintedLineSevenBars{
+   width: 1px;
+   height: 5px;
+  background-color: #2F4F4F;
+  position: relative;
+  left: 40%;
+  top: 9%;
+}
+
 
  .faintedXaxis {
    /*width : 5%;*/
@@ -407,6 +575,26 @@ right:80%;
      font-size: 70%;
 }
 
+.ovalGraphLabel{
+   color: hsl(120,100%,80%);
+   text-align: center;
+   font-size: 100%;
+  position: relative;
+  width: 5%;
+  left: 33%;
+  top: 10%;
+}
+
+.circularGrapLabel{
+   color: hsl(120,100%,80%);
+   text-align: center;
+   font-size: 120%;
+  position: relative;
+  width: 5%;
+  left: 8%;
+  top: 20%;
+}
+
 .xLabel {
    color: hsl(120,100%,80%);
    font-size:70%;
@@ -415,38 +603,40 @@ right:80%;
    bottom: 8px;
 }
 
-.xLabelVertical{
-  color: white;
-  font-size:70%;
-  text-align: center;
-  position: relative;
-  top: 40px;
-  transform: rotate(-90deg);
+.xLabelThreeBars  {
+   color: hsl(120,100%,80%);
+   font-size:70%;
+   text-align: center;
+    position: relative;
+   bottom: 8px;
 }
 
-.xLabelFiveBand {
+
+.xLabelFiveBars {
    color: hsl(120,100%,80%);
    font-size:50%;
    text-align: center;
     position: relative;
    bottom: 8px;
 }
-.xLabelTenBand {
+
+
+.xLabelTenBars {
    color: hsl(120,100%,80%);
-   font-size:80%;
+   font-size:65%;
    text-align: center;
    position: relative;
    bottom: 8px;
-
 }
 
-.xLabelMirror {
+.xLabelSevenBars{
    color: hsl(120,100%,80%);
    font-size:70%;
    text-align: center;
    position: relative;
    bottom: 8px;
 }
+
 
 .countLabel {
   color: hsl(120,100%,80%);
@@ -484,7 +674,7 @@ right:80%;
   width: 15px;
   height: 10%;
   position: relative;
-  top: 13%;
+  top: 15%;
   left: 4%;
 }
 .countMainLabelV {
@@ -694,14 +884,7 @@ transform: rotate(-90deg);
   margin-right: -10%;
 }
 
-.scoreBarWrapperVertical {
-  display: inline-block;
-  position: relative;
-  bottom:55%;
-  width: 50%;
-  margin-left: -10%;
-  margin-right: -10%;
-}
+
 
 .scoreBarWrapperHist {
     display: inline-block;
@@ -712,32 +895,50 @@ transform: rotate(-90deg);
   margin-right: -10%;
 }
 
-.scoreBarWrapperHistMirror {
-  display: inline-block;
-position: relative;
-bottom:50%;
-width: 50%;
-margin-left: -10%;
-margin-right: -10%;
-
-}
-
-.scoreBarWrapperFiveBand {
+.scoreBarWrapperThreeBars{
   display: inline-block;
   position: relative;
   bottom:55%;
-  width: 15%;
+  width: 32%;
+  margin-left: -2.5%;
+  margin-right: -2.5%;
 }
 
-.scoreBarWrapperTenBand {
+.scoreBarWrapperFiveBars {
+  display: inline-block;
+  position: relative;
+  bottom:55%;
+  width: 17%;
+   margin-left: -0.5%;
+  margin-right: -0.5%;
+}
+
+.scoreBarWrapperSevenBars{
   display: inline-block;
   flex-grow: 1;
   position: relative;
   bottom:55%;
-  width:7%;
+  width:13%;
+     margin-left: -1%;
+  margin-right: -1%;
 }
 
+.scoreBarWrapperTenBars {
+  display: inline-block;
+  flex-grow: 1;
+  position: relative;
+  bottom:55%;
+  width:8%;
 
+}
+
+.ovalScoreWrapper {
+  display: flex;
+  height: 30px;
+  border-radius: 15px;
+  width: 26.7%;
+  background-color: lightgray;
+}
 
 .explanation{
   text-align: justify;

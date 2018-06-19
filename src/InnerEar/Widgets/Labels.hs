@@ -9,6 +9,7 @@ import Control.Monad
 import Prelude as P
 import InnerEar.Widgets.Utility
 import InnerEar.Types.Score
+import InnerEar.Types.GScore
 
 --Labels with CSS style to be used above bars
 labelsForBars :: MonadWidget t m => String -> m ()
@@ -115,3 +116,12 @@ dynGraphLabel c label = do
     elDynAttr "div" c' $ do
       dynText label -- m ()
       return ()
+
+gamifiedGraphLabel :: MonadWidget t m => Dynamic t String -> Dynamic t (Maybe GScore) -> m ()
+gamifiedGraphLabel c score = do
+  score' <- mapDyn (maybe (GScore 0.0 50.0) id) score
+  score''  <- mapDyn show score' --Dynamic t Double
+  class' <- mapDyn (singleton "class") c
+  elDynAttr "div" class' $ do
+    dynText score''
+    return ()

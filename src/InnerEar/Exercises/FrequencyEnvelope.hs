@@ -89,7 +89,7 @@ renderAnswer _ c@(s, d, o) _ (Just ans) = buildSynth_ $ do
 renderAnswer _ _ _ Nothing = buildSynth_ $ silent >> destination
 
 displayEval :: MonadWidget t m => Dynamic t (Map Answer Score) -> Dynamic t (MultipleChoiceStore Config Answer) -> m ()
-displayEval e _ = displayMultipleChoiceEvaluationGraph' "Session Performance" "" answers e
+displayEval e _ = displayMultipleChoiceEvaluationGraph  ("scoreBarWrapperThreeBars","svgBarContainerThreeBars","svgFaintedLineThreeBars","xLabelThreeBars") "Session Performance" "" answers e
 
 generateQ :: Config -> [ExerciseDatum] -> IO ([Answer],Answer)
 generateQ _ _ = randomMultipleChoiceQuestion answers

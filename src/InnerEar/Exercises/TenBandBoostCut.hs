@@ -65,7 +65,10 @@ boostAmounts = reverse [-10,-6,-3,-2,-1,1,2,3,6,10]
 
 type Config = (FrequencyBand, Double) -- FrequencyBand and Boost/Cut amount
 
-newtype Answer = Answer { frequency :: Frequency } deriving (Show,Eq,Ord,Data,Typeable)
+newtype Answer = Answer { frequency :: Frequency } deriving (Eq,Ord,Data,Typeable)
+
+instance Show Answer where
+  show a = freqAsString $frequency a
 
 instance Buttonable Answer where
   makeButton = showAnswerButton
@@ -99,15 +102,15 @@ instructions = el "div" $ do
 generateQ :: Config -> [ExerciseDatum] -> IO ([Answer],Answer)
 generateQ config _ = randomMultipleChoiceQuestion (convertBands $ fst config)
 
-displayEval :: MonadWidget t m => Dynamic t (Map Answer Score) -> Dynamic t (MultipleChoiceStore Config Answer) -> m ()
-displayEval e _ = displayMultipleChoiceEvaluationGraph''' "Session Performance" "Hz" answers e
-
 sourcesMap :: Map Int (String,SoundSourceConfigOption)
 sourcesMap = fromList $ [
     (0, ("Pink noise", Resource "pinknoise.wav" (Just $ Sec 2))),
     (1, ("White noise", Resource "whitenoise.wav" (Just $ Sec 2))),
     (2, ("Load a sound file", UserProvidedResource))
   ]
+
+displayEval :: MonadWidget t m => Dynamic t (Map Answer Score) -> Dynamic t (MultipleChoiceStore Config Answer) -> m ()
+displayEval e _ = displayMultipleChoiceEvaluationGraph ("scoreBarWrapperTenBars","svgBarContainerTenBars","svgFaintedLineTenBars","xLabelTenBars") "Session Performance" "" answers e
 
 -- temporary until config widget is changed to take a list/map of config parameters that can be changed
 tenBandsConfigWidget :: MonadWidget t m => Map String AudioBuffer -> Config -> m (Dynamic t Config, Dynamic t (Maybe (SourceNodeSpec, Maybe Time)), Event t (), Event t ())

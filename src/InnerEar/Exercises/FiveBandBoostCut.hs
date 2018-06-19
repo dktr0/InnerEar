@@ -34,14 +34,14 @@ configs = [10,6,3,2,1,-1,-2,-3,-6,-10]
 configMap::Map Int (String,Config)
 configMap = fromList $ zip [0::Int,1..] $ fmap (\x-> (show x ++ " dB",x)) configs
 
--- type Answer = Frequency
-newtype Answer = Answer { frequency :: Frequency } deriving (Show,Eq,Ord,Data,Typeable)
--- data Answer = Answer Frequency
+newtype Answer = Answer { frequency :: Frequency } deriving (Eq,Ord,Data,Typeable)
 
 instance Buttonable Answer where
   makeButton = showAnswerButton
 
-
+instance Show Answer where
+  show a = freqAsString $ frequency a
+  
 answers :: [Answer]
 answers = [Answer $ F 155 "Bass (155 Hz)",Answer $ F 1125 "Low Mids (1125 Hz)",Answer $ F 3000 "High Mids (3 kHz)",
   Answer $ F 5000 "Presence (5 kHz)",Answer $ F 13000 "Brilliance (13 kHz)"]
@@ -64,7 +64,7 @@ instructions = el "div" $ do
   elClass "div" "instructionsText" $ text "In this exercise, a filter is applied to a specific region of the spectrum, either boosting or cutting the energy in that part of the spectrum by a specified amount. Your task is to identify which part of the spectrum has been boosted or cut. Challenge yourself and explore additional possibilities by trying cuts (instead of boosts) to the spectrum, and by trying more subtle boosts/cuts (dB values progressively closer to 0)."
 
 displayEval :: MonadWidget t m => Dynamic t (Map Answer Score) -> Dynamic t (MultipleChoiceStore Config Answer) -> m ()
-displayEval e _ = displayMultipleChoiceEvaluationGraph' "Session Performance" "" answers e
+displayEval e _ = displayMultipleChoiceEvaluationGraph ("scoreBarWrapperFiveBars","svgBarContainerFiveBars","svgFaintedLineFiveBars", "xLabelFiveBars") "Session performance" "Hz" answers e
 
 generateQ :: Config -> [ExerciseDatum] -> IO ([Answer],Answer)
 generateQ _ _ = randomMultipleChoiceQuestion answers
@@ -75,7 +75,6 @@ sourcesMap = fromList $ [
     (1, ("White noise", Resource "whitenoise.wav" (Just $ Sec 2))),
     (2, ("Load a sound file", UserProvidedResource))
   ]
-
 
 fiveBandBoostCutExercise :: MonadWidget t m => Exercise t m Config [Answer] Answer (Map Answer Score) (MultipleChoiceStore Config Answer)
 fiveBandBoostCutExercise = multipleChoiceExercise

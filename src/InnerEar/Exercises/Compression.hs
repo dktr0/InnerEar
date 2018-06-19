@@ -54,8 +54,7 @@ renderAnswer _ _ (src, dur) _ = buildSynth $ do
   maybeDelete (fmap (+Sec 0.2) dur)
 
 displayEval :: MonadWidget t m => Dynamic t (Map Answer Score) -> Dynamic t (MultipleChoiceStore Config Answer) -> m ()
-displayEval e _ = displayMultipleChoiceEvaluationGraph' "Session Performance" "" answers e
-
+displayEval e _ = displayMultipleChoiceEvaluationGraph ("scoreBarWrapper","svgBarContainer","svgFaintedLine", "xLabel") "Session Performance" "" answers e
 
 generateQ :: Config -> [ExerciseDatum] -> IO ([Answer],Answer)
 generateQ _ _ = randomMultipleChoiceQuestion [Answer False,Answer True]

@@ -53,7 +53,7 @@ clientWidget sysResources = elClass "div" "innerEar" $ mdo
   (wsRcvd,wsStatus) <- WS.reflexWebSocket wsSend
   elClass "div" "title" $ text "Inner Ear"
   loginVisible <- holdDyn True $ leftmost [True <$ loggedIn, False <$ noLogin, True <$ loggedOut]
-  navVisible <- mapDyn not loginVisible
+  navVisible <- holdDyn False $ leftmost [True <$ loggedIn, True <$ noLogin, False <$ loggedOut]
   (loginRequests,currentRole) <- visibleWhen loginVisible $ elClass "div" "login" $ loginWidget wsRcvd
   let loggedIn = ffilter isJust $ updated currentRole
   let loggedOut = ffilter isNothing $ updated currentRole

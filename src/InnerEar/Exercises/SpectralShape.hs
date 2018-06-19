@@ -19,9 +19,8 @@ import InnerEar.Types.MultipleChoiceStore
 import InnerEar.Types.Data hiding (Time)
 import InnerEar.Types.Frequency
 import InnerEar.Types.Utility
+import InnerEar.Widgets.ScoreGraphs
 import InnerEar.Widgets.SpecEval
-import InnerEar.Widgets.Config
-import InnerEar.Widgets.SpecGraph
 import InnerEar.Widgets.Lines
 import InnerEar.Widgets.AnswerButton
 import InnerEar.Widgets.Utility
@@ -32,28 +31,27 @@ type Config = Frequency -- represents fundamental frequency for sound generation
 configs :: [Config]
 configs = [F 100 "100 Hz",F 200 "200 Hz", F 400 "400 Hz", F 800 "800 Hz", F 1600 "1600Hz", F 3200 "3200Hz"]
 
-data Answer = Steep | Linear | Gradual | Flat | InverseGradual | InverseLinear | InverseSteep
+data Answer = Steep | Linear | Gradual | Flat | InvGradual | InvLinear | InvSteep
   deriving (Eq,Ord,Data,Typeable,Show)
 
-instance Buttonable Answer where
-  -- makeButton a m = answerButton' m a $ do
-  makeButton a m = clickableDiv (constDyn "someClass") a $ do
-    elClass "div" "someClass" $ text (show a)
-    elClass "div" "someClass" $ text (show a)
-    let xAndYPoints = [ (x*4,y*100) | x <- [1,2 .. 25] , y <- take 25 (getShape a) ]
-    elClass "div" "someClass" $ shapeLine' "polyline" xAndYPoints
-    return ()
 
-answers = [Steep,Linear,Gradual,Flat,InverseGradual,InverseLinear,InverseSteep]
+instance Buttonable Answer where
+  makeButton a m = answerButtonWChild a m $ do
+      text (show a)
+      let x = if a == Flat then 50 else 80
+      shapeLine' "polyline" m $ zip (fmap (*x) (fmap dbamp $ (getShape a))) [1, 2 .. 100]
+
+answers = [Steep,Linear,Gradual,Flat,InvGradual,InvLinear,InvSteep]
+
 
 getShape :: Answer -> [Double]
 getShape Steep = fmap (ampdb . (\x -> 1/(x*x))) [1,2 .. 200]
 getShape Linear = fmap (ampdb . (\x -> 1/x)) [1,2 .. 200]
 getShape Gradual = fmap (ampdb . (\x -> 1/sqrt x)) [1,2 .. 200]
-getShape Flat = fmap (ampdb . (\x -> 1)) [1,2 .. 200]
-getShape InverseGradual = fmap (ampdb . (\x -> 1/sqrt x)) [1,2 .. 200]
-getShape InverseLinear = fmap (ampdb . (\x -> 1/x)) [1,2 .. 200]
-getShape InverseSteep = fmap (ampdb . (\x -> 1/(x*x))) [1,2 .. 200]
+getShape Flat = fmap (ampdb . (\x -> 1)) [1,2.. 200]
+getShape InvGradual =  reverse $ fmap (ampdb . (\x -> 1/sqrt x)) [1,2 .. 100]
+getShape InvLinear = reverse $ fmap (ampdb . (\x -> 1/x))  [1,2 .. 100]
+getShape InvSteep = reverse $ fmap (ampdb . (\x -> 1/(x*x))) [1,2.. 100]
 
 
 renderAnswer :: Map String AudioBuffer -> Config -> (SourceNodeSpec,Maybe Time) -> Maybe Answer -> Synth ()
@@ -68,9 +66,8 @@ renderAnswer _ f0 _ (Just a) = buildSynth $ do
     oscSpecs = zip fs gs
 renderAnswer _ f0 _ Nothing = return ()
 
-
 displayEval :: MonadWidget t m => Dynamic t (Map Answer Score) -> Dynamic t (MultipleChoiceStore Config Answer) -> m ()
-displayEval e _ = displayMultipleChoiceEvaluationGraph' "Session Performance" "" answers e
+displayEval e _ = displayMultipleChoiceEvaluationGraph  ("scoreBarWrapperSevenBars","svgBarContainerSevenBars","svgFaintedLineSevenBars","xLabelSevenBars") "Session Performance" "" answers e
 
 generateQ :: Config -> [ExerciseDatum] -> IO ([Answer],Answer)
 generateQ _ _ = randomMultipleChoiceQuestion answers
@@ -88,7 +85,7 @@ instructions :: MonadWidget t m => m ()
 instructions = el "div" $ do
   elClass "div" "instructionsText" $ text "Instructions placeholder"
   --shapeLine (constDyn "polyline") [(10,10), (20,20), (30,30), (40,40), (50,50), (60,60)]
-  graphGen xPoints linearGraphYPoints
+  --graphGen xPoints linearGraphYPoints
 
 spectralShapeExercise :: MonadWidget t m => Exercise t m Config [Answer] Answer (Map Answer Score) (MultipleChoiceStore Config Answer)
 spectralShapeExercise = multipleChoiceExercise
