@@ -44,7 +44,7 @@ renderAnswer sysResources db (src, dur) (Just (Answer True)) = buildSynth $ do
   -- sticking an EmptyGraph somewhere won't break the stack structure of Synths right?
   let env = maybe (return EmptyGraph) (unitRectEnv (Millis 1)) dur
   synthSource src >> gain (Db $ fromIntegral $ -10) >> env >> destination
-  audioBufferSource (sysResources!"whitenoise") (BufferParams 0 1 (isJust dur)) >> env >> destination
+  audioBufferSource (sysResources!"whitenoise.wav") (BufferParams 0 1 (isJust dur)) >> gain (Db db) >> env >> destination
   maybeDelete (fmap (+Sec 0.2) dur)
 renderAnswer _ db (src, dur) _ = buildSynth $ do
   let env = maybe (return EmptyGraph) (unitRectEnv (Millis 1)) dur

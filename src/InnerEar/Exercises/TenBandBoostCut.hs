@@ -99,8 +99,8 @@ generateQ config _ = randomMultipleChoiceQuestion (convertBands $ fst config)
 
 sourcesMap :: Map Int (String,SoundSourceConfigOption)
 sourcesMap = fromList $ [
-    (0, ("Pink noise", Resource "pinknoise.wav" (Just 2))),
-    (1, ("White noise", Resource "whitenoise.wav" (Just 2))),
+    (0, ("Pink noise", Resource "pinknoise.wav" (Just $ Sec 2))),
+    (1, ("White noise", Resource "whitenoise.wav" (Just $ Sec 2))),
     (2, ("Load a sound file", UserProvidedResource))
   ]
 
