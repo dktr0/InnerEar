@@ -17,15 +17,7 @@ import InnerEar.Types.Utility
 import InnerEar.Types.ExerciseId
 import InnerEar.Types.Handle
 
-data StoreDB = StoreDB {
-  storeHandle :: Handle,
-  storeId :: ExerciseId,
-  storeValue :: String,
-  storeTime :: Time
-  } deriving (Eq,Data,Typeable)
 
-instance Show StoreDB where
-  show x = show (storeHandle x) ++ " " ++ show (storeId x) ++ " " ++ show (storeValue x)
 
 -- | Each exercise has unique strictly typed representations so there must be a type for the data
 -- specific to each exercise. (And this type, Datum c q a e, like all of the types in this module, is
@@ -85,6 +77,7 @@ toDatum (ExerciseReflection r) = return $ Reflection r
 toDatum (ExerciseStore s) = Store <$> decode s
 toDatum ExerciseEnded = return Ended
 
+
 toDatum' :: (JSON c, JSON q, JSON a, JSON e, JSON s) => ExerciseDatum -> Maybe (Datum c q a e s)
 toDatum' = f . toDatum
   where f (Ok x) = Just x
@@ -123,3 +116,23 @@ data Record = Record {
   userHandle :: Handle,
   point :: Point
 } deriving (Show,Eq,Data,Typeable)
+
+
+data StoreDB = StoreDB {
+  storeHandle :: Handle,
+  storeId :: ExerciseId,
+  storeValue :: String, -- JSON representation of exercise store
+  storeTime :: Time
+  } deriving (Eq,Data,Typeable)
+
+instance Show StoreDB where
+  show x = show (storeHandle x) ++ " " ++ show (storeId x) ++ " " ++ show (storeValue x)
+
+recordToMaybeStoreDB :: Record -> Maybe StoreDB
+recordToMaybeStoreDB (Record h (Point (Left (i,ExerciseStore s)) t)) = Just (StoreDB h i s t)
+recordToMaybeStoreDB _ = Nothing
+
+
+
+
+

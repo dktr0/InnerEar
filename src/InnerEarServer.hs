@@ -156,6 +156,8 @@ postPoint i p s = do
       let r = Record (fromJust h) p
       putStrLn $ "posting record: " ++ (show r)
       DB.postEvent (database s) r
+      -- let storeDB = recordToMaybeStoreDB r
+      -- working here: call DB.postStore only when storeDB is not Nothing
       return s
     else do
       putStrLn $ "warning: received post record attempt from non-or-differently-authenticated connection"
