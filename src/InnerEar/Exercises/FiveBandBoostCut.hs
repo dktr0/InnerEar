@@ -15,7 +15,7 @@ import InnerEar.Widgets.SpecEval
 import InnerEar.Types.Data hiding (Time)
 import InnerEar.Types.Sound
 import InnerEar.Types.Score
-import Reflex.Synth.Synth hiding(Frequency)
+import Sound.MusicW hiding (Frequency)
 import InnerEar.Types.Exercise
 import InnerEar.Types.ExerciseId
 import InnerEar.Types.Frequency

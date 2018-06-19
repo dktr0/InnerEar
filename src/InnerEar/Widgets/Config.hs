@@ -18,8 +18,7 @@ import InnerEar.Widgets.Utility(radioWidget, elClass', hideableWidget, asapOrUpd
 import Reflex
 import Reflex.Class
 import Reflex.Dom
-import Reflex.Synth.Buffer
-import Reflex.Synth.Spec
+import Reflex.Synth.Synth
 
 
 -- Verify this but for css styling, what goes in the config panel is 1 div with class "configWidget" and 2 internal divs:
@@ -53,7 +52,7 @@ sourceSelectionWidget sysResources inputID choices defChoiceIdx =
     dd <- dropdown defChoiceIdx (constDyn $ fmap fst choices) def
 
     dynSelOpt <- forDyn (value dd) $ \choiceIdx -> snd $ choices!choiceIdx
-    inputAttrs <- forDyn dynSelOpt $ \opt -> 
+    inputAttrs <- forDyn dynSelOpt $ \opt ->
       let staticAttr = fromList [("accept", "audio/*"), ("id", inputID)] in
         case opt of
           UserProvidedResource -> staticAttr
@@ -77,9 +76,9 @@ sourceSelectionWidget sysResources inputID choices defChoiceIdx =
         playbackRange = (0, 1),
         shouldLoop = False
       }
-    
-    (dynSrcCfg, playEv, stopEv) <- return dynConfig 
-      >>= sourceRangeConfigurationWidget 
+
+    (dynSrcCfg, playEv, stopEv) <- return dynConfig
+      >>= sourceRangeConfigurationWidget
       >>= sourcePlaybackControlsWidget
 
     -- Take all of the configuration options and compile them import a configured spec
@@ -87,7 +86,7 @@ sourceSelectionWidget sysResources inputID choices defChoiceIdx =
       SourceLoading -> Nothing
       SourceUnderSpecified -> Nothing
       SourceError msg -> Nothing -- TODO display this error somewhere visible to the user
-      SourceLoaded (AudioBufferSource d _) dur -> 
+      SourceLoaded (AudioBufferSource d _) dur ->
         let params = BufferParams (fst $ playbackRange cfg) (snd $ playbackRange cfg) (shouldLoop cfg) in
           Just (AudioBufferSource d params, dur)
       SourceLoaded spec dur -> Just (spec, dur)
@@ -96,7 +95,7 @@ sourceSelectionWidget sysResources inputID choices defChoiceIdx =
 
 constructSoundSource :: Map String AudioBuffer -> SoundSourceConfigOption -> BufferStatus -> IO SoundSource
 constructSoundSource _ (Spec spec dur) _ = return $ SourceLoaded spec dur
-constructSoundSource sysResources (Resource resourceId dur) _ = 
+constructSoundSource sysResources (Resource resourceId dur) _ =
   return $ SourceLoaded (AudioBufferSource (sysResources!resourceId) $ BufferParams 0 1 False) dur
 constructSoundSource _ UserProvidedResource BufferUnderspecified = return SourceUnderSpecified
 constructSoundSource _ UserProvidedResource BufferLoading = return SourceLoading
@@ -110,7 +109,7 @@ sourceRangeConfigurationWidget :: MonadWidget t m => Dynamic t SoundSourceConfig
 sourceRangeConfigurationWidget dynSrc =
   elClass "div" "sourceCanvasWrapper" $ do
     canvasElement <- G.castToHTMLCanvasElement <$> _el_element <$> fst <$> elClass' "canvas" "waveformCanvas" blank
-    
+
     initialRange <- playbackRange <$> sample (current dynSrc)
     dynRangeSelectVisible <- forDyn dynSrc $ \s -> case source s of
       SourceLoaded (AudioBufferSource _ _) _ -> True
@@ -130,7 +129,7 @@ sourcePlaybackControlsWidget dynSrc =
   elClass "div" "bufferControls" $ do
     playEv <- button "►"
     stopEv <- button "◼"
-    
+
     text "Loop:"
     isLoopingSetNow <- shouldLoop <$> sample (current dynSrc)
     shouldLoopCheckbox <- checkbox isLoopingSetNow $ CheckboxConfig (fmap shouldLoop $ updated dynSrc) (constDyn empty)
@@ -148,7 +147,7 @@ startLoadingBuffer fileEv = do
   bufferEv <- performEvent $ ffor fileEv $ liftIO . createBuffer
 
   -- stateChangeEv :: Event t Buffer - tiggered on a status change
-  stateChangeEv <- performEventAsync $ ffor bufferEv $ \buffer evTrigger -> 
+  stateChangeEv <- performEventAsync $ ffor bufferEv $ \buffer evTrigger ->
     liftIO $ startLoadingAndDecodingWithCallback buffer evTrigger
 
   -- statusEv' :: Event t BufferStatus - triggered on **relevant** status changes, hence the fmapMaybe
@@ -159,7 +158,7 @@ startLoadingBuffer fileEv = do
 
 -- | buffer creates a smart buffer for asynchronous loading of the most recent `Just` file fired
 -- from the `Event t (Maybe File)`. Until the first occurance of the event, the buffer is `Nothing`.
--- The returned buffer status monitors the current state of the buffer. 
+-- The returned buffer status monitors the current state of the buffer.
 mkBuffer :: MonadWidget t m => Event t (Maybe G.File) -> m (Dynamic t (Maybe Buffer), Dynamic t BufferStatus)
 mkBuffer maybeFileEv = do
   (bufferEv, statusEv) <- startLoadingBuffer (fmapMaybe id maybeFileEv)

@@ -15,7 +15,7 @@ import InnerEar.Widgets.Utility
 import InnerEar.Widgets.AnswerButton
 import InnerEar.Types.Request
 import InnerEar.Types.Response
-import Reflex.Synth.Synth
+import Sound.MusicW
 import InnerEar.Types.Score
 import InnerEar.Types.Frequency
 import InnerEar.Widgets.AnswerButton

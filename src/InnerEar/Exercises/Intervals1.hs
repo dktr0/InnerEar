@@ -4,7 +4,7 @@ module InnerEar.Exercises.Intervals1 (intervals1Exercise) where
 
 import Reflex
 import Reflex.Dom
-import Reflex.Synth.Synth
+import Sound.MusicW
 
 import Data.Map
 

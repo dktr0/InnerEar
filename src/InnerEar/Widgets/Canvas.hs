@@ -16,7 +16,8 @@ import qualified GHCJS.DOM.Types as DT
 import GHCJS.Marshal.Pure (pToJSVal)
 import GHCJS.DOM.EventM
 
-import Reflex.Synth.Spec
+import Sound.MusicW
+
 
 import InnerEar.Types.Sound
 import InnerEar.Widgets.Utility

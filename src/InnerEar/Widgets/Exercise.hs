@@ -15,12 +15,11 @@ import Data.Map(Map)
 import InnerEar.Types.ExerciseId
 import InnerEar.Widgets.Utility
 import InnerEar.Types.Data
-import Reflex.Synth.Synth
 import InnerEar.Types.ExerciseNavigation
 import InnerEar.Types.Exercise
 import InnerEar.Types.Response
 
-import Reflex.Synth.Synth
+import Sound.MusicW
 
 -- | runExercise takes a completely defined Exercise value and uses it to run an ear-training
 -- exercise in the browser.

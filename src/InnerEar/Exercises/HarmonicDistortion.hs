@@ -8,7 +8,7 @@ import Data.Map
 import Text.JSON
 import Text.JSON.Generic
 
-import Reflex.Synth.Synth
+import Sound.MusicW
 import InnerEar.Exercises.MultipleChoice
 import InnerEar.Types.ExerciseId
 import InnerEar.Types.Exercise

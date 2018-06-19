@@ -4,8 +4,8 @@ module InnerEar.Exercises.SpectralShape (spectralShapeExercise) where
 
 import Reflex
 import Reflex.Dom
-import Reflex.Synth.Synth hiding (Frequency)
 
+import Sound.MusicW hiding(Frequency)
 import Data.Map
 
 import Text.JSON

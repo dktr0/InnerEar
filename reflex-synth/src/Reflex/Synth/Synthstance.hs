@@ -5,7 +5,6 @@ module Reflex.Synth.Synthstance (
   stopSynth,
   stopSynthNow
 ) where
-
 import Reflex.Synth.Graph
 import Reflex.Synth.Node
 import Reflex.Synth.Spec

@@ -4,8 +4,8 @@ module InnerEar.Types.Sound (
   SoundSourceConfig(..),
 ) where
 
-import Reflex.Synth.Buffer
-import Reflex.Synth.Spec
+import Sound.MusicW
+
 
 data SoundSourceConfigOption
   = Spec SourceNodeSpec (Maybe Time)

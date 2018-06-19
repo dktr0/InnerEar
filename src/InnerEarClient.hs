@@ -4,7 +4,7 @@ import Data.Map
 
 import Reflex
 import Reflex.Dom
-import Reflex.Synth.Synth
+import Sound.MusicW -- is this import needed?
 import InnerEar.Widgets.Client
 
 import InnerEar.Exercises.MultipleChoice

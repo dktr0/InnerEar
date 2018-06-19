@@ -22,8 +22,7 @@ import InnerEar.Types.Request
 import InnerEar.Widgets.Login
 import InnerEar.Widgets.Navigation
 import qualified InnerEar.WebSocket as WS
-import Reflex.Synth.Synth
-import Reflex.Synth.AudioRoutingGraph
+import Sound.MusicW
 
 -- | The clientWidget is the top-level widget in the Inner Ear web client.
 -- If the user is logged in as an authenticated user, it displays that.

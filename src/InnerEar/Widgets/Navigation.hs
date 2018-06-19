@@ -16,7 +16,7 @@ import InnerEar.Types.Response
 import InnerEar.Types.Request
 import InnerEar.Widgets.CreateUser
 import InnerEar.Widgets.Test
-import Reflex.Synth.Synth
+import Sound.MusicW
 import InnerEar.Types.Exercise
 import InnerEar.Types.ExerciseId
 import InnerEar.Widgets.Exercise

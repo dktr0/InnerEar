@@ -9,7 +9,7 @@ import Data.Maybe
 import Text.JSON
 import Text.JSON.Generic
 
-import Reflex.Synth.Synth
+import Sound.MusicW
 import InnerEar.Exercises.MultipleChoice
 import InnerEar.Types.ExerciseId
 import InnerEar.Types.Exercise
@@ -67,7 +67,7 @@ instructions = el "div" $ do
 -- Change to SoundSourceConfigOption instead of Source
 sourcesMap :: Map Int (String, SoundSourceConfigOption)
 sourcesMap = fromList $ [
-    (0, ("300hz sine wave", Spec (Oscillator Sine (Hz 300)) (Just $ Sec 2))), 
+    (0, ("300hz sine wave", Spec (Oscillator Sine (Hz 300)) (Just $ Sec 2))),
     (1, ("Load a sound file", UserProvidedResource))
   ]
 

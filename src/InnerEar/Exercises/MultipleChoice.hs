@@ -23,7 +23,7 @@ import InnerEar.Types.Score
 import InnerEar.Types.Utility
 import InnerEar.Widgets.Utility
 import InnerEar.Widgets.AnswerButton
-import Reflex.Synth.Synth
+import Sound.MusicW 
 
 -- | This module introduces a function to generate multiple choice exercises.
 -- Most specifically, it abstracts over the requirement to provide a widget
@@ -126,7 +126,7 @@ multipleChoiceQuestionWidget maxTries answers exId exInstructions cWidget render
 
   let listenToQuestionPressed = fmapMaybe id $ tagDyn answer listenPressed
 
-  playbackSynthChanged <- connectPlaybackControls 
+  playbackSynthChanged <- connectPlaybackControls
     listenToQuestionPressed exploreAnswerPressed playPressed stopPressed
     dynConfig dynSource
     (render sysResources)
@@ -149,13 +149,13 @@ multipleChoiceQuestionWidget maxTries answers exId exInstructions cWidget render
   let datums' = fmap toExerciseDatum datums
   return (datums', playbackSynthChanged, updated dynConfig, navEvents)
 
-connectPlaybackControls :: MonadWidget t m 
-  => Event t a 
-  -> Event t a 
-  -> Event t () 
-  -> Event t () 
-  -> Dynamic t c 
-  -> Dynamic t (Maybe (SourceNodeSpec, Maybe Time)) 
+connectPlaybackControls :: MonadWidget t m
+  => Event t a
+  -> Event t a
+  -> Event t ()
+  -> Event t ()
+  -> Dynamic t c
+  -> Dynamic t (Maybe (SourceNodeSpec, Maybe Time))
   -> (c -> (SourceNodeSpec, Maybe Time) -> Maybe a -> Synth ()) -- ^ AnswerRenderer c a with the resources already applied
   -> m (Event t (Maybe (Synth ())))
 connectPlaybackControls playQuestion exploreAnswer playReference stop dynConfig dynSrc render = do

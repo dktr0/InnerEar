@@ -8,7 +8,7 @@ import Reflex
 
 import InnerEar.Types.ExerciseId
 import InnerEar.Types.Data
-import Reflex.Synth.Synth
+import Sound.MusicW
 import InnerEar.Types.ExerciseNavigation
 
 -- | An Exercise is a uniquely typed value representing all of the components of
