@@ -333,7 +333,7 @@ button.correctButton{
 
 .svgBarContainer {
   width: 50%;
-  background-color: hsl(120,100%,80%);
+  background :linear-gradient(to top, hsl(120,100%,90%), hsl(120,100%,70%));
 }
 
 
@@ -349,24 +349,46 @@ button.correctButton{
 
 .svgBarContainerThreeBars{
   width: 80%;
-  background-color: hsl(120,100%,80%);
+  background :linear-gradient(to top, hsl(120,100%,90%), hsl(120,100%,70%));
 }
 
 .svgBarContainerFiveBars {
   width: 90%;
-  background-color: hsl(120,100%,80%);
+  background :linear-gradient(to top, hsl(120,100%,90%), hsl(120,100%,70%));
 }
 
 .svgBarContainerTenBars {
   width: 90%;
-  background-color: hsl(120,100%,80%);
+  background :linear-gradient(to top, hsl(120,100%,90%), hsl(120,100%,70%));
 }
 
 .svgBarContainerSevenBars{
   width: 80%;
-  background-color: hsl(120,100%,80%);
+  background :linear-gradient(to top, hsl(120,100%,90%), hsl(120,100%,70%));
 }
 
+.pathContainer {
+  viewBox: 0 0 360 360;
+  margin-top: 20px;
+  margin-left: 60px;
+  max-width: 80%;
+  height: 300px;
+  background: transparent;
+}
+
+.percentageCircle {
+  fill:none;
+  stroke-width:15;
+  stroke-linecap: round;
+
+}
+
+.ovalScoreBar{
+  border-radius: 15px;
+  stroke-linecap: round;
+
+/*  background: linear-gradient(to top right, orange,yellow);*/
+}
 
 .makeButtonContainer{
   display: flex;
@@ -551,6 +573,26 @@ right:80%;
 .emptyScoreLabel{
   color:transparent;
      font-size: 70%;
+}
+
+.ovalGraphLabel{
+   color: hsl(120,100%,80%);
+   text-align: center;
+   font-size: 100%;
+  position: relative;
+  width: 5%;
+  left: 33%;
+  top: 10%;
+}
+
+.circularGrapLabel{
+   color: hsl(120,100%,80%);
+   text-align: center;
+   font-size: 120%;
+  position: relative;
+  width: 5%;
+  left: 8%;
+  top: 20%;
 }
 
 .xLabel {
@@ -843,6 +885,7 @@ transform: rotate(-90deg);
 }
 
 
+
 .scoreBarWrapperHist {
     display: inline-block;
   position: relative;
@@ -886,8 +929,16 @@ transform: rotate(-90deg);
   position: relative;
   bottom:55%;
   width:8%;
+
 }
 
+.ovalScoreWrapper {
+  display: flex;
+  height: 30px;
+  border-radius: 15px;
+  width: 26.7%;
+  background-color: lightgray;
+}
 
 .explanation{
   text-align: justify;

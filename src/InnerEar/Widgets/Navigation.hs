@@ -74,6 +74,7 @@ includedExercises = [
   FrequencyEnvelope
   ]
 
+
 buttonForExercise :: MonadWidget t m => ExerciseId -> m (Event t Navigation)
 buttonForExercise x = elClass "div" "navButton" $ do
   y <- button (showExerciseTitle x)
@@ -125,7 +126,7 @@ navigationPage responses currentRole (ExercisePage FrequencyEnvelope) =
   runExerciseForNavigationPage leftRightCentreExercise responses currentRole -}
 
 navigationPage responses currentRole TestPage = do
-  testOurDynSvg
+--  testOurDynSvg
   (requests,sounds,navUnit) <- testWidget responses
   return (requests,sounds,SplashPage <$ navUnit)
 

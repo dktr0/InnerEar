@@ -26,25 +26,6 @@ evalGraphFrame xMainLabel graphLabel = do
   elClass "div" "graphLabel" $ text graphLabel
   return ()
 
-
---answerCases :: String -> String?
-answerCases a = case (show a) of "Answer {frequency = Bass (155 Hz)}" -> "Bass (155 Hz)"
-                                 "Answer {frequency = Low Mids (1125 Hz)}" -> "Low Mids (1125 Hz)"
-                                 "Answer {frequency = High Mids (3 kHz)}" -> "High Mids (3 kHz)"
-                                 "Answer {frequency = Presence (5 kHz)}" -> "Presence (5 kHz)"
-                                 "Answer {frequency = Brilliance (13 kHz)}" -> "Brilliance (13 kHz)"
-                                 "Answer {frequency = 31}" ->  "31Hz"
-                                 "Answer {frequency = 63}" -> "63Hz"
-                                 "Answer {frequency = 125}" -> "125Hz"
-                                 "Answer {frequency = 250}" -> "250Hz"
-                                 "Answer {frequency = 500}" -> "500Hz"
-                                 "Answer {frequency = 1k}" ->  "1k"
-                                 "Answer {frequency = 2k}" ->  "2k"
-                                 "Answer {frequency = 4k}" ->  "4k"
-                                 "Answer {frequency = 8k}" ->  "8k"
-                                 "Answer {frequency = 16k}" -> "16k"
-                                 _ -> show a
-
 displayMultipleChoiceEvaluationGraph :: (MonadWidget t m, Show a, Ord a) => (String, String, String, String) -> String -> String -> [a] -> Dynamic t (Map a Score) -> m ()
 displayMultipleChoiceEvaluationGraph (scoreBarWrapperClass, svgBarContainerClass, svgFaintedLineClass, xLabelClass) graphLabel qLabel possibilities scoreMap = elClass "div" "specEvalWrapper" $ do
       scoreList <- mapDyn (\x -> fmap (\y -> Data.Map.lookup y x) possibilities) scoreMap -- m (Dynamic t [Maybe Score])
@@ -55,6 +36,7 @@ displayMultipleChoiceEvaluationGraph (scoreBarWrapperClass, svgBarContainerClass
       where f k d = scoreBar (scoreBarWrapperClass, svgBarContainerClass, svgFaintedLineClass, xLabelClass) (show k) d
 
 
+--a historical evaluation graph
 displayHistoricalEvaluationGraph :: (MonadWidget t m, Show a, Ord a) => String -> String -> [a] -> Dynamic t (Map a Score) -> m ()
 displayHistoricalEvaluationGraph graphLabel qLabel possibilities currentScoreMap = elClass "div" "specEvalWrapper" $ do
      currentScoreList <- mapDyn (\x -> fmap (\y -> Data.Map.lookup y x) possibilities) currentScoreMap

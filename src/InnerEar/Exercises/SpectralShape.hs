@@ -18,7 +18,7 @@ import InnerEar.Widgets.SpecEval
 import InnerEar.Types.Data
 import InnerEar.Types.Frequency
 import InnerEar.Types.Utility
-import InnerEar.Widgets.SpecGraph
+import InnerEar.Widgets.ScoreGraphs
 import InnerEar.Widgets.Lines
 import InnerEar.Widgets.AnswerButton
 import InnerEar.Widgets.Utility
