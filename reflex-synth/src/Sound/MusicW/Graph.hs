@@ -1,26 +1,35 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
-module Reflex.Synth.Graph (
-  Graph,
-  Change,
-  Synth,
+module Sound.MusicW.Graph (
+  Graph(..),
+  Change(..),
+  Synth(..),
   SynthBuilder,
-  Reference,
+  Reference(..),
+  NodeProps(..),
   Env,
   buildSynth,
+  buildSynth_,
   synthSource,
+  synthSourceSink,
   synthSink,
+  getNodeId,
   audioParamSink,
   setParamValue,
   linearRampToParamValue,
   exponentialRampToParamValue,
-  curveToParamValue
+  curveToParamValue,
+  setDeletionTime,
+  maybeDelete
 ) where
 
 import qualified Data.Map as Map
+
+import Control.Monad (void)
 import Control.Monad.Trans.Class
 import Control.Monad.Trans.State
-import Reflex.Synth.Spec
+
+import Sound.MusicW.Spec
 
 -- See https://wiki.haskell.org/New_monads/MonadUnique for a simple monad transformer to support
 -- generating unique values.
@@ -42,12 +51,15 @@ evalUniqueT (UniqueT s) = evalStateT s 0
 
 type AudioParam = String
 
-data Reference = RefToNode Integer | RefToParamOfNode Integer AudioParam deriving (Show)
+data Reference
+  = RefToNode Integer
+  | RefToParamOfNode Integer AudioParam
+  deriving (Show)
 
-data NodeProps =
-  SourceSpec SourceNodeSpec |
-  SourceSinkSpec NodeSpec |
-  SinkSpec SinkNodeSpec
+data NodeProps
+  = SourceSpec SourceNodeSpec
+  | SourceSinkSpec SourceSinkNodeSpec
+  | SinkSpec SinkNodeSpec
   deriving (Show)
 
 type Env = Map.Map Integer NodeProps
@@ -71,6 +83,7 @@ data Synth a = Synth {
     env :: Env,
     changes :: [Change],
     deletionTime :: Maybe Time,
+    -- TODO preDelete :: Bool, delete what ever is already going on and start this one
     supplement :: a
   } deriving (Show)
 
@@ -78,6 +91,9 @@ type SynthBuilder = UniqueT Synth
 
 buildSynth :: SynthBuilder a -> Synth a
 buildSynth = evalUniqueT
+
+buildSynth_ :: SynthBuilder a -> Synth ()
+buildSynth_ = void . buildSynth
 
 connectGraphs :: Graph -> Graph -> Graph
 connectGraphs EmptyGraph y = y
@@ -97,10 +113,11 @@ connectGraphs' (x@(Sink _ _):tl, completed) y@(Sink _ _)
 connectGraphs' (hd:tl, completed) y
   | isComplete y = (hd:tl, y:completed)
   | hasSource y  = (y:hd:tl, completed)
-  | otherwise = if isComplete connected
-    then (tl, connected:completed)
-    else (connected:tl, completed)
-  where connected = connectGraphs hd y
+  | otherwise =
+      if isComplete connected
+        then (tl, connected:completed)
+        else (connected:tl, completed)
+      where connected = connectGraphs hd y
 
 connectGraphStacks :: ([Graph], [Graph]) -> ([Graph], [Graph]) -> ([Graph], [Graph])
 connectGraphStacks (incomp1, comp1) ([], comp2) = (incomp1, comp1 ++ comp2)
@@ -155,7 +172,7 @@ synthSource spec = do
   r <- fresh
   lift $ makeSynth r (Source (RefToNode r)) (SourceSpec spec)
 
-synthSourceSink :: NodeSpec -> SynthBuilder Graph
+synthSourceSink :: SourceSinkNodeSpec -> SynthBuilder Graph
 synthSourceSink spec = do
   r <- fresh
   lift $ makeSynth r (SourceSink (RefToNode r) EmptyGraph) (SourceSinkSpec spec)
@@ -174,13 +191,13 @@ makeSynth r g np = Synth {
   supplement = g
 }
 
-audioParamSink :: Graph -> AudioParam -> SynthBuilder Graph
-audioParamSink g p = lift $ Synth {
-  graphs = ([g'],[]),
-  env = Map.empty,
-  changes = [],
-  deletionTime = Nothing,
-  supplement = g
+audioParamSink :: AudioParam -> Graph -> SynthBuilder Graph
+audioParamSink p g = lift $ Synth {
+    graphs = ([g'],[]),
+    env = Map.empty,
+    changes = [],
+    deletionTime = Nothing,
+    supplement = g
   }
   where g' = Sink (RefToParamOfNode (getNodeId g) p) EmptyGraph
 
@@ -199,31 +216,35 @@ change a c = lift $ Synth {
   supplement = a
 }
 
-setParamValue :: Graph -> AudioParam -> Double -> Time -> SynthBuilder Graph
-setParamValue g p v e = change g $ SetValue g p v e
+setParamValue :: AudioParam -> Double -> Time -> Graph -> SynthBuilder Graph
+setParamValue p v e g = change g $ SetValue g p v e
 
-linearRampToParamValue :: Graph -> AudioParam -> Double -> Time -> SynthBuilder Graph
-linearRampToParamValue g p v e = change g $ LinearRampToValue g p v e
+linearRampToParamValue :: AudioParam -> Double -> Time -> Graph -> SynthBuilder Graph
+linearRampToParamValue p v e g = change g $ LinearRampToValue g p v e
 
-exponentialRampToParamValue :: Graph -> AudioParam -> Double -> Time -> SynthBuilder Graph
-exponentialRampToParamValue g p v e = change g $ ExponentialRampToValue g p v e
+exponentialRampToParamValue :: AudioParam -> Double -> Time -> Graph -> SynthBuilder Graph
+exponentialRampToParamValue p v e g = change g $ ExponentialRampToValue g p v e
 
-curveToParamValue :: Graph -> AudioParam -> [Double] -> Time -> Time -> SynthBuilder Graph
-curveToParamValue g p vs s d = change g $ CurveToValue g p vs s d
+curveToParamValue :: AudioParam -> [Double] -> Time -> Time -> Graph -> SynthBuilder Graph
+curveToParamValue p vs s d g = change g $ CurveToValue g p vs s d
 
 setDeletionTime :: Time -> SynthBuilder ()
 setDeletionTime t = lift $ Synth {
-  graphs = ([], []),
-  env = Map.empty,
-  changes = [],
-  deletionTime = Just t,
-  supplement = ()
+    graphs = ([], []),
+    env = Map.empty,
+    changes = [],
+    deletionTime = Just t,
+    supplement = ()
   }
+
+maybeDelete :: Maybe Time -> SynthBuilder () -- move to where setDeletionTime
+maybeDelete = maybe (return ()) (setDeletionTime)
+
 
 test1 :: Synth ()
 test1 = buildSynth $ do
   r <- synthSource $ Oscillator Sine (Hz 440)
-  linearRampToParamValue r "freq" 880 (Sec 4.0)
+  linearRampToParamValue "freq" 880 (Sec 4.0) r
   synthSource $ Oscillator Sine (Hz 220)
   synthSink Destination
   synthSink Destination
@@ -234,5 +255,5 @@ test1 = buildSynth $ do
 
 test2 :: Synth ()
 test2 = buildSynth $ do
-  g <- synthSource $ Oscillator Sine (Hz 440)
+  _ <- synthSource $ Oscillator Sine (Hz 440)
   return ()

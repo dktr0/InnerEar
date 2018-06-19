@@ -7,21 +7,20 @@ import Reflex.Dom
 import Data.Map
 import Text.JSON
 import Text.JSON.Generic
-import Reflex.Synth.Types
+import Sound.MusicW 
+
 
 import InnerEar.Exercises.MultipleChoice
 import InnerEar.Types.ExerciseId
 import InnerEar.Types.Exercise
 import InnerEar.Types.Score
 import InnerEar.Types.MultipleChoiceStore
-import InnerEar.Types.Data
+import InnerEar.Types.Data hiding (Time)
+import InnerEar.Types.Sound
 import InnerEar.Widgets.Config
-import InnerEar.Widgets.UserMedia
 import InnerEar.Widgets.SpecEval
 import InnerEar.Widgets.AnswerButton
 import InnerEar.Widgets.Utility
-
-
 
 type Config = Int -- gain value for attenuated sounds
 
@@ -43,14 +42,16 @@ instance Show Answer where
 instance Buttonable Answer where
   makeButton = showAnswerButton
 
-
-renderAnswer :: Config -> Source -> Maybe Answer -> Sound
-renderAnswer db s (Just (Answer True)) = GainSound (Sound s)  ((fromIntegral db)::Double) -- 2.0 -- should be a sound source attenuated by dB value
-renderAnswer db _ (Just (Answer False)) = NoSound -- 2.0
--- renderAnswer db _ Nothing = GainSound (OverlappedSound "test" oscs) (-20)
---   where oscs = fmap (\x -> DelayedSound (Sound $ NodeSource (OscillatorNode $ Oscillator Sine x 0) (Just 0.5)) (x/100) ) [100::Double,200,300,400,500,600,700,800]
--- renderAnswer db _ Nothing
-renderAnswer db s (Nothing) = GainSound (Sound s) ((fromIntegral db)::Double)
+renderAnswer :: Map String AudioBuffer -> Config -> (SourceNodeSpec, Maybe Time) -> Maybe Answer -> Synth ()
+renderAnswer _ db (src, dur) (Just (Answer True)) = buildSynth $ do
+  let env = maybe (return EmptyGraph) (unitRectEnv (Millis 1)) dur
+  synthSource src >> gain (Db $ fromIntegral db) >> env >> destination
+  maybeDelete (fmap (+ Sec 0.2) dur)
+renderAnswer _ db _ (Just (Answer False)) = buildSynth_ $ silent >> destination
+renderAnswer _ db (src, dur) Nothing = buildSynth $ do
+  let env = maybe (return EmptyGraph) (unitRectEnv (Millis 1)) dur
+  synthSource src >> gain (Db $ fromIntegral db) >> env >> destination
+  maybeDelete (fmap (+ Sec 0.2) dur)
 
 instructionsText = "In this exercise, the system either makes no sound at all \
     \or it plays a sound that has been reduced in level by some specific amount \
@@ -72,12 +73,15 @@ instructions = elClass "div" "instructionsText" $ do
 displayEval :: MonadWidget t m => Dynamic t (Map Answer Score) -> Dynamic t (MultipleChoiceStore Config Answer) -> m ()
 displayEval e _ = displayMultipleChoiceEvaluationGraph' "Session Performance" "" answers e
 
-generateQ :: Config -> [ExerciseDatum] -> IO ([Answer],Answer)
+generateQ :: Config -> [ExerciseDatum] -> IO ([Answer], Answer)
 generateQ _ _ = randomMultipleChoiceQuestion answers
 
-
-sourcesMap:: Map Int (String,Source)
-sourcesMap = fromList $ zip [0::Int,1..] [("Pink noise",NodeSource (BufferNode $ File "pinknoise.wav") (Just 2)), ("White noise", NodeSource (BufferNode $ File "whitenoise.wav") (Just 2)), ("Load a soundfile", NodeSource (BufferNode $ LoadedFile "thresholdOfSilenceExercise" (PlaybackParam 0 1 False)) Nothing)]
+sourcesMap :: Map Int (String, SoundSourceConfigOption)
+sourcesMap = fromList $ [
+    (0, ("Pink noise", Resource "pinknoise.wav" (Just $ Sec 2))),
+    (1, ("White noise", Resource "whitenoise.wav" (Just $ Sec 2))),
+    (2, ("Load a sound file", UserProvidedResource))
+  ]
 
 thresholdOfSilenceExercise :: MonadWidget t m => Exercise t m Int [Answer] Answer (Map Answer Score) (MultipleChoiceStore Config Answer)
 thresholdOfSilenceExercise = multipleChoiceExercise

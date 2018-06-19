@@ -10,8 +10,6 @@ import InnerEar.Types.Response
 import InnerEar.Types.User
 import InnerEar.Types.Handle
 import InnerEar.Widgets.Utility
-import Reflex.Synth.Types
-import Reflex.Synth.Synth
 
 
 userListWidget :: MonadWidget t m

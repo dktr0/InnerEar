@@ -5,10 +5,11 @@ module InnerEar.Exercises.AddedWhiteNoise (addedWhiteNoiseExercise) where
 import Reflex
 import Reflex.Dom
 import Data.Map
+import Data.Maybe
 import Text.JSON
 import Text.JSON.Generic
 
-import Reflex.Synth.Types
+import Sound.MusicW
 import InnerEar.Exercises.MultipleChoice
 import InnerEar.Types.ExerciseId
 import InnerEar.Types.Exercise
@@ -16,7 +17,8 @@ import InnerEar.Types.Score
 import InnerEar.Types.MultipleChoiceStore
 import InnerEar.Widgets.Config
 import InnerEar.Widgets.SpecEval
-import InnerEar.Types.Data
+import InnerEar.Types.Data hiding (Time)
+import InnerEar.Types.Sound
 import InnerEar.Widgets.AnswerButton
 
 type Config = Double -- representing level of attenuation for added white noise
@@ -38,12 +40,18 @@ instance Buttonable Answer where
 
 answers = [Answer False,Answer True]
 
-renderAnswer :: Config -> Source -> Maybe Answer -> Sound
-renderAnswer db (NodeSource node dur) (Just (Answer True)) = OverlappedSound "addedWhiteNoiseExercise"  [GainSound (Sound $ NodeSource node dur) (-10) , GainSound (Sound $ NodeSource (BufferNode $ File "whitenoise.wav") dur ) db] -- should be soundSource (b) at -10 plus whiteNoise at dB
-renderAnswer db b (Just (Answer False)) = OverlappedSound "addedWhiteNoiseExercise" [GainSound (Sound b) (-10)] -- note: this must be an overlapped sound so that it cuts off the previous playing sound...
-renderAnswer db b Nothing = OverlappedSound "addedWhiteNoiseExercise" [GainSound (Sound b) (-10)] -- should also just be soundSource (b) at -10
--- note also: default sound source for this is a 300 Hz sine wave, but user sound files are possible
--- pink or white noise should NOT be possible as selectable sound source types
+renderAnswer :: Map String AudioBuffer -> Config -> (SourceNodeSpec, Maybe Time) -> Maybe Answer -> Synth ()
+renderAnswer sysResources db (src, dur) (Just (Answer True)) = buildSynth $ do
+  -- sticking an EmptyGraph somewhere won't break the stack structure of Synths right?
+  let env = maybe (return EmptyGraph) (unitRectEnv (Millis 1)) dur
+  synthSource src >> gain (Db $ fromIntegral $ -10) >> env >> destination
+  audioBufferSource (sysResources!"whitenoise.wav") (BufferParams 0 1 (isJust dur)) >> gain (Db db) >> env >> destination
+  maybeDelete (fmap (+Sec 0.2) dur)
+renderAnswer _ db (src, dur) _ = buildSynth $ do
+  let env = maybe (return EmptyGraph) (unitRectEnv (Millis 1)) dur
+  synthSource src >> gain (Db $ fromIntegral $ -10) >> env >> destination
+  maybeDelete (fmap (+Sec 0.2) dur)
+
 
 displayEval :: MonadWidget t m => Dynamic t (Map Answer Score) -> Dynamic t (MultipleChoiceStore Config Answer) -> m ()
 displayEval e _ = displayMultipleChoiceEvaluationGraph' "Session Performance" "" answers e
@@ -57,9 +65,13 @@ instructions = el "div" $ do
   elClass "div" "instructionsText" $ text "Note: the exercise will work right away with a sine wave as a reference tone (to which noise is or is not added), however it is strongly recommended that the exercise be undertaken with recorded material such as produced music, field recordings, etc. Click on the sound source menu to load a sound file from the local filesystem."
 
 
+-- Change to SoundSourceConfigOption instead of Source
+sourcesMap :: Map Int (String, SoundSourceConfigOption)
+sourcesMap = fromList $ [
+    (0, ("300hz sine wave", Spec (Oscillator Sine (Hz 300)) (Just $ Sec 2))),
+    (1, ("Load a sound file", UserProvidedResource))
+  ]
 
-sourcesMap:: Map Int (String,Source)
-sourcesMap = fromList $ [(0,("300hz sine wave", NodeSource (OscillatorNode $ Oscillator Sine 440 0) (Just 2))), (1,("Load a soundfile", NodeSource (BufferNode $ LoadedFile "addedWhiteNoiseExercise" (PlaybackParam 0 1 False)) Nothing))]
 
 addedWhiteNoiseExercise :: MonadWidget t m => Exercise t m Config [Answer] Answer (Map Answer Score) (MultipleChoiceStore Config Answer)
 addedWhiteNoiseExercise = multipleChoiceExercise

@@ -2,11 +2,13 @@
 
 module InnerEar.Types.Exercise where
 
+import Data.Map(Map)
+
 import Reflex
 
 import InnerEar.Types.ExerciseId
 import InnerEar.Types.Data
-import Reflex.Synth.Types
+import Sound.MusicW
 import InnerEar.Types.ExerciseNavigation
 
 -- | An Exercise is a uniquely typed value representing all of the components of
@@ -21,5 +23,5 @@ data Exercise t m c q a e s = Exercise {
   defaultEvaluation :: e,
   displayEvaluation :: Dynamic t e -> Dynamic t s -> m (),
   generateQuestion :: c -> [ExerciseDatum] -> IO (q,a),
-  questionWidget ::  c -> e -> Event t (q,a) -> m (Event t ExerciseDatum,Event t Sound, Event t c,Event t ExerciseNavigation)
+  questionWidget :: Map String AudioBuffer -> c -> e -> Event t (q, a) -> m (Event t ExerciseDatum, Event t (Maybe (Synth ())), Event t c, Event t ExerciseNavigation)
 }

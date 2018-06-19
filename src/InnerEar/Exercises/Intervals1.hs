@@ -4,21 +4,22 @@ module InnerEar.Exercises.Intervals1 (intervals1Exercise) where
 
 import Reflex
 import Reflex.Dom
+import Sound.MusicW
+
 import Data.Map
+
 import Text.JSON
 import Text.JSON.Generic
 
-import Reflex.Synth.Types
 import InnerEar.Exercises.MultipleChoice
 import InnerEar.Types.ExerciseId
 import InnerEar.Types.Exercise
 import InnerEar.Types.Score
 import InnerEar.Types.MultipleChoiceStore
-import InnerEar.Widgets.Config
-import InnerEar.Widgets.SpecEval
-import InnerEar.Types.Data
-import InnerEar.Types.Frequency
+import InnerEar.Types.Data hiding (Time)
 import InnerEar.Types.Utility
+import InnerEar.Widgets.SpecEval
+import InnerEar.Widgets.Config
 import InnerEar.Widgets.AnswerButton
 
 type Config = ()
@@ -45,17 +46,29 @@ instance Buttonable Answer where
 
 answers = [P1,M2,M3,P4,P5]
 
+baseTone :: Frequency
+baseTone = Midi 60
+
 -- *** note: random pitches requires renderAnswer to return IO Sound instead of Sound
-renderAnswer :: Config -> Source -> Maybe Answer -> Sound
+--     ^ then the pitch generation belongs in the Config where the config widget can perform the IO
 
-renderAnswer _ _ (Just x) = GainSound (OverlappedSound "why?" [n1,n2]) (-20)
-  where
-    f1 = midicps 60
-    f2 = midicps (60 + answerToSemitones x)
-    n1 = Sound $ NodeSource (OscillatorNode $ Oscillator Triangle f1 0.0) (Just 0.8)
-    n2 = DelayedSound (Sound $ NodeSource (OscillatorNode $ Oscillator Triangle f2 0.0) (Just 1.0)) 1.0
-
-renderAnswer _ _ Nothing = NoSound
+renderAnswer :: Map String AudioBuffer -> Config -> (SourceNodeSpec, Maybe Time) -> Maybe Answer -> Synth ()
+renderAnswer _ _ _ Nothing = buildSynth_ $ silent >> destination
+renderAnswer _ _ _ (Just interval) = buildSynth_ $ do
+  osc <- oscillator Triangle baseTone
+  let amp = Db $ fromIntegral (-20)
+  g <- rectEnv (Millis 100) (Sec 1) amp
+  let firstDur = (Millis $ 2 * 100) + (Sec 1)
+  let rest = Sec 0.5
+  -- Change the frequency of the oscillator after the first playback.
+  setParamValue "frequency" (inHz $ Midi $ answerToSemitones interval + inMidi baseTone) firstDur osc
+  -- Reset for second note and have another rectEnv at firstDur.
+  setParamValue "gain" 0 (firstDur + rest) g
+  linearRampToParamValue "gain" (inAmp amp) (firstDur + rest + Millis 100) g
+  setParamValue "gain" (inAmp amp) (firstDur + rest + Millis 100 + Sec 1) g
+  linearRampToParamValue "gain" 0 (firstDur + rest + Millis (2 * 100) + Sec 1) g
+  destination
+  setDeletionTime (firstDur*2+rest +(Sec 0.5))
 
 instructions :: MonadWidget t m => m ()
 instructions = el "div" $ do
@@ -72,7 +85,7 @@ intervals1Exercise = multipleChoiceExercise
   3
   answers
   instructions
-  (\x-> return (constDyn (), constDyn (NodeSource (SilentNode) $ Just 1), never))
+  (\_ _-> return (constDyn (), constDyn (Just (Silent, Nothing)), never, never))
   renderAnswer
   Intervals1
   ()

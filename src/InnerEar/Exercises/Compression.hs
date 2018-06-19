@@ -8,7 +8,7 @@ import Data.Map
 import Text.JSON
 import Text.JSON.Generic
 
-import Reflex.Synth.Types
+import Sound.MusicW
 import InnerEar.Exercises.MultipleChoice
 import InnerEar.Types.ExerciseId
 import InnerEar.Types.Exercise
@@ -16,7 +16,8 @@ import InnerEar.Types.Score
 import InnerEar.Types.MultipleChoiceStore
 import InnerEar.Widgets.Config
 import InnerEar.Widgets.SpecEval
-import InnerEar.Types.Data
+import InnerEar.Types.Data hiding (Time)
+import InnerEar.Types.Sound
 import InnerEar.Widgets.AnswerButton
 
 type Config = Double -- representing compression ratio, i.e. 2 = 2:1 compression ratio
@@ -38,12 +39,19 @@ instance Buttonable Answer where
 
 answers = [Answer False,Answer True]
 
-
-renderAnswer :: Config -> Source -> Maybe Answer -> Sound
-renderAnswer r b (Just (Answer True)) = GainSound (CompressedSound (Sound b) (Compressor {threshold=(-20),ratio=r,knee=0,attack=0.003,release=0.1})) (-10)
--- should be source (b) compressed at threshold -20 dB with ratio r, then down -10 dB post-compression<
-renderAnswer _ b _ = GainSound (Sound b) (-10) -- should just be source (b) down -10 dB
--- note also: the user MUST provide a sound file (or we might provide some standard ones) - synthetic sources won't work for this
+renderAnswer::Map String AudioBuffer -> Config -> (SourceNodeSpec,Maybe Time)-> Maybe Answer -> Synth ()
+renderAnswer _ ratio (src, dur) (Just (Answer True)) = buildSynth $ do
+  let env = maybe (return EmptyGraph) (unitRectEnv (Millis 1)) dur
+  synthSource src
+  gain $ Db $ fromIntegral $ -10
+  compressor (Db $ -20) (Db 0) (Db ratio) (Sec 0.003) (Sec 0.1)
+  env
+  destination
+  maybeDelete (fmap (+Sec 0.2) dur)
+renderAnswer _ _ (src, dur) _ = buildSynth $ do
+  let env = maybe (return EmptyGraph) (unitRectEnv (Millis 1)) dur
+  synthSource src >> gain (Db $ fromIntegral $ -10) >> env >> destination
+  maybeDelete (fmap (+Sec 0.2) dur)
 
 displayEval :: MonadWidget t m => Dynamic t (Map Answer Score) -> Dynamic t (MultipleChoiceStore Config Answer) -> m ()
 displayEval e _ = displayMultipleChoiceEvaluationGraph' "Session Performance" "" answers e
@@ -57,9 +65,8 @@ instructions = el "div" $ do
   elClass "div" "instructionsText" $ text "In this exercise, a reference sound is either compressed or not and your task is to tell whether or not it has been compressed. The threshold of the compressor is set at -20 dBFS, and you can configure the exercise to work with smaller and smaller ratios for increased difficulty. Note that you must provide a source sound to use for the exercise (click on Browse to the right). Short musical excerpts that consistently have strong levels are recommended."
 
 
-sourcesMap:: Map Int (String,Source)
-sourcesMap = singleton 0 ("Load a soundfile", NodeSource (BufferNode $ LoadedFile "compressionExercise" (PlaybackParam 0 1 False)) Nothing)
-
+sourcesMap:: Map Int (String,SoundSourceConfigOption)
+sourcesMap = singleton 0 ("Load a soundfile", UserProvidedResource)
 
 compressionExercise :: MonadWidget t m => Exercise t m Config [Answer] Answer (Map Answer Score) (MultipleChoiceStore Config Answer)
 compressionExercise = multipleChoiceExercise

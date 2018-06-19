@@ -1,6 +1,9 @@
 {-# LANGUAGE  OverloadedStrings, JavaScriptFFI #-}
 
-module InnerEar.Widgets.Canvas where
+module InnerEar.Widgets.Canvas (
+  rangeSelect,
+  drawSource,
+) where
 
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad (liftM)
@@ -8,17 +11,20 @@ import Data.Map
 import Data.Bool (bool)
 import Reflex
 import Reflex.Dom as D
-import  GHCJS.Types (JSString)
+import Data.JSString(JSString, pack)
 import qualified GHCJS.DOM.Types as DT
 import GHCJS.Marshal.Pure (pToJSVal)
 import GHCJS.DOM.EventM
 
+import Sound.MusicW
 
+
+import InnerEar.Types.Sound
 import InnerEar.Widgets.Utility
 
 data CanvasEvent = ClickEvent {value::Double} | DragEvent {value::Double} | ReleaseEvent {value::Double} deriving (Show)
 
-toPercent:: CanvasEvent -> Double -> CanvasEvent
+toPercent :: CanvasEvent -> Double -> CanvasEvent
 toPercent (ClickEvent a) b = ClickEvent (a/b)
 toPercent (DragEvent a) b = DragEvent (a/b)
 toPercent (ReleaseEvent a) b = ReleaseEvent (a/b)
@@ -29,7 +35,7 @@ data RangeState = RangeState {
     dragging :: Maybe (Either Double Double)
   } deriving (Show)
 
-updateRangeState::  CanvasEvent -> RangeState -> RangeState
+updateRangeState :: CanvasEvent -> RangeState -> RangeState
 updateRangeState (ClickEvent x) (RangeState l r Nothing)    -- catching when line has been clicked/ whether or not the click was in a 10% range
   | x>= l-0.05 && x <= l+0.05 = RangeState l r (Just $ Left x)
   | x>= r-0.05 && x <= r+0.05 = RangeState l r (Just $ Right x)
@@ -49,7 +55,7 @@ updateRangeState (ReleaseEvent x) (RangeState l r (Just (Right _)))
 
 --
 
-rangeSelect :: MonadWidget t m =>   Dynamic t Bool -> (Double,Double) ->  m (Dynamic t (Double,Double))
+rangeSelect :: MonadWidget t m => Dynamic t Bool -> (Double, Double) -> m (Dynamic t (Double, Double))
 rangeSelect visible (l,r) = do
   let initialRangeState = RangeState l r Nothing
   (canvasElement,canvasPostBuild) <- liftM (\(a,b)->(_el_element a,b)) $ elClass' "canvas" "startEndCanvas" $ getPostBuild
@@ -70,7 +76,7 @@ rangeSelect visible (l,r) = do
   performEvent_ $ fmap (\(r,visible)-> liftIO (if visible then drawRange htmlCanvasEl r else clearCanvas htmlCanvasEl)) $ attachDyn rangeState $ leftmost [updated visible, tagDyn visible canvasPostBuild]
   forDyn rangeState $ \x -> (leftRange x, rightRange x)
 
-drawRange:: DT.HTMLCanvasElement -> RangeState -> IO ()
+drawRange :: DT.HTMLCanvasElement -> RangeState -> IO ()
 drawRange canvas (RangeState l r drag)  = do
   clearCanvas canvas
   w <- getWidth canvas
@@ -82,6 +88,43 @@ drawRange canvas (RangeState l r drag)  = do
   fillRect canvas 0 0 (l*w) h
   fillRect canvas (r*w) 0 (w-r*w) h
 
+drawSource :: DT.HTMLCanvasElement -> SoundSource -> IO ()
+drawSource canvas (SourceLoading) = drawSourceLoadingOnCanvas canvas
+drawSource canvas (SourceError s) = drawSourceErrorOnCanvas canvas (pack s)
+drawSource canvas (SourceUnderSpecified) = drawSourceUnderSpecifiedOnCanvas canvas
+drawSource canvas (SourceLoaded src _) = drawSourceNodeSpecOnCanvas canvas src
+
+drawSourceNodeSpecOnCanvas :: DT.HTMLCanvasElement -> SourceNodeSpec -> IO ()
+drawSourceNodeSpecOnCanvas canvas Silent = do
+  clearCanvas canvas
+  w <- getWidth canvas
+  h <- getHeight canvas
+  fillStyle canvas "rgb(180,180,180)"
+drawSourceNodeSpecOnCanvas canvas (Oscillator t f) = do
+  clearCanvas canvas
+  drawOscOnCanvas canvas (pack $ show t) (inHz f)
+drawSourceNodeSpecOnCanvas canvas (AudioBufferSource buf p) = do
+  clearCanvas canvas
+  drawBufferOnCanvas canvas buf
+
+
+
+foreign import javascript unsafe
+  "drawBufferOnCanvas($2, $1)" drawBufferOnCanvas:: DT.HTMLCanvasElement -> AudioBuffer ->   IO ()
+
+-- maybe implement this in haskell
+foreign import javascript unsafe
+  "drawOscOnCanvas($1, $2, $3)" drawOscOnCanvas:: DT.HTMLCanvasElement -> JSString -> Double -> IO ()
+
+foreign import javascript unsafe
+  "drawSourceLoadingOnCanvas($1)" drawSourceLoadingOnCanvas:: DT.HTMLCanvasElement -> IO ()
+
+foreign import javascript unsafe
+  "drawSourceErrorOnCanvas($1, $2)" drawSourceErrorOnCanvas:: DT.HTMLCanvasElement -> JSString ->  IO ()
+
+foreign import javascript unsafe
+  "drawSourceUnderSpecifiedOnCanvas($1);"
+  drawSourceUnderSpecifiedOnCanvas :: DT.HTMLCanvasElement -> IO ()
 
 foreign import javascript unsafe
   "$1.getContext('2d').fillStyle = $2" fillStyle :: DT.HTMLCanvasElement -> JSString -> IO ()

@@ -5,26 +5,28 @@ module InnerEar.Widgets.Exercise where
 import Reflex
 import Reflex.Dom
 import Control.Monad.IO.Class (liftIO)
-import Control.Monad (liftM)
+import Control.Monad (liftM, void)
 import Text.JSON
 import Text.JSON.Generic
 import Data.Maybe
 import Data.Either
+import Data.Map(Map)
 
 import InnerEar.Types.ExerciseId
 import InnerEar.Widgets.Utility
 import InnerEar.Types.Data
-import Reflex.Synth.Types
 import InnerEar.Types.ExerciseNavigation
 import InnerEar.Types.Exercise
 import InnerEar.Types.Response
+
+import Sound.MusicW
 
 -- | runExercise takes a completely defined Exercise value and uses it to run an ear-training
 -- exercise in the browser.
 
 runExercise :: forall t m c q a e s. (MonadWidget t m, Data c, Data q, Data a, Data e, Data s, Show c, Show q, Show a, Show e)
-  => Exercise t m c q a e s -> Event t [Response] -> m (Event t (ExerciseId,ExerciseDatum),Event t Sound,Event t ())
-runExercise ex responses = mdo
+  => Map String AudioBuffer -> Exercise t m c q a e s -> Event t [Response] -> m (Event t (ExerciseId,ExerciseDatum),Event t (Maybe (Synth ())),Event t ())
+runExercise sysResources ex responses = mdo
 
   -- form databank for exercise by folding together pertinent database entries plus data transmitted up
   let records = ffilter (\x -> length x > 0) $ fmap (catMaybes . (fmap justRecordResponses)) responses -- Event t [Record]
@@ -36,8 +38,8 @@ runExercise ex responses = mdo
   currentData <- foldDyn (++) [] $ leftmost [datadown, questionWidgetData']
 
   -- Question Widget
-  (questionWidgetData,sounds,configUpdate,questionNav) <- elClass "div" "exerciseQuestion" $ do
-    (questionWidget ex) (defaultConfig ex) (defaultEvaluation ex) question
+  (questionWidgetData, sounds, configUpdate, questionNav) <- elClass "div" "exerciseQuestion" $ do
+    (questionWidget ex) sysResources (defaultConfig ex) (defaultEvaluation ex) question
   config <- holdDyn (defaultConfig ex) configUpdate
 
   -- Question (with generateQuestion called again with each transition to Question)
@@ -59,4 +61,4 @@ runExercise ex responses = mdo
   let allData = (leftmost [startedData,configData,newQuestionData,endedData]) :: Event t (Datum c q a e s)
   let exerciseData = leftmost [questionWidgetData,toExerciseDatum <$> allData]
   let dataPairedWithId = (\x -> (exerciseId ex,x)) <$> exerciseData
-  return (dataPairedWithId,sounds,closeExercise)
+  return (dataPairedWithId, sounds, closeExercise)

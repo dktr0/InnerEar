@@ -8,6 +8,7 @@ import Reflex.Dom.Contrib.Widgets.ButtonGroup (radioGroup)
 import Reflex.Dom.Contrib.Widgets.Common
 import Data.Map
 import Control.Monad (zipWithM)
+import Control.Monad.IO.Class (liftIO)
 import Data.List (findIndices,partition,elemIndex)
 import Data.Maybe (fromJust)
 import System.Random
@@ -15,16 +16,15 @@ import Text.JSON
 import Text.JSON.Generic
 
 import InnerEar.Types.ExerciseId
-import InnerEar.Types.Data
+import InnerEar.Types.Data hiding (Time)
 import InnerEar.Types.Exercise
 import InnerEar.Types.ExerciseNavigation
 import InnerEar.Types.Score
 import InnerEar.Types.MultipleChoiceStore
 import InnerEar.Types.Utility
 import InnerEar.Widgets.Utility
-import InnerEar.Widgets.UserMedia
 import InnerEar.Widgets.AnswerButton
-import Reflex.Synth.Types
+import Sound.MusicW 
 
 -- | This module introduces a function to generate multiple choice exercises.
 -- Most specifically, it abstracts over the requirement to provide a widget
@@ -32,12 +32,20 @@ import Reflex.Synth.Types
 -- answers be provided, together with a pure function that converts an answer
 -- value to a sound.
 
+-- | AnswerRenderer takes the system resources, a question configuration, sound source,
+-- and a potential answer and builds a `Synth` for that answer. If the answer is `Nothing` a
+-- reference synth should be constructed.
+type AnswerRenderer c a = Map String AudioBuffer -> c -> (SourceNodeSpec, Maybe Time) -> Maybe a -> Synth ()
+
+-- | ConfigWidgetBuilder constructs a configuration widget with a given default configuration.
+type ConfigWidgetBuilder m t c a = Map String AudioBuffer -> c -> m (Dynamic t c, Dynamic t (Maybe (SourceNodeSpec, Maybe Time)), Event t (), Event t ())
+
 multipleChoiceExercise :: forall t m c q a e s. (MonadWidget t m, Show a, Eq a, Ord a, Data a, Data c, Ord c,Buttonable a)
   => Int -- maximum number of tries to allow
   -> [a]
   -> m ()
-  -> (c->m (Dynamic t c,  Dynamic t Source,  Event t (Maybe a))) -- dyn config, source, and event maybe answer for playing reference sound (config widget)
-  -> (c -> Source -> Maybe a -> Sound) -- function to produce a sound from an answer, where a Nothing answer is to be interpreted as a reference sound (or
+  -> ConfigWidgetBuilder m t c a
+  -> AnswerRenderer c a
   -> ExerciseId
   -> c
   -> (Dynamic t (Map a Score) -> Dynamic t (MultipleChoiceStore c a) -> m ())
@@ -60,16 +68,17 @@ multipleChoiceQuestionWidget :: forall t m c q a e s. (MonadWidget t m, Show a, 
   -> [a] -- fixed list of potential answers
   -> ExerciseId
   -> m ()
-  -> (c->m (Dynamic t c,  Dynamic t Source,  Event t (Maybe a))) -- dyn config, source, and event maybe answer for playing reference sound (config widget)
-  -> (c -> Source -> Maybe a -> Sound) -- function to produce a sound from an answer, where a Nothing answer is to be interpreted as a reference sound (or some other sound not a question)
+  -> ConfigWidgetBuilder m t c a
+  -> AnswerRenderer c a
   -> (Dynamic t (Map a Score) -> Dynamic t (MultipleChoiceStore c a) -> m ())
   -> (Map c (Map a Score) -> (Int,Int))
+  -> Map String AudioBuffer
   -> c
   -> Map a Score
   -> Event t ([a],a)
-  -> m (Event t ExerciseDatum,Event t Sound,Event t c,Event t ExerciseNavigation)
+  -> m (Event t ExerciseDatum,Event t (Maybe (Synth ())),Event t c,Event t ExerciseNavigation)
 
-multipleChoiceQuestionWidget maxTries answers exId exInstructions cWidget render eWidget calculateXp config initialEval newQuestion = elClass "div" "exerciseWrapper" $ mdo
+multipleChoiceQuestionWidget maxTries answers exId exInstructions cWidget render eWidget calculateXp sysResources config initialEval newQuestion = elClass "div" "exerciseWrapper" $ mdo
 
   let initialStore = MultipleChoiceStore { scores = empty, xp = (0,1) } -- normally this would come as an argument, then reset session specific elements of store
   let newScoreMaps = fmap (newScores calculateXp) $ updated evaluations
@@ -78,20 +87,21 @@ multipleChoiceQuestionWidget maxTries answers exId exInstructions cWidget render
 
   let initialState = initialMultipleChoiceState config answers maxTries
   let newQuestionAndConfig = attachDyn dynConfig newQuestion
-  let newQuestion' = fmap (\(c,q) -> newQuestionMultipleChoiceState c q) newQuestionAndConfig
-  questionHeard0 <- holdDyn False $ leftmost [False <$ newQuestion,True <$ playQuestion]
+  let newQuestion' = fmap (\(c, q) -> newQuestionMultipleChoiceState c q) newQuestionAndConfig
+  questionHeard0 <- holdDyn False $ leftmost [False <$ newQuestion, True <$ listenPressed]
   let questionHeard = nubDyn questionHeard0
-  let questionHeard' = fmap (const onceQuestionHeard) $ ffilter (==True) $ updated questionHeard
+  let questionHeard' = fmap (const onceQuestionHeard) $ ffilter (== True) $ updated questionHeard
   let answerPressed' = fmap answerSelected answerPressed
-  let stateChanges = leftmost [newQuestion',questionHeard', answerPressed']
+  let stateChanges = leftmost [newQuestion', questionHeard', answerPressed']
   multipleChoiceState <- foldDyn ($) initialState stateChanges
   modes <- mapDyn answerButtonModes multipleChoiceState
   modes' <- mapM (\x-> mapDyn (!!x) modes) [0,1..9]
   -- scores <- mapDyn scoreMap multipleChoiceState
-  scores <- combineDyn (\x y -> maybe empty id $ Data.Map.lookup x (scoreMap y) ) dynConfig multipleChoiceState
+  scores <- combineDyn (\x y -> maybe empty id $ Data.Map.lookup x (scoreMap y)) dynConfig multipleChoiceState
 
-  -- user interface
-  (closeExercise,playQuestion,answerPressed,nextQuestionNav) <- elClass "div" "topRow" $ do
+  -- MC question controls and answer input.
+  -- (Event t ExerciseNavigation, Event t (), Event t a, Event t ExerciseNavigation)
+  (closeExercise, listenPressed, answerPressed, nextQuestionNav) <- elClass "div" "topRow" $ do
     w <- elClass "div" "topRowHeader" $ do
       elClass "div" "questionTitle" $ text $ ("Exercise: " ++ showExerciseTitle exId)
       elClass "div" "closeExerciseButton" $ buttonClass "Close" "closeExerciseButton"
@@ -102,14 +112,16 @@ multipleChoiceQuestionWidget maxTries answers exId exInstructions cWidget render
         leftmost <$> zipWithM makeButton answers modes'
 
       z <- elClass "div" "nextButton" $ revealableButton "Next" "nextButton" questionHeard
-      return (x,y,z)
-    return (CloseExercise <$ w,x,y,InQuestion <$ z)
+      return (x, y, z)
+    return (CloseExercise <$ w, x, y, InQuestion <$ z)
 
-  (dynConfig, dynSource, playReference) <- elClass "div" "middleRow" $ do
+  -- Instructions and configuration widgets.
+  -- (Dynamic t c, Dynamic t (Maybe SourceNodeSpec), Event t (), Event t ())
+  (dynConfig, dynSource, playPressed, stopPressed) <- elClass "div" "middleRow" $ do
     elClass "div" "evaluation" $ exInstructions
     elClass "div" "journal" $ do
       text "Configuration"
-      elClass "div"  "configWidgetWrapper" $ cWidget config
+      elClass "div"  "configWidgetWrapper" $ cWidget sysResources config
 
   journalData <- elClass "div" "bottomRow" $ do
     elClass "div" "evaluation" $ do
@@ -117,24 +129,26 @@ multipleChoiceQuestionWidget maxTries answers exId exInstructions cWidget render
     elClass "div" "journal" $ journalWidget
 
   let answerEvent = gate (fmap (==AnswerMode) . fmap mode . current $ multipleChoiceState) answerPressed
-  let exploreEvent = gate (fmap (==ExploreMode) . fmap mode . current $ multipleChoiceState) answerPressed
+  let exploreAnswerPressed = gate (fmap (==ExploreMode) . fmap mode . current $ multipleChoiceState) answerPressed
 
   -- generate sounds to be played
   answer <- holdDyn Nothing $ fmap (Just . snd) newQuestion
 
-  let questionSound = fmapMaybe id $ tagDyn answer playQuestion
-  let soundsToRender = leftmost [fmap Just questionSound, fmap Just exploreEvent, playReference]
-  sourceAndConfig <- combineDyn (,) dynConfig dynSource
-  let playSounds = attachDynWith (\(c,s) r->render c s r) sourceAndConfig soundsToRender
+  let listenToQuestionPressed = fmapMaybe id $ tagDyn answer listenPressed
 
-  let navEvents = leftmost [closeExercise,nextQuestionNav]
+  playbackSynthChanged <- connectPlaybackControls
+    listenToQuestionPressed exploreAnswerPressed playPressed stopPressed
+    dynConfig dynSource
+    (render sysResources)
+
+  let navEvents = leftmost [closeExercise, nextQuestionNav]
 
   -- generate data for adaptive questions and analysis
-  let questionWhileListened = (\x -> (possibleAnswers x,correctAnswer x)) <$> tagDyn multipleChoiceState playQuestion
-  let listenedQuestionData = attachDynWith (\c (q,a)-> ListenedQuestion c q a) dynConfig questionWhileListened
+  let questionWhileListened = (\x -> (possibleAnswers x, correctAnswer x)) <$> tagDyn multipleChoiceState listenPressed
+  let listenedQuestionData = attachDynWith (\c (q, a)-> ListenedQuestion c q a) dynConfig questionWhileListened
 
-  let questionWhileReference = (\x -> (possibleAnswers x,correctAnswer x)) <$> tagDyn multipleChoiceState playReference
-  let listenedReferenceData = attachDynWith (\c (q,a) -> ListenedReference c q a) dynConfig questionWhileReference
+  let questionWhileReference = (\x -> (possibleAnswers x,correctAnswer x)) <$> tagDyn multipleChoiceState playPressed
+  let listenedReferenceData = attachDynWith (\c (q, a) -> ListenedReference c q a) dynConfig questionWhileReference
   evaluations <- mapDyn scoreMap multipleChoiceState
  
   mcsAndConfig <- combineDyn (,) dynConfig multipleChoiceState
@@ -145,7 +159,32 @@ multipleChoiceQuestionWidget maxTries answers exId exInstructions cWidget render
   let listenedExploreData = attachDynWith (\c (q,a,s) -> ListenedExplore s c q a) dynConfig questionWhileExplore
   let datums = leftmost [listenedQuestionData,listenedReferenceData, answerData,listenedExploreData,journalData] :: Event t (Datum c [a] a (Map a Score) (MultipleChoiceStore c a))
   let datums' = fmap toExerciseDatum datums
-  return (datums', playSounds,updated dynConfig,navEvents)
+  return (datums', playbackSynthChanged, updated dynConfig, navEvents)
+
+connectPlaybackControls :: MonadWidget t m
+  => Event t a
+  -> Event t a
+  -> Event t ()
+  -> Event t ()
+  -> Dynamic t c
+  -> Dynamic t (Maybe (SourceNodeSpec, Maybe Time))
+  -> (c -> (SourceNodeSpec, Maybe Time) -> Maybe a -> Synth ()) -- ^ AnswerRenderer c a with the resources already applied
+  -> m (Event t (Maybe (Synth ())))
+connectPlaybackControls playQuestion exploreAnswer playReference stop dynConfig dynSrc render = do
+  let triggerPlay = leftmost [Just <$> playQuestion, Just <$> exploreAnswer, Nothing <$ playReference]
+  let triggerStop = Nothing <$ stop
+
+  -- Dynamic t (c, Maybe (SourceNodeSpec, Maybe Time))
+  dynRenderSrc <- combineDyn (,) dynConfig dynSrc
+  -- Event t ((c, Maybe (SourceNodeSpec, Maybe Time)), Maybe a)
+  let triggerPlay' = attachDyn dynRenderSrc triggerPlay
+  let triggerPlay'' = fmap (uncurry renderAnswerSound) triggerPlay'
+
+  return $ leftmost [triggerStop, triggerPlay'']
+  where
+    -- (c, Maybe (SourceNodeSpec, Maybe Time)) -> Maybe a -> Maybe (Synth ())
+    renderAnswerSound (_, Nothing) _ = Nothing
+    renderAnswerSound (cfg, Just srcAndDur) ans = Just $ render cfg srcAndDur ans
 
 journalWidget :: MonadWidget t m => m (Event t (Datum c q a e s))
 journalWidget = elClass "div" "journalItem" $ mdo
