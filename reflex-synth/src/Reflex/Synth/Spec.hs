@@ -1,14 +1,14 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Reflex.Synth.Spec (
-  module Reflex.Synth.Spec,
+module Sound.MusicW.Spec (
+  module Sound.MusicW.Spec,
   AudioBuffer
 ) where
 
 import GHCJS.Marshal.Pure
 import GHCJS.Types
 
-import Reflex.Synth.AudioRoutingGraph
+import Sound.MusicW.AudioRoutingGraph
 
 data SourceNodeSpec
   = Silent

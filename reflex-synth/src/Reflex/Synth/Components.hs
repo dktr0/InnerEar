@@ -1,10 +1,10 @@
-module Reflex.Synth.Components where
+module Sound.MusicW.Components where
 
 import Reflex.Synth.Graph
 import Reflex.Synth.Spec
 import GHCJS.Prim(toJSString)
 
-import Reflex.Synth.AudioRoutingGraph
+import Sound.MusicW.AudioRoutingGraph
 
 -- Nodes
 

@@ -1,4 +1,4 @@
-module Reflex.Synth.Synthstance (
+module Sound.MusicW.Synthstance (
   instantiateSynth,
   startSynth,
   startSynthNow,
@@ -6,9 +6,9 @@ module Reflex.Synth.Synthstance (
   stopSynthNow
 ) where
 
-import Reflex.Synth.Graph
-import Reflex.Synth.Node
-import Reflex.Synth.Spec
+import Sound.MusicW.Graph
+import Sound.MusicW.Node
+import Sound.MusicW.Spec
 import Data.Foldable(find)
 import Data.Map(Map,(!))
 
