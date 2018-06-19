@@ -2,8 +2,14 @@
 module InnerEar.Widgets.Client where
 
 import Control.Monad.IO.Class (liftIO)
+import Control.Monad (forM)
 
-import Data.Map(Map)
+import GHCJS.Types
+import GHCJS.Marshal.Internal
+import GHCJS.Foreign.Callback
+
+import Data.Map(Map, fromList, empty)
+import Data.JSString(JSString, pack)
 
 import Reflex
 import Reflex.Dom
@@ -17,6 +23,7 @@ import InnerEar.Widgets.Login
 import InnerEar.Widgets.Navigation
 import qualified InnerEar.WebSocket as WS
 import Reflex.Synth.Synth
+import Reflex.Synth.AudioRoutingGraph
 
 -- | The clientWidget is the top-level widget in the Inner Ear web client.
 -- If the user is logged in as an authenticated user, it displays that.
@@ -50,3 +57,37 @@ clientWidget sysResources = elClass "div" "innerEar" $ mdo
   let wsSend = leftmost [x,y]
   performSynth synthEv
   return ()
+
+loadGlobalResources :: MonadWidget t m => m ( Event t  (Map String AudioBuffer))
+loadGlobalResources = do
+  let sources = ["pinknoise.wav", "whitenoise.wav"]
+  pb <- getPostBuild
+  bufferEv <- loadResources $ fmap (const sources) pb -- Ev (Map String Buffer)
+  let r = fmap (fmap js_getAudioBuffer) bufferEv -- Ev (Map String (IO AudioBuffer))
+  let r' = fmap (liftIO . sequence) r  -- ev (io (Map String AudioBuffer))
+  performEvent r'
+
+loadResources:: MonadWidget t m => Event t [String] -> m (Event t (Map String Buffer))
+loadResources ev = do
+  bufferEv <- performEvent $ ffor ev $ \fileNames -> liftIO $ do                     -- Ev t [(String,Buffer)]
+    ctx <- js_setupGlobalAudioContext -- really just get global ac
+    forM fileNames $ \s -> do
+      buf <- js_createBufferFromURL (pack s) ctx
+      return (s,buf)
+  stateChangeEv <- performEventAsync $ ffor bufferEv $ \buffers evTrigger -> liftIO $ do  -- Event t [Buffer]
+    -- cbs <- forM buffers $ \(s,buf) -> asyncCallback1 $ \buf -> evTrigger (Buffer buf)  -- IO [cb]
+    cb <- asyncCallback1 $ \bufs -> do
+      maybeBufs <- fromJSValListOf bufs -- IO (Maybe [Buffer])
+      evTrigger (maybe [] (fmap Buffer) maybeBufs)
+    func (fmap snd buffers) cb
+    releaseCallback cb
+  statusEv <- performEvent $ ffor stateChangeEv $ \buffers -> do   -- Event t [Maybe BufferStatus]
+    liftIO $ sequence $ fmap bufferStatus buffers -- IO [(Maybe BufferStatus)] then lifted
+  let areLoaded = fmap (and . fmap (maybe False (isBufferLoaded))) statusEv
+  dynBuffers <- holdDyn Data.Map.empty $ fmap fromList bufferEv
+  return $ tagDyn dynBuffers $ ffilter id areLoaded
+  where
+    func:: [Buffer] -> Callback (JSVal -> IO ()) -> IO ()
+    func b cb  = do
+      listJSVal <- toJSValListOf b
+      js_startLoadingAndDecodingMultiple listJSVal cb

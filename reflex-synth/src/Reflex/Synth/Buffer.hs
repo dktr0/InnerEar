@@ -1,24 +1,22 @@
 module Reflex.Synth.Buffer (
   Buffer(..),
   BufferStatus(..),
-<<<<<<< HEAD
-  mapToBuffer,
-  buffer,
-  loadGlobalResources
+  bufferStatus,
+  createBuffer,
+  startLoadingAndDecodingWithCallback,
+  js_getAudioBuffer,
+  js_createBufferFromURL,
+  js_startLoadingAndDecodingMultiple,
+  isBufferLoaded
 ) where
+
+
 
 import Control.Monad.IO.Class
 import Control.Monad (forM,liftM)
 import Data.Map
-import Data.JSString(JSString, unpack, pack)
-=======
-  bufferStatus,
-  createBuffer,
-  startLoadingAndDecodingWithCallback,
-) where
+import Data.JSString(JSString, unpack)
 
-import Data.JSString(unpack)
->>>>>>> 5aea6419105b66b4b1be5738978928691c8d9f26
 
 import GHCJS.DOM.File
 import GHCJS.Types
@@ -64,49 +62,21 @@ bufferStatus buffer = do
     otherwise -> return Nothing
 
 
-loadGlobalResources :: MonadWidget t m => m ( Event t  (Map String AudioBuffer))
-loadGlobalResources = do
-  let sources = ["pinknoise.wav", "whitenoise.wav"]
-  pb <- getPostBuild
-  -- loadResources loadRequestEv
-  bufferEv <- loadResources $ fmap (const sources) pb -- Ev (Map String Buffer)
-  let r = fmap (fmap js_getAudioBuffer) bufferEv -- Ev (Map String (IO AudioBuffer))
-  let r' = fmap (liftIO . sequence) r  -- ev (io (Map String AudioBuffer))
-  performEvent r'
-
-loadResources:: MonadWidget t m => Event t [String] -> m (Event t (Map String Buffer))
-loadResources ev = do
-  bufferEv <- performEvent $ ffor ev $ \fileNames -> liftIO $ do                     -- Ev t [(String,Buffer)]
-    ctx <- js_setupGlobalAudioContext -- really just get global ac
-    forM fileNames $ \s -> do
-      buf <- js_createBufferFromURL (pack s) ctx
-      return (s,buf)
-  stateChangeEv <- performEventAsync $ ffor bufferEv $ \buffers evTrigger -> liftIO $ do  -- Event t [Buffer]
-    -- cbs <- forM buffers $ \(s,buf) -> asyncCallback1 $ \buf -> evTrigger (Buffer buf)  -- IO [cb]
-    cb <- asyncCallback1 $ \bufs -> do
-      maybeBufs <- fromJSValListOf bufs -- IO (Maybe [Buffer])
-      evTrigger (maybe [] (fmap Buffer) maybeBufs)
-    func (fmap snd buffers) cb
-    releaseCallback cb
-  statusEv <- performEvent $ ffor stateChangeEv $ \buffers -> do   -- Event t [Maybe BufferStatus]
-    liftIO $ sequence $ fmap bufferStatus buffers -- IO [(Maybe BufferStatus)] then lifted
-  let areLoaded = fmap (and . fmap (maybe False (isBufferLoaded))) statusEv
-  dynBuffers <- holdDyn Data.Map.empty $ fmap fromList bufferEv
-  return $ tagDyn dynBuffers $ ffilter id areLoaded
 
 
-mapToBuffer :: MonadWidget t m => Event t File -> m (Event t Buffer, Event t BufferStatus)
-mapToBuffer fileEv = do
-  -- bufferEv :: Event t Buffer - a buffer ready to start loading it's file
-  bufferEv <- performEvent $ ffor fileEv $ \file -> liftIO $ do
-    ctx <- js_setupGlobalAudioContext
-    js_createBuffer file ctx
 
-  -- stateChangeEv :: Event t Buffer - tiggered on a status change
-  stateChangeEv <- performEventAsync $ ffor bufferEv $ \buffer evTrigger -> liftIO $ do
-    cb <- asyncCallback1 $ \buf -> evTrigger (Buffer buf)
-    js_startLoadingAndDecoding buffer cb
-    releaseCallback cb
+-- mapToBuffer :: MonadWidget t m => Event t File -> m (Event t Buffer, Event t BufferStatus)
+-- mapToBuffer fileEv = do
+--   -- bufferEv :: Event t Buffer - a buffer ready to start loading it's file
+--   bufferEv <- performEvent $ ffor fileEv $ \file -> liftIO $ do
+--     ctx <- js_setupGlobalAudioContext
+--     js_createBuffer file ctx
+--
+--   -- stateChangeEv :: Event t Buffer - tiggered on a status change
+--   stateChangeEv <- performEventAsync $ ffor bufferEv $ \buffer evTrigger -> liftIO $ do
+--     cb <- asyncCallback1 $ \buf -> evTrigger (Buffer buf)
+--     js_startLoadingAndDecoding buffer cb
+--     releaseCallback cb
 
 createBuffer :: File -> IO Buffer
 createBuffer file = do
@@ -119,18 +89,15 @@ startLoadingAndDecodingWithCallback buffer evTrigger = do
   js_startLoadingAndDecoding buffer cb
   releaseCallback cb
 
-<<<<<<< HEAD
--- | buffer creates a smart buffer for asynchronous loading of the most recent `Just` file fired
--- from the `Event t (Maybe File)`. Until the first occurance of the event, the buffer is `Nothing`.
--- The returned buffer status monitors the current state of the buffer.
-buffer :: MonadWidget t m => Event t (Maybe File) -> m (Dynamic t (Maybe Buffer), Dynamic t BufferStatus)
-buffer maybeFileEv = do
-  (bufferEv, statusEv) <- mapToBuffer (fmapMaybe id maybeFileEv)
-  dynBuffer <- holdDyn Nothing $ fmap Just bufferEv
-  dynStatus <- holdDyn BufferUnderspecified statusEv
-  return (dynBuffer, dynStatus)
-=======
->>>>>>> 5aea6419105b66b4b1be5738978928691c8d9f26
+-- -- | buffer creates a smart buffer for asynchronous loading of the most recent `Just` file fired
+-- -- from the `Event t (Maybe File)`. Until the first occurance of the event, the buffer is `Nothing`.
+-- -- The returned buffer status monitors the current state of the buffer.
+-- buffer :: MonadWidget t m => Event t (Maybe File) -> m (Dynamic t (Maybe Buffer), Dynamic t BufferStatus)
+-- buffer maybeFileEv = do
+--   (bufferEv, statusEv) <- mapToBuffer (fmapMaybe id maybeFileEv)
+--   dynBuffer <- holdDyn Nothing $ fmap Just bufferEv
+--   dynStatus <- holdDyn BufferUnderspecified statusEv
+--   return (dynBuffer, dynStatus)
 
 foreign import javascript safe
   "new Buffer($1, $2)"
@@ -149,10 +116,7 @@ foreign import javascript safe
   "startLoadingAndDecodingMultiple($1, $2)"
   js_startLoadingAndDecodingMultiple:: JSVal -> Callback (JSVal -> IO ()) -> IO ()
 
-func:: [Buffer] -> Callback (JSVal -> IO ()) -> IO ()
-func b cb  = do
-  listJSVal <- toJSValListOf b
-  js_startLoadingAndDecodingMultiple listJSVal cb
+
 
 foreign import javascript safe
   "$1.status"
