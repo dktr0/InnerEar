@@ -79,9 +79,11 @@ renderAnswer :: Map String AudioBuffer -> Config -> (SourceNodeSpec, Maybe Time)
 renderAnswer _ c@(s, d, o) _ (Just ans) = buildSynth_ $ do
   let dur = Millis $ fromIntegral d
   let curve = sampleEnvelope 200 (actualEnvelope c ans) d
+  let env = unitRectEnv (Millis 1) dur --maybe (return EmptyGraph) (unitRectEnv (Millis 1)) dur
   setDeletionTime $ dur + Millis 200
   oscillator Triangle (Hz 0) >>= curveToParamValue "frequency" curve (Sec 0) dur
   gain (Db $ fromIntegral $ -20)
+  env
   destination
 renderAnswer _ _ _ Nothing = buildSynth_ $ silent >> destination
 
