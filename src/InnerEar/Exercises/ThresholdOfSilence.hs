@@ -44,7 +44,7 @@ renderAnswer _ db (src, dur) (Just (Answer True)) = buildSynth $ do
   let env = maybe (return EmptyGraph) (unitRectEnv (Millis 1)) dur
   synthSource src >> gain (Db $ fromIntegral db) >> env >> destination
   maybeDelete (fmap (+ Sec 0.2) dur)
-renderAnswer _ db _ (Just (Answer False)) = return ()
+renderAnswer _ db _ (Just (Answer False)) = buildSynth_ $ silent >> destination
 renderAnswer _ db (src, dur) Nothing = buildSynth $ do
   let env = maybe (return EmptyGraph) (unitRectEnv (Millis 1)) dur
   synthSource src >> gain (Db $ fromIntegral db) >> env >> destination

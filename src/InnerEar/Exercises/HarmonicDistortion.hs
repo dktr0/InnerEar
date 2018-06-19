@@ -62,7 +62,7 @@ instructions = el "div" $ do
 
 
 sourcesMap:: Map Int (String,SoundSourceConfigOption)
-sourcesMap = fromList $ [(0,("300hz sine wave", Spec (Oscillator Sine (Hz 300)) (Just 2) ))]
+sourcesMap = fromList $ [(0,("300hz sine wave", Spec (Oscillator Sine (Hz 300)) (Just $ Sec 2) ))]
 
 harmonicDistortionExercise :: MonadWidget t m => Exercise t m Config [Answer] Answer (Map Answer Score)
 harmonicDistortionExercise = multipleChoiceExercise
