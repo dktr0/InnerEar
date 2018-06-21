@@ -3,8 +3,10 @@ module InnerEar.Types.Server where
 import qualified Network.WebSockets as WS
 import Data.Map
 import Control.Concurrent.MVar
+import Control.Monad.Except
+
 import Data.List ((\\))
-import Data.Maybe (fromMaybe)
+import Data.Maybe
 import Database.SQLite.Simple
 
 import InnerEar.Types.Handle
@@ -35,6 +37,13 @@ deleteConnection i s = s { connections = delete i (connections s)}
 
 getHandle :: ConnectionIndex -> Server -> Maybe Handle
 getHandle i s = (Data.Map.lookup i $ connections s) >>= snd
+
+getHandle' :: ConnectionIndex -> Server -> Except String Handle
+getHandle' i s = do
+  let x = Data.Map.lookup i $ connections s
+  when (isNothing x) $ throwError "connection not found in connections map"
+  let y = snd $ fromJust x
+  if isJust y then return (fromJust y) else throwError "connection is not authenticated"
 
 getConnection :: ConnectionIndex -> Server -> Maybe WS.Connection
 getConnection i s = (Data.Map.lookup i $ connections s) >>= return . fst

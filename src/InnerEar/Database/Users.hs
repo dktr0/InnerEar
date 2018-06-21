@@ -5,6 +5,7 @@ module InnerEar.Database.Users where
 import Data.Char
 import Data.Either
 import Data.Maybe
+import Control.Monad.Trans.Either
 import Database.SQLite.Simple
 import Database.SQLite.Simple.FromRow
 import Database.SQLite.Simple.ToRow
@@ -39,8 +40,8 @@ instance FromRow User where
 instance ToRow User where
   toRow (User h pwd cmu) = toRow (fmap toLower h,pwd,cmu)
 
-addUser :: Connection -> User -> IO (Either String Handle)
-addUser c u = do
+addUser :: Connection -> User -> EitherT String IO Handle -- IO (Either String Handle)
+addUser c u = EitherT $ do
   let h = fmap toLower (handle u)
   u' <- findUser c h
   if isNothing u'

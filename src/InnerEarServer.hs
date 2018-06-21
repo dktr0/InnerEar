@@ -10,6 +10,7 @@ import WaiAppStatic.Types (unsafeToPiece)
 import Text.JSON
 import Text.JSON.Generic
 import Data.Either.Combinators (fromLeft')
+import Control.Monad.Trans.Either
 import Data.Map
 import Data.Text (Text)
 import Data.List ((\\))
@@ -107,13 +108,23 @@ processRequest s i GetUserList = withServer s $ getUserList i
 processRequest s i (GetAllRecords h) = withServer s $ getAllRecords i h
 processRequest s i (GetAllExerciseEvents h e) = withServer s $ getAllExerciseEvents i h e
 
+{- working here:
+getRole :: DB.Connection -> Handle -> ExceptT String IO Role
+getRole db h = do
+  h <- getHandle' i s  
+  DB.findUser db h
+-}
+
 createUser :: ConnectionIndex -> Handle -> Password -> Server -> IO Server
-createUser i newHandle p s = do
-  let h = getHandle i s
+createUser i newHandle p s = do 
+  let h = getHandle i s 
   u <- maybe (return Nothing) (DB.findUser (database s)) h
   let r = maybe Nothing (Just . role) u
   if canSeeUserList r then do -- note: if you can see the user list then you can add new users...
-    x <- DB.addUser (database s) $ User { handle = newHandle, password = p, role = NormalUser } 
+--    runEitherT $ do
+ --     x <- DB.addUser (database s) $ User { handle = newHandle, password = p, role = NormalUser }
+  --   whenLeft x
+    x <- runEitherT $ DB.addUser (database s) $ User { handle = newHandle, password = p, role = NormalUser } 
     if isLeft x then do
       let errorMsg = fromLeft' x
       putStrLn $ "attempt to create user " ++ newHandle ++ " failed because: " ++ errorMsg

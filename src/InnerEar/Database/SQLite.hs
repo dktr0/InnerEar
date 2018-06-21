@@ -10,6 +10,7 @@ import Database.SQLite.Simple.ToField
 import Database.SQLite.Simple.Ok
 
 import Data.Time.Clock
+import Control.Monad.Trans.Either
 
 import InnerEar.Types.User
 import InnerEar.Types.Data
@@ -24,7 +25,7 @@ openDatabase = do
   createUsersTable c
   createEventsTable c
   createStoresTable c
-  addUser c $ User "test" "test" NormalUser
+  runEitherT $ addUser c $ User "test" "test" NormalUser
   return c
 
 closeDatabase :: Connection -> IO ()
