@@ -9,6 +9,7 @@ import Network.Wai.Handler.Warp (run)
 import WaiAppStatic.Types (unsafeToPiece)
 import Text.JSON
 import Text.JSON.Generic
+import Data.Either.Combinators (fromLeft')
 import Data.Map
 import Data.Text (Text)
 import Data.List ((\\))
@@ -98,7 +99,7 @@ processResult _ i (Error x) = putStrLn ("Error (processResult): " ++ x)
 processResult s i (Ok x) = processRequest s i x
 
 processRequest :: MVar Server -> ConnectionIndex -> Request -> IO ()
-processRequest s i (CreateUser h p) = putStrLn "warning: ignoring request from client to CreateUser (that functionality is disactivated in this build)"
+processRequest s i (CreateUser h p) = withServer s $ createUser i h p
 processRequest s i (Authenticate h p) = withServer s $ authenticate i h p
 processRequest s i Deauthenticate = withServer s $ deauthenticate i
 processRequest s i (PostPoint r) = withServer s $ postPoint i r
@@ -106,6 +107,25 @@ processRequest s i GetUserList = withServer s $ getUserList i
 processRequest s i (GetAllRecords h) = withServer s $ getAllRecords i h
 processRequest s i (GetAllExerciseEvents h e) = withServer s $ getAllExerciseEvents i h e
 
+createUser :: ConnectionIndex -> Handle -> Password -> Server -> IO Server
+createUser i newHandle p s = do
+  let h = getHandle i s
+  u <- maybe (return Nothing) (DB.findUser (database s)) h
+  let r = maybe Nothing (Just . role) u
+  if canSeeUserList r then do -- note: if you can see the user list then you can add new users...
+    x <- DB.addUser (database s) $ User { handle = newHandle, password = p, role = NormalUser } 
+    if isLeft x then do
+      let errorMsg = fromLeft' x
+      putStrLn $ "attempt to create user " ++ newHandle ++ " failed because: " ++ errorMsg
+      respond s i $ UserNotCreated errorMsg
+    else do
+      putStrLn $ "createUser " ++ newHandle ++ " succeeded"
+      respond s i $ UserCreated 
+  else do
+    let errorMsg = "user originating request is not authenticated"
+    putStrLn $ "attempt to create user " ++ newHandle ++ " failed because: " ++ errorMsg
+    respond s i $ UserNotCreated errorMsg
+  return s
 
 authenticate :: ConnectionIndex -> Handle -> Password -> Server -> IO Server
 authenticate i h p s = do
@@ -119,6 +139,9 @@ authenticate i h p s = do
         now <- getCurrentTime
         DB.postEvent (database s) $ Record h $ Point (Right SessionStart) now
         respond s i $ Authenticated h r
+        allStores <- DB.findAllStores (database s) h
+        forM allStores $ respond s i . StoreResponse
+        respond s i $ AllStoresSent 
         return $ authenticateConnection i h s
       else do
         putStrLn $ "failure to authenticate as user " ++ h
@@ -156,8 +179,7 @@ postPoint i p s = do
       let r = Record (fromJust h) p
       putStrLn $ "posting record: " ++ (show r)
       DB.postEvent (database s) r
-      -- let storeDB = recordToMaybeStoreDB r
-      -- working here: call DB.postStore only when storeDB is not Nothing
+      maybe (return ()) (DB.postStore (database s)) (recordToMaybeStoreDB r)
       return s
     else do
       putStrLn $ "warning: received post record attempt from non-or-differently-authenticated connection"

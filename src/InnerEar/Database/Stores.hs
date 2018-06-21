@@ -21,7 +21,7 @@ import InnerEar.Types.ExerciseId
 import InnerEar.Database.ExerciseId
 
 createStoresTable :: Connection -> IO ()
-createStoresTable c = execute_ c "CREATE TABLE IF NOT EXISTS stores (handle TEXT, exerciseId TEXT, store TEXT, time TEXT)"
+createStoresTable c = execute_ c "CREATE TABLE IF NOT EXISTS stores (handle TEXT NOT NULL, exerciseId TEXT NOT NULL, store TEXT, time TEXT, PRIMARY KEY (handle,exerciseId))"
 
 instance FromRow StoreDB where
   fromRow = StoreDB <$> field <*> field <*> field <*> field 
@@ -29,10 +29,8 @@ instance FromRow StoreDB where
 instance ToRow StoreDB where
   toRow (StoreDB h i s t) = toRow (h,i,s,t)
 
--- TODO: this is not quite right: there should be at most one entry in the database for each handle and exerciseId combination
--- so if there is already an entry for this handle+exerciseID, it must be replaced with the new store and time
 postStore :: Connection -> StoreDB -> IO ()
-postStore c s = execute c "INSERT INTO stores (handle,exerciseId,store,time)" s
+postStore c s = execute c "INSERT OR REPLACE INTO stores VALUES (?,?,?,?)" s
 
 findAllStores :: Connection -> Handle -> IO [StoreDB]
 findAllStores conn h = query conn "SELECT handle,exerciseId,store,time FROM stores WHERE handle = ?" (Only (fmap Data.Char.toLower h))

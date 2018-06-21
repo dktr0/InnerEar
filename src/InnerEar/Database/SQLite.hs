@@ -16,12 +16,14 @@ import InnerEar.Types.Data
 import InnerEar.Types.ExerciseId
 import InnerEar.Database.Users
 import InnerEar.Database.Events
+import InnerEar.Database.Stores
 
 openDatabase :: IO Connection
 openDatabase = do
   c <- open "../InnerEar.db"
   createUsersTable c
   createEventsTable c
+  createStoresTable c
   addUser c $ User "test" "test" NormalUser
   return c
 

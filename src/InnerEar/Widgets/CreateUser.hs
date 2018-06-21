@@ -24,13 +24,14 @@ createUserWidget responses = elClass "div" "createUserWidget" $ do
   createValue <- combineDyn CreateUser handleEntry passwordEntry
   let requests = tagDyn createValue createButton
 
-  -- when they fail to create a new user, display a message to that effect
-  let failEvent = fmapMaybe (lastWithPredicate (==UserNotCreated)) responses
-  failText <- holdDyn "" $ fmap (const " Unable to create user!") failEvent
-  elClass "div" "createUserFeedback" $ dynText failText
+  msgText <- holdDyn "" $ fmap (concat . fmap messageForResponse) responses
+  elClass "div" "createUserFeedback" $ dynText msgText
 
-  -- go back to splash page if they press the back button, or if we succeed in creating a new user
   home <- elClass "div" "navButton" $ button "back to splash page"
-  let successEvent = fmap (const ())$ fmapMaybe (lastWithPredicate isAuthenticated) responses
-  let back = leftmost [home,successEvent]
-  return (requests,back)
+  return (requests,home)
+
+messageForResponse :: Response -> String
+messageForResponse (UserNotCreated x) = " Unable to create user because: " ++ x
+messageForResponse UserCreated = " User successfully created."
+messageForResponse _ = ""
+

@@ -45,9 +45,9 @@ addUser c u = do
   u' <- findUser c h
   if isNothing u'
     then do
-      let u' = u { handle = h }
-      execute c "INSERT INTO users (handle,password,role) VALUES (?,?,?)" u'
-      return $ Right $ handle u'
+      let u'' = u { handle = h }
+      execute c "INSERT INTO users (handle,password,role) VALUES (?,?,?)" u''
+      return $ Right $ handle u''
     else return $ Left "user handle already exists"
 
 findUser :: Connection -> Handle -> IO (Maybe User)

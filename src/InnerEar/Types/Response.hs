@@ -15,9 +15,11 @@ import InnerEar.Types.ExerciseId
 data Response =
   NotAuthenticated | -- signals that client is not authenticated as any handle
   Authenticated Handle Role | -- signals that client is successfully authenticated as the indicated handle and role
-  UserNotCreated | -- signals a failure to create a new user for some reason
+  UserNotCreated String | -- signals a failure to create a new user for some reason (described by the String)
+  UserCreated | -- signals success at creating a new normal user
   RecordResponse Record |
-  NoExerciseState Handle ExerciseId | -- signals no stored state for this exercise
+  StoreResponse StoreDB |
+  AllStoresSent |
   UserData User
   deriving (Show,Eq,Data,Typeable)
 
