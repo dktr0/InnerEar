@@ -4,6 +4,7 @@ import qualified Network.WebSockets as WS
 import Data.Map
 import Control.Concurrent.MVar
 import Control.Monad.Except
+import Control.Error.Util
 
 import Data.List ((\\))
 import Data.Maybe
@@ -40,10 +41,8 @@ getHandle i s = (Data.Map.lookup i $ connections s) >>= snd
 
 getHandle' :: ConnectionIndex -> Server -> Except String Handle
 getHandle' i s = do
-  let x = Data.Map.lookup i $ connections s
-  when (isNothing x) $ throwError "connection not found in connections map"
-  let y = snd $ fromJust x
-  if isJust y then return (fromJust y) else throwError "connection is not authenticated"
+  x <- Data.Map.lookup i (connections s) ?? "connection not found in connections map"
+  snd x ?? "connection is not authenticated"
 
 getConnection :: ConnectionIndex -> Server -> Maybe WS.Connection
 getConnection i s = (Data.Map.lookup i $ connections s) >>= return . fst
