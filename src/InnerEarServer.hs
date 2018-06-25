@@ -10,7 +10,9 @@ import WaiAppStatic.Types (unsafeToPiece)
 import Text.JSON
 import Text.JSON.Generic
 import Data.Either.Combinators (fromLeft')
+import Control.Monad.Trans.Except
 import Control.Monad.Trans.Either
+import Control.Error.Util
 import Data.Map
 import Data.Text (Text)
 import Data.List ((\\))
@@ -108,30 +110,23 @@ processRequest s i GetUserList = withServer s $ getUserList i
 processRequest s i (GetAllRecords h) = withServer s $ getAllRecords i h
 processRequest s i (GetAllExerciseEvents h e) = withServer s $ getAllExerciseEvents i h e
 
-{- working here:
-getRole :: DB.Connection -> Handle -> ExceptT String IO Role
-getRole db h = do
-  h <- getHandle' i s  
-  DB.findUser db h
--}
+getRole :: ConnectionIndex -> Server -> ExceptT String IO Role
+getRole i s = do
+  h <- Control.Error.Util.hoistEither $ runExcept $ getHandle' i s  -- ExceptT String IO Handle
+  u <- failWithM "user not found in database" $ DB.findUser (database s) h -- ExceptT String IO User
+  return $ role u
 
 createUser :: ConnectionIndex -> Handle -> Password -> Server -> IO Server
-createUser i newHandle p s = do 
-  let h = getHandle i s 
-  u <- maybe (return Nothing) (DB.findUser (database s)) h
-  let r = maybe Nothing (Just . role) u
-  if canSeeUserList r then do -- note: if you can see the user list then you can add new users...
---    runEitherT $ do
- --     x <- DB.addUser (database s) $ User { handle = newHandle, password = p, role = NormalUser }
-  --   whenLeft x
-    x <- runEitherT $ DB.addUser (database s) $ User { handle = newHandle, password = p, role = NormalUser } 
-    if isLeft x then do
-      let errorMsg = fromLeft' x
-      putStrLn $ "attempt to create user " ++ newHandle ++ " failed because: " ++ errorMsg
+createUser i newHandle p s = runExceptT $ do
+  r <- getRole i s
+  if canSeeUserList r then do
+    DB.addUser (database s) $ User { handle = newHandle, password = p, role = NormalUser }
+    liftIO $ putStrLn $ "createUser " ++ newHandle ++ " succeeded"
+    liftIO $ respond s i $ UserCreated
+  else do
+     putStrLn $ "attempt to create user " ++ newHandle ++ " failed because: " ++ errorMsg
       respond s i $ UserNotCreated errorMsg
     else do
-      putStrLn $ "createUser " ++ newHandle ++ " succeeded"
-      respond s i $ UserCreated 
   else do
     let errorMsg = "user originating request is not authenticated"
     putStrLn $ "attempt to create user " ++ newHandle ++ " failed because: " ++ errorMsg
@@ -152,7 +147,7 @@ authenticate i h p s = do
         respond s i $ Authenticated h r
         allStores <- DB.findAllStores (database s) h
         forM allStores $ respond s i . StoreResponse
-        respond s i $ AllStoresSent 
+        respond s i $ AllStoresSent
         return $ authenticateConnection i h s
       else do
         putStrLn $ "failure to authenticate as user " ++ h
