@@ -72,7 +72,7 @@ displayEval e _ = displayMultipleChoiceEvaluationGraph  ("scoreBarWrapperSevenBa
 generateQ :: Config -> [ExerciseDatum] -> IO ([Answer],Answer)
 generateQ _ _ = randomMultipleChoiceQuestion answers
 
-thisConfigWidget :: MonadWidget t m => Map String AudioBuffer -> Config -> m (Dynamic t Config, Dynamic t (Maybe (SourceNodeSpec, Maybe Time)), Event t (), Event t ())
+thisConfigWidget :: MonadWidget t m => Dynamic t (Map String AudioBuffer) -> Config -> m (Dynamic t Config, Dynamic t (Maybe (SourceNodeSpec, Maybe Time)), Event t (), Event t ())
 thisConfigWidget _ c = do
   text "Fundamental Frequency: "
   dd <- dropdown (freqAsDouble $ head configs) (constDyn $ fromList $ fmap (\x-> (freqAsDouble x, freqAsString x)) configs) (DropdownConfig never (constDyn empty))

@@ -23,5 +23,5 @@ data Exercise t m c q a e s = Exercise {
   defaultEvaluation :: e,
   displayEvaluation :: Dynamic t e -> Dynamic t s -> m (),
   generateQuestion :: c -> [ExerciseDatum] -> IO (q,a),
-  questionWidget :: Map String AudioBuffer -> c -> e -> Event t (q, a) -> m (Event t ExerciseDatum, Event t (Maybe (Synth ())), Event t c, Event t ExerciseNavigation)
+  questionWidget :: Dynamic t (Map String AudioBuffer) -> c -> e -> Event t (q, a) -> m (Event t ExerciseDatum, Event t (Maybe (Synth ())), Event t c, Event t ExerciseNavigation)
 }

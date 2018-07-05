@@ -24,7 +24,7 @@ import InnerEar.Types.MultipleChoiceStore
 import InnerEar.Types.Utility
 import InnerEar.Widgets.Utility
 import InnerEar.Widgets.AnswerButton
-import Sound.MusicW 
+import Sound.MusicW
 
 -- | This module introduces a function to generate multiple choice exercises.
 -- Most specifically, it abstracts over the requirement to provide a widget
@@ -82,7 +82,7 @@ multipleChoiceQuestionWidget maxTries answers exId exInstructions cWidget render
 
   let initialStore = MultipleChoiceStore { scores = empty, xp = (0,1) } -- normally this would come as an argument, then reset session specific elements of store
   let newScoreMaps = fmap (newScores calculateXp) $ updated evaluations
-  let storeUpdates = newScoreMaps 
+  let storeUpdates = newScoreMaps
   currentStore <- foldDyn ($) initialStore storeUpdates
 
   let initialState = initialMultipleChoiceState config answers maxTries
@@ -149,7 +149,7 @@ multipleChoiceQuestionWidget maxTries answers exId exInstructions cWidget render
   let questionWhileReference = (\x -> (possibleAnswers x,correctAnswer x)) <$> tagDyn multipleChoiceState playPressed
   let listenedReferenceData = attachDynWith (\c (q, a) -> ListenedReference c q a) dynConfig questionWhileReference
   evaluations <- mapDyn scoreMap multipleChoiceState
- 
+
   mcsAndConfig <- combineDyn (,) dynConfig multipleChoiceState
   let answerWithContext = attachDynWith (\(c,mcs) s -> (s, c, possibleAnswers mcs, correctAnswer mcs)) mcsAndConfig answerEvent
   let tempHack k m = findWithDefault empty k m
@@ -167,24 +167,17 @@ connectPlaybackControls :: MonadWidget t m
   -> Event t ()
   -> Dynamic t c
   -> Dynamic t (Maybe (SourceNodeSpec, Maybe Time))
-  -> Dynamic t (Map String AudioBuffer))
+  -> Dynamic t (Map String AudioBuffer)
   -> (Map String AudioBuffer -> c -> (SourceNodeSpec, Maybe Time) -> Maybe a -> Synth ())
   -> m (Event t (Maybe (Synth ())))
 connectPlaybackControls playQuestion exploreAnswer playReference stop dynConfig dynSrc sysResources render = do
   let triggerPlay = leftmost [Just <$> playQuestion, Just <$> exploreAnswer, Nothing <$ playReference]
   let triggerStop = Nothing <$ stop
-
-  -- Dynamic t (c, Maybe (SourceNodeSpec, Maybe Time))
-  dynRenderSrc <- combineDyn (,) dynConfig dynSrc
-  -- Event t ((c, Maybe (SourceNodeSpec, Maybe Time)), Maybe a)
-  let triggerPlay' = attachDyn dynRenderSrc triggerPlay
-  let triggerPlay'' = fmap (uncurry renderAnswerSound) triggerPlay'
-
-  return $ leftmost [triggerStop, triggerPlay'']
-  where
-    -- (c, Maybe (SourceNodeSpec, Maybe Time)) -> Maybe a -> Maybe (Synth ())
-    renderAnswerSound (_, Nothing) _ = Nothing
-    renderAnswerSound (cfg, Just srcAndDur) ans = Just $ render cfg srcAndDur ans
+  render' <- mapDyn render sysResources -- Dynamic t (c -> (SourceNodeSpec, Maybe Time) -> Maybe a -> Synth ())
+  render'' <- combineDyn ($) render' dynConfig -- Dynamic t ((SourceNodeSpec,Maybe Time) -> Maybe a -> Synth ())
+  render''' <- combineDyn (\x y -> maybe (const Nothing) (\z -> Just . x z) y) render'' dynSrc
+  let triggerPlay' = attachDynWith ($) render''' triggerPlay
+  return $ leftmost [triggerStop, triggerPlay']
 
 journalWidget :: MonadWidget t m => m (Event t (Datum c q a e s))
 journalWidget = elClass "div" "journalItem" $ mdo

@@ -22,7 +22,7 @@ data User = User {
   role :: Role
   } deriving (Show,Eq,Data,Typeable)
 
-canSeeUserList :: Maybe Role -> Bool
-canSeeUserList (Just Administrator) = True
-canSeeUserList (Just Manager) = True
+canSeeUserList :: Role -> Bool
+canSeeUserList Administrator = True
+canSeeUserList Manager = True
 canSeeUserList _ = False

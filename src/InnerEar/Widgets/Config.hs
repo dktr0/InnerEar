@@ -30,7 +30,7 @@ import Sound.MusicW hiding (value)
 
 -- TODO inputID can be dropped anywhere it is used in here
 
-configWidget :: (MonadWidget t m, Eq c) => String -> Map Int (String, SoundSourceConfigOption) -> Int -> String -> Map Int (String, c) -> Map String AudioBuffer -> c -> m (Dynamic t c, Dynamic t (Maybe (SourceNodeSpec, Maybe Time)), Event t (), Event t ())
+configWidget :: (MonadWidget t m, Eq c) => String -> Map Int (String, SoundSourceConfigOption) -> Int -> String -> Map Int (String, c) -> Dynamic t (Map String AudioBuffer) -> c -> m (Dynamic t c, Dynamic t (Maybe (SourceNodeSpec, Maybe Time)), Event t (), Event t ())
 configWidget inputID sourceMap iSource configLabel configMap sysResources iConfig = elClass "div" "configWidget" $ do
   config <- elClass "div" "exerciseConfigWidget" $ exerciseConfigWidget configLabel configMap iConfig
   (dynSrcSpec, playEv, stopEv) <- elClass "div" "sourceWidget" $ sourceSelectionWidget sysResources inputID sourceMap iSource
@@ -44,7 +44,7 @@ exerciseConfigWidget label configMap iConfig = do
   dd <- dropdown index (constDyn $ fmap fst configMap) ddConfig -- & dropdownConfig_attributes .~ (constDyn $ M.singleton "class" "soundSourceDropdown")
   mapDyn (\x -> snd $ fromJust $ Data.Map.lookup x configMap) $ _dropdown_value dd
 
-sourceSelectionWidget :: MonadWidget t m => Map String AudioBuffer -> String -> Map Int (String, SoundSourceConfigOption) -> Int -> m (Dynamic t (Maybe (SourceNodeSpec, Maybe Time)), Event t (), Event t ())
+sourceSelectionWidget :: MonadWidget t m => Dynamic t (Map String AudioBuffer) -> String -> Map Int (String, SoundSourceConfigOption) -> Int -> m (Dynamic t (Maybe (SourceNodeSpec, Maybe Time)), Event t (), Event t ())
 sourceSelectionWidget sysResources inputID choices defChoiceIdx =
   elClass "div" "sourceSelection" $ do
     text "Sound source: "
@@ -69,8 +69,11 @@ sourceSelectionWidget sysResources inputID choices defChoiceIdx =
     (dynBuffer, dynBufferStatus) <- mkBuffer selFileEv
 
     -- Dynamic t SoundSource
-    dynSoundSrc <- combineDynIO (constructSoundSource sysResources) dynSelOpt dynBufferStatus
-    dynConfig <- forDyn dynSoundSrc $ \src -> SoundSourceConfig {
+    dynSoundSrc <- mapDyn constructSoundSource sysResources
+    dynSoundSrc' <- combineDyn ($) dynSoundSrc dynSelOpt
+    dynSoundSrc'' <- combineDynIO ($) dynSoundSrc' dynBufferStatus
+--    dynSoundSrc'' <- combineDynIO (constructSoundSource sysResources) dynSelOpt dynBufferStatus
+    dynConfig <- forDyn dynSoundSrc'' $ \src -> SoundSourceConfig {
         source = src,
         playbackRange = (0, 1),
         shouldLoop = False

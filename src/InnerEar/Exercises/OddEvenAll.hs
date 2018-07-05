@@ -57,7 +57,7 @@ displayEval e _ = displayMultipleChoiceEvaluationGraph  ("scoreBarWrapperThreeBa
 generateQ :: Config -> [ExerciseDatum] -> IO ([Answer],Answer)
 generateQ _ _ = randomMultipleChoiceQuestion answers
 
-oddEvenAllConfigWidget :: MonadWidget t m => Map String AudioBuffer -> Config -> m (Dynamic t Config, Dynamic t (Maybe (SourceNodeSpec, Maybe Time)), Event t (), Event t ())
+oddEvenAllConfigWidget :: MonadWidget t m => Dynamic t (Map String AudioBuffer) -> Config -> m (Dynamic t Config, Dynamic t (Maybe (SourceNodeSpec, Maybe Time)), Event t (), Event t ())
 oddEvenAllConfigWidget _ c = do
   text "Fundamental Frequency: "
   dd <- dropdown (freqAsDouble $ head configs) (constDyn $ fromList $ fmap (\x-> (freqAsDouble x, freqAsString x)) configs) (DropdownConfig never (constDyn empty))

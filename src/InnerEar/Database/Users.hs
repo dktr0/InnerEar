@@ -5,7 +5,7 @@ module InnerEar.Database.Users where
 import Data.Char
 import Data.Either
 import Data.Maybe
-import Control.Monad.Trans.Either
+import Control.Monad.Except
 import Database.SQLite.Simple
 import Database.SQLite.Simple.FromRow
 import Database.SQLite.Simple.ToRow
@@ -40,16 +40,15 @@ instance FromRow User where
 instance ToRow User where
   toRow (User h pwd cmu) = toRow (fmap toLower h,pwd,cmu)
 
-addUser :: Connection -> User -> EitherT String IO Handle -- IO (Either String Handle)
-addUser c u = EitherT $ do
+addUser :: Connection -> User -> ExceptT String IO Handle
+addUser c u = do
   let h = fmap toLower (handle u)
-  u' <- findUser c h
-  if isNothing u'
-    then do
-      let u'' = u { handle = h }
-      execute c "INSERT INTO users (handle,password,role) VALUES (?,?,?)" u''
-      return $ Right $ handle u''
-    else return $ Left "user handle already exists"
+  u' <- liftIO $ findUser c h
+  if isNothing u' then do
+    let u'' = u { handle = h }
+    liftIO $ execute c "INSERT INTO users (handle,password,role) VALUES (?,?,?)" u''
+    return $ handle u''
+  else throwError $ "user handle " ++ h ++ " already exists"
 
 findUser :: Connection -> Handle -> IO (Maybe User)
 findUser conn h = do

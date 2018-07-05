@@ -8,7 +8,7 @@ import Data.Map
 import Text.JSON
 import Text.JSON.Generic
 
-import Sound.MusicW 
+import Sound.MusicW
 import InnerEar.Exercises.MultipleChoice
 import InnerEar.Types.ExerciseId
 import InnerEar.Types.Exercise
@@ -94,7 +94,7 @@ displayEval e _ = displayMultipleChoiceEvaluationGraph  ("scoreBarWrapperThreeBa
 generateQ :: Config -> [ExerciseDatum] -> IO ([Answer],Answer)
 generateQ _ _ = randomMultipleChoiceQuestion answers
 
-thisConfigWidget:: MonadWidget t m => Map String AudioBuffer -> Config -> m (Dynamic t Config, Dynamic t (Maybe (SourceNodeSpec, Maybe Time)), Event t (), Event t ())
+thisConfigWidget:: MonadWidget t m => Dynamic t (Map String AudioBuffer) -> Config -> m (Dynamic t Config, Dynamic t (Maybe (SourceNodeSpec, Maybe Time)), Event t (), Event t ())
 thisConfigWidget _ c@(s,d,o) = do
   text "Similarity: "
   simDropDown <- dropdown (head similarities) (constDyn $ fromList [ (x,show x) | x <- similarities ]) (DropdownConfig never (constDyn empty))

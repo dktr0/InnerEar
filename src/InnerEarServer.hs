@@ -10,8 +10,7 @@ import WaiAppStatic.Types (unsafeToPiece)
 import Text.JSON
 import Text.JSON.Generic
 import Data.Either.Combinators (fromLeft')
-import Control.Monad.Trans.Except
-import Control.Monad.Trans.Either
+import Control.Monad.Except
 import Control.Error.Util
 import Data.Map
 import Data.Text (Text)
@@ -110,6 +109,10 @@ processRequest s i GetUserList = withServer s $ getUserList i
 processRequest s i (GetAllRecords h) = withServer s $ getAllRecords i h
 processRequest s i (GetAllExerciseEvents h e) = withServer s $ getAllExerciseEvents i h e
 
+
+getHandle'' :: ConnectionIndex -> Server -> ExceptT String IO Handle
+getHandle'' i s = Control.Error.Util.hoistEither $ runExcept $ getHandle' i s  -- ExceptT String IO Handle
+
 getRole :: ConnectionIndex -> Server -> ExceptT String IO Role
 getRole i s = do
   h <- Control.Error.Util.hoistEither $ runExcept $ getHandle' i s  -- ExceptT String IO Handle
@@ -117,21 +120,17 @@ getRole i s = do
   return $ role u
 
 createUser :: ConnectionIndex -> Handle -> Password -> Server -> IO Server
-createUser i newHandle p s = runExceptT $ do
-  r <- getRole i s
-  if canSeeUserList r then do
-    DB.addUser (database s) $ User { handle = newHandle, password = p, role = NormalUser }
-    liftIO $ putStrLn $ "createUser " ++ newHandle ++ " succeeded"
-    liftIO $ respond s i $ UserCreated
-  else do
-     putStrLn $ "attempt to create user " ++ newHandle ++ " failed because: " ++ errorMsg
-      respond s i $ UserNotCreated errorMsg
-    else do
-  else do
-    let errorMsg = "user originating request is not authenticated"
-    putStrLn $ "attempt to create user " ++ newHandle ++ " failed because: " ++ errorMsg
-    respond s i $ UserNotCreated errorMsg
+createUser i newHandle p s = do
+  x <- runExceptT $ do
+    r <- getRole i s
+    if canSeeUserList r then DB.addUser (database s) $ User { handle = newHandle, password = p, role = NormalUser }
+    else throwError $ "this user can't see the user list"
+  if Data.Either.isRight x then do
+    putStrLn $ "createUser " ++ newHandle ++ " succeeded"
+    respond s i $ UserCreated
+  else putStrLn $ "attempt to create user " ++ newHandle ++ " failed because: " ++ (either id (const "") x)
   return s
+
 
 authenticate :: ConnectionIndex -> Handle -> Password -> Server -> IO Server
 authenticate i h p s = do
@@ -202,45 +201,44 @@ possiblySendAllExerciseData _ _ _ = return ()
 
 getUserList :: ConnectionIndex -> Server -> IO Server
 getUserList i s = do
-  let h = getHandle i s
-  u <- maybe (return Nothing) (DB.findUser (database s)) h
-  let r = maybe Nothing (Just . role) u
-  if canSeeUserList r then do
-    putStrLn $ "getUserList "
-    allUsers <- DB.findAllUsers (database s)
-    forM_ allUsers $ \(User uh _ ur) -> respond s i (UserData (User uh "" ur)) -- ie. blanking passwords before transmission
-  else do
-    putStrLn "warning: getUserList from non-authenticated connection"
+  e <- runExceptT $ do
+    h <- getHandle'' i s
+    r <- getRole i s
+    if canSeeUserList r then do
+      liftIO $ putStrLn $ "getUserList "
+      allUsers <- liftIO $ DB.findAllUsers (database s)
+      liftIO $ forM_ allUsers $ \(User uh _ ur) -> respond s i (UserData (User uh "" ur)) -- ie. blanking passwords before transmission
+    else throwError $ "warning: getUserList from non-authenticated connection"
+  either (\x -> putStrLn $ "getUserList failed because " ++ x) (const $ return ()) e
   return s
 
 getAllRecords :: ConnectionIndex -> Handle -> Server -> IO Server
 getAllRecords i h s = do
-  let h' = getHandle i s
-  u <- maybe (return Nothing) (DB.findUser (database s)) h'
-  let r = maybe Nothing (Just . role) u
-  -- if authenticated as Administrator or Manager, or if authenticated as the user pertaining to the records, then proceed...
-  if (canSeeUserList r || (h' == (Just h))) then do
-    putStrLn $ "getAllRecords for " ++ h
-    allRecords <- DB.findAllRecords (database s) h
-    forM_ allRecords $ \x -> respond s i (RecordResponse x)
-  else do
-    putStrLn "warning: getUserList from non-authenticated connection"
+  e <- runExceptT $ do
+    h' <- getHandle'' i s
+    r <- getRole i s
+    -- if authenticated as Administrator or Manager, or if authenticated as the user pertaining to the records, then proceed...
+    if (canSeeUserList r || (h' == h)) then do
+      liftIO $ putStrLn $ "getAllRecords for " ++ h
+      allRecords <- liftIO $ DB.findAllRecords (database s) h
+      liftIO $ forM_ allRecords $ \x -> respond s i (RecordResponse x)
+    else throwError $ "no permission to getAllRecords for user " ++ h ++ " by user " ++ h'
+  either (\x -> putStrLn $ "getAllRecords failed because: " ++ x) (const $ return ()) e
   return s
 
 getAllExerciseEvents :: ConnectionIndex -> Handle -> ExerciseId -> Server -> IO Server
 getAllExerciseEvents i h e s = do
-  let h' = getHandle i s
-  u <- maybe (return Nothing) (DB.findUser (database s)) h'
-  let r = maybe Nothing (Just . role) u
-  -- if authenticated as Administrator or Manager, or if authenticated as the user pertaining to the records, then proceed...
-  if (canSeeUserList r || (h' == (Just h))) then do
-    allRecords <- DB.findAllExerciseEvents (database s) h e
-    putStrLn $ "getAllExerciseEvents for " ++ h ++ " " ++ (show e) ++ ": " ++ (show (length allRecords)) ++ " values"
-    forM_ allRecords $ \x -> respond s i (RecordResponse x)
-  else do
-    putStrLn "warning: getUserList from non-authenticated connection"
+  e <- runExceptT $ do
+    h' <- getHandle'' i s
+    r <- getRole i s
+    -- if authenticated as Administrator or Manager, or if authenticated as the user pertaining to the records, then proceed...
+    if (canSeeUserList r || (h' == h)) then do
+      allRecords <- liftIO $ DB.findAllExerciseEvents (database s) h e
+      liftIO $ putStrLn $ "getAllExerciseEvents for " ++ h ++ " " ++ (show e) ++ ": " ++ (show (length allRecords)) ++ " values"
+      liftIO $ forM_ allRecords $ \x -> respond s i (RecordResponse x)
+    else throwError $ "getUserList from non-authenticated connection"
+  either (\x -> putStrLn $ "getAllExerciseEvents failed because: " ++ x) (const $ return ()) e
   return s
-
 
 withServer :: MVar Server -> (Server -> IO Server) -> IO ()
 withServer s f = takeMVar s >>= f >>= putMVar s

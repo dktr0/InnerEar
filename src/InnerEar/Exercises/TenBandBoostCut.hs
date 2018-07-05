@@ -113,7 +113,7 @@ displayEval :: MonadWidget t m => Dynamic t (Map Answer Score) -> Dynamic t (Mul
 displayEval e _ = displayMultipleChoiceEvaluationGraph ("scoreBarWrapperTenBars","svgBarContainerTenBars","svgFaintedLineTenBars","xLabelTenBars") "Session Performance" "" answers e
 
 -- temporary until config widget is changed to take a list/map of config parameters that can be changed
-tenBandsConfigWidget :: MonadWidget t m => Map String AudioBuffer -> Config -> m (Dynamic t Config, Dynamic t (Maybe (SourceNodeSpec, Maybe Time)), Event t (), Event t ())
+tenBandsConfigWidget :: MonadWidget t m => Dynamic t (Map String AudioBuffer) -> Config -> m (Dynamic t Config, Dynamic t (Maybe (SourceNodeSpec, Maybe Time)), Event t (), Event t ())
 tenBandsConfigWidget sysResources c =  elClass "div" "configWidget" $ do
   config <- elClass "div" "tenBandsConfigWidget" $ do
     text "Spectrum Range: "
