@@ -48,7 +48,7 @@ performSynth selectedSynth = mdo
 
   return ()
 
-clientWidget :: MonadWidget t m => Map String AudioBuffer -> m ()
+clientWidget :: MonadWidget t m => Dynamic t (Map String AudioBuffer) -> m ()
 clientWidget sysResources = elClass "div" "innerEar" $ mdo
   (wsRcvd,wsStatus) <- WS.reflexWebSocket wsSend
   elClass "div" "title" $ text "Inner Ear"

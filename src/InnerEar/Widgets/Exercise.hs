@@ -25,7 +25,10 @@ import Sound.MusicW
 -- exercise in the browser.
 
 runExercise :: forall t m c q a e s. (MonadWidget t m, Data c, Data q, Data a, Data e, Data s, Show c, Show q, Show a, Show e)
-  => Map String AudioBuffer -> Exercise t m c q a e s -> Event t [Response] -> m (Event t (ExerciseId,ExerciseDatum),Event t (Maybe (Synth ())),Event t ())
+  => Dynamic t (Map String AudioBuffer)
+  -> Exercise t m c q a e s
+  -> Event t [Response]
+  -> m (Event t (ExerciseId,ExerciseDatum),Event t (Maybe (Synth ())),Event t ())
 runExercise sysResources ex responses = mdo
 
   -- form databank for exercise by folding together pertinent database entries plus data transmitted up

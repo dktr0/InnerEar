@@ -38,7 +38,7 @@ import Sound.MusicW
 type AnswerRenderer c a = Map String AudioBuffer -> c -> (SourceNodeSpec, Maybe Time) -> Maybe a -> Synth ()
 
 -- | ConfigWidgetBuilder constructs a configuration widget with a given default configuration.
-type ConfigWidgetBuilder m t c a = Map String AudioBuffer -> c -> m (Dynamic t c, Dynamic t (Maybe (SourceNodeSpec, Maybe Time)), Event t (), Event t ())
+type ConfigWidgetBuilder m t c a = Dynamic t (Map String AudioBuffer) -> c -> m (Dynamic t c, Dynamic t (Maybe (SourceNodeSpec, Maybe Time)), Event t (), Event t ())
 
 multipleChoiceExercise :: forall t m c q a e s. (MonadWidget t m, Show a, Eq a, Ord a, Data a, Data c, Ord c,Buttonable a)
   => Int -- maximum number of tries to allow
@@ -72,7 +72,7 @@ multipleChoiceQuestionWidget :: forall t m c q a e s. (MonadWidget t m, Show a, 
   -> AnswerRenderer c a
   -> (Dynamic t (Map a Score) -> Dynamic t (MultipleChoiceStore c a) -> m ())
   -> (Map c (Map a Score) -> (Int,Int))
-  -> Map String AudioBuffer
+  -> Dynamic t (Map String AudioBuffer)
   -> c
   -> Map a Score
   -> Event t ([a],a)
@@ -138,8 +138,7 @@ multipleChoiceQuestionWidget maxTries answers exId exInstructions cWidget render
 
   playbackSynthChanged <- connectPlaybackControls
     listenToQuestionPressed exploreAnswerPressed playPressed stopPressed
-    dynConfig dynSource
-    (render sysResources)
+    dynConfig dynSource sysResources render
 
   let navEvents = leftmost [closeExercise, nextQuestionNav]
 
@@ -168,9 +167,10 @@ connectPlaybackControls :: MonadWidget t m
   -> Event t ()
   -> Dynamic t c
   -> Dynamic t (Maybe (SourceNodeSpec, Maybe Time))
-  -> (c -> (SourceNodeSpec, Maybe Time) -> Maybe a -> Synth ()) -- ^ AnswerRenderer c a with the resources already applied
+  -> Dynamic t (Map String AudioBuffer))
+  -> (Map String AudioBuffer -> c -> (SourceNodeSpec, Maybe Time) -> Maybe a -> Synth ())
   -> m (Event t (Maybe (Synth ())))
-connectPlaybackControls playQuestion exploreAnswer playReference stop dynConfig dynSrc render = do
+connectPlaybackControls playQuestion exploreAnswer playReference stop dynConfig dynSrc sysResources render = do
   let triggerPlay = leftmost [Just <$> playQuestion, Just <$> exploreAnswer, Nothing <$ playReference]
   let triggerStop = Nothing <$ stop
 
