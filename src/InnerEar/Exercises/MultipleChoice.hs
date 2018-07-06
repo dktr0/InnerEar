@@ -7,7 +7,7 @@ import Reflex.Dom
 import Reflex.Dom.Contrib.Widgets.ButtonGroup (radioGroup)
 import Reflex.Dom.Contrib.Widgets.Common
 import Data.Map
-import Control.Monad (zipWithM)
+import Control.Monad (zipWithM,liftM)
 import Control.Monad.IO.Class (liftIO)
 import Data.List (findIndices,partition,elemIndex)
 import Data.Maybe (fromJust)
@@ -40,7 +40,7 @@ type AnswerRenderer c a = Map String AudioBuffer -> c -> (SourceNodeSpec, Maybe 
 -- | ConfigWidgetBuilder constructs a configuration widget with a given default configuration.
 type ConfigWidgetBuilder m t c a = Dynamic t (Map String AudioBuffer) -> c -> m (Dynamic t c, Dynamic t (Maybe (SourceNodeSpec, Maybe Time)), Event t (), Event t ())
 
-multipleChoiceExercise :: forall t m c q a e s. (MonadWidget t m, Show a, Eq a, Ord a, Data a, Data c, Ord c,Buttonable a)
+multipleChoiceExercise :: forall t m c q a e s. (MonadWidget t m, Show a, Eq a, Ord a, Data a, Data c, Ord c, Show c, Buttonable a)
   => Int -- maximum number of tries to allow
   -> [a]
   -> m ()
@@ -63,7 +63,7 @@ multipleChoiceExercise maxTries answers iWidget cWidget render i c de g calculat
   questionWidget = multipleChoiceQuestionWidget maxTries answers i iWidget cWidget render de calculateXp
   }
 
-multipleChoiceQuestionWidget :: forall t m c q a e s. (MonadWidget t m, Show a, Eq a, Ord a,Data a,Data c,Ord c, Buttonable a)
+multipleChoiceQuestionWidget :: forall t m c q a e s. (MonadWidget t m, Show a, Eq a, Ord a,Data a,Data c,Ord c, Show c, Buttonable a)
   => Int -- maximum number of tries
   -> [a] -- fixed list of potential answers
   -> ExerciseId
@@ -71,19 +71,22 @@ multipleChoiceQuestionWidget :: forall t m c q a e s. (MonadWidget t m, Show a, 
   -> ConfigWidgetBuilder m t c a
   -> AnswerRenderer c a
   -> (Dynamic t (Map a Score) -> Dynamic t (MultipleChoiceStore c a) -> m ())
-  -> (Map c (Map a Score) -> (Int,Int))
+  -> XpFunction c a
   -> Dynamic t (Map String AudioBuffer)
   -> c
   -> Map a Score
   -> Event t ([a],a)
   -> m (Event t ExerciseDatum,Event t (Maybe (Synth ())),Event t c,Event t ExerciseNavigation)
 
-multipleChoiceQuestionWidget maxTries answers exId exInstructions cWidget render eWidget calculateXp sysResources config initialEval newQuestion = elClass "div" "exerciseWrapper" $ mdo
+multipleChoiceQuestionWidget maxTries answers exId exInstructions cWidget render eWidget xpF sysResources config initialEval newQuestion = elClass "div" "exerciseWrapper" $ mdo
 
   let initialStore = MultipleChoiceStore { scores = empty, xp = (0,1) } -- normally this would come as an argument, then reset session specific elements of store
-  let newScoreMaps = fmap (newScores calculateXp) $ updated evaluations
-  let storeUpdates = newScoreMaps
-  currentStore <- foldDyn ($) initialStore storeUpdates
+  let scoreChanges = traceEventWith (const "scoreChanges") $ attachWith answerToScoreChange (current multipleChoiceState) answerPressed -- Event t (Maybe (c,Map a Score -> Map a Score))
+  let scoreChanges' = traceEventWith (const "scoreChanges'") $ fmapMaybe id scoreChanges -- Event t (c,Map a Score -> Map a Score)
+  let scoreChanges'' = traceEventWith (const "scoreChanges''") $ fmap (newScores xpF) scoreChanges' -- Event t (MultipleChoiceStore -> MultipleChoiceStore)
+  currentStore <- foldDyn ($) initialStore $ scoreChanges''
+  display currentStore
+
 
   let initialState = initialMultipleChoiceState config answers maxTries
   let newQuestionAndConfig = attachDyn dynConfig newQuestion
@@ -93,11 +96,12 @@ multipleChoiceQuestionWidget maxTries answers exId exInstructions cWidget render
   let questionHeard' = fmap (const onceQuestionHeard) $ ffilter (== True) $ updated questionHeard
   let answerPressed' = fmap answerSelected answerPressed
   let stateChanges = leftmost [newQuestion', questionHeard', answerPressed']
+
+  
+
   multipleChoiceState <- foldDyn ($) initialState stateChanges
   modes <- mapDyn answerButtonModes multipleChoiceState
   modes' <- mapM (\x-> mapDyn (!!x) modes) [0,1..9]
-  -- scores <- mapDyn scoreMap multipleChoiceState
-  scores <- combineDyn (\x y -> maybe empty id $ Data.Map.lookup x (scoreMap y)) dynConfig multipleChoiceState
 
   -- MC question controls and answer input.
   -- (Event t ExerciseNavigation, Event t (), Event t a, Event t ExerciseNavigation)
@@ -124,8 +128,8 @@ multipleChoiceQuestionWidget maxTries answers exId exInstructions cWidget render
       elClass "div"  "configWidgetWrapper" $ cWidget sysResources config
 
   journalData <- elClass "div" "bottomRow" $ do
-    elClass "div" "evaluation" $ do
-      eWidget scores currentStore
+    elClass "div" "evaluation" $ return ()
+      -- eWidget scores currentStore
     elClass "div" "journal" $ journalWidget
 
   let answerEvent = gate (fmap (==AnswerMode) . fmap mode . current $ multipleChoiceState) answerPressed
@@ -148,15 +152,14 @@ multipleChoiceQuestionWidget maxTries answers exId exInstructions cWidget render
 
   let questionWhileReference = (\x -> (possibleAnswers x,correctAnswer x)) <$> tagDyn multipleChoiceState playPressed
   let listenedReferenceData = attachDynWith (\c (q, a) -> ListenedReference c q a) dynConfig questionWhileReference
-  evaluations <- mapDyn scoreMap multipleChoiceState
 
   mcsAndConfig <- combineDyn (,) dynConfig multipleChoiceState
   let answerWithContext = attachDynWith (\(c,mcs) s -> (s, c, possibleAnswers mcs, correctAnswer mcs)) mcsAndConfig answerEvent
   let tempHack k m = findWithDefault empty k m
-  let answerData = attachDynWith (\e (s,c,q,a) -> Answered s (tempHack c e) (tempHack c e) c q a) evaluations answerWithContext
+  -- let answerData = attachDynWith (\e (s,c,q,a) -> Answered s (tempHack c e) (tempHack c e) c q a) evaluations answerWithContext
   let questionWhileExplore = attachDynWith (\x y -> (possibleAnswers x,correctAnswer x,y)) multipleChoiceState answerPressed
   let listenedExploreData = attachDynWith (\c (q,a,s) -> ListenedExplore s c q a) dynConfig questionWhileExplore
-  let datums = leftmost [listenedQuestionData,listenedReferenceData, answerData,listenedExploreData,journalData] :: Event t (Datum c [a] a (Map a Score) (MultipleChoiceStore c a))
+  let datums = leftmost [listenedQuestionData,listenedReferenceData, listenedExploreData,journalData] :: Event t (Datum c [a] a (Map a Score) (MultipleChoiceStore c a))
   let datums' = fmap toExerciseDatum datums
   return (datums', playbackSynthChanged, updated dynConfig, navEvents)
 
@@ -222,8 +225,7 @@ data MultipleChoiceState a c = MultipleChoiceState {
   possibleAnswers :: [a],
   answerButtonModes :: [AnswerButtonMode],
   attemptsRemainingDefault :: Int,
-  attemptsRemaining :: Int,
-  scoreMap :: Map c (Map a Score)
+  attemptsRemaining :: Int
   }
 
 
@@ -240,8 +242,7 @@ initialMultipleChoiceState c xs n = MultipleChoiceState {
   possibleAnswers = xs,
   answerButtonModes = NotPossible <$ xs,
   attemptsRemainingDefault = n,
-  attemptsRemaining = n,
-  scoreMap = empty
+  attemptsRemaining = n
   }
 
 -- When a multiple choice question is generated, all of the buttons are
@@ -271,29 +272,29 @@ onceQuestionHeard s = s { mode = AnswerMode, answerButtonModes = m }
 -- Otherwise (i.e. AnswerMode) the state is updated in different ways depending
 -- on whether the answer is correct or incorrect, and
 
+answerToScoreChange :: Ord a => MultipleChoiceState a c -> a -> Maybe (c,Map a Score -> Map a Score)
+answerToScoreChange s _ | mode s == ListenMode = Nothing
+answerToScoreChange s _ | mode s == ExploreMode = Nothing
+answerToScoreChange s a | a == correctAnswer s = Just (currentConfig s, markCorrect a)  
+answerToScoreChange s a | a /= correctAnswer s = Just (currentConfig s, markIncorrect a (correctAnswer s)) 
+
 answerSelected :: (Eq a,Ord a,Ord c) => a -> MultipleChoiceState a c -> MultipleChoiceState a c
 answerSelected _ s | mode s == ListenMode = s
 answerSelected _ s | mode s == ExploreMode = s
 
 answerSelected a s | a == correctAnswer s = toExploreMode $ s {
-      answerButtonModes = replaceAtSameIndex a (allAnswers s) Correct (answerButtonModes s),
-      scoreMap = insert (currentConfig s) newSpecificMap (scoreMap s)
+      answerButtonModes = replaceAtSameIndex a (allAnswers s) Correct (answerButtonModes s)
       }
-      where newSpecificMap = markCorrect a $ findWithDefault empty (currentConfig s) (scoreMap s)
 
 answerSelected a s | a /= correctAnswer s && attemptsRemaining s > 1 = s {
       answerButtonModes = replaceAtSameIndex a (allAnswers s) IncorrectDisactivated (answerButtonModes s),
-      attemptsRemaining = attemptsRemaining s - 1,
-      scoreMap = insert (currentConfig s) newSpecificMap (scoreMap s)
+      attemptsRemaining = attemptsRemaining s - 1
       }
-      where newSpecificMap = markIncorrect a (correctAnswer s)$ findWithDefault empty (currentConfig s) (scoreMap s)
 
 answerSelected a s | a /= correctAnswer s && attemptsRemaining s <= 1 = toExploreMode $ s {
       answerButtonModes = replaceAtSameIndex a (allAnswers s) IncorrectActivated $
-              replaceAtSameIndex (correctAnswer s) (allAnswers s) CorrectMissed (answerButtonModes s),
-      scoreMap = insert (currentConfig s) newSpecificMap (scoreMap s)
+              replaceAtSameIndex (correctAnswer s) (allAnswers s) CorrectMissed (answerButtonModes s)
       }
-      where newSpecificMap = markIncorrect a (correctAnswer s) $ findWithDefault empty (currentConfig s) (scoreMap s)
 
 toExploreMode :: MultipleChoiceState a c -> MultipleChoiceState a c
 toExploreMode s = s {
