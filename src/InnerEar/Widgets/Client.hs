@@ -29,7 +29,7 @@ import Sound.MusicW
 -- | The clientWidget is the top-level widget in the Inner Ear web client.
 -- At first it displays the login widget plus a choice to continue without logging in.
 -- Successfully logging in (or choosing to continue without logging in) loads
--- the excercise navigationWidget instead.
+-- the exercise navigationWidget instead.
 
 performSynth :: MonadWidget t m => Event t (Maybe (Synth ())) -> m ()
 performSynth selectedSynth = mdo
@@ -37,10 +37,10 @@ performSynth selectedSynth = mdo
   prevSynthstance <- hold Nothing newSynthstances
 
   -- Event t (Maybe Synthstance, Maybe (Synth ())) - prev and current
-  let synthstnacePair = attach prevSynthstance selectedSynth
+  let synthstancePair = attach prevSynthstance selectedSynth
 
   -- Event t (Maybe Synthstance)
-  newSynthstances <- performEvent $ ffor synthstnacePair $ \(prev, curr) -> liftIO $ do
+  newSynthstances <- performEvent $ ffor synthstancePair $ \(prev, curr) -> liftIO $ do
     -- Stop the old one if it existed
     maybe (return ()) stopSynthNow prev
     -- Start the new one if given

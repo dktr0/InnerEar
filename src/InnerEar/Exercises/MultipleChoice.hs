@@ -40,7 +40,7 @@ type AnswerRenderer c a = Map String AudioBuffer -> c -> (SourceNodeSpec, Maybe 
 -- | ConfigWidgetBuilder constructs a configuration widget with a given default configuration.
 type ConfigWidgetBuilder m t c a = Dynamic t (Map String AudioBuffer) -> c -> m (Dynamic t c, Dynamic t (Maybe (SourceNodeSpec, Maybe Time)), Event t (), Event t ())
 
-multipleChoiceExercise :: forall t m c q a e s. (MonadWidget t m, Show a, Eq a, Ord a, Data a, Data c, Ord c, Show c, Buttonable a)
+multipleChoiceExercise :: forall t m c a. (MonadWidget t m, Show a, Eq a, Ord a, Data a, Data c, Ord c, Show c, Buttonable a)
   => Int -- maximum number of tries to allow
   -> [a]
   -> m ()
@@ -50,20 +50,21 @@ multipleChoiceExercise :: forall t m c q a e s. (MonadWidget t m, Show a, Eq a, 
   -> c
   -> (Dynamic t (Map a Score) -> Dynamic t (MultipleChoiceStore c a) -> m ())
   -> (c -> [ExerciseDatum] -> IO ([a],a))
-  -> (Map c (Map a Score) -> (Int,Int)) -- function to calculate Xp from a map of performance over all configurations
+  -> XpFunction c a
   -> Exercise t m c [a] a (Map a Score) (MultipleChoiceStore c a)
 
 multipleChoiceExercise maxTries answers iWidget cWidget render i c de g calculateXp = Exercise {
   exerciseId = i,
   instructionsWidget = iWidget,
   defaultConfig = c,
+  defaultStore = newStoreWithNoScores calculateXp,
   defaultEvaluation = empty,
   displayEvaluation = de,
   generateQuestion = g,
   questionWidget = multipleChoiceQuestionWidget maxTries answers i iWidget cWidget render de calculateXp
   }
 
-multipleChoiceQuestionWidget :: forall t m c q a e s. (MonadWidget t m, Show a, Eq a, Ord a,Data a,Data c,Ord c, Show c, Buttonable a)
+multipleChoiceQuestionWidget :: forall t m c a. (MonadWidget t m, Show a, Eq a, Ord a,Data a,Data c,Ord c, Show c, Buttonable a)
   => Int -- maximum number of tries
   -> [a] -- fixed list of potential answers
   -> ExerciseId
@@ -72,15 +73,16 @@ multipleChoiceQuestionWidget :: forall t m c q a e s. (MonadWidget t m, Show a, 
   -> AnswerRenderer c a
   -> (Dynamic t (Map a Score) -> Dynamic t (MultipleChoiceStore c a) -> m ())
   -> XpFunction c a
+  -> s
   -> Dynamic t (Map String AudioBuffer)
   -> c
   -> Map a Score
   -> Event t ([a],a)
   -> m (Event t ExerciseDatum,Event t (Maybe (Synth ())),Event t c,Event t ExerciseNavigation)
 
-multipleChoiceQuestionWidget maxTries answers exId exInstructions cWidget render eWidget xpF sysResources config initialEval newQuestion = elClass "div" "exerciseWrapper" $ mdo
+multipleChoiceQuestionWidget maxTries answers exId exInstructions cWidget render eWidget xpF initialStore sysResources config initialEval newQuestion = elClass "div" "exerciseWrapper" $ mdo
 
-  let initialStore = MultipleChoiceStore { scores = empty, xp = (0,1) } -- normally this would come as an argument, then reset session specific elements of store
+  -- let initialStore = MultipleChoiceStore { scores = empty, xp = (0,1) } -- normally this would come as an argument, then reset session specific elements of store
   let scoreChanges = traceEventWith (const "scoreChanges") $ attachWith answerToScoreChange (current multipleChoiceState) answerPressed -- Event t (Maybe (c,Map a Score -> Map a Score))
   let scoreChanges' = traceEventWith (const "scoreChanges'") $ fmapMaybe id scoreChanges -- Event t (c,Map a Score -> Map a Score)
   let scoreChanges'' = traceEventWith (const "scoreChanges''") $ fmap (newScores xpF) scoreChanges' -- Event t (MultipleChoiceStore -> MultipleChoiceStore)
@@ -97,7 +99,7 @@ multipleChoiceQuestionWidget maxTries answers exId exInstructions cWidget render
   let answerPressed' = fmap answerSelected answerPressed
   let stateChanges = leftmost [newQuestion', questionHeard', answerPressed']
 
-  
+
 
   multipleChoiceState <- foldDyn ($) initialState stateChanges
   modes <- mapDyn answerButtonModes multipleChoiceState
@@ -275,8 +277,8 @@ onceQuestionHeard s = s { mode = AnswerMode, answerButtonModes = m }
 answerToScoreChange :: Ord a => MultipleChoiceState a c -> a -> Maybe (c,Map a Score -> Map a Score)
 answerToScoreChange s _ | mode s == ListenMode = Nothing
 answerToScoreChange s _ | mode s == ExploreMode = Nothing
-answerToScoreChange s a | a == correctAnswer s = Just (currentConfig s, markCorrect a)  
-answerToScoreChange s a | a /= correctAnswer s = Just (currentConfig s, markIncorrect a (correctAnswer s)) 
+answerToScoreChange s a | a == correctAnswer s = Just (currentConfig s, markCorrect a)
+answerToScoreChange s a | a /= correctAnswer s = Just (currentConfig s, markIncorrect a (correctAnswer s))
 
 answerSelected :: (Eq a,Ord a,Ord c) => a -> MultipleChoiceState a c -> MultipleChoiceState a c
 answerSelected _ s | mode s == ListenMode = s

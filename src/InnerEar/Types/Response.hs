@@ -23,9 +23,13 @@ data Response =
   UserData User
   deriving (Show,Eq,Data,Typeable)
 
+instance JSON Response where
+  showJSON = toJSON
+  readJSON = fromJSON
 
 -- | decodeResponse probably shouldn't be necessary but we need to do this
 -- in order to avoid "unknown constructor" errors when decoding JSON
+-- *** note: maybe it is no longer necessary since we added JSON instance just above?
 
 decodeResponses :: String -> Result [Response]
 decodeResponses = either Error fromJSON . runGetJSON readJSValue
@@ -41,3 +45,7 @@ isAuthenticated _ = False
 justRecordResponses :: Response -> Maybe Record
 justRecordResponses (RecordResponse r) = Just r
 justRecordResponses _ = Nothing
+
+justStoreResponses :: Response -> Maybe StoreDB
+justStoreResponses (StoreResponse s) = Just s
+justStoreResponses _ = Nothing

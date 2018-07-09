@@ -21,7 +21,7 @@ data ExerciseId =
   Intervals1 |
   FrequencyEnvelope |
   AmplitudeEnvelope
-  deriving (Show,Read,Eq,Data,Typeable)
+  deriving (Show,Read,Eq,Ord,Data,Typeable)
 
 showExerciseTitle :: ExerciseId -> String
 showExerciseTitle ThresholdOfSilence = "Threshold of Silence"
@@ -39,8 +39,3 @@ showExerciseTitle SpectralShape = "Spectral Shape"
 showExerciseTitle Intervals1 = "Intervals 1: P1 M2 M3 P4 P5"
 showExerciseTitle FrequencyEnvelope = "Frequency Envelope"
 showExerciseTitle AmplitudeEnvelope = "Amplitude Envelope"
-showExerciseTitle _ = "Error: unknown exercise"
-
-
-
-

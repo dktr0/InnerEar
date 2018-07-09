@@ -9,7 +9,7 @@ import InnerEar.Widgets.Client
 import InnerEar.Exercises.MultipleChoice
 
 main :: IO ()
-main =	mainWidget $ do
+main = mainWidget $ do
   globalBuffers <- loadGlobalResources
   globalBuffers' <- holdDyn empty globalBuffers
   clientWidget globalBuffers'
