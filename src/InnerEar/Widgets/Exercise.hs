@@ -32,7 +32,7 @@ runExercise :: forall t m c q a e s. (MonadWidget t m, Data c, Data q, Data a, D
   -> m (Event t (ExerciseId,ExerciseDatum),Event t (Maybe (Synth ())),Event t ())
 runExercise initialStore sysResources ex responses = mdo
 
-  let initialStore' = fmap (maybe (defaultStore ex) id) $ join $ fmap storeValueToStore initialStore
+  let initialStore' = maybe (defaultStore ex) id $ join $ fmap storeValueToStore initialStore
 
   -- form databank for exercise by folding together pertinent database entries plus data transmitted up
   let records = ffilter (\x -> length x > 0) $ fmap (catMaybes . (fmap justRecordResponses)) responses -- Event t [Record]

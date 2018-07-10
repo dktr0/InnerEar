@@ -73,7 +73,7 @@ multipleChoiceQuestionWidget :: forall t m c a. (MonadWidget t m, Show a, Eq a, 
   -> AnswerRenderer c a
   -> (Dynamic t (Map a Score) -> Dynamic t (MultipleChoiceStore c a) -> m ())
   -> XpFunction c a
-  -> s
+  -> MultipleChoiceStore c a
   -> Dynamic t (Map String AudioBuffer)
   -> c
   -> Map a Score
