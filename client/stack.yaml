@@ -11,6 +11,18 @@ setup-info:
 build:
   haddock-hyperlink-source: false
 
+ghc-options:
+  # possibly th times/memory too high but the simplifier runs out of ticks or runs too long to wait for the end
+  json: -funfolding-use-threshold=16
+  # reference errors when using the complicated, optimized interfaces and TH. Omiting them and falling back to the simple
+  # ones seems to work great! This is the default for -O0 anyways so adding it only affects the profile builds
+  # which don't work without it.
+  th-reify-many: -fomit-interface-pragmas
+  safe: -fomit-interface-pragmas
+  lens: -fomit-interface-pragmas
+  profunctors: -fomit-interface-pragmas
+  contravariant: -fomit-interface-pragmas
+
 allow-newer: true
 
 packages:

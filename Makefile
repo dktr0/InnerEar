@@ -47,3 +47,19 @@ buildReleaseTest: buildClient buildServer release bootServer
 
 ghciServer:
 	cd server && stack ghci
+
+
+# development builds
+
+PRODUCTION_WORK_DIR=.stack-work-production/
+
+prodBuildClient:
+	cd client && stack --work-dir $(PRODUCTION_WORK_DIR) build --ghc-options="-DGHCJS_BROWSER -O2"
+
+releaseProdClient:
+	cd client && cp -Rf $$(stack --work-dir $(PRODUCTION_WORK_DIR) path --local-install-root)/bin/InnerEarClient.jsexe ../release/	
+
+# profile builds
+
+profBuildClient:
+	cd client && stack build --profile

@@ -17,8 +17,14 @@ cabal.sandbox.config
 *.hp
 *.eventlog
 .DS_Store
+
+### Stack
 .stack-work/
+.stack-work-profile/
+.stack-work-production/
 cabal.project.local
+
+### Project Specific
 release/
 InnerEar.db
 
