@@ -15,6 +15,7 @@ extra-source-files:
 
 executable InnerEarClient
   hs-source-dirs:    src
+  js-sources:        ../static/InnerEarWebSocket.js ../static/reflex-synth.js
   main-is:           InnerEarClient.hs
   build-depends:     base, reflex, reflex-dom,reflex-dom-contrib, containers, safe, ghcjs-base, ghcjs-dom,
                      text, array, ghcjs-prim, data-default, transformers, file-embed, time, tuple,

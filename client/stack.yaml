@@ -1,6 +1,18 @@
+#resolver: lts-8.11
+#compiler: ghcjs-0.2.1.9008011_ghc-8.0.2i
+#compiler-check: match-exact
+#
+#setup-info:
+#  ghcjs:
+#    source:
+#      ghcjs-0.2.1.9008011_ghc-8.0.2:
+#        url: https://github.com/matchwood/ghcjs-stack-dist/raw/master/ghcjs-0.2.1.9008011.tar.gz
+#        sha1: a72a5181124baf64bcd0e68a8726e65914473b3b
+
 resolver: lts-6.30
 compiler: ghcjs-0.2.0.9006030_ghc-7.10.3
 compiler-check: match-exact
+
 setup-info:
   ghcjs:
     source:
@@ -22,6 +34,7 @@ ghc-options:
   lens: -fomit-interface-pragmas
   profunctors: -fomit-interface-pragmas
   contravariant: -fomit-interface-pragmas
+ # reflex-dom-contrib: -fexternal-interpreter
 
 allow-newer: true
 

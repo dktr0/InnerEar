@@ -4,7 +4,6 @@ module InnerEar.Exercises.MultipleChoice where
 
 import Reflex
 import Reflex.Dom
-import Reflex.Dom.Contrib.Widgets.ButtonGroup (radioGroup)
 import Reflex.Dom.Contrib.Widgets.Common
 import Data.Map
 import Control.Monad (zipWithM)
@@ -193,20 +192,6 @@ randomMultipleChoiceQuestion possibilities = do
   let n = length possibilities
   x <- getStdRandom ((randomR (0,n-1))::StdGen -> (Int,StdGen))
   return (possibilities,possibilities!!x)
-
-radioConfigWidget :: (MonadWidget t m, Eq a, Show a) => String -> String -> [a] -> a -> m (Event t a)
-radioConfigWidget explanation msg possibilities i = do
-  let radioButtonMap =  zip [0::Int,1..] possibilities
-  let iVal = maybe 0 id $ elemIndex i possibilities
-  elClass "div" "explanation" $ text explanation
-  elClass "div" "configText" $ text msg
-  radioWidget <- radioGroup (constDyn "radioWidget") (constDyn $ fmap (\(x,y)->(x,show y)) radioButtonMap)
-           (WidgetConfig {_widgetConfig_initialValue= Just iVal
-                         ,_widgetConfig_setValue = never
-                         ,_widgetConfig_attributes = constDyn empty})
-  dynConfig <- holdDyn i $ fmap (\x-> maybe i id $ Data.Map.lookup (maybe 0 id x) (fromList radioButtonMap)) (_hwidget_change radioWidget)
-  b <- button "Begin Exercise"
-  return $ tagDyn dynConfig b
 
 trivialBWidget :: MonadWidget t m => m (Dynamic t ())
 trivialBWidget = holdDyn () $ never

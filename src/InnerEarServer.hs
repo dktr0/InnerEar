@@ -6,6 +6,7 @@ import qualified Network.Wai as WS
 import qualified Network.Wai.Handler.WebSockets as WS
 import Network.Wai.Application.Static (staticApp, defaultWebAppSettings, ssIndices)
 import Network.Wai.Handler.Warp (run)
+import Network.Wai.Middleware.Gzip
 import WaiAppStatic.Types (unsafeToPiece)
 import Text.JSON
 import Text.JSON.Generic
@@ -56,7 +57,12 @@ mainWithDatabase :: MVar Server -> IO ()
 mainWithDatabase s = do
   putStrLn "Inner Ear server (listening on port 8000)"
   let settings = (defaultWebAppSettings "InnerEarClient.jsexe") { ssIndices = [unsafeToPiece "index.html"] }
-  run 8000 $ WS.websocketsOr WS.defaultConnectionOptions (webSocketsApp s) (staticApp settings)
+  run 8000 $ gzipMiddleware $ WS.websocketsOr WS.defaultConnectionOptions (webSocketsApp s) (staticApp settings)
+
+gzipMiddleware :: WS.Middleware
+gzipMiddleware = gzip $ def { 
+  gzipFiles = GzipPreCompressed GzipIgnore
+}
 
 webSocketsApp :: MVar Server -> WS.ServerApp -- = PendingConnection -> IO ()
 webSocketsApp s ws = do
