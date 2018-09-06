@@ -1,6 +1,18 @@
+#resolver: lts-8.11
+#compiler: ghcjs-0.2.1.9008011_ghc-8.0.2i
+#compiler-check: match-exact
+#
+#setup-info:
+#  ghcjs:
+#    source:
+#      ghcjs-0.2.1.9008011_ghc-8.0.2:
+#        url: https://github.com/matchwood/ghcjs-stack-dist/raw/master/ghcjs-0.2.1.9008011.tar.gz
+#        sha1: a72a5181124baf64bcd0e68a8726e65914473b3b
+
 resolver: lts-6.30
 compiler: ghcjs-0.2.0.9006030_ghc-7.10.3
 compiler-check: match-exact
+
 setup-info:
   ghcjs:
     source:
@@ -10,6 +22,19 @@ setup-info:
 
 build:
   haddock-hyperlink-source: false
+
+ghc-options:
+  # possibly th times/memory too high but the simplifier runs out of ticks or runs too long to wait for the end
+  json: -funfolding-use-threshold=16
+  # reference errors when using the complicated, optimized interfaces and TH. Omiting them and falling back to the simple
+  # ones seems to work great! This is the default for -O0 anyways so adding it only affects the profile builds
+  # which don't work without it.
+  th-reify-many: -fomit-interface-pragmas
+  safe: -fomit-interface-pragmas
+  lens: -fomit-interface-pragmas
+  profunctors: -fomit-interface-pragmas
+  contravariant: -fomit-interface-pragmas
+ # reflex-dom-contrib: -fexternal-interpreter
 
 allow-newer: true
 

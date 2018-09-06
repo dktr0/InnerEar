@@ -10,7 +10,6 @@ import Data.List (elemIndex)
 import Data.Map
 import Reflex
 import Reflex.Dom
-import Reflex.Dom.Contrib.Widgets.ButtonGroup (radioGroup)
 import Reflex.Dom.Contrib.Widgets.Common
 import Control.Monad ((>=>))
 import Control.Monad.IO.Class (liftIO)
