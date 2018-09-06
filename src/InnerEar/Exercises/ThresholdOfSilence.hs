@@ -83,6 +83,9 @@ sourcesMap = fromList $ [
     (2, ("Load a sound file", UserProvidedResource))
   ]
 
+xpFunction :: XpFunction Config Answer
+xpFunction m = (size m,100)
+
 thresholdOfSilenceExercise :: MonadWidget t m => Exercise t m Int [Answer] Answer (Map Answer Score) (MultipleChoiceStore Config Answer)
 thresholdOfSilenceExercise = multipleChoiceExercise
   1
@@ -94,5 +97,5 @@ thresholdOfSilenceExercise = multipleChoiceExercise
   (-20)
   displayEval
   generateQ
-  (const (0,2))
+  xpFunction
 

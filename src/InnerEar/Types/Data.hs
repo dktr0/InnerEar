@@ -12,12 +12,11 @@ import Data.Tuple.Select
 import Data.Tuple.Curry
 import Data.Time.Clock
 import Text.Read
+import Data.Map
 
 import InnerEar.Types.Utility
 import InnerEar.Types.ExerciseId
 import InnerEar.Types.Handle
-
-
 
 -- | Each exercise has unique strictly typed representations so there must be a type for the data
 -- specific to each exercise. (And this type, Datum c q a e, like all of the types in this module, is
@@ -35,6 +34,10 @@ data Datum c q a e s = -- c is configuration type, q is question type, a is answ
   Store s |
   Ended
   deriving (Show,Eq,Data,Typeable)
+
+instance (Data c, Data q, Data a, Data e, Data s) => JSON (Datum c q a e s) where
+  showJSON = toJSON
+  readJSON = fromJSON
 
 -- | The functions in the definition of an exercise will return some specific type Datum c q a e
 -- But to treat the data resulting from all exercises equally we need to be able to convert that
@@ -65,6 +68,9 @@ toExerciseDatum (Reflection r) = ExerciseReflection r
 toExerciseDatum (Store s) = ExerciseStore (encodeJSON s)
 toExerciseDatum Ended = ExerciseEnded
 
+{-
+
+-- this is currently not used anywhere, and possibly would not work because of issues related to derivation of JSON elsewhere
 toDatum :: (JSON c, JSON q, JSON a, JSON e, JSON s) => ExerciseDatum -> Result (Datum c q a e s)
 toDatum ExerciseStarted = return Started
 toDatum (ExerciseConfigured j) = Configured <$> decode j
@@ -77,11 +83,11 @@ toDatum (ExerciseReflection r) = return $ Reflection r
 toDatum (ExerciseStore s) = Store <$> decode s
 toDatum ExerciseEnded = return Ended
 
-
 toDatum' :: (JSON c, JSON q, JSON a, JSON e, JSON s) => ExerciseDatum -> Maybe (Datum c q a e s)
 toDatum' = f . toDatum
   where f (Ok x) = Just x
         f _ = Nothing
+-}
 
 -- | Some events of interest are not tied to a particular ear-training exercise.
 -- For these, we have the type SessionDatum.
@@ -125,14 +131,21 @@ data StoreDB = StoreDB {
   storeTime :: Time
   } deriving (Eq,Data,Typeable)
 
+instance JSON StoreDB where
+  showJSON = toJSON
+  readJSON = fromJSON
+
 instance Show StoreDB where
   show x = show (storeHandle x) ++ " " ++ show (storeId x) ++ " " ++ show (storeValue x)
+
+storeDBToMapChange :: StoreDB -> Map ExerciseId String -> Map ExerciseId String
+storeDBToMapChange x = insert (storeId x) (storeValue x)
+
+storeValueToStore :: JSON s => String -> Maybe s
+storeValueToStore = f . decode
+  where f (Ok x) = Just x
+        f _ = Nothing
 
 recordToMaybeStoreDB :: Record -> Maybe StoreDB
 recordToMaybeStoreDB (Record h (Point (Left (i,ExerciseStore s)) t)) = Just (StoreDB h i s t)
 recordToMaybeStoreDB _ = Nothing
-
-
-
-
-

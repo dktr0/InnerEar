@@ -7,15 +7,26 @@ import Text.JSON
 import Text.JSON.Generic
 import InnerEar.Types.Score
 
+type XpFunction c a = Map c (Map a Score) -> (Int,Int)
+
 data MultipleChoiceStore c a = MultipleChoiceStore {
   scores :: Map c (Map a Score),
   xp :: (Int,Int)
-  } deriving (Show,Eq,Typeable,Data)
+  } deriving (Show,Eq,Data,Typeable)
 
-newScores :: (Eq c, Eq a, Ord c, Ord a) => (Map c (Map a Score) -> (Int,Int)) -> Map c (Map a Score) -> MultipleChoiceStore c a -> MultipleChoiceStore c a
-newScores f m s = s { scores = m, xp = f m }
+instance (Ord c, Ord a, Data c, Data a) => JSON (MultipleChoiceStore c a) where
+  showJSON = toJSON
+  readJSON = fromJSON
 
-newScoresForConfig :: (Eq c, Eq a, Ord c, Ord a) => (Map c (Map a Score) -> (Int,Int)) -> c -> Map a Score -> MultipleChoiceStore c a -> MultipleChoiceStore c a
-newScoresForConfig f c m s = s { scores = newMap, xp = f newMap }
-  where newMap = insert c m (scores s)
+newStoreWithNoScores :: (Ord c, Ord a) => XpFunction c a -> MultipleChoiceStore c a
+newStoreWithNoScores f = MultipleChoiceStore { scores = empty, xp = f empty }
 
+newScores :: (Ord c, Ord a)
+  => XpFunction c a
+  -> (c, Map a Score -> Map a Score)
+  -> MultipleChoiceStore c a -> MultipleChoiceStore c a
+newScores xpF (c,newScoresF) s = s { scores = newMap, xp = xpF newMap }
+  where
+    oldSubMap = findWithDefault empty c $ scores s
+    newSubMap = newScoresF oldSubMap
+    newMap = insert c newSubMap $ scores s

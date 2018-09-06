@@ -2,7 +2,6 @@
 
 module InnerEar.Types.Score where
 
-
 import Text.JSON
 import Text.JSON.Generic
 import Data.Map
@@ -11,10 +10,14 @@ data Score = Score {
   correctAnswers :: Int,
   falsePositives::Int, -- times user thinks it is this the answer but correct answer is something else
   falseNegatives::Int  -- times user thinks it is another answer but this is the correct answer
-} deriving (Show,Eq,Typeable,Data)
+} deriving (Show,Eq,Data,Typeable)
+
+instance JSON Score where
+  showJSON = toJSON
+  readJSON = fromJSON
 
 -- Times that the answer this score pertains to has been the answer
-questionsAsked::Score -> Int
+questionsAsked :: Score -> Int
 questionsAsked (Score a _ c) = a+c
 
 asPercent :: Score -> Double
