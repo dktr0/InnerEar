@@ -60,7 +60,7 @@ mainWithDatabase s = do
   run 8000 $ gzipMiddleware $ WS.websocketsOr WS.defaultConnectionOptions (webSocketsApp s) (staticApp settings)
 
 gzipMiddleware :: WS.Middleware
-gzipMiddleware = gzip $ def { 
+gzipMiddleware = gzip $ def {
   gzipFiles = GzipPreCompressed GzipIgnore
 }
 
@@ -82,6 +82,7 @@ processLoop ws s i = do
       let x' = decode (T.unpack x) :: Result JSString
       case x' of
         Ok x'' -> do
+          -- putStrLn $ "debug: " ++ show x''
           processResult s i $ (decodeRequest . fromJSString) x''
           processLoop ws s i
         Error x'' -> do
@@ -186,7 +187,7 @@ postPoint i p s = do
   let h = snd ((connections s) ! i) -- should this be guarded against lookup failure, using getHandle like in getUserList below?
   if isJust h
     then do
-      possiblySendAllExerciseData i p s
+      -- possiblySendAllExerciseData i p s
       let r = Record (fromJust h) p
       putStrLn $ "posting record: " ++ (show r)
       DB.postEvent (database s) r
@@ -239,6 +240,7 @@ getAllExerciseEvents i h e s = do
     r <- getRole i s
     -- if authenticated as Administrator or Manager, or if authenticated as the user pertaining to the records, then proceed...
     if (canSeeUserList r || (h' == h)) then do
+      liftIO $ putStrLn "about to getAllExerciseEvents..."
       allRecords <- liftIO $ DB.findAllExerciseEvents (database s) h e
       liftIO $ putStrLn $ "getAllExerciseEvents for " ++ h ++ " " ++ (show e) ++ ": " ++ (show (length allRecords)) ++ " values"
       liftIO $ forM_ allRecords $ \x -> respond s i (RecordResponse x)

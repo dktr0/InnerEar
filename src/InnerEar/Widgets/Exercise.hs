@@ -25,14 +25,14 @@ import Sound.MusicW
 -- exercise in the browser.
 
 runExercise :: forall t m c q a e s. (MonadWidget t m, Data c, Data q, Data a, Data e, Data s, JSON s, Show c, Show q, Show a, Show e, Show s)
-  => Maybe String
+  => Maybe StoreString
   -> Dynamic t (Map String AudioBuffer)
   -> Exercise t m c q a e s
   -> Event t [Response]
-  -> m (Event t (ExerciseId,ExerciseDatum),Event t (Maybe (Synth ())),Event t ())
+  -> m (Event t StoreString, Event t (ExerciseId,ExerciseDatum),Event t (Maybe (Synth ())),Event t ())
 runExercise initialStore sysResources ex responses = mdo
 
-  let initialStore' = maybe (defaultStore ex) id $ join $ fmap storeValueToStore initialStore
+  let initialStore' = maybe (defaultStore ex) id $ join $ fmap storeStringToStore initialStore
 
   -- form databank for exercise by folding together pertinent database entries plus data transmitted up
   let records = ffilter (\x -> length x > 0) $ fmap (catMaybes . (fmap justRecordResponses)) responses -- Event t [Record]
@@ -44,9 +44,10 @@ runExercise initialStore sysResources ex responses = mdo
   currentData <- foldDyn (++) [] $ leftmost [datadown, questionWidgetData']
 
   -- Question Widget
-  (questionWidgetData, sounds, configUpdate, questionNav) <- elClass "div" "exerciseQuestion" $ do
+  (storeEvents,questionWidgetData, sounds, configUpdate, questionNav) <- elClass "div" "exerciseQuestion" $ do
     (questionWidget ex) initialStore' sysResources (defaultConfig ex) (defaultEvaluation ex) question
   config <- holdDyn (defaultConfig ex) configUpdate
+  let storeEvents' = fmap storeToStoreString storeEvents
 
   -- Question (with generateQuestion called again with each transition to Question)
   hackyBypass <- getPostBuild
@@ -61,10 +62,10 @@ runExercise initialStore sysResources ex responses = mdo
   -- structuring of exercise data for reporting/collection upwards
   startedData <- (Started <$) <$> getPostBuild
   let configData = Configured <$> configUpdate -- note: possibility for data loss here with question event and leftmost
-  let newQuestionData = attachDynWith (\c (q,a) -> NewQuestion c q a) config question
+  let newQuestionData = fmap (uncurry NewQuestion) question
 
   let endedData = Ended <$ closeExercise
   let allData = (leftmost [startedData,configData,newQuestionData,endedData]) :: Event t (Datum c q a e s)
   let exerciseData = leftmost [questionWidgetData,toExerciseDatum <$> allData]
   let dataPairedWithId = (\x -> (exerciseId ex,x)) <$> exerciseData
-  return (dataPairedWithId, sounds, closeExercise)
+  return (storeEvents',dataPairedWithId, sounds, closeExercise)

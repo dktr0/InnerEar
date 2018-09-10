@@ -77,16 +77,16 @@ multipleChoiceQuestionWidget :: forall t m c a. (MonadWidget t m, Show a, Eq a, 
   -> c
   -> Map a Score
   -> Event t ([a],a)
-  -> m (Event t ExerciseDatum,Event t (Maybe (Synth ())),Event t c,Event t ExerciseNavigation)
+  -> m (Event t (MultipleChoiceStore c a),Event t ExerciseDatum,Event t (Maybe (Synth ())),Event t c,Event t ExerciseNavigation)
 
 multipleChoiceQuestionWidget maxTries answers exId exInstructions cWidget render eWidget xpF initialStore sysResources config initialEval newQuestion = elClass "div" "exerciseWrapper" $ mdo
 
-  -- let initialStore = MultipleChoiceStore { scores = empty, xp = (0,1) } -- normally this would come as an argument, then reset session specific elements of store
   let scoreChanges = traceEventWith (const "scoreChanges") $ attachWith answerToScoreChange (current multipleChoiceState) answerPressed -- Event t (Maybe (c,Map a Score -> Map a Score))
   let scoreChanges' = traceEventWith (const "scoreChanges'") $ fmapMaybe id scoreChanges -- Event t (c,Map a Score -> Map a Score)
   let scoreChanges'' = traceEventWith (const "scoreChanges''") $ fmap (newScores xpF) scoreChanges' -- Event t (MultipleChoiceStore -> MultipleChoiceStore)
   currentStore <- foldDyn ($) initialStore $ scoreChanges''
-  display currentStore
+  let storeEvents = updated currentStore
+  -- display currentStore -- for debugging
 
 
   let initialState = initialMultipleChoiceState config answers maxTries
@@ -134,6 +134,8 @@ multipleChoiceQuestionWidget maxTries answers exId exInstructions cWidget render
     elClass "div" "journal" $ journalWidget
 
   let answerEvent = gate (fmap (==AnswerMode) . fmap mode . current $ multipleChoiceState) answerPressed
+  let correctAnswerEvent = attachDynWithMaybe (\x y -> if y == correctAnswer x then Just y else Nothing) multipleChoiceState answerEvent
+  let incorrectAnswerEvent = attachDynWithMaybe (\x y -> if y /= correctAnswer x then Just y else Nothing) multipleChoiceState answerEvent
   let exploreAnswerPressed = gate (fmap (==ExploreMode) . fmap mode . current $ multipleChoiceState) answerPressed
 
   -- generate sounds to be played
@@ -148,21 +150,14 @@ multipleChoiceQuestionWidget maxTries answers exId exInstructions cWidget render
   let navEvents = leftmost [closeExercise, nextQuestionNav]
 
   -- generate data for adaptive questions and analysis
-  let questionWhileListened = (\x -> (possibleAnswers x, correctAnswer x)) <$> tagDyn multipleChoiceState listenPressed
-  let listenedQuestionData = attachDynWith (\c (q, a)-> ListenedQuestion c q a) dynConfig questionWhileListened
-
-  let questionWhileReference = (\x -> (possibleAnswers x,correctAnswer x)) <$> tagDyn multipleChoiceState playPressed
-  let listenedReferenceData = attachDynWith (\c (q, a) -> ListenedReference c q a) dynConfig questionWhileReference
-
-  mcsAndConfig <- combineDyn (,) dynConfig multipleChoiceState
-  let answerWithContext = attachDynWith (\(c,mcs) s -> (s, c, possibleAnswers mcs, correctAnswer mcs)) mcsAndConfig answerEvent
-  let tempHack k m = findWithDefault empty k m
-  -- let answerData = attachDynWith (\e (s,c,q,a) -> Answered s (tempHack c e) (tempHack c e) c q a) evaluations answerWithContext
-  let questionWhileExplore = attachDynWith (\x y -> (possibleAnswers x,correctAnswer x,y)) multipleChoiceState answerPressed
-  let listenedExploreData = attachDynWith (\c (q,a,s) -> ListenedExplore s c q a) dynConfig questionWhileExplore
-  let datums = leftmost [listenedQuestionData,listenedReferenceData, listenedExploreData,journalData] :: Event t (Datum c [a] a (Map a Score) (MultipleChoiceStore c a))
+  let listenedQuestionData = ListenedQuestion <$ listenPressed
+  let listenedReferenceData = ListenedReference <$ playPressed
+  let incorrectAnswerData = fmap (\(s,a) -> IncorrectAnswer a s) $ attachDyn currentStore incorrectAnswerEvent
+  let correctAnswerData = fmap CorrectAnswer $ tagDyn currentStore correctAnswerEvent
+  let listenedExploreData = fmap ListenedExplore exploreAnswerPressed
+  let datums = leftmost [listenedQuestionData,listenedReferenceData,incorrectAnswerData,correctAnswerData,listenedExploreData,journalData] :: Event t (Datum c [a] a (Map a Score) (MultipleChoiceStore c a))
   let datums' = fmap toExerciseDatum datums
-  return (datums', playbackSynthChanged, updated dynConfig, navEvents)
+  return (storeEvents,datums', playbackSynthChanged, updated dynConfig, navEvents)
 
 connectPlaybackControls :: MonadWidget t m
   => Event t a

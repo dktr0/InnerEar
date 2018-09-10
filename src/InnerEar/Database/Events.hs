@@ -24,140 +24,57 @@ import InnerEar.Database.ExerciseId
 
 createEventsTable :: Connection -> IO ()
 createEventsTable c =
-  execute_ c "CREATE TABLE IF NOT EXISTS events (handle TEXT, time TEXT, event TEXT, exerciseId TEXT, config TEXT, question TEXT, answer TEXT, selection TEXT, shortTermEval TEXT, longTermEval TEXT, reflection TEXT)"
+  execute_ c "CREATE TABLE IF NOT EXISTS events (handle TEXT, time TEXT, event TEXT, exerciseId TEXT, param1 TEXT, param2 TEXT)"
 
 instance FromRow Record where
   fromRow = do
-    h <- field
-    t <- field
-    (e,i,c,q,a,s,e1,e2,r) <- fromRow
-    let x = recordFromRow h t e i c q a s e1 e2 r
+    (h,t,e,i,p1,p2) <- fromRow
+    let x = recordFromRow h t e i p1 p2
     let uhoh = fail "unable to parse Record in FromRow instance"
     maybe uhoh return x
 
-recordFromRow :: Maybe String -> Maybe Time -> Maybe String -> Maybe ExerciseId -> Maybe String
-  -> Maybe String -> Maybe String -> Maybe String -> Maybe String -> Maybe String
-  -> Maybe String -> Maybe Record
+recordFromRow :: String -> Time -> String -> ExerciseId -> String -> String -> Maybe Record
+recordFromRow h t "Started" i p1 p2 = Just $ Record h $ Point (Left (i,ExerciseStarted)) t
+recordFromRow h t "Configured" i p1 p2 = Just $ Record h $ Point (Left (i,ExerciseConfigured p1)) t
+recordFromRow h t "NewQuestion" i p1 p2 = Just $ Record h $ Point (Left (i,ExerciseNewQuestion p1 p2)) t
+recordFromRow h t "ListenedQuestion" i p1 p2 = Just $ Record h $ Point (Left (i,ExerciseListenedQuestion)) t
+recordFromRow h t "ListenedReference" i p1 p2 = Just $ Record h $ Point (Left (i,ExerciseListenedReference)) t
+recordFromRow h t "IncorrectAnswer" i p1 p2 = Just $ Record h $ Point (Left (i,ExerciseIncorrectAnswer p1 p2)) t
+recordFromRow h t "CorrectAnswer" i p1 p2 = Just $ Record h $ Point (Left (i,ExerciseCorrectAnswer p1)) t
+recordFromRow h t "ListenedExplore" i p1 p2 = Just $ Record h $ Point (Left (i,ExerciseListenedExplore p1)) t
+recordFromRow h t "Reflection" i p1 p2 = Just $ Record h $ Point (Left (i,ExerciseReflection p1)) t
+recordFromRow h t "Ended" i p1 p2 = Just $ Record h $ Point (Left (i,ExerciseEnded)) t
+recordFromRow h t "SessionStart" i p1 p2 = Just $ Record h $ Point (Right SessionStart) t
+recordFromRow h t "SessionEnd" i p1 p2 = Just $ Record h $ Point (Right SessionEnd) t
+recordFromRow h t "AuthenticationFailure" i p1 p2 = Just $ Record h $ Point (Right AuthenticationFailure) t
+recordFromRow _ _ _ _ _ _ = Nothing
 
-recordFromRow h t (Just "Started") i c q a s e1 e2 r = do
-  y <- (Left . (,ExerciseStarted)) <$> i
-  z <- Point y <$> t
-  (flip Record) z <$> h
-
-recordFromRow h t (Just "Configured") i c q a s e1 e2 r = do
-  x <- ExerciseConfigured <$> c
-  y <- (Left . (,x)) <$> i
-  z <- Point y <$> t
-  (flip Record) z <$> h
-
-recordFromRow h t (Just "NewQuestion") i c q a s e1 e2 r = do
-  x <- ExerciseNewQuestion <$> c <*> q <*> a
-  y <- (Left . (,x)) <$> i
-  z <- Point y <$> t
-  (flip Record) z <$> h
-
-recordFromRow h t (Just "ListenedQuestion") i c q a s e1 e2 r = do
-  x <- ExerciseListenedQuestion <$> c <*> q <*> a
-  y <- (Left . (,x)) <$> i
-  z <- Point y <$> t
-  (flip Record) z <$> h
-
-recordFromRow h t (Just "ListenedReference") i c q a s e1 e2 r = do
-  x <- ExerciseListenedReference <$> c <*> q <*> a
-  y <- (Left . (,x)) <$> i
-  z <- Point y <$> t
-  (flip Record) z <$> h
-
-recordFromRow h t (Just "Answered") i c q a s e1 e2 r = do
-  x <- ExerciseAnswered <$> s <*> e1 <*> e2 <*> c <*> q <*> a
-  y <- (Left . (,x)) <$> i
-  z <- Point y <$> t
-  (flip Record) z <$> h
-
-recordFromRow h t (Just "ListenedExplore") i c q a s e1 e2 r = do
-  x <- ExerciseListenedExplore <$> s <*> c <*> q <*> a
-  y <- (Left . (,x)) <$> i
-  z <- Point y <$> t
-  (flip Record) z <$> h
-
-recordFromRow h t (Just "Reflection") i c q a s e1 e2 r = do
-  x <- ExerciseReflection <$> r
-  y <- (Left . (,x)) <$> i
-  z <- Point y <$> t
-  (flip Record) z <$> h
-
-recordFromRow h t (Just "Store") i c q a s e1 e2 r = do
-  x <- ExerciseStore <$> c -- Note: somewhat arbitrarily/temporarily we are placing Store data in the config column of the database table...
-  y <- (Left . (,x)) <$> i
-  z <- Point y <$> t
-  (flip Record) z <$> h
-
-recordFromRow h t (Just "Ended") i c q a s e1 e2 r = do
-  y <- (Left . (,ExerciseEnded)) <$> i
-  z <- Point y <$> t
-  (flip Record) z <$> h
-
-recordFromRow h t (Just "SessionStart") i c q a s e1 e2 r = do
-  let y = Right SessionStart
-  z <- Point y <$> t
-  (flip Record) z <$> h
-
-recordFromRow h t (Just "SessionEnd") i c q a s e1 e2 r = do
-  let y = Right SessionEnd
-  z <- Point y <$> t
-  (flip Record) z <$> h
-
-recordFromRow h t (Just "AuthenticationFailure") i c q a s e1 e2 r = do
-  let y = Right AuthenticationFailure
-  z <- Point y <$> t
-  (flip Record) z <$> h
-
-recordFromRow _ _ _ _ _ _ _ _ _ _ _ = Nothing
+instance ToRow Record where
+  toRow (Record h (Point (Left (i,ExerciseStarted)) t)) = toRow (h,t,"Started"::Text,i,nil,nil)
+  toRow (Record h (Point (Left (i,ExerciseConfigured c)) t)) = toRow (h,t,"Configured"::Text,i,c,nil)
+  toRow (Record h (Point (Left (i,ExerciseNewQuestion q a)) t)) = toRow (h,t,"NewQuestion"::Text,i,q,a)
+  toRow (Record h (Point (Left (i,ExerciseListenedQuestion)) t)) = toRow (h,t,"ListenedQuestion"::Text,i,nil,nil)
+  toRow (Record h (Point (Left (i,ExerciseListenedReference)) t)) = toRow (h,t,"ListenedReference"::Text,i,nil,nil)
+  toRow (Record h (Point (Left (i,ExerciseIncorrectAnswer a s)) t)) = toRow (h,t,"IncorrectAnswer"::Text,i,a,s)
+  toRow (Record h (Point (Left (i,ExerciseCorrectAnswer s)) t)) = toRow (h,t,"CorrectAnswer"::Text,i,s,nil)
+  toRow (Record h (Point (Left (i,ExerciseListenedExplore a)) t)) = toRow (h,t,"ListenedExplore"::Text,i,a,nil)
+  toRow (Record h (Point (Left (i,ExerciseReflection r)) t)) = toRow (h,t,"Reflection"::Text,i,r,nil)
+  toRow (Record h (Point (Left (i,ExerciseEnded)) t)) = toRow (h,t,"Ended"::Text,i,nil,nil)
+  toRow (Record h (Point (Right SessionStart) t)) = toRow (h,t,"SessionStart"::Text,nil,nil,nil)
+  toRow (Record h (Point (Right SessionEnd) t)) = toRow (h,t,"SessionEnd"::Text,nil,nil,nil)
+  toRow (Record h (Point (Right AuthenticationFailure) t)) = toRow (h,t,"AuthenticationFailure"::Text,nil,nil,nil)
 
 nil :: SQLData
 nil = toField (Nothing :: Maybe Text)
 
-instance
-  (ToField a,ToField b,ToField c, ToField d,ToField e,ToField f,
-   ToField g, ToField h, ToField i, ToField j, ToField k) =>
-  ToRow (a,b,c,d,e,f,g,h,i,j,k) where
-  toRow (a,b,c,d,e,f,g,h,i,j,k) =
-    [toField a,toField b,toField c,toField d,toField e,toField f,toField g,toField h,
-     toField i,toField j,toField k]
-
-instance ToRow Record where
-  toRow (Record h (Point (Left (i,ExerciseStarted)) t)) =
-    toRow (h,t,"Started"::Text,i,nil,nil,nil,nil,nil,nil,nil)
-  toRow (Record h (Point (Left (i,ExerciseConfigured c)) t)) =
-    toRow (h,t,"Configured"::Text,i,c,nil,nil,nil,nil,nil,nil)
-  toRow (Record h (Point (Left (i,ExerciseNewQuestion c q a)) t)) =
-    toRow (h,t,"NewQuestion"::Text,i,c,q,a,nil,nil,nil,nil)
-  toRow (Record h (Point (Left (i,ExerciseListenedQuestion c q a)) t)) =
-    toRow (h,t,"ListenedQuestion"::Text,i,c,q,a,nil,nil,nil,nil)
-  toRow (Record h (Point (Left (i,ExerciseListenedReference c q a)) t)) =
-    toRow (h,t,"ListenedReference"::Text,i,c,q,a,nil,nil,nil,nil)
-  toRow (Record h (Point (Left (i,ExerciseAnswered ia e1 e2 c q a)) t)) =
-    toRow (h,t,"Answered"::Text,i,c,q,a,ia,e1,e2,nil)
-  toRow (Record h (Point (Left (i,ExerciseListenedExplore s c q a)) t)) =
-    toRow (h,t,"ListenedExplore"::Text,i,c,q,a,s,nil,nil,nil)
-  toRow (Record h (Point (Left (i,ExerciseReflection r)) t)) =
-    toRow (h,t,"Reflection"::Text,i,nil,nil,nil,nil,nil,nil,r)
-  toRow (Record h (Point (Left (i,ExerciseStore s)) t)) =
-    toRow (h,t,"Store"::Text,i,s,nil,nil,nil,nil,nil,nil)
-  toRow (Record h (Point (Left (i,ExerciseEnded)) t)) =
-    toRow (h,t,"Ended"::Text,i,nil,nil,nil,nil,nil,nil,nil)
-  toRow (Record h (Point (Right SessionStart) t)) =
-    toRow (h,t,"SessionStart"::Text,nil,nil,nil,nil,nil,nil,nil,nil)
-  toRow (Record h (Point (Right SessionEnd) t)) =
-    toRow (h,t,"SessionEnd"::Text,nil,nil,nil,nil,nil,nil,nil,nil)
-  toRow (Record h (Point (Right AuthenticationFailure) t)) =
-    toRow (h,t,"AuthenticationFailure"::Text,nil,nil,nil,nil,nil,nil,nil,nil)
-
 postEvent :: Connection -> Record -> IO ()
-postEvent c r = execute c "INSERT INTO events (handle,time,event,exerciseId,config,question,answer,selection,shortTermEval,longTermEval,reflection) VALUES (?,?,?,?,?,?,?,?,?,?,?)" r
+postEvent c r = execute c "INSERT INTO events (handle,time,event,exerciseId,param1,param2) VALUES (?,?,?,?,?,?)" $ sanitizeRecord r
+
+sanitizeRecord :: Record -> Record
+sanitizeRecord r = r { userHandle = fmap Data.Char.toLower (userHandle r) }
 
 findAllRecords :: Connection -> Handle -> IO [Record]
-findAllRecords conn h = query conn "SELECT handle,time,event,exerciseId,config,question,answer,selection,shortTermEval,longTermEval,reflection FROM events WHERE handle = ?" (Only (fmap Data.Char.toLower h))
+findAllRecords conn h = query conn "SELECT handle,time,event,exerciseId,param1,param2 FROM events WHERE handle = ?" (Only (fmap Data.Char.toLower h))
 
 findAllExerciseEvents :: Connection -> Handle -> ExerciseId -> IO [Record]
-findAllExerciseEvents conn h e = query conn "SELECT handle,time,event,exerciseId,config,question,answer,selection,shortTermEval,longTermEval,reflection FROM events WHERE handle = ? AND exerciseId = ?" (fmap Data.Char.toLower h,show e)
+findAllExerciseEvents conn h e = query conn "SELECT handle,time,event,exerciseId,param1,param2 FROM events WHERE handle = ? AND exerciseId = ?" (fmap Data.Char.toLower h,show e)

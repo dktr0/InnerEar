@@ -24,7 +24,7 @@ createStoresTable :: Connection -> IO ()
 createStoresTable c = execute_ c "CREATE TABLE IF NOT EXISTS stores (handle TEXT NOT NULL, exerciseId TEXT NOT NULL, store TEXT, time TEXT, PRIMARY KEY (handle,exerciseId))"
 
 instance FromRow StoreDB where
-  fromRow = StoreDB <$> field <*> field <*> field <*> field 
+  fromRow = StoreDB <$> field <*> field <*> field <*> field
 
 instance ToRow StoreDB where
   toRow (StoreDB h i s t) = toRow (h,i,s,t)
@@ -34,4 +34,3 @@ postStore c s = execute c "INSERT OR REPLACE INTO stores VALUES (?,?,?,?)" s
 
 findAllStores :: Connection -> Handle -> IO [StoreDB]
 findAllStores conn h = query conn "SELECT handle,exerciseId,store,time FROM stores WHERE handle = ?" (Only (fmap Data.Char.toLower h))
-

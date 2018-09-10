@@ -48,23 +48,25 @@ data Navigation =
   UserPage Handle |
   TestPage
 
-maintainExerciseStores :: MonadWidget t m => Event t [Response] -> Event t a -> m (Dynamic t (Map ExerciseId String))
-maintainExerciseStores responses resetEvent = do
+maintainExerciseStores :: MonadWidget t m => Event t [Response] -> Event t (ExerciseId,StoreString) -> Event t a -> m (Dynamic t (Map ExerciseId String))
+maintainExerciseStores responses storeEvent resetEvent = do
   let responseEvent = fmap ((Prelude.foldl (.) id) . fmap storeDBToMapChange . catMaybes . fmap justStoreResponses) responses
+  let storeEvent' = fmap (uncurry Data.Map.insert) storeEvent
   let resetEvent' = (const Data.Map.empty) <$ resetEvent
-  let updateEvents = mergeWith (.) [resetEvent',responseEvent]
+  let updateEvents = mergeWith (.) [ responseEvent,storeEvent',resetEvent' ]
   foldDyn ($) Data.Map.empty updateEvents
-
+  
 navigationWidget :: MonadWidget t m => Dynamic t (Map String AudioBuffer) -> Event t [Response] -> Dynamic t (Maybe Role) -> m (Event t Request, Event t (Maybe (Synth ())))
 navigationWidget sysResources responses currentRole = elClass "div" "mainBody" $ mdo
-  stores <- maintainExerciseStores responses $ updated currentRole
+  stores <- maintainExerciseStores responses storeEvents $ updated currentRole
   let initialPage = navigationPage sysResources responses currentRole Data.Map.empty SplashPage
   let storesAndNav = attachDyn stores navEvents
   let rebuild = fmap (uncurry $ navigationPage sysResources responses currentRole) storesAndNav
   w <- widgetHold initialPage rebuild
-  requests <- liftM switchPromptlyDyn $ mapDyn (\(x,_,_) -> x) w
-  sounds <- liftM switchPromptlyDyn $ mapDyn (\(_,x,_) -> x) w
-  navEvents <- liftM switchPromptlyDyn $ mapDyn (\(_,_,x) -> x) w
+  storeEvents <- liftM switchPromptlyDyn $ mapDyn (\(x,_,_,_) -> x) w
+  requests <- liftM switchPromptlyDyn $ mapDyn (\(_,x,_,_) -> x) w
+  sounds <- liftM switchPromptlyDyn $ mapDyn (\(_,_,x,_) -> x) w
+  navEvents <- liftM switchPromptlyDyn $ mapDyn (\(_,_,_,x) -> x) w
   return (requests,sounds)
 
 includedExercises = [
@@ -93,7 +95,7 @@ navigationPage :: MonadWidget t m
   -> Dynamic t (Maybe Role)
   -> Map ExerciseId String
   -> Navigation
-  -> m (Event t Request, Event t (Maybe (Synth ())), Event t Navigation)
+  -> m (Event t (ExerciseId,StoreString), Event t Request, Event t (Maybe (Synth ())), Event t Navigation)
 navigationPage sysResources responses currentRole stores SplashPage = elClass "div" "nav" $ do
   elClass "div" "explanation" $
     text "Welcome to Inner Ear! Select an ear-training exercise from the list below. If you are doing this is part of a requirement for a class, please make sure you are logged in first (at the top right)."
@@ -103,11 +105,11 @@ navigationPage sysResources responses currentRole stores SplashPage = elClass "d
   c <- (TestPage <$) <$> (visibleWhen isAdmin $ elClass "div" "navButton" $ button "Test")
   d <- (CreateUserPage <$) <$> (visibleWhen isAdmin $ elClass "div" "navButton" $ button "Create Users")
   let navEvents = leftmost (a:c:{-d:-}b)
-  return (never,never,navEvents)
+  return (never,never,never,navEvents)
 
 navigationPage sysResources responses currentRole stores CreateUserPage = el "div" $ do
   (requests,navUnit) <- createUserWidget responses
-  return (requests,never,SplashPage <$ navUnit)
+  return (never,requests,never,SplashPage <$ navUnit)
 
 navigationPage sysResources responses currentRole stores (ExercisePage ThresholdOfSilence) =
   runExerciseForNavigationPage sysResources thresholdOfSilenceExercise responses currentRole stores
@@ -135,34 +137,35 @@ navigationPage sysResources responses currentRole stores (ExercisePage Frequency
 navigationPage sysResources responses currentRole stores TestPage = do
   -- testOurDynSvg
   (requests,sounds,navUnit) <- testWidget responses
-  return (requests,sounds,SplashPage <$ navUnit)
+  return (never,requests,sounds,SplashPage <$ navUnit)
 
 navigationPage sysResources responses currentRole stores AdminPage = do
   goToUserList <- (UserListPage <$) <$> button "Users"
   goToSplashPage <- (SplashPage <$) <$> button "Back to homepage"
   let navEvents = leftmost [goToUserList,goToSplashPage]
   let requests = never
-  return (requests,never,navEvents)
+  return (never,requests,never,navEvents)
 
 navigationPage sysResources responses currentRole stores UserListPage = do
   (requests,nav) <- userListWidget responses currentRole
   let nav' = fmap (maybe AdminPage UserPage) nav
-  return (requests,never,nav')
+  return (never,requests,never,nav')
 
 navigationPage sysResources responses currentRole stores (UserPage h) = do
   (requests,nav) <- userPageWidget h responses currentRole
-  return (requests,never,SplashPage <$ nav)
+  return (never,requests,never,SplashPage <$ nav)
 
 runExerciseForNavigationPage :: (MonadWidget t m, Data c, Data q, Data a, Data e, Data s, JSON s, Show c, Show q, Show a, Show e, Show s)
   => Dynamic t (Map String AudioBuffer)
   -> Exercise t m c q a e s
   -> Event t [Response] -> Dynamic t (Maybe Role) -> Map ExerciseId String
-  -> m (Event t Request, Event t (Maybe (Synth ())), Event t Navigation)
+  -> m (Event t (ExerciseId,StoreString), Event t Request, Event t (Maybe (Synth ())), Event t Navigation)
 runExerciseForNavigationPage sysResources ex responses currentRole stores = do
   let initialStore = Data.Map.lookup (exerciseId ex) stores
-  (newData,sounds,navUnit) <- runExercise initialStore sysResources ex responses
+  (newStore,newData,sounds,navUnit) <- runExercise initialStore sysResources ex responses
   currentRole' <- mapDyn isJust currentRole
   let newData' = gate (current currentRole') newData
   newPoint <- performEvent $ fmap (liftIO . datumToPoint . Left) $ newData'
   let newRequest = PostPoint <$> newPoint
-  return (newRequest,sounds,SplashPage <$ navUnit)
+  let newStore' = fmap (\x -> (exerciseId ex,x)) newStore
+  return (newStore',newRequest,sounds,SplashPage <$ navUnit)

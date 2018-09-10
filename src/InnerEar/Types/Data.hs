@@ -25,13 +25,13 @@ import InnerEar.Types.Handle
 data Datum c q a e s = -- c is configuration type, q is question type, a is answer type, e is evaluation type, s is exercise store type
   Started |
   Configured c |
-  NewQuestion c q a |
-  ListenedQuestion c q a |
-  ListenedReference c q a |
-  Answered a e e c q a | -- their choice, new short- and long-term evaluation plus context
-  ListenedExplore a c q a | -- for exploratory listening to possible answers
+  NewQuestion q a |
+  ListenedQuestion |
+  ListenedReference |
+  IncorrectAnswer a s |
+  CorrectAnswer s |
+  ListenedExplore a |
   Reflection String |
-  Store s |
   Ended
   deriving (Show,Eq,Data,Typeable)
 
@@ -46,48 +46,28 @@ instance (Data c, Data q, Data a, Data e, Data s) => JSON (Datum c q a e s) wher
 data ExerciseDatum =
   ExerciseStarted |
   ExerciseConfigured String |
-  ExerciseNewQuestion String String String |
-  ExerciseListenedQuestion String String String |
-  ExerciseListenedReference String String String |
-  ExerciseAnswered String String String String String String |
-  ExerciseListenedExplore String String String String |
+  ExerciseNewQuestion String String |
+  ExerciseListenedQuestion |
+  ExerciseListenedReference |
+  ExerciseIncorrectAnswer String String |
+  ExerciseCorrectAnswer String |
+  ExerciseListenedExplore String |
   ExerciseReflection String |
-  ExerciseStore String |
   ExerciseEnded
   deriving (Show,Eq,Data,Typeable)
 
 toExerciseDatum :: (Data c,Data q,Data a,Data e,Data s) => Datum c q a e s -> ExerciseDatum
 toExerciseDatum Started = ExerciseStarted
 toExerciseDatum (Configured c) = ExerciseConfigured $ encodeJSON c
-toExerciseDatum (NewQuestion c q a) = ExerciseNewQuestion (encodeJSON c) (encodeJSON q) (encodeJSON a)
-toExerciseDatum (ListenedQuestion c q a) = ExerciseListenedQuestion (encodeJSON c) (encodeJSON q) (encodeJSON a)
-toExerciseDatum (ListenedReference c q a) = ExerciseListenedReference (encodeJSON c) (encodeJSON q) (encodeJSON a)
-toExerciseDatum (Answered ia e1 e2 c q a) = ExerciseAnswered (encodeJSON ia) (encodeJSON e1) (encodeJSON e2) (encodeJSON c) (encodeJSON q) (encodeJSON a)
-toExerciseDatum (ListenedExplore a1 c q a2) = ExerciseListenedExplore (encodeJSON a1) (encodeJSON c) (encodeJSON q) (encodeJSON a2)
+toExerciseDatum (NewQuestion q a) = ExerciseNewQuestion (encodeJSON q) (encodeJSON a)
+toExerciseDatum ListenedQuestion = ExerciseListenedQuestion
+toExerciseDatum ListenedReference = ExerciseListenedReference
+toExerciseDatum (IncorrectAnswer a s) = ExerciseIncorrectAnswer (encodeJSON a) (encodeJSON s)
+toExerciseDatum (CorrectAnswer s) = ExerciseCorrectAnswer (encodeJSON s)
+toExerciseDatum (ListenedExplore a) = ExerciseListenedExplore (encodeJSON a)
 toExerciseDatum (Reflection r) = ExerciseReflection r
-toExerciseDatum (Store s) = ExerciseStore (encodeJSON s)
 toExerciseDatum Ended = ExerciseEnded
 
-{-
-
--- this is currently not used anywhere, and possibly would not work because of issues related to derivation of JSON elsewhere
-toDatum :: (JSON c, JSON q, JSON a, JSON e, JSON s) => ExerciseDatum -> Result (Datum c q a e s)
-toDatum ExerciseStarted = return Started
-toDatum (ExerciseConfigured j) = Configured <$> decode j
-toDatum (ExerciseNewQuestion c q a) = NewQuestion <$> decode c <*> decode q <*> decode a
-toDatum (ExerciseListenedQuestion c q a) = ListenedQuestion <$> decode c <*> decode q <*> decode a
-toDatum (ExerciseListenedReference c q a) = ListenedReference <$> decode c <*> decode q <*> decode a
-toDatum (ExerciseAnswered ia e1 e2 c q a) = Answered <$> decode ia <*> decode e1 <*> decode e2 <*> decode c <*> decode q <*> decode a
-toDatum (ExerciseListenedExplore a1 c q a2) = ListenedExplore <$> decode a1 <*> decode c <*> decode q <*> decode a2
-toDatum (ExerciseReflection r) = return $ Reflection r
-toDatum (ExerciseStore s) = Store <$> decode s
-toDatum ExerciseEnded = return Ended
-
-toDatum' :: (JSON c, JSON q, JSON a, JSON e, JSON s) => ExerciseDatum -> Maybe (Datum c q a e s)
-toDatum' = f . toDatum
-  where f (Ok x) = Just x
-        f _ = Nothing
--}
 
 -- | Some events of interest are not tied to a particular ear-training exercise.
 -- For these, we have the type SessionDatum.
@@ -141,11 +121,17 @@ instance Show StoreDB where
 storeDBToMapChange :: StoreDB -> Map ExerciseId String -> Map ExerciseId String
 storeDBToMapChange x = insert (storeId x) (storeValue x)
 
-storeValueToStore :: JSON s => String -> Maybe s
-storeValueToStore = f . decode
+type StoreString = String
+
+storeStringToStore :: JSON s => StoreString -> Maybe s
+storeStringToStore = f . decode
   where f (Ok x) = Just x
         f _ = Nothing
 
+storeToStoreString :: JSON s => s -> StoreString
+storeToStoreString = encode
+
 recordToMaybeStoreDB :: Record -> Maybe StoreDB
-recordToMaybeStoreDB (Record h (Point (Left (i,ExerciseStore s)) t)) = Just (StoreDB h i s t)
+recordToMaybeStoreDB (Record h (Point (Left (i,ExerciseIncorrectAnswer _ s)) t)) = Just (StoreDB h i s t)
+recordToMaybeStoreDB (Record h (Point (Left (i,ExerciseCorrectAnswer s)) t)) = Just (StoreDB h i s t)
 recordToMaybeStoreDB _ = Nothing

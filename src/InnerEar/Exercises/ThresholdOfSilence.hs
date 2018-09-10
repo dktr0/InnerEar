@@ -7,7 +7,7 @@ import Reflex.Dom
 import Data.Map
 import Text.JSON
 import Text.JSON.Generic
-import Sound.MusicW 
+import Sound.MusicW
 
 
 import InnerEar.Exercises.MultipleChoice
@@ -55,20 +55,21 @@ renderAnswer _ db (src, dur) Nothing = buildSynth $ do
 
 instructionsText = "In this exercise, the system either makes no sound at all \
     \or it plays a sound that has been reduced in level by some specific amount \
-    \of attenuation. As you make the level lower and lower, it should become more \
-    \difficult to tell when the system is playing a sound versus when it is playing \
-    \nothing."
+    \of attenuation. As you make the level lower and lower (ie. lower and lower values \
+    \for attenuation), it should become more difficult to tell when the system is playing \
+    \a sound versus when it is playing nothing."
 
 data MyTabs = Instructions | Other deriving (Eq,Show)
 
 instructions :: MonadWidget t m => m ()
--- instructions = elClass "div" "instructionsText" $ text instructionsText
-instructions = elClass "div" "instructionsText" $ do
+instructions = elClass "div" "instructionsText" $ text instructionsText
+{- instructions = elClass "div" "instructionsText" $ do
   tab <- simpleTabBar [Instructions,Other] Instructions
   tabAVisible <- mapDyn (== Instructions) tab
   visibleWhen tabAVisible $ text "This would be the text of the instructions."
   tabBVisible <- mapDyn (== Other) tab
   visibleWhen tabBVisible $ text "Now we are displaying some other text instead!"
+-}
 
 displayEval :: MonadWidget t m => Dynamic t (Map Answer Score) -> Dynamic t (MultipleChoiceStore Config Answer) -> m ()
 displayEval e _ = displayMultipleChoiceEvaluationGraph ("scoreBarWrapper","svgBarContainer","svgFaintedLine", "xLabel") "Session Performance" "" answers e
@@ -98,4 +99,3 @@ thresholdOfSilenceExercise = multipleChoiceExercise
   displayEval
   generateQ
   xpFunction
-
