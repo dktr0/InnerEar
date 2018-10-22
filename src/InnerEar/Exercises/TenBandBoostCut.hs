@@ -24,7 +24,7 @@ import InnerEar.Widgets.Config
 import InnerEar.Widgets.Utility (radioWidget, safeDropdown)
 import InnerEar.Widgets.AnswerButton
 
-data FrequencyBand = AllBands | HighBands  | Mid8Bands | MidBands | LowBands deriving (Eq,Data,Typeable, Read)
+data FrequencyBand = AllBands | HighBands | MidBands | Mid8Bands | LowBands deriving (Eq,Ord,Data,Typeable, Read)
 
 instance Show FrequencyBand where
   show (AllBands) = "Entire spectrum"
@@ -33,34 +33,10 @@ instance Show FrequencyBand where
   show (Mid8Bands) = "Mid 8 Bands"
   show (LowBands) = "Low Bands"
 
-
--- necessary so things are displayed in the config dropdown in the right order
-instance Ord FrequencyBand where
-  compare AllBands AllBands = EQ
-  compare AllBands _ = LT
-  compare HighBands AllBands = GT
-  compare HighBands HighBands = EQ
-  compare HighBands MidBands = LT
-  compare HighBands Mid8Bands = LT
-  compare HighBands LowBands = LT
-  compare MidBands AllBands = GT
-  compare MidBands HighBands = GT
-  compare MidBands MidBands = EQ
-  compare MidBands Mid8Bands = LT
-  compare MidBands LowBands = LT
-  compare Mid8Bands AllBands =GT
-  compare Mid8Bands HighBands = GT
-  compare Mid8Bands MidBands = GT
-  compare Mid8Bands Mid8Bands = EQ
-  compare Mid8Bands LowBands = LT
-  compare LowBands LowBands = EQ
-  compare LowBands _ = GT
-
-
-frequencyBands::[FrequencyBand]
+frequencyBands :: [FrequencyBand]
 frequencyBands = [AllBands, HighBands, Mid8Bands, MidBands, LowBands]
 
-boostAmounts::[Double]
+boostAmounts :: [Double]
 boostAmounts = reverse [-10,-6,-3,-2,-1,1,2,3,6,10]
 
 type Config = (FrequencyBand, Double) -- FrequencyBand and Boost/Cut amount
@@ -68,7 +44,7 @@ type Config = (FrequencyBand, Double) -- FrequencyBand and Boost/Cut amount
 newtype Answer = Answer { frequency :: Frequency } deriving (Eq,Ord,Data,Typeable)
 
 instance Show Answer where
-  show a = freqAsString $frequency a
+  show a = freqAsString $ frequency a
 
 instance Buttonable Answer where
   makeButton = showAnswerButton
@@ -77,8 +53,6 @@ answers :: [Answer]
 answers = [
   Answer $ F 31 "31",Answer $ F 63 "63", Answer $ F 125 "125", Answer $ F 250 "250", Answer $ F 500 "500",
   Answer $ F 1000 "1k", Answer $ F 2000 "2k", Answer $ F 4000 "4k", Answer $ F 8000 "8k", Answer $ F 16000 "16k"]
-
--- TODO why is the frequency band not used?
 
 renderAnswer :: Map String AudioBuffer -> Config -> (SourceNodeSpec, Maybe Time)-> Maybe Answer -> Synth ()
 renderAnswer _ (_, boost) (src, dur) ans = buildSynth $ do
