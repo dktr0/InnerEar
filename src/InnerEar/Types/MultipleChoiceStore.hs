@@ -9,6 +9,10 @@ import InnerEar.Types.Score
 
 type XpFunction c a = Map c (Map a Score) -> (Int,Int)
 
+scoreForConfig :: Ord c => Map c (Map a Score) -> c -> Double -> Double
+scoreForConfig m c maxPoints = x * maxPoints
+  where x = (Data.Map.foldl (+) 0 $ fmap asPercent $ findWithDefault empty c m)
+
 data MultipleChoiceStore c a = MultipleChoiceStore {
   scores :: Map c (Map a Score),
   xp :: (Int,Int)

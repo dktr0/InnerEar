@@ -86,7 +86,8 @@ multipleChoiceQuestionWidget maxTries answers exId exInstructions cWidget render
   let scoreChanges'' = traceEventWith (const "scoreChanges''") $ fmap (newScores xpF) scoreChanges' -- Event t (MultipleChoiceStore -> MultipleChoiceStore)
   currentStore <- foldDyn ($) initialStore $ scoreChanges''
   let storeEvents = updated currentStore
-  -- display currentStore -- for debugging
+
+  display currentStore -- for debugging
 
 
   let initialState = initialMultipleChoiceState config answers maxTries

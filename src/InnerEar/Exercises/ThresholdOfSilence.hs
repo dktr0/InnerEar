@@ -85,7 +85,11 @@ sourcesMap = fromList $ [
   ]
 
 xpFunction :: XpFunction Config Answer
-xpFunction m = (size m,100)
+xpFunction m = (ceiling normalizedScore,100)
+  where
+    rawScore = sum $ fmap (uncurry (scoreForConfig m)) $ zip configs [100,200,300,400,500,600,700,800,900,1000]
+    clippedScore = min rawScore 4320
+    normalizedScore = clippedScore / 4320 * 100
 
 thresholdOfSilenceExercise :: MonadWidget t m => Exercise t m Int [Answer] Answer (Map Answer Score) (MultipleChoiceStore Config Answer)
 thresholdOfSilenceExercise = multipleChoiceExercise
