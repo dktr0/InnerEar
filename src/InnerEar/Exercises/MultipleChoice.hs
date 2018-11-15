@@ -81,10 +81,14 @@ multipleChoiceQuestionWidget :: forall t m c a. (MonadWidget t m, Show a, Eq a, 
 
 multipleChoiceQuestionWidget maxTries answers exId exInstructions cWidget render eWidget xpF initialStore sysResources config initialEval newQuestion = elClass "div" "exerciseWrapper" $ mdo
 
+  -- calculation of current value of exercise' MultipleChoiceStore
   let scoreChanges = traceEventWith (const "scoreChanges") $ attachWith answerToScoreChange (current multipleChoiceState) answerPressed -- Event t (Maybe (c,Map a Score -> Map a Score))
   let scoreChanges' = traceEventWith (const "scoreChanges'") $ fmapMaybe id scoreChanges -- Event t (c,Map a Score -> Map a Score)
   let scoreChanges'' = traceEventWith (const "scoreChanges''") $ fmap (newScores xpF) scoreChanges' -- Event t (MultipleChoiceStore -> MultipleChoiceStore)
-  currentStore <- foldDyn ($) initialStore $ scoreChanges''
+  let toRecentAnswers = attachWithMaybe answerToRecentAnswer (current multipleChoiceState) answerPressed
+  let toRecentAnswers' = fmap (newAnswer xpF) toRecentAnswers
+  let currentStoreChanges = mergeWith (.) [scoreChanges'',toRecentAnswers']
+  currentStore <- foldDyn ($) initialStore $ currentStoreChanges
   let storeEvents = updated currentStore
 
   display currentStore -- for debugging
@@ -254,6 +258,12 @@ onceQuestionHeard s = s { mode = AnswerMode, answerButtonModes = m }
 -- When answers are selected they are ignored if mode is ListenMode or ExploreMode
 -- Otherwise (i.e. AnswerMode) the state is updated in different ways depending
 -- on whether the answer is correct or incorrect, and
+
+answerToRecentAnswer :: Eq a => MultipleChoiceState a c -> a -> Maybe (c,Bool)
+answerToRecentAnswer s _ | mode s == ListenMode = Nothing
+answerToRecentAnswer s _ | mode s == ExploreMode = Nothing
+answerToRecentAnswer s a | a == correctAnswer s = Just (currentConfig s, True)
+answerToRecentAnswer s a | a /= correctAnswer s = Just (currentConfig s, False)
 
 answerToScoreChange :: Ord a => MultipleChoiceState a c -> a -> Maybe (c,Map a Score -> Map a Score)
 answerToScoreChange s _ | mode s == ListenMode = Nothing

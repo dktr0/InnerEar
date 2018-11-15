@@ -84,10 +84,11 @@ sourcesMap = fromList $ [
     (2, ("Load a sound file", UserProvidedResource))
   ]
 
-xpFunction :: XpFunction Config Answer
+xpFunction :: XpFunction Config Answer -- MultipleChoiceStore c a -> (Int, Int)
 xpFunction m = (ceiling normalizedScore,100)
   where
-    rawScore = sum $ fmap (uncurry (scoreForConfig m)) $ zip configs [100,200,300,400,500,600,700,800,900,1000]
+    m' = scores m
+    rawScore = sum $ fmap (uncurry (scoreForConfig m')) $ zip configs [100,200,300,400,500,600,700,800,900,1000]
     clippedScore = min rawScore 4320
     normalizedScore = clippedScore / 4320 * 100
 

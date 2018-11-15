@@ -103,6 +103,24 @@ tenBandsConfigWidget sysResources c =  elClass "div" "configWidget" $ do
   return (config, source, playEv, stopEv)
 
 
+scoreForAnswer :: ((FrequencyBand, Double), Bool) -> Double
+scoreForAnswer ((_,-10),True) = 100
+scoreForAnswer ((_,-6),True) = 200
+scoreForAnswer ((_,-3),True) = 300
+scoreForAnswer ((_,-2),True) = 400
+scoreForAnswer ((_,-1),True) = 500
+scoreForAnswer ((_,1),True) = 500
+scoreForAnswer ((_,2),True) = 400
+scoreForAnswer ((_,3),True) = 300
+scoreForAnswer ((_,6),True) = 200
+scoreForAnswer ((_,10),True) = 100
+scoreForAnswer ((_,_),False) = 0
+
+xpFunction :: XpFunction Config Answer -- MultipleChoiceStore c a -> (Int,Int)
+xpFunction s | length (recentAnswers s) < 5 = (0,0)
+xpFunction s | otherwise = (ceiling points,0)
+  where points = (/ fromIntegral (length (recentAnswers s))) $ sum $ fmap scoreForAnswer $ recentAnswers s
+
 tenBandBoostCutExercise :: MonadWidget t m => Exercise t m Config [Answer] Answer (Map Answer Score) (MultipleChoiceStore Config Answer)
 tenBandBoostCutExercise = multipleChoiceExercise
   3
@@ -114,4 +132,5 @@ tenBandBoostCutExercise = multipleChoiceExercise
   (AllBands, 10)
   displayEval
   generateQ
-  (const (0,2))
+  xpFunction
+  
