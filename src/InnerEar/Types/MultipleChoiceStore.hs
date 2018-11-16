@@ -17,7 +17,6 @@ instance (Ord c, Ord a, Data c, Data a) => JSON (MultipleChoiceStore c a) where
   showJSON = toJSON
   readJSON = fromJSON
 
-
 type XpFunction c a = MultipleChoiceStore c a -> (Int,Int)
 
 scoreForConfig :: Ord c => Map c (Map a Score) -> c -> Double -> Double

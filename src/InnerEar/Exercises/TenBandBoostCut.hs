@@ -19,6 +19,9 @@ import Sound.MusicW hiding (Frequency)
 import InnerEar.Types.Exercise
 import InnerEar.Types.ExerciseId
 import InnerEar.Types.Frequency
+import InnerEar.Types.GScore
+import InnerEar.Widgets.ScoreGraphs
+import InnerEar.Widgets.Bars
 import InnerEar.Exercises.MultipleChoice
 import InnerEar.Widgets.Config
 import InnerEar.Widgets.Utility (radioWidget, safeDropdown)
@@ -84,7 +87,10 @@ sourcesMap = fromList $ [
   ]
 
 displayEval :: MonadWidget t m => Dynamic t (Map Answer Score) -> Dynamic t (MultipleChoiceStore Config Answer) -> m ()
-displayEval e _ = displayMultipleChoiceEvaluationGraph ("scoreBarWrapperTenBars","svgBarContainerTenBars","svgFaintedLineTenBars","xLabelTenBars") "Session Performance" "" answers e
+displayEval e s = do
+  currentXp <- mapDyn (Just . uncurry GScore . (\(x,y) -> (fromIntegral x,fromIntegral y)) .  xp) s
+  ovalScoreBar currentXp
+  displayMultipleChoiceEvaluationGraph ("scoreBarWrapperTenBars","svgBarContainerTenBars","svgFaintedLineTenBars","xLabelTenBars") "Session Performance" "" answers e
 
 -- temporary until config widget is changed to take a list/map of config parameters that can be changed
 tenBandsConfigWidget :: MonadWidget t m => Dynamic t (Map String AudioBuffer) -> Config -> m (Dynamic t Config, Dynamic t (Maybe (SourceNodeSpec, Maybe Time)), Event t (), Event t ())

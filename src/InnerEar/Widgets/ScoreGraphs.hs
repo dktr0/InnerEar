@@ -51,9 +51,9 @@ graphGenOval score = do
   ovalScoreBar score
   return ()
 
---a cirular graph generator
+--a circular graph generator
 graphGenCircular :: MonadWidget t m => Dynamic t (Maybe GScore) -> m ()
-graphGenCircular score = do 
+graphGenCircular score = do
   gamifiedGraphLabel (constDyn "circularGrapLabel") score
   percentageCircleGraph score
   return ()

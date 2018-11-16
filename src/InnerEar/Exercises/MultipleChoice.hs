@@ -91,7 +91,7 @@ multipleChoiceQuestionWidget maxTries answers exId exInstructions cWidget render
   currentStore <- foldDyn ($) initialStore $ currentStoreChanges
   let storeEvents = updated currentStore
 
-  display currentStore -- for debugging
+  -- display currentStore -- for debugging
 
 
   let initialState = initialMultipleChoiceState config answers maxTries
@@ -134,8 +134,8 @@ multipleChoiceQuestionWidget maxTries answers exId exInstructions cWidget render
       elClass "div"  "configWidgetWrapper" $ cWidget sysResources config
 
   journalData <- elClass "div" "bottomRow" $ do
-    elClass "div" "evaluation" $ return ()
-      -- eWidget scores currentStore
+    scoresForCurrentConfig <- combineDyn (\c s -> findWithDefault empty c $ scores s)   dynConfig currentStore
+    elClass "div" "evaluation" $ eWidget scoresForCurrentConfig currentStore
     elClass "div" "journal" $ journalWidget
 
   let answerEvent = gate (fmap (==AnswerMode) . fmap mode . current $ multipleChoiceState) answerPressed
