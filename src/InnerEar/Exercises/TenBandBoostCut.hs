@@ -102,24 +102,34 @@ tenBandsConfigWidget sysResources c =  elClass "div" "configWidget" $ do
   (source, playEv, stopEv) <- sourceSelectionWidget sysResources "tenBandBoostCutExercise" sourcesMap 0
   return (config, source, playEv, stopEv)
 
+valueForBands :: FrequencyBand -> Double
+valueForBands AllBands = 2 * 820/6
+valueForBands HighBands = 0
+valueForBands MidBands = 0
+valueForBands Mid8Bands = 1 * 820/6
+valueForBands LowBands = 0
+
+valueForDb :: Double -> Double
+valueForDb 10 = 0
+valueForDb 6 = 1 * 820/6
+valueForDb 3 = 2 * 820/6
+valueForDb 2 = 3 * 820/6
+valueForDb 1 = 4 * 820/6
+valueForDb x | x <0 = valueForDb (x * (-1)) + 80
+
+valueForConfig :: (FrequencyBand,Double) -> Double
+valueForConfig (bands,db) = fromIntegral $ ceiling (valueForBands bands + valueForDb db) + 100
 
 scoreForAnswer :: ((FrequencyBand, Double), Bool) -> Double
-scoreForAnswer ((_,-10),True) = 100
-scoreForAnswer ((_,-6),True) = 200
-scoreForAnswer ((_,-3),True) = 300
-scoreForAnswer ((_,-2),True) = 400
-scoreForAnswer ((_,-1),True) = 500
-scoreForAnswer ((_,1),True) = 500
-scoreForAnswer ((_,2),True) = 400
-scoreForAnswer ((_,3),True) = 300
-scoreForAnswer ((_,6),True) = 200
-scoreForAnswer ((_,10),True) = 100
-scoreForAnswer ((_,_),False) = 0
+scoreForAnswer (c,True) = valueForConfig c
+scoreForAnswer _ = 0
 
 xpFunction :: XpFunction Config Answer -- MultipleChoiceStore c a -> (Int,Int)
 xpFunction s | length (recentAnswers s) < 5 = (0,0)
-xpFunction s | otherwise = (ceiling points,0)
-  where points = (/ fromIntegral (length (recentAnswers s))) $ sum $ fmap scoreForAnswer $ recentAnswers s
+xpFunction s | otherwise = (ceiling points,valueOfMostRecentConfig)
+  where
+    points = (/ fromIntegral (length (recentAnswers s))) $ sum $ fmap scoreForAnswer $ recentAnswers s
+    valueOfMostRecentConfig = ceiling $ valueForConfig $ fst $ head $ recentAnswers s
 
 tenBandBoostCutExercise :: MonadWidget t m => Exercise t m Config [Answer] Answer (Map Answer Score) (MultipleChoiceStore Config Answer)
 tenBandBoostCutExercise = multipleChoiceExercise
@@ -133,4 +143,3 @@ tenBandBoostCutExercise = multipleChoiceExercise
   displayEval
   generateQ
   xpFunction
-  
