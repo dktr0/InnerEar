@@ -90,6 +90,6 @@ intervals1Exercise = multipleChoiceExercise
   renderAnswer
   Intervals1
   ()
-  displayEval
+  (\_ _ -> return ())
   generateQ
   (const (0,2))

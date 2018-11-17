@@ -73,8 +73,7 @@ convertBands Mid8Bands = take 8 $ drop 1 $ answers
 convertBands LowBands = take 5 answers
 
 instructions :: MonadWidget t m => m ()
-instructions = el "div" $ do
-  elClass "div" "instructionsText" $ text "In this exercise, a filter is applied to a specific region of the spectrum, either boosting or cutting the energy in that part of the spectrum by a specified amount. Your task is to identify which part of the spectrum has been boosted or cut. Challenge yourself and explore additional possibilities by trying cuts (instead of boosts) to the spectrum, and by trying more subtle boosts/cuts (dB values progressively closer to 0)."
+instructions = elClass "div" "instructionsText" $ text "Instructions: In this exercise, a filter is applied to a specific region of the spectrum, either boosting or cutting the energy in that part of the spectrum by a specified amount. Your task is to identify which part of the spectrum has been boosted or cut. Challenge yourself and explore additional possibilities by trying cuts (instead of boosts) to the spectrum, and by trying more subtle boosts/cuts (dB values progressively closer to 0)."
 
 generateQ :: Config -> [ExerciseDatum] -> IO ([Answer],Answer)
 generateQ config _ = randomMultipleChoiceQuestion (convertBands $ fst config)
@@ -86,11 +85,20 @@ sourcesMap = fromList $ [
     (2, ("Load a sound file", UserProvidedResource))
   ]
 
+xpTextDisplay :: MonadWidget t m => Dynamic t (Int,Int) -> m ()
+xpTextDisplay currentXp = do
+  xpText <- mapDyn (\(x,y) -> show x ++ " / " ++ show y ++ " XP") currentXp
+  elClass "div" "xpText" $ dynText xpText
+  currentXp' <- mapDyn (Just . uncurry GScore . (\(x,y) -> (fromIntegral x,fromIntegral y))) currentXp
+  elClass "div" "xpBar" $ ovalScoreBar currentXp'
+
 displayEval :: MonadWidget t m => Dynamic t (Map Answer Score) -> Dynamic t (MultipleChoiceStore Config Answer) -> m ()
-displayEval e s = do
-  currentXp <- mapDyn (Just . uncurry GScore . (\(x,y) -> (fromIntegral x,fromIntegral y)) .  xp) s
-  ovalScoreBar currentXp
-  displayMultipleChoiceEvaluationGraph ("scoreBarWrapperTenBars","svgBarContainerTenBars","svgFaintedLineTenBars","xLabelTenBars") "Session Performance" "" answers e
+displayEval e s = elClass "div" "evalFlex" $ do
+  elClass "div" "evalFlexItem" $ do -- left column
+    currentXp <- mapDyn xp s
+    xpTextDisplay currentXp
+  elClass "div" "evalFlexItem" $ do -- right column
+    displayMultipleChoiceEvaluationGraph ("scoreBarWrapperTenBars","svgBarContainerTenBars","svgFaintedLineTenBars","xLabelTenBars") "Session Performance" "" answers e
 
 -- temporary until config widget is changed to take a list/map of config parameters that can be changed
 tenBandsConfigWidget :: MonadWidget t m => Dynamic t (Map String AudioBuffer) -> Config -> m (Dynamic t Config, Dynamic t (Maybe (SourceNodeSpec, Maybe Time)), Event t (), Event t ())

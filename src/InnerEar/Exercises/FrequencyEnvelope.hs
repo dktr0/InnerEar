@@ -124,6 +124,6 @@ frequencyEnvelopeExercise = multipleChoiceExercise
   renderAnswer
   FrequencyEnvelope
   (1,1000,8.0)
-  displayEval
+  (\_ _ -> return ())
   generateQ
   (const (0,2))

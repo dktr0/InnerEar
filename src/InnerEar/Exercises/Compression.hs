@@ -76,6 +76,6 @@ compressionExercise = multipleChoiceExercise
   renderAnswer
   Compression
   (20)
-  displayEval
+  (\_ _ -> return ())
   generateQ
   (const (0,2))

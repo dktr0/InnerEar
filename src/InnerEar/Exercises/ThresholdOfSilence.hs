@@ -101,6 +101,6 @@ thresholdOfSilenceExercise = multipleChoiceExercise
   renderAnswer
   ThresholdOfSilence
   (-20)
-  displayEval
+  (\_ _ -> return ())
   generateQ
   xpFunction

@@ -52,12 +52,13 @@ clientWidget :: MonadWidget t m => Dynamic t (Map String AudioBuffer) -> m ()
 clientWidget sysResources = elClass "div" "innerEar" $ mdo
   (wsRcvd,wsStatus) <- WS.reflexWebSocket wsSend
   elClass "div" "title" $ text "Inner Ear"
-  loginVisible <- holdDyn True $ leftmost [True <$ loggedIn, False <$ noLogin, True <$ loggedOut]
+  loginVisible <- holdDyn True $ leftmost [True <$ loggedIn, True <$ noLogin, True <$ loggedOut]
   navVisible <- holdDyn False $ leftmost [True <$ loggedIn, True <$ noLogin, False <$ loggedOut]
-  (loginRequests,currentRole) <- visibleWhen loginVisible $ elClass "div" "login" $ loginWidget wsRcvd
+  bypassVisible <- holdDyn True $ leftmost [False <$ loggedIn, False <$ noLogin, True <$ loggedOut]
+  (loginRequests,currentRole) <- elClass "div" "login" $ visibleWhen loginVisible $ loginWidget wsRcvd
   let loggedIn = ffilter isJust $ updated currentRole
   let loggedOut = ffilter isNothing $ updated currentRole
-  noLogin <- visibleWhen loginVisible $ button "Continue without logging in"
+  noLogin <- elClass "div" "loginBypass" $ visibleWhen bypassVisible $ button "Continue without logging in"
   (navRequests,sounds) <- visibleWhen navVisible $ navigationWidget sysResources wsRcvd currentRole
   let wsSend = leftmost [loginRequests,navRequests]
   performSynth sounds

@@ -41,7 +41,7 @@ instance Buttonable Answer where
 
 instance Show Answer where
   show a = freqAsString $ frequency a
-  
+
 answers :: [Answer]
 answers = [Answer $ F 155 "Bass (155 Hz)",Answer $ F 1125 "Low Mids (1125 Hz)",Answer $ F 3000 "High Mids (3 kHz)",
   Answer $ F 5000 "Presence (5 kHz)",Answer $ F 13000 "Brilliance (13 kHz)"]
@@ -85,6 +85,6 @@ fiveBandBoostCutExercise = multipleChoiceExercise
   renderAnswer
   FiveBandBoostCut
   (configs!!0)
-  displayEval
+  (\_ _ -> return ())
   generateQ
   (const (0,2))

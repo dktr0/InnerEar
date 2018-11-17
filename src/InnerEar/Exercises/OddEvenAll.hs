@@ -79,6 +79,6 @@ oddEvenAllExercise = multipleChoiceExercise
   renderAnswer
   OddEvenAll
   (-10)
-  displayEval
+  (\_ _ -> return ())
   generateQ
   (const (0,2))

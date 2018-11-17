@@ -73,6 +73,6 @@ harmonicDistortionExercise = multipleChoiceExercise
   renderAnswer
   HarmonicDistortion
   (-12)
-  displayEval
+  (\_ _ -> return ())
   generateQ
   (const (0,2))

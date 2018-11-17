@@ -126,17 +126,18 @@ multipleChoiceQuestionWidget maxTries answers exId exInstructions cWidget render
     return (CloseExercise <$ w, x, y, InQuestion <$ z)
 
   -- Instructions and configuration widgets.
-  -- (Dynamic t c, Dynamic t (Maybe SourceNodeSpec), Event t (), Event t ())
-  (dynConfig, dynSource, playPressed, stopPressed) <- elClass "div" "middleRow" $ do
-    elClass "div" "evaluation" $ exInstructions
-    elClass "div" "journal" $ do
+  (dynConfig, dynSource, playPressed, stopPressed, journalData) <- elClass "div" "middleRow" $ do
+    (a,b,c,d) <- elClass "div" "leftBox" $ do
       text "Configuration"
       elClass "div"  "configWidgetWrapper" $ cWidget sysResources config
+    j <- elClass "div" "rightBox" $ journalWidget
+    return (a,b,c,d,j)
 
-  journalData <- elClass "div" "bottomRow" $ do
-    scoresForCurrentConfig <- combineDyn (\c s -> findWithDefault empty c $ scores s)   dynConfig currentStore
-    elClass "div" "evaluation" $ eWidget scoresForCurrentConfig currentStore
-    elClass "div" "journal" $ journalWidget
+  elClass "div" "bottomRow" $ do
+    elClass "div" "leftBox" $ do
+      scoresForCurrentConfig <- combineDyn (\c s -> findWithDefault empty c $ scores s)   dynConfig currentStore
+      elClass "div" "evaluation" $ eWidget scoresForCurrentConfig currentStore
+    elClass "div" "rightBox" $ exInstructions
 
   let answerEvent = gate (fmap (==AnswerMode) . fmap mode . current $ multipleChoiceState) answerPressed
   let correctAnswerEvent = attachDynWithMaybe (\x y -> if y == correctAnswer x then Just y else Nothing) multipleChoiceState answerEvent
